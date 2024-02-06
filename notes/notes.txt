@@ -163,3 +163,6 @@ mummy
 jaguar
 abumsh trapdoor spider
 min damage debuff
+plant spawning plant monster
+terraforming mage
+storm summoner - AA
