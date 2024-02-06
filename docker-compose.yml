@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+
+  #  pdb:
+  #    image: postgres
+  #    restart: always
+  #    environment:
+  #      POSTGRES_DB: 'hexfow'
+  #      POSTGRES_USER: 'phdk'
+  #      POSTGRES_PASSWORD: "password"
+  #      POSTGRES_ROOT_PASSWORD: "password"
+  #    networks:
+  #      - database_network
+
+  web:
+    build: .
+    image: app-image
+    restart: always
+    volumes:
+      - .:/code
+    #      - ./appdirs/:/root/.local/share/
+    #      - ~/.local/share/mtgimg:/root/.local/share/mtgimg
+    #      - ~/.local/share/mtgorp:/root/.local/share/mtgorp
+    #      - static_volume:/opt/services/hexfow/static
+    #      - media_volume:/opt/services/hexfow/meda
+    #    depends_on:
+    #      - pdb
+    networks:
+      - database_network
+    #    env_file:
+    #      - .env
+    environment:
+      - DEBUG=1
+    ports:
+      - "9000:9000"
+
+  frontend:
+    image: app-image
+    working_dir: /code/frontend
+    command: npm run start
+    restart: always
+    volumes:
+      - .:/code
+    environment:
+      - DEBUG=1
+
+networks:
+  database_network:
+    driver: bridge
+
+volumes:
+  db:
+  static_volume:
+  media_volume:
