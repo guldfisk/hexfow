@@ -166,3 +166,5 @@ min damage debuff
 plant spawning plant monster
 terraforming mage
 storm summoner - AA
+weather?
+day/night cycle?
