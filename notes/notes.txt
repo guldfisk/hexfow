@@ -166,5 +166,17 @@ min damage debuff
 plant spawning plant monster
 terraforming mage
 storm summoner - AA
-weather?
 day/night cycle?
+	night -1 sight (min 1)
+	amount of rounds of day/night in a cycle, and where in the cycle the game starts can vary depending on map
+weather (bloat, this time for real). but maybe these can just be like global statuses on certain maps?
+	hot
+		units ending turn with no unspent movement points suffer 1 damage
+	cold
+		units ending round with no adjacent allied units suffer 1 damage
+	rain
+		-1 sight (min 1)
+	windy
+		-1 movement air units
+like hot/cold as just debuffs also	
+debuff min damage (1-2 damage -> 3 or whatever)

@@ -1242,3 +1242,74 @@ flash-bang
 - can move on water. cannor attack or use abilities when on water.
 - camouflage
 	+ 1 ranged protection if terrain base is more than 0
+
+angel
+	health 7, movement 4, sight 2, energi 5, L
+smite
+	melee attack
+	4 damage, -1 movement
+divine restoration
+	ability 4 energi
+	target allied unit 1 range, -1 movement
+	heals 5 health, dispels all debuffs. if unit does not have any shield, apply 1 shield.
+- flying
+- starts with 1 shield
+
+carnivorous plant
+	health 5, movement 0, sight 1, M
+bite
+	melee attack
+	2 damage
+- cannot move
+- at the beginning of round, heals 1.
+
+verdant hulk
+	health 9, movement 3, sight 2, energi 5, L
+punch
+	melee attack
+	4 damage, -1 movement
+entangling vines
+	aoe ability, 3 energi
+	aoe type triangle size 1, 3 range, NLoS, -2 movement
+	applies rooted to all ground units for 2 rounds
+plant seed
+	multi 2x max activations combineable ability 2 energy
+	target adjacent hex, -1 movement
+	applies seeded status to hex for 2 rounds, or 1 round if space contains a corpse
+		when expires summon carnivorous plant on hex
+- can move unto allied carnivorous plant. this kills the plant, and heals this for 3
+- when ends its turn, if it has unspent movement points, +1 energi.
+- at the beginning of round, heals 2.
+
+terraforming mage
+	health 5, movement 3, sight 2, energi 6, S
+raise terrain
+	ability 3 energy
+	target hex 3 range NLoS, -1 movement
+	if terrain is lowground applies status raised
+		terrain is elevated
+flatten terrain
+	ability 3 energy
+	target hex 3 range NLoS, -1 movement
+	if target is elevated applies status lowered
+		terrain is lowground
+fault line
+	aoe ability 2 energy
+	aoe type continuous line line length 3 range 3 NLoS, -2 movement
+	deals terrain pircing aoe damage to each unit equal to the aoe terrain protection (excluding elevation bonus) of their hex.
+mudslide
+	ability 2 energy
+	target hex 3 range NLoS, -2 movement
+	if hex is lowground, deals 2*(amount of adjancent high ground hexes) (+1 if any of those are snow) aoe damage to unit on hex.
+magma fissure
+	ability 2 energy
+	target hex 3 range NLoS, -1 movement
+	applies status magma to hex
+		unstackable
+		when ground units moves in, and at the end of round, applies 2 burn
+
+mummy lich
+	health 6, movement 3, sight 2, energi 5, M
+hit
+	melee attack
+	3 damage, -2 movement
