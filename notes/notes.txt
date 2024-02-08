@@ -180,3 +180,7 @@ weather (bloat, this time for real). but maybe these can just be like global sta
 		-1 movement air units
 like hot/cold as just debuffs also	
 debuff min damage (1-2 damage -> 3 or whatever)
+giant slayer
+leader
+heroic hoplite
+frost devil
