@@ -1,0 +1,77 @@
+RULES
+
+
+LoS - line of sight
+flying
+	no terrain movement penalties
+	does not receive terrain protection
+	always considered on high ground
+	cannot capture points
+melee attack
+	ground unit cannot melee flying unit
+	hex of attacked unit most be passable by attacker
+stealth
+	can only be seen by adjacent units
+teleport
+	move to a hex if it is unoccupied
+stun n
+	exhausts unit
+	applies a debuff with duration n - (1 if unit was ready else 0) that exhausts unit in the beginning of round
+accelerate n
+	ready unit
+	applies buff accelerated with duration n - (1 if unit was exhausted else 0).
+		if this unit would be exhausted, instead remove a stack of accelerated.
+broken
+	passieve abilities are inactive
+rooted
+	can not move
+burn n
+	stackable debuff
+	beginning of round apply damage equal to n and decrement by one
+poision n
+	stackable debudd
+	beginning of round apply damage equal to n
+for terrain:
+	+n movement cost
+		n extra movement point required to move into/out of this space
+	n movement penalty
+		n movement point subtracted after moving into/out of this space (result can be negativ afterwards)
+transport
+	a unit can be a transport. It must define it's carry capacity.
+	capacity can use any logic, but if it is just a number, it denotes it's total size capacity.
+		small: 1
+		medium: 2
+		large: 3
+		giga: 4
+	units can be inside a transport. when they are, their position is equal to that of the container, and they cannot perform any action except for a move out. They cannot be attacked.
+	when a transport dies, if it is a ground unit containing a single other unit, it will attempt to place that unit on the hex of the dead transport (might fail due to attacker moving in for example, or hex being impassable for contained unit). it it fails, the unit dies. all other units die.
+	transport can can be "enterable", which means an allied unit that could be contained can move unto it, entering it, and will then end its turn.
+	transport can be "exitable", which means a contained unit can be activated while inside (and then only action is move out).
+	transports can never be nested.
+	by default flying units can not be carried.
+aquatic
+	can move on water
+energy
+	units have a max energy, and regenerate 1 at the start of each round
+energy cost toggle n1/n2
+	unit has two combineable abilities, one to toggle on some buff, and one to toggle it off.
+	toggle on costs n1 energy. At the beginning of each round, if the unit has the buff,it loses n2 energy if available. if it isn't, the buff is lost.
+round starting player
+	starting player on first round is random (if there is a map draft, prob tied to this). after that, the starting player is the player that didn't take the last non-skip action in the previous round.
+terrain protection
+	a(-b)? x/y/z - x melee protection / y ranged protection / z aoe protection for size a (to size b)
+	protection if first thing subtracted from incomming damage. cannot redude damage below 1.
+elevated
+	terrain +1 protection against low ground.
+	+1 move in cost from low ground
+	blocks LoS from low ground
+highest stackable
+	for statuses applied of n. when applied, stack count will be set to max of n and previous value.
+radioactive n
+	terrain status
+	stackable
+	when unit moves in and at the end of round, apply radiated n to unit where n is stacks of radioactive.
+radiated n
+	stackable
+	at the end of round deals n - ceil(armor/2) damage to unit, and all stacks are removed.
+

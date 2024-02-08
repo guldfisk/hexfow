@@ -1,0 +1,109 @@
+Biomes:
+	sand
+	vegetation
+	snow
+	magma
+	rock
+	wet
+
+TERRAIN
+
+plains
+
+tundra - snow
+1 melee protection
+1 move out penalty
+
+forest - vegetation
+S-M: 1/2/2 protection
+1 move in penalty
+blocks LoS
+
+shrub - vegetation
+S: 0/2/1 protection
+M: 0/1/0 protection
+blocks LoS
+
+snowy forest - vegetation snow
+S-M: 2 protection
+L-G: 1 protection
+1 move in penalty
+1 move out penalty
+blocks LoS
+
+jungle - vegetation
+S-M: 2 protection
+L-G: 1 protection
+2 move in penalty
+blocks LoS
+
+hill
+elevated
+
+dune - sand
+elevated
+1 move in penalty
+
+desert - sand
+
+snowy hill - snow
+elevated
+1 move out penalty
+
+mountain - rock
+S-M: 1 protection
+elevated
+1 move in penalty
+blocks LoS
+
+snowy mountain - rock snow
+S-M: 1 protection
+elevated
+1 move in penalty
+1 move out penalty
+
+ravine - rock
+S: 1/3/3 protection
+M: 1/2/2 protection
+L: 0/1/1 protection
+1 move in penalty
+1 move out penalty
+
+snow crevace - snow
+S: 2/3/3 protection
+M: 2/2/2 protection
+L: 1/1/1 protection
+1 move in penalty
+2 move out penalty
+
+swamp - wet
+1 melee protection
+1 move in penalty
+1 move out penalty
+
+lava - magma
+when moving in, suffer 1 burn
+at the end of the round, units on this hex suffers 1 burn
+units melee attacking a unit on this hex suffers 1 burn
+
+volcano - magma rock
+S-M: 1 protection
+elevated
+1 move in penalty
+blocks LoS
+when moving in, suffer 1 burn
+at the end of the round, units on this hex suffers 1 burn
+units melee attacking a unit on this hex suffers 1 burn
+
+water - wet
+impassable to ground
+
+shallow water - wet
+1 move in penalty
+
+frozen water - snow
+impassable to ground units L+
+
+wall
+impassable to ground
+blocks LoS

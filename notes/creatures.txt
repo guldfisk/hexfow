@@ -1,0 +1,1120 @@
+inferno tank
+movement 3, health 9, armor 1, sight 1, 4 energy L
+scorch
+	aoe attack
+	aoe type tri-connected adjacent
+	3 damage, -2 movement
+	all damaged units suffer 2 burn
+flame wall
+	aoe ability 2 energy
+	aoe type 3 hex adjacent line
+	-2 movement
+	all units in aof suffer 2 burn
+	apply flame wall status to terrain
+		3 round duration
+		non stackable, refreshable
+		units moving into or ending their turn on this hex suffer 2 burn
+- immune to burn
+
+plague beetle
+movement 3, health 7, sight 2, 4 energy M
+sting
+	melee attack
+	2 damage, -1 movement
+	all damaged units suffer 1 poison
+plague miasma
+	aoe ability 3 energy
+	aoe type hex size 2 physical propagation range 1 LoS
+	apply miasma status to terrain
+		3 round duration
+		non stackable, refreshable
+		units on hex has maximum sight reduced to maximum 1
+		at the beginning of round, deal 2 fully piercing damage to units on hex
+- immune to damage from miasma status
+
+giant battle crab
+movement 2, health 11, armor 2, sight 1, L
+pinch
+	aoe melee attack
+	aoe type two adjacent hexes seperated by single hex
+	5 damage, -1 movement
+
+zone trooper
+movement 3, health 6, sight 2, M
+salvo
+	ranged attack
+	4 damage, 2 range, -1 movement
+	-1 damage against air
+hunker down
+	ability
+	applies hunkered buff to self until moves
+		+ 1 ranged/aoe protection
+
+zone skirmisher
+movement 3, health 5, sight 2, S
+salvo
+	ranged attack
+	3 damage, 2 range, -1 movement
+engage
+	melee attack
+	4 damage, -1 movement
+
+flare buggy
+movement 4, health 5, sight 2, energy 3, M
+flare
+	aoe ability 1 energy
+	aoe type hex size 1 unblocked propagation range 2 NLoS
+	applies flare status to terrain
+		1 round duration
+		non stackable, refreshable
+		you have vision of hex
+
+zone mech
+movement 2, health 10, armor 1, sight 2, energy 3, L
+hammer
+	ranged attack
+	5 damage, 2 range
+	ground target only
+aa battery
+	3 damage, 2 range
+	air target only
+smoke bomb
+	aoe ability 2 energy
+	aoe type hex size 1 physical propagation range 3 NLoS
+	applies smoke status to terrain
+		2 round duration
+		non stackable, refreshable
+		hex blocks LoS
+		units have sight reduced to maximum 1
+- ignores first terrain movement penalty each turn
+
+jumper bug
+movement 4, health 4, sight 2, S
+slice
+	melee attack
+	3 damage, -2 movement
+- ignores terrain move in cost / penalty
+
+battle bug
+movement 3, health 7, sight 2, M
+slice
+	melee attack
+	4 damage, -2 movement
+crush
+	melee attack
+	5 damage, no movement
+- camouflage
+	+ 1 ranged protection if terrain base is more than 0
+
+sniper
+movement 3, health 2, sight 2, S
+snipe
+	ranged attack
+	4 damage, 4 range, no movement
+	cannot target adjacent
+- stealth while not moveing
+
+mine layer beetle
+movement 3, health 7, sight 2, energy 5, M
+slice
+	melee attack
+	3 damage, -2 movement
+lay mine
+	combineable ability 2 energy
+	applies mine field status to current terrain
+		non stackable
+		hidden
+		when enemy unit moves into this hex, remove this status, and it deals 2 terrain piercing damage to it.
+
+rhino beast
+movement 3, health 10, sight 2, L
+gore
+	melee attack
+	4 damage
+	+2 damage if this unit was not adjacent to target at the beginning of turn
+
+entangler brute
+movement 2, health 11, sight 2, L
+slap
+	melee attack
+	4 damage, -1 movement
+	target receives entangled debuff until it moves
+		non stackable
+		- 1 movment
+- enemies attempting to disengaging this unit suffer 3 melee damage first
+
+radar wagon
+movement 1, health 5, sight 3, energy 4, M
+scan
+	aoe ability 3 energy
+	aoe type triangle size 1 range 8 NLoS
+	applies scan status to terrain
+		1 round duration
+		non stackable, refreshable
+		hidden
+		you have vision of hex
+
+
+heavy artillery
+movement 1, health 5, sight 1, L
+bombard
+	aoe attack
+	aoe type triangle size 1 range 6 NLoS
+	2 damage, no movement
+	ground only
+pummel
+	aoe attack
+	aoe type hex range 7 NLoS
+	5 damage, no movement
+	ground only
+	-floor(distance/2) damage
+	can not target adjacent
+	applies status flattened to terrain
+		non stackable
+		-1 range/aoe protection
+		undispellable
+
+hover drone
+movement 4, health 4, sight 1, S
+swarm
+	melee attack
+	2 damage
+lay low
+	ability
+	lose flying until next action
+- flying
+
+attack copter
+movement 3, health 4, sight 2, energy 4, M
+missile strike
+	ranged attack
+	3 damage, 2 range
+	can only target ground
+- flying
+- energy cost toggle 2/2 stealth
+
+shield walker
+movement 2, health 7, armor 1, sight 2, energy 3, M
+blast
+	ranged attack
+	5 damage, 2 range, no movement
+force field
+	aoe ability 2 energy
+	aoe type hex range 2 LoS
+	can only target hex empty of ground unit
+	applies force field status to terrain
+		2 round duration
+		non stackable, refreshable
+		hex is impassable to ground units
+		hex blocks LoS for attacks
+- if this unit would receive more than 3 damage in a single instance, it receives 3 instead
+
+force psychic
+movement 2, health 5, sight 2, energy 4, S
+force lance
+	ranged attack
+	3 damage, 3 range, no movement
+shield bubble
+	aoe ability 3 energy
+	aoe type hex size 1 unblocked propagation range 3
+	applies shield bubble status to terrain
+		2 round duration
+		non stackable, non refreshable
+		+2 ranged / aoe protection against attacks made from outside bubble
+
+sludge slug
+movement 2, health 10, sight 2, energy 3, M
+spew
+	ranged attack
+	4 damage, 2 range, -1 movement
+	ground only
+	damaged units receive slimed debuff for 2 rounds
+		non stackable, refreshable
+		- 1 movement
+belch
+	aoe ability 2 energy
+	aoe type triangle size 1 range 2 LoS
+	no movement
+	applies slimed debuff to all units for 2 rounds
+	applies sludged status to terrain
+		2 round duration
+		+1 move in/out penalty to hex
+		units entering receive slimed debuff for 2 rounds
+- immune to slimed debuff
+
+voidling
+movement 3, health 5, sight 2, energy 4, S
+ethereal claw
+	melee attack
+	5 damage, -2 movement
+	armor piercing
+blink
+	ability 2 energy
+	target hex 3 range NLoS
+	no movement
+	teleport to that hex 
+- stealth
+
+void sprite
+movement 0, health 5, sight 2, energy 4, S
+sting
+	melee attack
+	2 damage
+jaunt
+	combineable ability 2 energy
+	target hex 3 range NLoS
+	teleport to that hex
+- +1 mana regen
+
+brutodon
+movement 2, health 12, armor 1, sight 2, L
+crush
+	melee attack
+	7 damage, no movement
+	if target is killed may follow up
+slam
+	melee attack
+	3 damage, -1 movement
+	move target 1 space away from this unit if able
+- regens 1 health at the start of each round
+
+blind abomination
+movement 3, health 10, sight 0, L
+flail
+	aoe melee attack
+	aoe type hex range 1
+	6 damage, -2 movement
+	
+immolation orb
+movement 2, health 8, sight 1, S
+- flying
+- whenever a unit engages this unit, or ends it movement adjacent to this unit, apply 1 burn to that unit.
+- at the end of round, apply 2 burn to all adjacent units
+
+porcupine beast, M
+movement 3, health 8, sight 2
+scratch
+	melee attack
+	4 damage, -2 movement
+ball up
+	ability
+	-1 movement
+	gains buff balled until next action
+		+2 armor
+- units melee attacking this unit suffer 3 damage
+
+blitz trooper, M
+movement 3, health 6, sight 2
+blast
+	ranged attack
+	3 damage, 2 range
+	-1 movement
+strafe
+	combineable ranged attack
+	2 damage, 2 range
+	-1 movement
+
+basilisk
+movement 3, health 7, sight 2, energy 4, M
+acid breath
+	aoe ability 1 energy
+	aoe type cone size 1 physical propagation
+	-2 movement
+	applies 2 poison to all ground units in aoe
+petrify
+	ability 2 energy
+	target enemy unit 2 range LoS
+	-1 movement
+	apply 1 stun
+- unit melee attacking this unit suffers 1 poison
+
+bulldozer
+movement 2, health 14, armor 2, sight 1, L
+- doze
+	can move into occupied squares. pushes unit back chainable. all pushed units take 1 damage.
+
+rage beast
+movement 2, health 10, armor 1, sight 2, energy 2, L
+charge
+	melee attack, -1 movement
+	3 damage
+frenzy
+	ability 2 energy
+	-1 movement
+	gains frenzied buff for 3 rounds
+		non stackable, refreshable
+		+1 movement
+- when damaged gains buff enraged for 2 rounds
+	independently stackable
+	+1 damage
+
+med crawler
+movement 3, health 6, armor 1, sight 2, energy 4, M
+patch up
+	ability 2 energy
+	target different allied unit 1 range
+	-2 movement
+	heals 3 health
+nanobot injection
+	ability 2 energy
+	target different allied unit 1 range
+	-2 movement
+	applies buff nanobot fortified for 3 rounds
+		non stackable, refreshable
+		heals 1 health at the end of the round
+- ignores terrain move in cost / penalty
+
+time knight
+movement 3, health 7, sight 2, energy 3, M
+fated strike
+	melee attack, -2 movement
+	5 damage
+	prevent all damage done by this attack above 1. for each prevented this way apply a stack of debuff delayed fate
+		stackable
+		at the end of the round, remove half of the stacks, rounded up. affected unit suffers that much damage.
+pocket acceleration
+	aoe ability 3 energy
+	aoe type hex range 2
+	-2 movement
+	trigger round end/begin effcts of hex and any unit on it 3 times sequentially
+- if this unit would suffer damage except from delayed fate, prevent all but 1 of that damage. for each damage prevent this way apply a stack of delayed fate
+
+acid spitter iguana
+movement 3, health 6, sight, S
+acid spit
+	ranged attack
+	3 damage, 2 range, -2 movement
+	apply corrosion for 2 rounds to target
+		stackable, refreshable
+		-1 armor
+- when a unit melee attacks this unit, apply corosion to the attacker for 2 rounds
+- + 1 ranged protection if terrain base is more than 0
+
+phaseling
+movement 2, health 6, sight 2, energy 4, S
+translocate
+	ability 2 energy
+	target hex 4 range NLoS
+	no movement
+	teleport to that hex 
+swap
+	ability 2 energy
+	target unit 1 range
+	-1 movement
+	swap position with the target
+
+civilian
+movement 3, health 3, sight 1, S
+- at the end of the round, if this unit is in the middle of the board, sacrifice it. you gain 3 points
+
+ink witch
+movement 3, health 6, sight 2, energy 4, S
+blood expunge
+	ranged attack
+	2 damage, 3 range, -2 movement
+	+2 damage for each debuff on target
+ink ring
+	aoe ability 2 energy
+	aoe type ring size 1 range 3 NLoS
+	apply blinded for 2 rounds
+		-1 sight
+malevolent stare
+	ability 2 energy
+	target enemy unit, 3 range LoS
+	removes all buffs and applies silenced for 2 rounds
+		non stackable, refreshable
+		can't activate abilities
+
+psy-synced null
+movement 3, health 4, sight 2, S
+psionic syncronization
+	ability
+	target allied unit 2 range NLoS
+	activate target
+
+neddle bug
+movement 5, health 4, sight 2, S
+prick
+	melee attack
+	1 damage, -3 movement
+	+1 damage against exhausted units
+	may follow up
+
+piledriver droid
+movement 3, health 8, armor 1, sight 2, M
+hammer
+	melee attack
+	3 damage, -2 movement
+	+1 damage for each unit adjacent to target
+
+woodland shaman
+movement 3, health 5, sight 2, energy 4, S
+wrath of nature
+	ranged attack
+	2 damage, 2 range, -2 movement
+	ignores terrain protection on vegetation
+draw power well
+	aoe ability 3 energy
+	aoe type hex range 3 LoS
+	applies status power well to hex for 3 rounds
+		non stackable, refreshable
+		allied units on hex gains +1 damage
+		at the beginning of round, heal allied unit on hex 2 health
+consecreate land
+	aoe ability 1 energy
+	target hex range 3 LoS
+	remove all enemy statuses from hex
+- + 1 ranged protection if terrain base is more than 0
+
+iron warlok
+movement 3, health 5, armor 1, sight 2, energy 4, S
+abrade
+	ability 2 energy
+	target enemy unit 3 range LoS
+	-2 movement
+	applies abraded for 2 rounds
+		non stackable, refreshable
+		-1 armor
+		target is broken
+iron weight
+	ability 2 energy
+	target unit 3 range LoS
+	-2 movement
+	applies iron weight for 2 rounds
+		+2 armor
+		-1 movement per armor
+
+witch doctor
+movement 3, health 5, sight 2, energy 4, S
+restore
+ 	ability 2 energy
+ 	target allied unit 3 range LoS
+ 	-1 movement
+ 	heal 3 health and dispel all debuffs
+evil eye
+	ability 2 energy
+	target enemy unit 3 range LoS
+	-1 movement
+	apply 1 poison
+
+cult brute
+movement 3, health 6, armor 1, sight 2, M
+fate binding blade
+	melee attack
+	3 damage, -1 movement
+	before damage, apply intangled doom to target
+		whenever this unit suffers damage not from entangled doom, each other allied unit with the entangled doom debuff suffers 1 damage
+- whenever an enemy unit with entangled doom dies, heal this unit 1 health
+
+paladin
+movement 3, health 7, armor 1, sight 2, energy 3, M
+righteous strike
+	melee attack
+	4 damage, -2 movement
+purifying nova
+	ability 2 energy
+	no movement
+	each adjacent unit suffers 2 damage
+lay hands
+	combineable ability 1 energy
+	target different allied unit 1 range
+	-1 movement
+	heal 1 health
+	dispell latest debuff
+
+arms master
+movement 3, health 8, sight 2, M
+strike
+	3 damage, -1 movement
+disarm
+	ability
+	target enemy unit 1 range
+	- 1 movement
+	applies disarmed for 1 round
+		non stackable, refreshable
+		can't attack
+- enemies attempting to disengaging this unit suffer 2 melee damage first
+- whenever an enemy unit engages this unit it suffers 2 melee damage
+
+giant spider
+movement 3, health 9, sight 2, energy 4, L
+sting
+	melee attack
+	2 damage, -2 movement
+	+1 damage against rooted units
+	applies 2 poison to damaged units
+spin web
+	aoe abillity 2 energy
+	aoe type two linked adjacent hexes
+	-2 movement
+	applies status web snare to hex
+		non stackable
+		when enemy unit enters remove this status and apply snared for 2 rounds
+			rooted
+			no terrain protection
+			loses flying
+
+firefly
+movement 5, health 3, sight 1, S
+fiery nibble
+	melee attack
+	1 damage, -2 movement
+	apply 1 burning
+- flying
+- at the end of round 3, sacrifice this unit
+
+zephyr mage
+movement 3, health 6, sight 1, energy 5, S
+thunder bolt
+	ranged attack
+	damage 3, range 2, -1 movement
+levitate
+	combineable ability 3 energy
+	target unit 3 range LoS
+	-1 movement
+	unit gains flying for 1 round
+
+stim drone
+movement 2, health 3, sight 1, energy 2, S
+inject
+	ability 2 energy
+	target allied unit 1 range
+	ready target, it suffers 1 damage
+	sacrifice this unit
+
+vampire
+movement 2, health 7, sight 2, energy 4, M
+bite
+	melee attack
+	4 damage, no movement
+	heal this unit 2 damage
+blink
+	combineable ability 2 energy
+	target hex range 2 NLoS
+	teleport to hex
+dissolve into mist
+	combineable ability 1 energy
+	suffer 2 damage
+	until next actions gains mist form
+		can not be attacked
+		+1 aoe protection
+		disarmed
+		ignores terrain penalties
+
+force bubble droid
+movement 2, health 6, sight 2, M
+blast
+	ranged attack
+	3 damage, range 2, -1 movement
+- at the beginning of each round, if this unit does not have a stack of shield bubble, it gains a stack of shield bubble
+	if this unit would take damage, instead remove a stack of shield bubble
+
+broodmother
+movement 3, health 8, sight 1, L
+spawn
+	ability
+	target adjacent empty space
+	cooldown 2 rounds
+	-1 movement
+	create an exhausted null on that space
+
+null
+movement 2, health 4, sight 1
+slap
+	melee attack
+	2 damage
+	-1 movement
+
+melting monstrosity
+movement 3, health 15, armor -1, sight 2, L
+stomp
+	melee attack
+	4 damage
+	-2 movement
+- at the beginning of each round, this unit suffers 2 damage
+
+nullstone golem
+movement 3, health 7, armor 1, sight 2, M
+punch
+	melee attack
+	3 damage
+	-2 movement
+	dispell all statuses on target
+- this unit can not have dispellable statuses
+
+gattling tank
+movement 2, health 7, sight 2, L
+dakka
+	multi combineable ranged attack
+	1 damage, 2 range
+	3 max activations
+	this unit gains spun up until it moves
+	+1 damage if spun up
+
+glass golem
+movement 3, health 6, armor -1, sight 2, M
+punch
+	melee attack
+	3 damage, -2 movement
+
+armored blimp
+movement 1, health 6, armor 1, sight 2, L
+bombard
+	aoe attack
+	aoe type hex range 1
+	no movement
+	3 damage
+- flying
+
+warp entity
+movement 2, health 5, sight 2, S
+open gate
+	ability
+	target two hexes range 4
+	-1 movement
+	cooldown 4 rounds
+	each hex gets linked status gate for 2 rounds
+		independently stackable
+		when a unit enters, teleport it to linked hex
+force wall
+	aoe ability
+	aoe type line length 3 range 3
+	cooldown 2 rounds
+	each hex gets force bloced for 2 rounds
+		non stackable, refreshable
+		a unit moving into this hex loses all remaning movement points
+
+voltaic charger
+movement 3, health 6, sight 2, S
+zap
+	melee attack
+	3 damage, -2 movement
+	armor piercing
+overcharge
+	combineable ability
+	target unit 1 range
+	applies overcharged
+		non stackable
+		+1 damage/movement
+		after unit acts remove this status and apply 1 stun
+
+depressor
+movement 3, health 5, sight 2, S
+entropic ray
+	ranged attack
+	2 damage, 2 range
+	-1 movement
+shrivel
+	aoe ability
+	aoe type hex size 1 range 4
+	-2 movement
+	apply shriveled to all units in aoe until they skip
+		stackable
+		-1 max health
+
+troop crawler
+	movement 4, health 6, sight 1, L
+- enterable exitable transport 3
+	cannot carry large units
+
+super lifter
+	movement 4, health 4, sight 1, M
+pick up
+	combineable ability
+	target allied unit 1 range
+	-0/1/2 movement depending on target size
+	targeted unit enters
+drop of
+	combineable ability
+	target empty hex 1 range
+	-0/1/2 movement depending on target size
+	carried unit exits on targeted hex
+- transport
+	can carry any single unit of max size large
+- flying
+
+hercules chopper
+movement 0, health 6, sight 1, L
+take off
+	combineable ability
+	-1 movement
+	gains flying and +4 movement
+land
+	combineable ability
+	loses flying buff
+- transport 3
+	enterable and exitable while not flying
+
+mobile fortress
+	movement 2, health 10, armor 1, sight 1, L
+canon
+	ranged attack
+	4 damage, 3 range
+	no movement
+- enterable exitable transport 2
+
+hover dart
+	movement 5, health 4, sight 1, M
+- enterable exitable transport 2
+- ignores 1 move in/out penalty of terrain
+- aquatic
+
+cyclops
+	movement 3, health 11, sight 1, L
+club
+	melee attack
+	5 damage, -1 movement
+sweep
+	aoe melee attack
+	aoe type 3 consecutive adjacent hexes
+	4 damage, -1 movement
+stare
+	combineable aoe ability
+		aoe type radiating line length 4 FoV propagation
+		reveals hexes this action
+
+ap rifle squad
+	movement 2, health 5, sight 2, M
+ap rifle
+	ranged attack
+	3 damage, 3 range
+	1 ap
+	+1 damage againt large
+	no movement
+
+water elemental
+	movement 3, health 4, sight 2, M
+splash
+	melee attack
+	3 damage, -1 movement
+- melee/ranged resistant
+- aquatic
+- ignores move penalties on wet terrain
+- +1 terrain protection on wet terrain
+
+sand elemental
+	movement 3, health 5, sight 2, M
+punch
+	melee attack
+	3 damage, -1 movement
+- melee/ranged resistant
+- ignores move penalties on sand terrain
+- +1 movement point first time move onto sand terrain each turn
+
+plant elemental
+	movement 2, health 7, sight 2, M
+punch
+	melee attack
+	3 damage, -1 movement
+- ignores 1 move in penalty on vegetation terrain
+- regenerates 1 health at the beginning of each round
+
+ice elemental
+	movement 2, health 4, armor 2, sight 2, M
+punch
+	melee attack
+	3 damage, -1 movement
+- ignores 1 move out penalties on snow terrain
+
+fire elemental
+	movement 3, health 5, sight 2, M
+scorch
+	melee attack
+	2 damage, -1 movement
+	attacked units suffer 2 burn
+- immune to burn
+- melee/ranged resistant
+
+rock elemental
+	movement 2, health 7, armor 1, sight 2, M
+punch
+	3 damage, -1 movement
+- ignores 1 move in penalty on rock terrain
+
+dirt elemental
+	movement 3, helath 6, sight 2, M
+punch
+	melee attack
+	3 damage, -1 movement
+- melee/ranged resistant
+
+elemental summoner
+	movement 3, health 5, sight 2, energy 5, S
+summon elemetal
+	target unoccupied hex FoW
+	5 energy
+	creates elemental on hex based on the biome type(s) of the hex (mutliple types takes the first. no type makes a dirt elemental).
+	applies ephemeral status to elemental duration 3 rounds
+		undispellable
+		elemental dies when expires
+		when elemental dies no corpse
+- +1 mana regen
+
+mammoth tank
+	movement 2, health 10, armor 3, sight 2, energy 5, G
+twin canon
+	ranged attack 3 energy
+	5 damage, 3 range
+	1 ap
+	no movement cost
+aa battery
+	combineable ranged attack 1 energy
+	2 damage, 2 range
+	target air only
+recharge
+	cannot have taken any other action
+	regain all energy
+- can move on to space occupied by m/s unit. that unit will take 2/1 damage. if this kills it, this unit will move unto the space, othervise it will stay.
+
+ghost operative
+	movement 3, health 5, sight 2, energy 5, S
+gauss rifle
+	ranged attack
+	3 damage, 3 range
+	-2 movement
+	ignores 1 terrain protection
+emp
+	aoe ability 3 energy
+	aoe type hex 1 size 3 range LoS
+	units in aoe loss 3 energy
+- energy cost toggle 1/2 stealth
+
+charge bot
+	movement 3, health 5, sight 1, energy 4, S
+zap
+	melee attack
+	2 damage, -2 movement
+	+1 damage against targets with 3 or more energy
+charge
+	ability 3 energy
+	target allied unit 1 range
+	restores 2 energy
+
+mortar squad
+	movement 3, health 5, sight 2, M
+bombard
+	aoe attack
+	hex target 3 range NLoS
+	3 damage
+	no movement
+
+shaolin frog
+	3 movement, health 6, sight 2, S
+4-finger punch
+	melee attack
+	4 damage
+jump
+	combineable ability
+	target hex 2 range NLoS vision required
+	teleport to target
+-resistance to ranged
+-after being melee attacked, will melee retaliate (if target is legal). can only once per activation.
+
+bomb truck
+	movement 3, health 5, sight 1, M
+blow up
+	ability
+	this unit dies
+- explode
+	when unit dies, every unit in hex aoe type hex size 1 centered on this unit is dealt 5 aoe damage.
+
+owl
+	movement 3, health 3, sight 2, energy 4, S
+scratch
+	melee attack
+	1 damage, -2 movement
+stare
+	ability stare 2 energy
+	target hex range 3 LoS
+	applies buff revealed to hex for 1 round
+		grants vision of hex
+		hidden
+- flying
+- stealth
+
+griffon
+	movement 3, health 5, sight 2, M
+claw
+	melee attack
+	2 damage, -1 movement
+	+1 damage againt ground
+- flying
+- fast
+	at the beginning of each round, accelerate this unit 1.
+
+aa missile walker
+	movement 2, health 6, sight 2, M
+aa missiles
+	multi combineable ranged attack
+	2 damage, 3 range
+	-1 movement
+	max 2 activations
+	target air only
+- ignores first terrain movement penalty each turn
+
+mobile artillery platform
+	movement 2, health 5, sight 1, M
+bombard
+	aoe attack
+	aoe type hex range 5 NLoS
+	4 damage, -1 movement
+	ground only
+	-floor(distance/2) damage
+	can not target adjacent
+	applies status flattened to terrain
+		non stackable
+		-1 range/aoe protection
+		undispellable
+
+conqueror
+	movement 3, health 5, sight 2, S
+plant flag
+	ability
+	target hex 1 range
+	applies status flagged to hex
+		unstackable
+		hex counts as occupied by allied unit for purposes of capturing points.
+
+nuke tank
+	movement 4, health 7, armor 1, sight 2, M
+nuke canon
+	ranged attack
+	3 damage, 3 range, -1 movement
+	applices 1 radioactive to hex.
+	can target hex with no unit. will only damage visible units
+- immune to radiated
+- fallout
+	when dies, applies 2 radioactive to current hex, and 1 to each adjacent.
+
+tactical nuke platform
+	movement 1, health 5, sight 1, energy 16, L
+tactical nuke
+	aoe attack 16 energy
+	target hex 6 range NLoS
+	no movement
+	damage according to distance from center:
+		0: 10
+		1: 8
+		2: 5
+		3: 2
+	stacks of radioactive applied to hex according to distance from center:
+		0-1: 2
+		2-4: 1
+	applies status flattened to terrain distance 0-1 from center.
+		non stackable
+		-1 range/aoe protection
+		undispellable
+- starts with only 6 energy
+- +1 energy regen
+
+radiation demon
+	movement 3, health 8, sight 2, L
+beam
+	ability
+	target enemy unit 1 range, -2 movement
+	applies radiated 4 to target
+- at the end of each turn, applies radiated 2 to each adjanct unit
+- when moving into a hex with no stacks of radiation, applies radiation 1 to it.
+- immune to radiated
+
+yeti scout
+	movement 3, health 5, sight 2, S
+punch
+	melee attack
+	2 damage, -1 movement
+- ignores 1 move out penalties on snow terrain
+- stealth on snow terrain
+
+commando squad
+	movement 3, health 6, sight 2, energy 4, M
+riffle salvo
+	ranged attack
+	3 damage, -1 movement
+HE grenade
+	aoe attack 2 energy
+	aoe type hex 2 range NLoS
+	3 damage
+smoke grenade
+	aoe ability 2 energy
+	aoe type twin hex range 3 NLoS
+	applies smoke to hexes for 2 rounds
+flash-bang
+	aoe ability 2 energy
+	aoe type tri hex 3 range NLoS
+	applies blinded for 2 rounds
+		-1 sight
+- ignores first 2 move penalty each round
+- can move on water. cannor attack or use abilities when on water.
+- camouflage
+	+ 1 ranged protection if terrain base is more than 0
+
+angel
+	health 7, movement 4, sight 2, energi 5, L
+smite
+	melee attack
+	4 damage, -1 movement
+divine restoration
+	ability 4 energi
+	target allied unit 1 range, -1 movement
+	heals 5 health, dispels all debuffs. if unit does not have any shield, apply 1 shield.
+- flying
+- starts with 1 shield
+
+carnivorous plant
+	health 5, movement 0, sight 1, M
+bite
+	melee attack
+	2 damage
+- cannot move
+- at the beginning of round, heals 1.
+
+verdant hulk
+	health 9, movement 3, sight 2, energi 5, L
+punch
+	melee attack
+	4 damage, -1 movement
+entangling vines
+	aoe ability, 3 energi
+	aoe type triangle size 1, 3 range, NLoS, -2 movement
+	applies rooted to all ground units for 2 rounds
+plant seed
+	multi 2x max activations combineable ability 2 energy
+	target adjacent hex, -1 movement
+	applies seeded status to hex for 2 rounds, or 1 round if space contains a corpse
+		when expires summon carnivorous plant on hex
+- can move unto allied carnivorous plant. this kills the plant, and heals this for 3
+- when ends its turn, if it has unspent movement points, +1 energi.
+- at the beginning of round, heals 2.
+
+terraforming mage
+	health 5, movement 3, sight 2, energi 6, S
+raise terrain
+	ability 3 energy
+	target hex 3 range NLoS, -1 movement
+	if terrain is lowground applies status raised
+		terrain is elevated
+flatten terrain
+	ability 3 energy
+	target hex 3 range NLoS, -1 movement
+	if target is elevated applies status lowered
+		terrain is lowground
+fault line
+	aoe ability 2 energy
+	aoe type continuous line line length 3 range 3 NLoS, -2 movement
+	deals terrain pircing aoe damage to each unit equal to the aoe terrain protection (excluding elevation bonus) of their hex.
+mudslide
+	ability 2 energy
+	target hex 3 range NLoS, -2 movement
+	if hex is lowground, deals 2*(amount of adjancent high ground hexes) (+1 if any of those are snow) aoe damage to unit on hex.
+magma fissure
+	ability 2 energy
+	target hex 3 range NLoS, -1 movement
+	applies status magma to hex
+		unstackable
+		when ground units moves in, and at the end of round, applies 2 burn
+
+mummy lich
+	health 6, movement 3, sight 2, energi 5, M
+hit
+	melee attack
+	3 damage, -2 movement
