@@ -1234,3 +1234,20 @@ consume essence
 	-1 movement
 	consumes all corpses on current hex. restore 2 energy per corpse consumed.
 - ignores quicksand status.
+
+gladiator
+	health 7, movment 3, sight 2, energi 3, M
+trident
+	melee attack
+	4 damage, -1 movement
+	+1 damage against damaged units
+net
+	combineable ability 3 energi
+	target M- enemy unit 1 range, -1 movement
+	applied entangled for 2 rounds
+		disarmed
+		-1 movement
+
+electric rat (not pikachu)
+	health 6, movement 3, sight 2, energi 6, S
+zap

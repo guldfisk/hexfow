@@ -184,3 +184,5 @@ giant slayer
 leader
 heroic hoplite
 frost devil
+giant toad
+wolf - pack hunt

@@ -74,4 +74,5 @@ radioactive n
 radiated n
 	stackable
 	at the end of round deals n - ceil(armor/2) damage to unit, and all stacks are removed.
-
+sense enemies n
+	unit can see enemies in range n, ignoring LoS. units seen this way is just shown as "unknown enemy".
