@@ -154,7 +154,6 @@ scan
 		hidden
 		you have vision of hex
 
-
 heavy artillery
 movement 1, health 5, sight 1, L
 bombard
@@ -256,7 +255,7 @@ blink
 - stealth
 
 void sprite
-movement 0, health 5, sight 2, energy 4, S
+movement 0, health 5, sight 2, energy 5, S
 sting
 	melee attack
 	2 damage
@@ -264,7 +263,6 @@ jaunt
 	combineable ability 2 energy
 	target hex 3 range NLoS
 	teleport to that hex
-- +1 mana regen
 
 brutodon
 movement 2, health 12, armor 1, sight 2, L
@@ -315,14 +313,14 @@ strafe
 	-1 movement
 
 basilisk
-movement 3, health 7, sight 2, energy 4, M
+movement 3, health 7, sight 2, energy 5, M
 acid breath
-	aoe ability 1 energy
+	aoe ability 2 energy
 	aoe type cone size 1 physical propagation
 	-2 movement
 	applies 2 poison to all ground units in aoe
 petrify
-	ability 2 energy
+	ability 3 energy
 	target enemy unit 2 range LoS
 	-1 movement
 	apply 1 stun
@@ -421,7 +419,7 @@ ink ring
 malevolent stare
 	ability 2 energy
 	target enemy unit, 3 range LoS
-	removes all buffs and applies silenced for 2 rounds
+	dispels all buffs and applies silenced for 2 rounds
 		non stackable, refreshable
 		can't activate abilities
 
@@ -516,7 +514,7 @@ purifying nova
 	no movement
 	each adjacent unit suffers 2 damage
 lay hands
-	combineable ability 1 energy
+	combineable ability 2 energy
 	target different allied unit 1 range
 	-1 movement
 	heal 1 health
@@ -549,9 +547,10 @@ spin web
 	-2 movement
 	applies status web snare to hex
 		non stackable
+		hidden
 		when enemy unit enters remove this status and apply snared for 2 rounds
 			rooted
-			no terrain protection
+			no melee terrain protection
 			loses flying
 
 firefly
