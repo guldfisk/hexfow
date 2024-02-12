@@ -1,12 +1,12 @@
 inferno tank
-movement 3, health 9, armor 1, sight 1, 4 energy L
+movement 3, health 9, armor 1, sight 1, 5 energy L
 scorch
 	aoe attack
 	aoe type tri-connected adjacent
 	3 damage, -2 movement
 	aplies 2 burn
 flame wall
-	aoe ability 2 energy
+	aoe ability 3 energy
 	aoe type 3 hex adjacent line
 	-2 movement
 	all units in aof suffer 2 burn
@@ -29,15 +29,15 @@ plague miasma
 		3 round duration
 		non stackable, refreshable
 		units on hex has maximum sight reduced to maximum 1
-		at the beginning of round, deal 2 fully piercing damage to units on hex
+		at the beginning of round, deal 2 pure damage to units on hex
 - immune to damage from miasma status
 
 giant battle crab
 movement 2, health 11, armor 2, sight 1, L
 pinch
-	aoe melee attack
+	aoe attack
 	aoe type two adjacent hexes seperated by single hex
-	5 damage, -1 movement
+	5 melee damage, -1 movement
 
 zone trooper
 movement 3, health 6, sight 2, M
@@ -1168,6 +1168,7 @@ spear
 	2 damage, -1 movement
 	+1 damage for each allied unit adjacent to target
 - allied adjacent units gets +1 armor
+# maybe instead of 1 armor, +1 armor per adjacent allied unit
 
 bee swarm
 	health 3, movement 3, sight 1, S
@@ -1253,11 +1254,11 @@ electric rat (not pikachu!)
 zap
 	aoe ability 3 energy
 	-2 movement
-	deals 2 pure damage to adjacent units and their adjacent units, recursivly (single unit is only affected once. rat is not affected).
+	deals 2 pure damage to adjacent units and their adjacent units recursivly (single unit is only affected once. rat is not affected).
 overcharge
 	ability 2 energy
 	target adjacent unit, -1 movement
-	deals 3 armor piercing damage. restores 1 energy for each damage dealt.
+	deals 3 armor piercing aoe damage. restores 1 energy for each damage dealt.
 
 giant toad
 	health 9, movement 3, sight 2, energi 4, L
@@ -1284,7 +1285,7 @@ inject
 	4 damage, -2 movement
 	applies horror parasite to damaged target
 		unstackable
-		when this unit dies, summon exhausted horror spawn under debuff controllers control on this hex (TODO how interact with follow up? maybe spawn on the space of the attacker?)
+		when this unit dies, summon exhausted horror spawn under debuff controllers control on this hex #TODO how interact with follow up? maybe spawn on the space of the attacker?
 venomous spine
 	ability 2 energy
 	target enemy unit 2 range LoS, -1 movement
