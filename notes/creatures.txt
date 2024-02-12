@@ -1028,7 +1028,7 @@ commando squad
 	movement 3, health 6, sight 2, energy 4, M
 riffle salvo
 	ranged attack
-	3 damage, -1 movement
+	3 damage, 3 range, -1 movement
 HE grenade
 	aoe attack 2 energy
 	aoe type hex 2 range NLoS
@@ -1059,14 +1059,6 @@ divine restoration
 - flying
 - starts with 1 shield
 
-carnivorous plant
-	health 5, movement 0, sight 1, M
-bite
-	melee attack
-	2 damage
-- cannot move
-- at the beginning of round, heals 1.
-
 verdant hulk
 	health 9, movement 3, sight 2, energi 5, L
 punch
@@ -1084,6 +1076,15 @@ plant seed
 - can move unto allied carnivorous plant. this kills the plant, and heals this for 3
 - when ends its turn, if it has unspent movement points, +1 energi.
 - at the beginning of round, heals 2.
+
+carnivorous plant
+	health 5, movement 0, sight 1, M
+bite
+	ranged attack
+	2 damage, 1 range
+	if attack is lethal, applies seeded status to hex for 1 round.
+- cannot move
+- at the beginning of round, heals 1.
 
 terraforming mage
 	health 5, movement 3, sight 2, energi 6, S
@@ -1247,6 +1248,54 @@ net
 		disarmed
 		-1 movement
 
-electric rat (not pikachu)
+electric rat (not pikachu!)
 	health 6, movement 3, sight 2, energi 6, S
 zap
+	aoe ability 3 energy
+	-2 movement
+	deals 2 pure damage to adjacent units and their adjacent units, recursivly (single unit is only affected once. rat is not affected).
+overcharge
+	ability 2 energy
+	target adjacent unit, -1 movement
+	deals 3 armor piercing damage. restores 1 energy for each damage dealt.
+
+giant toad
+	health 9, movement 3, sight 2, energi 4, L
+tongue lash
+	melee attack
+	3 damage, -2 movement
+	can attack air
+jump
+	ability 2 energy
+	target hex 2 range NLoS vision required
+	teleport to target
+- unit melee attacking this unit suffers 1 poison
+
+horror spawn
+	health 3, movement 2, sight 1, S
+bite
+	melee attack
+	2 damage, -1 movement
+
+horror
+	health 7, movement 4, sight 2, energy 2, M
+inject
+	melee attack
+	4 damage, -2 movement
+	applies horror parasite to damaged target
+		unstackable
+		when this unit dies, summon exhausted horror spawn under debuff controllers control on this hex (TODO how interact with follow up? maybe spawn on the space of the attacker?)
+venomous spine
+	ability 2 energy
+	target enemy unit 2 range LoS, -1 movement
+	applies horror parasite and (paralyzing venom for 2 rounds) to target.
+		+1 move penalty
+		-1 attack
+
+fearsome ogre
+	health 9, movement 3, sight 2, L
+bash
+	melee attack
+	5 damage, -2 movement
+	+1 damage against S
+- adjacent enemy units have -1 attack
