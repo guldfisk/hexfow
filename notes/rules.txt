@@ -76,3 +76,6 @@ radiated n
 	at the end of round deals n - ceil(armor/2) damage to unit, and all stacks are removed.
 sense enemies n
 	unit can see enemies in range n, ignoring LoS. units seen this way is just shown as "unknown enemy".
+melee attack
+	to perform a melee attack, the attacker must be able to move into the attacked space, in addition to any movement cost of the attack. This does not include move in penalties, but it does include move in costs.
+	after the attack, if the attacked hex is no longer occupied, due to the attacked unit dying or being moved, the attacker moves unto the hex.
