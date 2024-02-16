@@ -7,6 +7,8 @@ flying
 	does not receive terrain protection
 	always considered on high ground
 	cannot capture points
+	FoV not blocked
+	enemy vision of this unit not blocked by FoV
 melee attack
 	ground unit cannot melee flying unit
 	hex of attacked unit most be passable by attacker

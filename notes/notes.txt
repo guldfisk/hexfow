@@ -66,10 +66,12 @@ thoughts about "standard play"
 unit price resources?
 	units have a generic point value that descibes how much they are worth, but maybe there should also be other resources, associated with specific mechanics/specializations/roles? this way maps get to fine tune how much "value" worth of flyers a player gets for example. this allows for more extreme map varriety, where for example a map with a lot of obstacles doesn't just become all flyers.
 	something like:
+		- white (w) - mobility
 		- blue (u) - flyer
 		- red (r) - ranged
 		- green (g) - high value units (if this can't be limited, then you might end up in a situation where the correct thing is to get very few units on a very small map, for very boring gameplay. altenativly a map can just ban units costing>n?)
 		- purple (p) - support/spells/high synergi
+	maybe also a mobility one?
 code for points is v
 	cost writen like 10uu or 7rpp
 buildings?
@@ -190,3 +192,16 @@ giant toad
 wolf - pack hunt
 boar
 einherjar
+heroes?
+	could have resource bonuses, like:
+		all units below n points -1 point cost
+		all units above n points -2 points cost
+		+n points/resource
+		bonus for unit duplicates / uniques
+		discount units costing certain resources
+	opponents hero is visible while deploying
+worm - nordic mythology
+hydra
+ghost!
+bog witch
+ageing/wither - halfs target max hp. or reduce by one third?
