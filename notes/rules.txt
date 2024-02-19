@@ -29,10 +29,10 @@ rooted
 	can not move
 burn n
 	stackable debuff
-	beginning of round apply damage equal to n and decrement by one
+	beginning of round apply physical damage equal to n and decrement by one
 poision n
 	stackable debudd
-	beginning of round apply damage equal to n
+	beginning of round apply pure damage equal to n
 for terrain:
 	+n movement cost
 		n extra movement point required to move into/out of this space
@@ -74,8 +74,9 @@ radioactive n
 	stackable
 	when unit moves in and at the end of round, apply radiated n to unit where n is stacks of radioactive.
 radiated n
-	stackable
-	at the end of round deals n - ceil(armor/2) damage to unit, and all stacks are removed.
+	highest stackable
+	when applying, subtract floor(target armor/2) from n
+	at the end of round deals n pure damage to unit, and all stacks are removed.
 sense enemies n
 	unit can see enemies in range n, ignoring LoS. units seen this way is just shown as "unknown enemy".
 melee attack
