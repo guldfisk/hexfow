@@ -82,3 +82,6 @@ sense enemies n
 melee attack
 	to perform a melee attack, the attacker must be able to move into the attacked space, in addition to any movement cost of the attack. This does not include move in penalties, but it does include move in costs.
 	after the attack, if the attacked hex is no longer occupied, due to the attacked unit dying or being moved, the attacker moves unto the hex.
+stasis
+	cannot be targeted, damaged, or have have statuses applied
+	removed when unit is activated
