@@ -85,3 +85,10 @@ melee attack
 stasis
 	cannot be targeted, damaged, or have have statuses applied
 	removed when unit is activated
+resistance to [damage type(s)]
+	half damage rounded up after reductions from [damage type(s)] (3 -> 2, 2 -> 1)
+detection vision
+	like normal vision, but can see stealth units even if there is no adjacent allied unit.
+shield n
+	status
+	if unit would receive damage, instead remove stack of shield

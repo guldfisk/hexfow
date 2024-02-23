@@ -206,3 +206,7 @@ ghost!
 bog witch
 ageing/wither - halfs target max hp. or reduce by one third?
 stasis
+lurker
+firebomb
+phoenix
+hellion
