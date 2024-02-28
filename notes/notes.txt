@@ -210,3 +210,39 @@ lurker
 firebomb
 phoenix
 hellion
+not really sure what to do with this:
+	warp entity
+	movement 2, health 5, sight 2, S
+	open gate
+		ability
+		target two hexes range 4
+		-1 movement
+		cooldown 4 rounds
+		each hex gets linked status gate for 2 rounds
+			independently stackable
+			when a unit enters, teleport it to linked hex
+	force wall
+		aoe ability
+		aoe type line length 3 range 3
+		cooldown 2 rounds
+		each hex gets force bloced for 2 rounds
+			non stackable, refreshable
+			a unit moving into this hex loses all remaning movement points
+	gate ability makes a lot more sense on the date demon thingy. force wall is cool, but together with what?
+this ones dumb, like the shrivel idea, though:
+	depressor
+	movement 3, health 5, sight 2, S
+	entropic ray
+		ranged attack
+		2 damage, 2 range
+		-1 movement
+	shrivel
+		aoe ability
+		aoe type hex size 1 range 4
+		-2 movement
+		apply shriveled to all units in aoe until they skip
+			stackable
+			-1 max health
+debuff share vision with target
+readied on attacked
+combineable melee attack only

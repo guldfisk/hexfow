@@ -9,9 +9,6 @@ flying
 	cannot capture points
 	FoV not blocked
 	enemy vision of this unit not blocked by FoV
-melee attack
-	ground unit cannot melee flying unit
-	hex of attacked unit most be passable by attacker
 stealth
 	can only be seen by adjacent units
 teleport
@@ -27,6 +24,7 @@ broken
 	passieve abilities are inactive
 rooted
 	can not move
+	can't melee attack (follows from not being able to move)
 burn n
 	stackable debuff
 	beginning of round apply physical damage equal to n and decrement by one
@@ -80,7 +78,9 @@ radiated n
 sense enemies n
 	unit can see enemies in range n, ignoring LoS. units seen this way is just shown as "unknown enemy".
 melee attack
+	ground unit cannot melee flying unit
 	to perform a melee attack, the attacker must be able to move into the attacked space, in addition to any movement cost of the attack. This does not include move in penalties, but it does include move in costs.
+	attack costs movemement points like moving into the space.
 	after the attack, if the attacked hex is no longer occupied, due to the attacked unit dying or being moved, the attacker moves unto the hex.
 stasis
 	cannot be targeted, damaged, or have have statuses applied
@@ -92,3 +92,8 @@ detection vision
 shield n
 	status
 	if unit would receive damage, instead remove stack of shield
+ephemeral
+	status
+	undispellable
+	unit dies when expires
+	when unit dies it leaves no corpse
