@@ -128,6 +128,8 @@ map ideas:
 		hilly landscape, medium vegetation
 	swamp mix-up
 		medium sized map with thick jungle/swamp, multiple small scattered deployment zones
+	cauldron
+		middle capture area surrounded by unpassable mountain ring, with a few gaps. medium elvevation, sparse vegetation, except for the middle.
 
 dragon
 	2 movement - 9 health - 2 vision
@@ -246,3 +248,12 @@ this ones dumb, like the shrivel idea, though:
 debuff share vision with target
 readied on attacked
 combineable melee attack only
+cost related abilities
+	- bulk discount
+not sure how to make this make sense:
+	immolation orb
+	health 8, movement 2, sight 1, S
+	- flying
+	- whenever a unit engages this unit, or ends it movement adjacent to this unit, apply 1 burn to that unit.
+	- at the end of round, apply 2 burn to all adjacent units
+meteor strike jump

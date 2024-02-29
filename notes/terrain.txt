@@ -56,6 +56,10 @@ elevated
 1 move in penalty
 blocks LoS
 
+tall mountain - rock
+impassable to ground
+blocks LoS
+
 snowy mountain - rock snow
 S-M: 1 protection
 elevated
@@ -75,6 +79,12 @@ M: 2/2/2 protection
 L: 1/1/1 protection
 1 move in penalty
 2 move out penalty
+
+needle pillars - rock
+1/3/3 protection
+1 move in penalty
+impassable to L+
+blocks LoS
 
 swamp - wet
 1 melee protection
