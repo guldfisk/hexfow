@@ -257,3 +257,8 @@ not sure how to make this make sense:
 	- whenever a unit engages this unit, or ends it movement adjacent to this unit, apply 1 burn to that unit.
 	- at the end of round, apply 2 burn to all adjacent units
 meteor strike jump
+heal to minimum threshold
+greater cleric
+frost archmage
+acceleate if would die buff
+vigor stacks - prevent next bebuff

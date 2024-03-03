@@ -281,8 +281,8 @@ flail
 	6 damage, -1 movement
 
 porcupine beast {10g} x1
-health 8, movement 3, sight 2, M
-scratch
+health 7, movement 3, sight 2, M
+claws
 	melee attack
 	4 damage, -1 movement
 ball up
@@ -635,11 +635,17 @@ dakka
 	this unit gains spun up until it moves
 	+1 damage if spun up
 
-glass golem {4} x3
-health 6, movement 3, armor -1, sight 2, M
+glass golem {5} x2
+health 1, movement 3, armor 2, sight 2, M
 punch
 	melee attack
 	3 damage, -1 movement
+
+diamond golem {7} x2
+health 1, movement 3, armor 3, sight 2, M
+punch
+	melee attack
+	4 damage, -1 movement 
 
 armored blimp {7u} x1
 health 6, movement 1, armor 1, sight 2, L
@@ -1150,7 +1156,7 @@ bite
 - ignores 1 move in penalty on vegetation
 - stealth on vegetation
 
-dragon {17wwuurrggp} x2
+dragon {17wwuurrggp} x1
 9 health, 2 movement, sight 2, energy 6, L
 claw
 	melee attack
@@ -1421,12 +1427,12 @@ open gate
 	applies linked status gate to both hexes for 3 rounds
 		units on this hex can move to linked hex as normal move action
 
-reaper spectre {9} x1
+reaper spectre {10} x1
 health 6, movement 3, sight 2, energy 4, M
 desolation scythe
 	melee attack
 	3 damage, -1 movement
-	+1 damage against units with no adjacent allied units
+	dispels all buffs before damage
 wither
 	ability 3 energy
 	target enemy unit 2 range, LoS, -1 movement
@@ -1488,7 +1494,7 @@ fiery draft
 	2 damage
 	applies 3 burning
 - flying
-- if this unit would die, instead remove all statuses, return it to full health, exhaust itm and apply status reborn fatigue for 3 rounds
+- if this unit would die, instead remove all statuses, return it to full health, exhaust it and apply status reborn fatigue for 3 rounds
 	undispellable
 	cannot be reborn again
 
@@ -1508,7 +1514,7 @@ tallons
 - flying
 
 bugling {5w} x3
-health 5, movement 4, sight 2, S
+health 4, movement 4, sight 2, S
 claws
 	combineable melee attack
 	2 damage
@@ -1538,3 +1544,30 @@ berserk
 	suffers 2 non-lethal pure damage
 - when dies, applies status couragious battleground to hex
 	+1 melee damage to allied units
+
+ice dragon {17wwuurrgpp} x1
+4 health, 2 movement, sight 2, armor 2, energy 6, L
+claw
+	melee attack
+	4 damage
+	+2 against chilled targets
+ice breath
+	aoe attack 2 energy
+	aoe type cone size 1 physical propagation when grounded
+	2 damage
+	applies chilled for 3 rounds
+		unstackable, refreshable
+		at the end of each round, if no allied units are adjacent, this unit suffers 1 pure damage
+	applies frigied 4 for 2 rounds
+		lowest stackable, refreshable
+		when this unit is damaged, remove that many stacks. if last stack is removed this way, stun this unit.
+- energy cost toggle 2/2 flying +2 movement
+
+bellstriker brute {10p}
+8 health, 3 movement, sight 2, M
+bell hammer
+	melee attack
+	4 damage
+	applies bell-struck for 2 rounds
+		unstackable, refreshable
+		when unit takes 3 or more damage before reductions (but after terrain reductions), exhaust it
