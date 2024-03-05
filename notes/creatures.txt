@@ -1,4 +1,4 @@
-inferno tank {15gg} x2
+inferno tank {15gg} x1
 health 9, movement 3, armor 1, sight 1, 5 energy L
 scorch
 	aoe attack
@@ -32,7 +32,7 @@ plague miasma
 		at the beginning of round, deal 2 pure damage to units on hex
 - immune to damage from miasma status
 
-giant battle crab {13g} x2
+giant battle crab {13g} x1
 health 11, movement 2, armor 2, sight 1, L
 pinch
 	aoe attack
@@ -51,7 +51,7 @@ hunker down
 		+1 ranged/aoe protection
 
 zone skirmisher {5} x2
-health 6, movement 3, sight 2, S
+health 6, movement 3, sight 2, M
 salvo
 	ranged attack
 	3 damage, 2 range, -1 movement
@@ -271,7 +271,7 @@ slam
 	melee attack
 	3 damage
 	move target 1 space away from this unit if able (this unit follows up)
-- regens 1 health at the start of each round
+- heals 1 health at the start of each round
 
 blind abomination {9} x2
 health 10, movement 3, sight 0, L
@@ -311,8 +311,7 @@ acid breath
 	applies 2 poison to all ground units in aoe
 petrify
 	ability 3 energy
-	target enemy unit 2 range LoS
-	-2 movement
+	target enemy unit 2 range LoS, -2 movement
 	apply 1 stun
 - unit melee attacking this unit suffers 1 poison
 
@@ -336,8 +335,8 @@ frenzy
 	independently stackable
 	+1 damage
 
-med crawler {6wp} x1
-health 6, movement 3, armor 1, sight 2, energy 4, M
+med crawler {6pp} x1
+health 6, movement 3, sight 2, energy 4, M
 patch up
 	ability 2 energy
 	target different allied unit 1 range
@@ -346,11 +345,11 @@ patch up
 nanobot injection
 	ability 2 energy
 	target different allied unit 1 range
-	-2 movement
+	-1 movement
 	applies buff nanobot fortified for 3 rounds
 		non stackable, refreshable
 		heals 1 health at the end of the round
-- ignores terrain move in cost / penalty
+- ignores first terrain move in cost / penalty each turn
 
 time knight {8p} x1
 health 7, movement 3, sight 2, energy 3, M
@@ -418,13 +417,13 @@ health 4, movement 3, sight 2, M
 psionic syncronization
 	ability
 	target allied unit 2 range NLoS
-	activate target
+	activates target
 
 neddle bug {5ww} x2
 health 4, movement 5, sight 2, S
 prick
 	melee attack
-	1 damage, -2 movement
+	1 damage, -1 movement
 	+1 damage against exhausted units
 
 piledriver droid {10g} x2
@@ -446,7 +445,7 @@ draw power well
 	applies status power well to hex for 3 rounds
 		non stackable, refreshable
 		allied units on hex gains +1 damage
-		at the beginning of round, heal allied unit on hex 2 health
+		at the beginning of round, heals allied unit on hex 2 health
 consecreate land
 	aoe ability 2 energy
 	target hex range 3 LoS
@@ -477,7 +476,7 @@ restore
  	ability 2 energy
  	target allied unit 3 range LoS
  	-1 movement
- 	heal 3 health and dispel all debuffs
+ 	heals 3 health and dispel all debuffs
 evil eye
 	ability 2 energy
 	target enemy unit 3 range LoS
@@ -491,7 +490,7 @@ fate binding blade
 	3 damage
 	before damage, apply intangled doom to target
 		whenever this unit suffers damage not from entangled doom, each other allied unit with the entangled doom debuff suffers 1 pure damage
-- whenever an enemy unit with entangled doom dies, heal this unit 1 health
+- whenever an enemy unit with entangled doom dies, heals this unit 1 health
 
 paladin {8p} x1
 health 7, movement 3, armor 1, sight 2, energy 3, M
@@ -506,7 +505,7 @@ lay hands
 	combineable ability 2 energy
 	target different allied unit 1 range
 	-1 movement
-	heal 1 health
+	heals 1 health
 	dispell latest debuff
 
 arms master {10} x1
@@ -551,7 +550,7 @@ fiery nibble
 - flying
 - at the end of round 3, sacrifice this unit
 
-zephyr mage {9uupp} x1
+zephyr mage {10uupp} x1
 health 6, movement 3, sight 1, energy 5, S
 thunder bolt
 	ranged attack
@@ -563,9 +562,9 @@ levitate
 	unit gains flying for 1 round
 
 stim drone {5ppp} x1
-health 3, movement 2, sight 1, energy 2, S
+health 3, movement 2, sight 1, energy 3, S
 inject
-	ability 2 energy
+	ability 3 energy
 	target allied unit 1 range
 	ready target, it suffers 1 damage
 	sacrifice this unit
@@ -575,7 +574,7 @@ health 7, movement 2, sight 2, energy 4, M
 bite
 	melee attack
 	4 damage, no movement
-	heal this unit 2 damage
+	heals this unit 2 damage
 blink
 	combineable ability 2 energy
 	target hex range 2 NLoS
@@ -805,7 +804,7 @@ summon elemetal
 	target unoccupied hex, range 3, LoS, -1 movement
 	creates elemental on hex based on the biome type(s) of the hex (mutliple types takes the first. no type makes a dirt elemental).
 	applies ephemeral status to elemental duration 3 rounds
-- +1 mana regen
+- +1 energi regen
 
 mammoth tank {17rrgggpp} x1
 health 10, movement 2, armor 3, sight 2, energy 5, G
@@ -1352,7 +1351,7 @@ strike
 	independently stackable
 	when expires, regens this unit 1
 
-lindworm {12w} x1
+lindworm {13w} x1
 health 8, movement 3, sight 2, energy 4, M
 bite
 	melee attack
@@ -1546,7 +1545,7 @@ berserk
 	+1 melee damage to allied units
 
 ice dragon {17wwuurrgpp} x1
-4 health, 2 movement, sight 2, armor 2, energy 6, L
+health 4, movement 2, sight 2, armor 2, energy 6, L
 claw
 	melee attack
 	4 damage
@@ -1563,11 +1562,126 @@ ice breath
 		when this unit is damaged, remove that many stacks. if last stack is removed this way, stun this unit.
 - energy cost toggle 2/2 flying +2 movement
 
-bellstriker brute {10p}
-8 health, 3 movement, sight 2, M
+bellstriker brute {10p} x1
+health 8, movement 3, sight 2, M
 bell hammer
 	melee attack
 	4 damage
 	applies bell-struck for 2 rounds
 		unstackable, refreshable
 		when unit takes 3 or more damage before reductions (but after terrain reductions), exhaust it
+
+sphinx {12upp} x1
+health 7, movement 3, sight 2, energy 5, M
+claw
+	melee attack
+	3 damage
+psychic command
+	ability 2 energy
+	target unit 3 range LoS, -1 movement
+	activates target
+riddle
+	ability 2 energy
+	target enemy unit 2 range LoS, -1 movement
+	applies confused for 2 rounds
+		unstackable, refreshable
+		when this unit is acivated and does not skip, stun it
+mystic energy
+	ability 2 energy
+	target allied unit 3 range, LoS, -1 movement
+	applies mystic empowerment for 3 rounds
+		+1 energi regen
+- energy cost toggle 1/2 flying
+
+gnome commando {3w} x2
+health 4, movement 3, sight 1, S
+spear
+	melee attack
+	2 damage
+- ignores first 2 move penalty each round
+
+dreadknight {12p}
+health 7, movement 3, sight 2, armor 1, energi 4, M
+cursed blade
+	melee attack
+	3 damage
+	before damage, applies power leak to target for 3 rounds
+		unstackable, refreshable
+		when damaged, loses that much energi
+mark of stagnation
+	ability 3 energy
+	target enemy unit 3 range LoS, -1 movement
+	applies stagnant for 3 rounds
+		unstackable, refreshable
+		unit can not gain health or energi
+	applies cursed 1 for 3 rounds
+		stackable, refreshable
+		if this unit would receive a buff, instead remove a stack of cursed
+
+marshmellow titan {3} x2
+health 10, movemet 2, sight 1, armor -1, L
+marshmellow fist
+	melee attack
+	2 damage
+
+lumbering pillar {2} 2
+health 8, movement 1, sight 0, armor 2, L
+
+giant turtle {12gggpp} x1
+health 12, movement 2, armor 3, sight 2, L
+bite
+	melee attack
+	4 damage, -1 movement
+- at the beginning of each round, if this unit does not have a stack of vigor, it gains one.
+	stackable, refreshable
+	if this unit would receive a debuff, instead remove a stack of vigor
+
+combat medic {5p}
+health 5, movement 3, sight 2, energi 4, M
+rifle
+	ranged attack
+	2 damage, 2 range, -2 movement
+cure venom
+	ability 2 energy
+	target allied unit 1 range, -1 movement
+	removes 2 poison debuff
+fire extinguishing foam
+	ability 2 energy
+	target allied unit 1 range, -1 movement
+	removes 3 burning debuff
+patch up
+	ability 2 energy
+	target different allied unit, -2 movement
+	heals 1
+
+plague ghoul {5} x1
+health 6, movement 3, sight 2, M
+spray vomit
+	aoe attack
+	aoe type hex 2 range, LoS, -2 movement
+	2 damage
+	applies debuff plague
+		unstackable, refreshable
+		at the end of each round, this unit suffers 1 pure damage
+		apply this debuff to each adjacent unit
+- immune to plague
+- at the end of each round, apply plague to each adjacent unit
+
+shadow operative {10p}
+health 5, movement 3, sight 2, energy 3, M
+stab
+	melee attack
+	2 damage
+bug
+	ability 3 energy
+	target enemy unit 2 range LoS, -2 movement
+	applies bugged for 2 rounds
+		unstackable, refreshable
+		hidden
+		you share units vision
+- stealth
+- invisible during your turn
+
+balloon {2u} x1
+health 1, movement 1, sight 2, M
+- flying

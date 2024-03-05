@@ -262,3 +262,8 @@ greater cleric
 frost archmage
 acceleate if would die buff
 vigor stacks - prevent next bebuff
+combat medic
+plague ghoul
+invis operativ
+big turtle
+timed/remote explosives

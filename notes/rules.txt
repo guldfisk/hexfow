@@ -11,6 +11,8 @@ flying
 	enemy vision of this unit not blocked by FoV
 stealth
 	can only be seen by adjacent units
+invisible
+	can't be seen. (attempting to move on to an invalid hex will not consume a movement point.)
 teleport
 	move to a hex if it is unoccupied
 stun n
@@ -88,7 +90,7 @@ stasis
 resistance to [damage type(s)]
 	half damage rounded up after reductions from [damage type(s)] (3 -> 2, 2 -> 1)
 detection vision
-	like normal vision, but can see stealth units even if there is no adjacent allied unit.
+	like normal vision, but can see stealth and invisible units as if they didn't have those abilities.
 shield n
 	status
 	if unit would receive damage, instead remove stack of shield
