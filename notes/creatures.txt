@@ -822,7 +822,7 @@ recharge
 	regain all energy
 - can move on to space occupied by m/s unit. that unit will take 1/2 damage. if this kills it, this unit will move unto the space, othervise it will stay.
 
-ghost operative {9rp} x1
+ghost operative {11rp} x1
 health 5, movement 3, sight 2, energy 5, M
 gauss rifle
 	ranged attack
@@ -1600,7 +1600,7 @@ spear
 	2 damage
 - ignores first 2 move penalty each round
 
-dreadknight {12p}
+dreadknight {12p} x1
 health 7, movement 3, sight 2, armor 1, energi 4, M
 cursed blade
 	melee attack
@@ -1624,7 +1624,7 @@ marshmellow fist
 	melee attack
 	2 damage
 
-lumbering pillar {2} 2
+lumbering pillar {2} x2
 health 8, movement 1, sight 0, armor 2, L
 
 giant turtle {12gggpp} x1
@@ -1636,7 +1636,7 @@ bite
 	stackable, refreshable
 	if this unit would receive a debuff, instead remove a stack of vigor
 
-combat medic {5p}
+combat medic {5p} x2
 health 5, movement 3, sight 2, energi 4, M
 rifle
 	ranged attack
@@ -1667,7 +1667,7 @@ spray vomit
 - immune to plague
 - at the end of each round, apply plague to each adjacent unit
 
-shadow operative {10p}
+shadow operative {10p} x1
 health 5, movement 3, sight 2, energy 3, M
 stab
 	melee attack
@@ -1685,3 +1685,82 @@ bug
 balloon {2u} x1
 health 1, movement 1, sight 2, M
 - flying
+
+chicken {1} x2
+health 2, movement 1, sight 1, S
+peck
+	melee attack
+	1 damage
+
+demo operative {10p} x1
+health 5, movement 3, sight 2, energi 5, M
+machine gun
+	ranged attack
+	4 damage, 2 range, -2 movement
+	loses stealth this turn
+	-2 damage against air
+timed demo-charge
+	ability 2 energy
+	-1 movement
+	applies status timed demo-charge to current hex with duration 2 rounds
+		unstackable, non-refreshable
+		hidden
+		when expires, deals 4 aoe damage to ground units on hex
+remote demo-charge
+	ability 2 energy
+	-1 movement
+	applies status remote demo-charge to hex
+		unstackable
+		hidden
+detonate remote charges
+	ability
+	deals 4 aoe damage to all units on hexes with status remote demo-charge, then removes those statuses.
+
+lanky prowler {} x1
+health 7, movement 4, sight 2, M
+strangle
+	melee attack
+	3 damage, -2 movement
+	+1 damage against M, +2 against S
+- ignores first terrain movement penalty each turn
+- stealth on your turn
+
+missile mech {10rr} x1
+health 7, movement 3, sight 2, M
+missile
+	ranged attack
+	3 damage, 3 range, -2 movement
+lock-on
+	ability
+	target enemy unit 3 range LoS, -1 movement
+	applies status locked-on until you loose vision of unit. removes locked-on from all other units.
+		unstackable
+		hidden
+laser-guided missile
+	ranged attack
+	4 damage, 4 range, -1 movement
+	can only target units with locked-on status.
+
+ghoul titan {14ggpp}
+health 9, movement 3, sight 2, energi 3, L
+smash
+	melee attack
+	4 damage
+	if lethal, heals this unit 3 heals and applies fed for 3 rounds
+		stackable, refreshable
+		+1 movement
+		+1 attack
+consume corpse
+	ability
+	removes latest corpse on current tile. if a corpse is removed this way, heals this unit 3 and applies fed for 3 rounds.
+drain essence
+	aoe ability 3 energy
+	aoe type hex size 2 range 3 NLoS, -2 movement
+	deals 1 pure damage to each unit in aoe. heals this unit 1 for each damage dealt this way.
+
+medic {6pp} x1
+health 5, movement 3, sight 2, energi 4, M
+heal beam
+	ability 2 energy
+	target allied unit 2 range LoS, -2 movement
+	heals 3 health

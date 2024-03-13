@@ -71,7 +71,7 @@ unit price resources?
 		- red (r) - ranged
 		- green (g) - high value units (if this can't be limited, then you might end up in a situation where the correct thing is to get very few units on a very small map, for very boring gameplay. altenativly a map can just ban units costing>n?)
 		- purple (p) - support/spells/high synergi
-	maybe also a mobility one?
+	maybe also a vision one?
 code for points is v
 	cost writen like 10uu or 7rpp
 buildings?
@@ -267,3 +267,6 @@ plague ghoul
 invis operativ
 big turtle
 timed/remote explosives
+illusion
+clone unit
+become copy of unit
