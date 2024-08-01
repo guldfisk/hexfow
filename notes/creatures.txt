@@ -59,10 +59,10 @@ engage
 	melee attack
 	4 damage
 
-flare buggy {6} x1
+flare buggy {8wp} x1
 health 5, movement 4, sight 2, energy 3, M
 flare
-	aoe ability 1 energy
+	aoe ability 2 energy
 	aoe type hex size 1 unblocked propagation range 2 NLoS
 	applies flare status to terrain
 		1 round duration
@@ -802,7 +802,7 @@ health 5, movement 3, sight 2, energy 6, S
 summon elemetal
 	ability 5 energy
 	target unoccupied hex, range 3, LoS, -1 movement
-	creates elemental on hex based on the biome type(s) of the hex (mutliple types takes the first. no type makes a dirt elemental).
+	summon elemental on hex based on the biome type(s) of the hex (mutliple types takes the first. no type makes a dirt elemental).
 	applies ephemeral status to elemental duration 3 rounds
 - +1 energi regen
 
@@ -958,7 +958,7 @@ tactical nuke
 	applies status flattened to terrain distance 0-1 from center.
 		non stackable
 		-1 range/aoe protection
-- starts with only 6 energy
+- spawns with only 6 energy
 - +1 energy regen
 
 radiation demon {9} x2
@@ -1012,7 +1012,7 @@ divine restoration
 	target allied unit 1 range, -1 movement
 	heals 5 health, dispels all debuffs. if unit does not have any shield, apply 1 shield.
 - flying
-- starts with 1 shield
+- spawns with 1 shield
 
 carnivorous plant {-}
 health 5, movement 0, sight 1, M
@@ -1164,7 +1164,7 @@ breath
 	aoe attack 2 energy
 	aoe type length 3 physical propagation when grounded, -1 movement
 	2 damage
-	applies 3 burn
+	applies 3 burning
 - energy cost toggle 2/2 flying +2 movement
 
 ancient mummy {11p} x1
@@ -1764,3 +1764,59 @@ heal beam
 	ability 2 energy
 	target allied unit 2 range LoS, -2 movement
 	heals 3 health
+
+otter scout {4} x2
+health 5, movement 3, sight 2, S
+bite
+	melee attack
+	2 damage
+- aquatic
+- ignores move penalties on wet terrain
+- +1 terrain protection on wet terrain
+
+walrus beast {7} x1
+health 9, movement 2, sight 2, M
+tusk
+	melee attack
+	3 damage
+	+1 damage against M-
+- aquatic
+- +1 terrain protection on wet terrain
+- spawns with one stack of vigor
+
+fire archmage {21wwrrrggpppp}
+health 5, movement 3, sight 2, energy 10, M
+fireball
+	aoe attack 4 energy
+	aoe type hex size 1, 3 range LoS, -2 movement
+	3 damage and 2 burning to center, and 1 damage and 2 burning to each adjacent hex
+summon fire elementals
+	ability 9 energy
+	two target adjacent hexes, 3 range LoS, -2 movement
+	summon an exhausted fire elemental with ephemeral 3 on each target hex
+scorhing speed
+	ability 3 energy
+	target allied unit 3 range LoS
+	applies burning 2 and scorching speed for 3 rounds
+		non stackable, refreshable
+		+2 movement
+glaring sun
+	aoe ability 3 energy
+	aoe type hex size 1 range 4 NLoS
+	applies glarring sun status to terrain for 2 rounds
+		non stackable, refreshable
+		you have vision of hex
+		units moving unto hex, and at the end of each round, apply parched for 3 rounds to units on hex.
+			non stackable, refreshable
+			when this unit ends its turn, if it does not have any remaining movement points, it suffers 1 pure damage.
+soot cloud
+	aoe ability 3 energy
+	aoe type hex size 1 range 4 NLoS
+	applies smoke status to terrain
+		2 round duration
+		non stackable, refreshable
+		hex blocks LoS
+		units have -2 sight
+- immune to burn
+- +1 energy regen
+	
