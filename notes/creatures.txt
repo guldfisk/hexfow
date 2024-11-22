@@ -28,7 +28,7 @@ plague miasma
 	apply miasma status to terrain
 		3 round duration
 		non stackable, refreshable
-		units on hex has maximum sight reduced to maximum 1
+		units on hex has sight reduced to 1
 		at the beginning of round, deal 2 pure damage to units on hex
 - immune to damage from miasma status
 
@@ -36,7 +36,7 @@ giant battle crab {13g} x1
 health 11, movement 2, armor 2, sight 1, L
 pinch
 	aoe attack
-	aoe type two adjacent hexes seperated by single hex
+	aoe type two hexes adjacent to this unit and seperated by a single hex
 	5 melee damage, -1 movement
 
 zone trooper {6} x2
@@ -47,6 +47,7 @@ salvo
 	-1 damage against air
 hunker down
 	ability
+	-1 movement
 	applies hunkered buff to self until moves
 		+1 ranged/aoe protection
 
@@ -111,7 +112,7 @@ snipe
 	4 damage, 4 range, no movement
 	cannot target adjacent
 	-2 damage against air
-- stealth while not moveing
+- stealth while not moving
 
 mine layer beetle {7} x2
 health 7, movement 3, sight 2, energy 5, M
@@ -632,7 +633,8 @@ dakka
 	multi 3x max activations combineable ranged attack
 	1 damage, 2 range
 	this unit gains spun up until it moves
-	+1 damage if spun up
+		unstackable
+		+1 damage
 
 glass golem {5} x2
 health 1, movement 3, armor 2, sight 2, M
