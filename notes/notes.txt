@@ -30,6 +30,7 @@ resistance to (damage to). half damage rounded up after reductions
 	blur - resistance to ranged
 	hardened carapace - resistance to aoe
 	ethereal - resistance to melee / ranged
+greater resistance - round down instead
 damage cap, like "the heart"
 spider sense, like slark
 complulsive impatience, aoe debuff - when player takes action with unit that is not this unit while this unit is ready, this units suffers 1 pure damage, removed when this unit is activated.
@@ -116,7 +117,7 @@ map ideas:
 	jotunheim
 		bunch of ice, with a lava crag in the middle. close to lave water is ice instead etc
 	frosty peaks
-		large maps with sporadik wood clusters and jagged mountain lines. mountains are snow in the center of the clusters
+		large maps with sporadic wood clusters and jagged mountain lines. mountains are snow in the center of the clusters
 	trench war
 		mostly flat with low vegetation. Two crack lines divide the map N-S.
 	arid mesa
@@ -270,3 +271,14 @@ timed/remote explosives
 illusion
 clone unit
 become copy of unit
+radiation maybe remove half rounded up and deal as damage? - dumb interaction with armor then
+bear - hibernate - heals when skips
+exhaustion - debuff stack n - when unit ends non skip action, takes n damage. when ends skip action, remove stack of exhaustion
+tough skin - greater resistance to damage from statuses. debufs with duration applies with half duration, rounded up.
+tough - 1/3 rounded down damage reduction
+
+cult master
+health 6, movement 3, sight 2, energy 6, M
+aoe entangled doom etc
+
+how reconcille cool use of entangled doom on allied units, if entangled doom is all units, not just of same player, with how stupid the mirror gets?

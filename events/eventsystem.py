@@ -14,6 +14,7 @@ from typing import (
     Any,
     Generic,
     get_args,
+    Iterator,
 )
 
 
@@ -61,14 +62,19 @@ class EventSystem:
         value: V,
     ) -> V:
         for attribute_modifier in sorted(
-            self._get_effects(AttributeModifierEffect, attribute_name),
+            (
+                _modifier
+                for _modifier in self._get_effects(
+                    AttributeModifierEffect, attribute_name
+                )
+                if _modifier.should_modify(obj, value)
+            ),
             key=lambda e: e.priority,
         ):
-            if attribute_modifier.should_modify(obj, value):
-                value = attribute_modifier.modify(obj, value)
+            value = attribute_modifier.modify(obj, value)
         return value
 
-    def resolve_event(self, event: Event[V]) -> V | None:
+    def resolve_event(self, event: Event[V]) -> EventResolution:
         if eligible_replacements := [
             replacement_effect
             for replacement_effect in self._get_effects(ReplacementEffect, event.name)
@@ -82,19 +88,14 @@ class EventSystem:
                     )
                 )
             )
-            return replacement_effect.resolve(event)
-        # pending_triggers = [
-        #     (priority, callback)
-        #     for priority, callback in [
-        #         (trigger_effect.priority, trigger_effect.should_trigger(event))
-        #         for trigger_effect in self._get_effects(TriggerEffect, event.name)
-        #     ]
-        #     if callback is not None
-        # ]
+            return EventResolution(list(replacement_effect.resolve(event)))
+        if event.parent:
+            event.parent.children.append(event)
         for trigger_effect in self._get_effects(TriggerEffect, event.name):
             if callback := trigger_effect.should_trigger(event):
                 self._pending_triggers.append((trigger_effect.priority, callback))
-        return event.resolve()
+        event.result = event.resolve()
+        return EventResolution([event])
 
     def resolve_pending_triggers(self) -> None:
         for _ in range(self.MAX_TRIGGER_RECURSION):
@@ -110,6 +111,22 @@ class EventSystem:
 
 def es() -> EventSystem:
     return EventSystem.i()
+
+
+@dataclasses.dataclass
+class EventResolution:
+    events: list[Event | EventResolution]
+
+    # def __init__(self):
+
+    def iter_type(self, event_type: type[E]) -> Iterator[E]:
+        for item in self.events:
+            if isinstance(item, EventResolution):
+                yield from item
+            else:
+                for event in item:
+                    if isinstance(event, event_type):
+                        yield event
 
 
 class _EventMetaclass(type):
@@ -131,6 +148,23 @@ class _EventMetaclass(type):
 class Event(Generic[V], metaclass=_EventMetaclass):
     name: ClassVar[str]
     replaced_by: set[ReplacementEffect] = dataclasses.field(default_factory=set)
+    parent: Event | None = None
+    children: list[Event] = dataclasses.field(default_factory=list)
+    result: V | None = None
+
+    # def __post_init__(self):
+    #     if self.parent:
+    #         self.parent.children.append(self)
+
+    # def value_as(self, event_type: type[Event[V]]) -> V | None:
+    #     if isinstance(self, event_type):
+    #         return self.result
+    #     return None
+
+    def __iter__(self) -> Iterator[Event]:
+        yield self
+        for child in self.children:
+            yield from child
 
     @abstractmethod
     def resolve(self) -> V:
@@ -142,7 +176,7 @@ class Event(Generic[V], metaclass=_EventMetaclass):
                 {
                     f.name: getattr(self, f.name)
                     for f in dataclasses.fields(event_type or self)
-                    if hasattr(self, f.name)
+                    if hasattr(self, f.name) and f.name not in ("children", "result")
                 }
                 | kwargs
             )
@@ -171,7 +205,7 @@ class ReplacementEffect(Effect, Generic[E], ABC):
         ...
 
     @abstractmethod
-    def resolve(self, event: E[V]) -> V | None:
+    def resolve(self, event: E) -> Iterator[EventResolution]:
         ...
 
 
@@ -187,19 +221,27 @@ class TriggerEffect(Effect, Generic[E], ABC):
         ...
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class ModifiableAttribute(Generic[T, V]):
     name: str
     source_name: str | None = None
 
     def __post_init__(self):
         if self.source_name is None:
-            self.source_name = f"_{self.name}"
+            object.__setattr__(self, "source_name", f"_{self.name}")
 
-    def __get__(self, instance: T, owner) -> V:
+    def get(self, instance: T) -> V:
         return EventSystem.i().determine_attribute(
             instance, self.name, getattr(instance, self.source_name)
         )
+
+    def get_base(self, instance: T) -> V:
+        return getattr(instance, self.source_name)
+
+    def __get__(self, instance: T | None, owner) -> V | ModifiableAttribute:
+        if instance is None:
+            return self
+        return self.get(instance)
 
     def __set__(self, instance: T, value: V) -> None:
         setattr(instance, self.source_name, value)

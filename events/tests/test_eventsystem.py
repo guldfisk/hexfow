@@ -396,6 +396,14 @@ def test_modifiable_attribute():
     assert Unit(3).power == 3
 
 
+def test_modifiable_attribute_get_base():
+    unit = Unit(2)
+    es().register_effect(DoublePower(unit))
+    assert unit.power == 4
+    assert Unit.power.get(unit) == 4
+    assert Unit.power.get_base(unit) == 2
+
+
 def test_deregister_modifiable_attribute():
     units = [Unit(v) for v in (1, 2)]
     effects = [es().register_effect(DoublePower(unit)) for unit in units]
@@ -437,3 +445,6 @@ def test_attribute_modification_order():
     assert units[2].power == 3
     es().deregister_effect(cap)
     assert units[2].power == 8
+
+
+# def test_conditional_
