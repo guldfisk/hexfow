@@ -6,6 +6,8 @@ Biomes:
 	rock
 	wet
 
+Protection: x/y/z: melee/ranged/aoe
+
 TERRAIN
 
 plains
@@ -16,13 +18,13 @@ tundra - snow
 
 forest - vegetation
 S-M: 1/2/2 protection
+L: 0/1/1
 1 move in penalty
 blocks LoS
 
 shrub - vegetation
-S: 0/2/1 protection
+S: 1/2/1 protection
 M: 0/1/0 protection
-blocks LoS
 
 snowy forest - vegetation snow
 S-M: 2 protection
@@ -83,7 +85,7 @@ L: 1/1/1 protection
 needle pillars - rock
 1/3/3 protection
 1 move in penalty
-impassable to L+
+impassable to ground L+
 blocks LoS
 
 swamp - wet
@@ -94,7 +96,7 @@ swamp - wet
 lava - magma
 when moving in, suffer 1 burn
 at the end of the round, units on this hex suffers 1 burn
-units melee attacking a unit on this hex suffers 1 burn
+when ground units moves in, melee attacks into, and at the end of round, applies 1 burn
 
 volcano - magma rock
 S-M: 1 protection
@@ -103,7 +105,7 @@ elevated
 blocks LoS
 when moving in, suffer 1 burn
 at the end of the round, units on this hex suffers 1 burn
-units melee attacking a unit on this hex suffers 1 burn
+when ground units moves in, melee attacks into, and at the end of round, applies 1 burn
 
 water - wet
 impassable to ground

@@ -2,6 +2,7 @@ RULES
 
 
 LoS - line of sight
+	blocked by certain terrain and enemy M+ ground units
 flying
 	no terrain movement penalties
 	does not receive terrain protection
@@ -79,6 +80,14 @@ radiated n
 	at the end of round deals n pure damage to unit, and all stacks are removed.
 sense enemies n
 	unit can see enemies in range n, ignoring LoS. units seen this way is just shown as "unknown enemy".
+actions
+	actions are attacks and abilities
+action movement costs
+	actions have movement cost. by default it is zero. it means to perform the action, the unit must have that at least many movement points left, and it then spent them on performing the action.
+	if a unit has not moved or performed an action, it ignores the minimum remaining points part, but it still pays the points.
+	this means if you have a negative amount of movement points left and have moved or performed an action, you cannot perform any actions.
+no movement requirement
+	actions can have a "no movement" restriction, which works like a movement cost that can only be paid if no movement has been made, and costs all remaining movement points.
 melee attack
 	ground unit cannot melee flying unit
 	to perform a melee attack, the attacker must be able to move into the attacked space, in addition to any movement cost of the attack. This does not include move in penalties, but it does include move in costs.

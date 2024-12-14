@@ -276,9 +276,94 @@ bear - hibernate - heals when skips
 exhaustion - debuff stack n - when unit ends non skip action, takes n damage. when ends skip action, remove stack of exhaustion
 tough skin - greater resistance to damage from statuses. debufs with duration applies with half duration, rounded up.
 tough - 1/3 rounded down damage reduction
+werewolf
+blind suicide flying
+aoe stun suicide
+
+
+cult warlock {5p} x2
+health 5, movement 3, sight 2, energy 3, M
+smite
+	ranked attack
+	2 damage, 2 range, -2 movement
+entangle fate
+	ability 2 energy
+	target unit 3 range LoS
+	-1 movement
+	applies entangled doom
 
 cult master
 health 6, movement 3, sight 2, energy 6, M
 aoe entangled doom etc
 
 how reconcille cool use of entangled doom on allied units, if entangled doom is all units, not just of same player, with how stupid the mirror gets?
+
+conqueror gnome {6p} x2
+health 5, movement 3, sight 2, S
+plant flag
+	ability
+	target hex 1 range
+	applies status flagged to hex
+		unstackable
+		hex counts as occupied by allied unit for purposes of capturing points.
+
+hover dart {6wwp} x2
+health 4, movement 5, sight 1, M
+- enterable exitable transport 2
+- ignores 1 move in/out penalty of terrain
+- aquatic
+
+troop crawler {8wwp} x1
+health 6, movement 4, sight 1, L
+- enterable exitable transport 3
+	cannot carry large units
+
+force psychic {8rrpp} x1
+health 5, movement 2, sight 2, energy 4, S
+force lance
+	ranged attack
+	3 damage, 3 range, no movement
+shield bubble
+	aoe ability 3 energy
+	aoe type hex size 1 unblocked propagation range 3
+	applies shield bubble status to terrain
+		2 round duration
+		non stackable, non refreshable
+		+2 ranged / aoe protection against attacks made from outside bubble
+
+mobile fortress {9gp} x1
+health 10, movement 2, armor 1, sight 1, L
+canon
+	ranged attack
+	4 damage, 3 range
+	no movement
+- enterable exitable transport 2
+
+
+hercules chopper {9wwup} x2
+health 6, movement 0, sight 1, L
+take off
+	combineable ability
+	-1 movement
+	gains flying and +4 movement
+land
+	ability
+	loses flying buff
+- transport 4
+	enterable and exitable while not flying
+
+super lifter {9wwupp} x2
+health 4, movement 4, sight 1, M
+pick up
+	combineable ability
+	target allied unit 1 range
+	-0/1/2 movement depending on target size
+	targeted unit enters
+drop of
+	combineable ability
+	target empty hex 1 range
+	-0/1/2 movement depending on target size
+	carried unit exits on targeted hex
+- transport
+	can carry any single unit of max size large
+- flying
