@@ -71,6 +71,7 @@ unit price resources?
 		- blue (u) - flyer
 		- red (r) - ranged
 		- green (g) - high value units (if this can't be limited, then you might end up in a situation where the correct thing is to get very few units on a very small map, for very boring gameplay. altenativly a map can just ban units costing>n?)
+		This prob makes sense as "pure fighting ability", i.e. "damage per turn" * "effective health", so small maps isn't just all the slowest units standing in a clump and hitting each other.
 		- purple (p) - support/spells/high synergi
 	maybe also a vision one?
 code for points is v
@@ -195,7 +196,7 @@ giant toad
 wolf - pack hunt
 boar
 einherjar
-heroes?
+identities?
 	could have resource bonuses, like:
 		all units below n points -1 point cost
 		all units above n points -2 points cost
@@ -273,13 +274,17 @@ clone unit
 become copy of unit
 radiation maybe remove half rounded up and deal as damage? - dumb interaction with armor then
 bear - hibernate - heals when skips
+how to make "at end of action" terrasin status triggers work with stunned units? i.e., if you are stunned in a fire wall, you should be burned.
+
+debuff - takes damage when debuff dispelled
+buff - healed when damaged over threshold / debuffed
+debuff - double damage taken
+corpse explosion
+effect removes stacks/duration of all debuffs
 exhaustion - debuff stack n - when unit ends non skip action, takes n damage. when ends skip action, remove stack of exhaustion
 tough skin - greater resistance to damage from statuses. debufs with duration applies with half duration, rounded up.
 tough - 1/3 rounded down damage reduction
 werewolf
-blind suicide flying
-aoe stun suicide
-
 
 cult warlock {5p} x2
 health 5, movement 3, sight 2, energy 3, M
@@ -367,3 +372,7 @@ drop of
 - transport
 	can carry any single unit of max size large
 - flying
+
+civilian {4p} x3
+health 3, movement 3, sight 1, M
+- at the end of the round, if this unit is in the middle of the board, sacrifice it. you gain 3 points

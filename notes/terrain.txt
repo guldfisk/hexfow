@@ -75,7 +75,7 @@ L: 0/1/1 protection
 1 move in penalty
 1 move out penalty
 
-snow crevace - snow
+snow crevice - snow
 S: 2/3/3 protection
 M: 2/2/2 protection
 L: 1/1/1 protection
@@ -90,6 +90,12 @@ blocks LoS
 
 swamp - wet
 1 melee protection
+1 move in penalty
+1 move out penalty
+
+marshland - wet vegetation
+S: 1/2/1 protection
+M: 1/1/0 protection
 1 move in penalty
 1 move out penalty
 
@@ -112,6 +118,12 @@ impassable to ground
 
 shallow water - wet
 1 move in penalty
+
+mangrove - wet vegetation
+S-M: 2 protection
+L-G: 1 protection
+2 move in penalty
+blocks LoS
 
 frozen water - snow
 impassable to ground units L+
