@@ -1,6 +1,5 @@
 RULES
 
-
 LoS - line of sight
 	blocked by certain terrain and enemy M+ ground units
 flying
@@ -16,38 +15,19 @@ invisible
 	can't be seen. (attempting to move on to an invalid hex will not consume a movement point.)
 teleport
 	move to a hex if it is unoccupied
-stun n
-	exhausts unit
-	applies a debuff with duration n - (1 if unit was ready else 0) that exhausts unit in the beginning of round
-accelerate n
-	ready unit
-	applies buff accelerated with duration n - (1 if unit was exhausted else 0).
-		if this unit would be exhausted, instead remove a stack of accelerated.
-broken
-	passieve abilities are inactive
-rooted
-	can not move
-	can't melee attack (follows from not being able to move)
-burn n
-	stackable debuff
-	beginning of round apply physical damage equal to n and decrement by one
-poision n
-	stackable debudd
-	beginning of round apply pure damage equal to n
 for terrain:
 	+n movement cost
 		n extra movement point required to move into/out of this space
 	n movement penalty
-		n movement point subtracted after moving into/out of this space (result can be negativ afterwards)
+		n movement point subtracted after moving into/out of this space (result can be negative afterward)
 transport
-	a unit can be a transport. It must define it's carry capacity.
+	a unit can be a transport. It must define its carry capacity.
 	capacity can use any logic, but if it is just a number, it denotes it's total size capacity.
 		small: 1
 		medium: 2
 		large: 3
-		giga: 4
 	units can be inside a transport. when they are, their position is equal to that of the container, and they cannot perform any action except for a move out. They cannot be attacked.
-	when a transport dies, if it is a ground unit containing a single other unit, it will attempt to place that unit on the hex of the dead transport (might fail due to attacker moving in for example, or hex being impassable for contained unit). it it fails, the unit dies. all other units die.
+	when a transport dies, if it is a ground unit containing a single other unit, it will attempt to place that unit on the hex of the dead transport (might fail due to attacker moving in for example, or hex being impassable for contained unit). if it fails, the unit dies. all other units die.
 	transport can can be "enterable", which means an allied unit that could be contained can move unto it, entering it, and will then end its turn.
 	transport can be "exitable", which means a contained unit can be activated while inside (and then only action is move out).
 	transports can never be nested.
@@ -57,33 +37,25 @@ aquatic
 energy
 	units have a max energy, and regenerate 1 at the start of each round
 energy cost toggle n1/n2
-	unit has two combineable abilities, one to toggle on some buff, and one to toggle it off.
+	unit has two combinable abilities, one to toggle on some buff, and one to toggle it off.
 	toggle on costs n1 energy. At the beginning of each round, if the unit has the buff,it loses n2 energy if available. if it isn't, the buff is lost.
 round starting player
 	starting player on first round is random (if there is a map draft, prob tied to this). after that, the starting player is the player that didn't take the last non-skip action in the previous round.
 terrain protection
 	a(-b)? x/y/z - x melee protection / y ranged protection / z aoe protection for size a (to size b)
-	protection if first thing subtracted from incomming damage. cannot redude damage below 1.
+	protection is first thing subtracted from incoming damage. cannot reduce damage below 1.
 elevated
 	terrain +1 protection against low ground.
 	+1 move in cost from low ground
 	blocks LoS from low ground
 highest stackable
 	for statuses applied of n. when applied, stack count will be set to max of n and previous value.
-radioactive n
-	terrain status
-	stackable
-	when unit moves in and at the end of round, apply radiated n to unit where n is stacks of radioactive.
-radiated n
-	highest stackable
-	when applying, subtract floor(target armor/2) from n
-	at the end of round deals n pure damage to unit, and all stacks are removed.
 sense enemies n
 	unit can see enemies in range n, ignoring LoS. units seen this way is just shown as "unknown enemy".
 actions
 	actions are attacks and abilities
 action movement costs
-	actions have movement cost. by default it is zero. it means to perform the action, the unit must have that at least many movement points left, and it then spent them on performing the action.
+	actions have movement cost. by default, it is zero. it means to perform the action, the unit must have that at least many movement points left, and it then spent them on performing the action.
 	if a unit has not moved or performed an action, it ignores the minimum remaining points part, but it still pays the points.
 	this means if you have a negative amount of movement points left and have moved or performed an action, you cannot perform any actions.
 no movement requirement
@@ -91,20 +63,20 @@ no movement requirement
 melee attack
 	ground unit cannot melee flying unit
 	to perform a melee attack, the attacker must be able to move into the attacked space, in addition to any movement cost of the attack. This does not include move in penalties, but it does include move in costs.
-	attack costs movemement points like moving into the space.
+	attack costs movement points like moving into the space.
 	after the attack, if the attacked hex is no longer occupied, due to the attacked unit dying or being moved, the attacker moves unto the hex.
-stasis
-	cannot be targeted, damaged, or have have statuses applied
-	removed when unit is activated
 resistance to [damage type(s)]
 	half damage rounded up after reductions from [damage type(s)] (3 -> 2, 2 -> 1)
+greater resistance
+    like resistance, but round down instead (3 -> 1, 2 -> 1)
 detection vision
 	like normal vision, but can see stealth and invisible units as if they didn't have those abilities.
-shield n
-	status
-	if unit would receive damage, instead remove stack of shield
-ephemeral
-	status
-	undispellable
-	unit dies when expires
-	when unit dies it leaves no corpse
+broken
+	passive abilities are inactive
+rooted
+	can not move
+	can't melee attack (follows from not being able to move)
+silenced
+    can't use abilities
+disarmed
+    can't attack

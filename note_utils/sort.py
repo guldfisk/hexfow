@@ -29,6 +29,7 @@ class Price:
 class Creature:
     source: str
     cost: Price
+    name: str
 
     @classmethod
     def from_str(cls, s: str) -> Creature:
@@ -37,6 +38,9 @@ class Creature:
             Price(int(match.group(1)), match.group(2))
             if (match := re.match(r"^[^{]*\{(\d+)([a-z]*)}", s))
             else Price(0, "", False),
+            match.group().strip()
+            if (match := re.match(r'[^{\n]+', s))
+            else ''
         )
 
     def serialize(self) -> str:
@@ -51,7 +55,7 @@ def load_creatures() -> Iterator[Creature]:
 
 def sort_creatures():
     result = "\n\n".join(
-        c.serialize() for c in sorted(load_creatures(), key=lambda c: c.cost)
+        c.serialize() for c in sorted(load_creatures(), key=lambda c: (c.cost, c.name))
     )
     with open("notes/creatures.txt", "w") as f:
         f.write(result)

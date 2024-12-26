@@ -1,0 +1,68 @@
+stun n
+	exhausts unit and end its turn
+	applies a debuff with duration n - (1 if unit was ready else 0) that exhausts unit in the beginning of round
+accelerate n
+	ready unit
+	applies buff accelerated with duration n - (1 if unit was exhausted else 0).
+		if this unit would be exhausted, instead remove a stack of accelerated.
+burn n
+	stackable debuff
+	beginning of round apply physical damage equal to n and decrement by one
+poison n
+	stackable debuff
+	beginning of round apply pure damage equal to n
+radioactive n
+	terrain status
+	stackable
+	when unit moves in and at the end of round, apply radiated n to unit where n is stacks of radioactive.
+radiated n
+	highest stackable
+	when applying, subtract floor(target armor/2) from n
+	at the end of round deals n pure damage to unit, and all stacks are removed.
+stasis
+	cannot be targeted, damaged, or have statuses applied
+	removed when unit is activated
+shield n
+	status
+	if unit would receive damage, instead remove stack of shield
+ephemeral
+	status
+	undispellable
+	unit dies when expires
+	when unit dies it leaves no corpse
+paralysis n
+	lowest stackable, refreshable
+	when loses a movement point (spending causes loss), unit gains that many stacks. when the stacks reach the target n threshold, remove this debuff, and stun unit.
+chilled
+    unstackable, refreshable
+    at the end of each round, if no allied units are adjacent, this unit suffers 1 pure damage
+frigid n
+    lowest stackable, refreshable
+    when this unit is damaged, it gains that many stacks. when the stacks reach the target n threshold, remove this debuff and stun this unit.
+parched
+    unstackable, refreshable
+    when this unit ends its turn, if it does not have any remaining movement points, it suffers 1 pure damage.
+smoke
+    terrain status
+    unstackable, refreshable
+    hex blocks LoS
+    units have sight reduced to 1
+blind
+    unstackable, refreshable
+    reduces sight to 0
+blinded
+    unstackable, refreshable
+    -1 sight
+flattened
+    terrain status
+    unstackable, refreshable (usually infinite duration)
+    -1 range/aoe protection
+cursed n
+    stackable, refreshable
+    if this unit would receive a buff, instead remove a stack of cursed
+vigor n
+	stackable, refreshable
+	if this unit would receive a debuff, instead remove a stack of vigor
+frail n
+    highest stackable, refreshable
+    if this unit would suffer less than n damage, it suffers n instead
