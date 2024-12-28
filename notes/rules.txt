@@ -69,6 +69,8 @@ resistance to [damage type(s)]
 	half damage rounded up after reductions from [damage type(s)] (3 -> 2, 2 -> 1)
 greater resistance
     like resistance, but round down instead (3 -> 1, 2 -> 1)
+minor resistance
+    like resistance, but reduce by a third instead (3 -> 2, 2 -> 2)
 detection vision
 	like normal vision, but can see stealth and invisible units as if they didn't have those abilities.
 broken

@@ -2,22 +2,14 @@ reveal target
 stop movement wall
 allied teleporter
 movementspeed buff
-debuff receive 1 damage for each adjacent end of the round
 flag planter
-bomb truck
 reactive armor
 exhaust a unit
 delayed aoe damage
 electric eel
-siege tank
-unit must act now
-razorwire wall - move in take damage
-wither - minus attack
-reduce armor to zero
-wall move in damaga based on initial distance
+rupture
 blind blood hunter
 isolation hunter
-lock on rocket launcher
 delayed long range tp
 anti tp aura
 corpses, like homm, cool design space + confirmation things died in fow
@@ -30,31 +22,15 @@ resistance to (damage to). half damage rounded up after reductions
 	blur - resistance to ranged
 	hardened carapace - resistance to aoe
 	ethereal - resistance to melee / ranged
-greater resistance - round down instead
-damage cap, like "the heart"
 spider sense, like slark
 complulsive impatience, aoe debuff - when player takes action with unit that is not this unit while this unit is ready, this units suffers 1 pure damage, removed when this unit is activated.
 soul tether - debuff two targets, keeps track of maximum seen distance between units, both suffer a pure damage for each distance max seen distance is extended.
-rolling ball - plus movement point when going down hill - plus damage proportional to distance between ball turn starting position and attack target position
-necromancer - capped revived health, undispellable status reanimated creature leaves no status
 corpse exlposion - aoe - multiple corpses same square combined into single damage instance - corpses of dead units explode recursivly
-energy??
 star shaped aoe
-mage vision - see cool downs / energy (these are normally hidden?)
 opression aura - move into / from space -1 movement point
-barbed wire - terrain status - space +1 movement into/from penalty - unit on space has special combineable action -2 movement to remove wire.
-single tile smoke
-double tile smoke
 full invisibility - removed on attack until next action - removed when blocking opponent unit?
 additional turns (within round only prob)
 OPPONENT OUT OF ACTIONS IN ROUND NOTIFICATION? - prob is, even if opponent has to do a noop pass, this will give them info instead, so maybe just embrace? cool insentiv for canon fodder or dumb arms race?
-terrain proficient unit
-	snow yeti - ignore snow move out penalty
-	otter - can move on water with additional terrain protection
-	commando squat - ignore snow penalty - can move on water without protection
-unit sizes (small/medium/large)?? Very design bloat, but allows for better top down design / knob tuning of stuff like the ice terrain (relying on max hp will have lots of weird cases).
-	also cool for transportation / unit displacement
-	larger units gets worse terran protection
 thoughts about "standard play"
 	an army is build for a map pool (prob 5)
 	a map is a procedure for generating a symmetrical set of hexes to play on
@@ -83,26 +59,7 @@ power runes on map
 	move over +1 movement point
 	single vp pickup
 		only for specific player on other side of map?
-terrain "biome types", like forest (forest, jungle), snow (all the snow shit), water (water, maybe swamp?) etc
-	another top-down design angle
 stealh while not moving
-aa tank
-	multi target missile attack
-shaolin frog
-	3 movement
-	2 move cost 2 range "jump" teleport. only to visible space?
-	once per ready melee retaliation
-	resistance to ranged damage
-bombardment status reduces terrain protection of targeted hex
-collussus, war of the worlds
-	pseudo flying
-		ignores terrain penalties
-		no terrain protection
-			or at most 1?
-		self/opponent FoV like flying
-		can be meleed
-	beam attack
-		attacks 3 consecutive hexes
 map ideas:
 
 	note about directions (P1, P2 are starting areas):
@@ -116,7 +73,7 @@ map ideas:
 	river
 		map divided by (not unbroken river) W-E. medium terrain
 	jotunheim
-		bunch of ice, with a lava crag in the middle. close to lave water is ice instead etc
+		bunch of ice, with a lava crag in the middle. close to lave water is ice instead etc.
 	frosty peaks
 		large maps with sporadic wood clusters and jagged mountain lines. mountains are snow in the center of the clusters
 	trench war
@@ -129,7 +86,7 @@ map ideas:
 		starting areas very close to each other. one time player specific point pickups behind opponent for each player
 		hilly landscape, medium vegetation
 	swamp mix-up
-		medium sized map with thick jungle/swamp, multiple small scattered deployment zones
+		medium-sized map with thick jungle/swamp, multiple small scattered deployment zones
 	cauldron
 		middle capture area surrounded by unpassable mountain ring, with a few gaps. medium elvevation, sparse vegetation, except for the middle.
 
@@ -376,3 +333,13 @@ drop of
 civilian {4p} x3
 health 3, movement 3, sight 1, M
 - at the end of the round, if this unit is in the middle of the board, sacrifice it. you gain 3 points
+
+force field
+    aoe ability 2 energy
+    aoe type hex range 2 LoS
+    can only target hex empty of ground unit
+    applies force field status to terrain
+        2 round duration
+        unstackable, refreshable
+        hex is impassable to ground units
+        hex blocks LoS for attacks
