@@ -6,7 +6,7 @@ import re
 from typing import Iterator
 
 
-@functools.total_ordering
+# @functools.total_ordering
 @dataclasses.dataclass
 class Price:
     value: int
@@ -14,15 +14,15 @@ class Price:
     payable: bool = True
 
     @property
-    def compare_value(self) -> tuple[int, int]:
-        return self.value, len(self.additional)
+    def compare_value(self) -> tuple[float, int]:
+        return -1/self.value if self.payable else 0, len(self.additional)
 
-    def __gt__(self, other) -> bool:
-        if isinstance(other, Price):
-            return other.payable and (
-                not self.payable or (self.compare_value > other.compare_value)
-            )
-        return False
+    # def __gt__(self, other) -> bool:
+    #     if isinstance(other, Price):
+    #         return other.payable and (
+    #             not self.payable or (self.compare_value > other.compare_value)
+    #         )
+    #     return False
 
 
 @dataclasses.dataclass
@@ -54,8 +54,10 @@ def load_creatures() -> Iterator[Creature]:
 
 
 def sort_creatures():
+    # for v in sorted((c.cost.compare_value, c.name) for c in load_creatures()):
+    #     print(v)
     result = "\n\n".join(
-        c.serialize() for c in sorted(load_creatures(), key=lambda c: (c.cost, c.name))
+        c.serialize() for c in sorted(load_creatures(), key=lambda c: (c.cost.compare_value, c.name))
     )
     with open("notes/creatures.txt", "w") as f:
         f.write(result)
