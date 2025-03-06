@@ -1,38 +1,42 @@
 stun n
-	exhausts unit and end its turn
-	applies a debuff with duration n - (1 if unit was ready else 0) that exhausts unit in the beginning of round
+    exhausts unit and end its turn
+    applies a debuff with duration n - (1 if unit was ready else 0) that exhausts unit in the beginning of round
 accelerate n
-	ready unit
-	applies buff accelerated with duration n - (1 if unit was exhausted else 0).
-		if this unit would be exhausted, instead remove a stack of accelerated.
+    ready unit
+    applies buff accelerated with duration n - (1 if unit was exhausted else 0).
+        if this unit would be exhausted, instead remove a stack of accelerated.
 burn n
-	stackable debuff
-	beginning of round apply physical damage equal to n and decrement by one
+    stackable debuff
+    beginning of round apply physical damage equal to n and decrement by one
 poison n
-	stackable debuff
-	beginning of round apply pure damage equal to n
+    stackable debuff
+    beginning of round apply pure damage equal to n
 radioactive n
-	terrain status
-	stackable
-	when unit moves in and at the end of round, apply radiated n to unit where n is stacks of radioactive.
+    terrain status
+    stackable
+    when unit moves in and at the end of round, apply radiated n to unit where n is stacks of radioactive.
+revealed
+    unstackable, refreshable
+    hidden
+    you have detection vision of hex.
 radiated n
-	highest stackable
-	when applying, subtract floor(target armor/2) from n
-	at the end of round deals n pure damage to unit, and all stacks are removed.
+    highest stackable
+    when applying, subtract floor(target armor/2) from n
+    at the end of round deals n pure damage to unit, and all stacks are removed.
 stasis
-	cannot be targeted, damaged, or have statuses applied
-	removed when unit is activated
+    cannot be targeted, damaged, or have statuses applied
+    removed when unit is activated
 shield n
-	status
-	if unit would receive damage, instead remove stack of shield
+    status
+    if unit would receive damage, instead remove stack of shield
 ephemeral
-	status
-	undispellable
-	unit dies when expires
-	when unit dies it leaves no corpse
+    status
+    undispellable
+    unit dies when expires
+    when unit dies it leaves no corpse
 paralysis n
-	lowest stackable, refreshable
-	when loses a movement point (spending causes loss), unit gains that many stacks. when the stacks reach the target n threshold, remove this debuff, and stun unit.
+    lowest stackable, refreshable
+    when unit moves, uses an ability, or attacks, it gains a stack. when the stacks reach the target n threshold, remove this debuff, and stun unit.
 chilled
     unstackable, refreshable
     at the end of each round, if no allied units are adjacent, this unit suffers 1 pure damage
@@ -61,8 +65,8 @@ cursed n
     stackable, refreshable
     if this unit would receive a buff, instead remove a stack of cursed
 vigor n
-	stackable, refreshable
-	if this unit would receive a debuff, instead remove a stack of vigor
+    stackable, refreshable
+    if this unit would receive a debuff, instead remove a stack of vigor
 frail n
     highest stackable, refreshable
     if this unit would suffer less than n damage, it suffers n instead

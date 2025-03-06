@@ -91,6 +91,7 @@ class EventSystem:
             return EventResolution(list(replacement_effect.resolve(event)))
         if event.parent:
             event.parent.children.append(event)
+        # TODO after instead?
         for trigger_effect in self._get_effects(TriggerEffect, event.name):
             if callback := trigger_effect.should_trigger(event):
                 self._pending_triggers.append((trigger_effect.priority, callback))
@@ -166,6 +167,11 @@ class Event(Generic[V], metaclass=_EventMetaclass):
         for child in self.children:
             yield from child
 
+    def iter_type(self, event_type: type[E]) -> Iterator[E]:
+        for event in self:
+            if isinstance(event, event_type):
+                yield event
+
     @abstractmethod
     def resolve(self) -> V:
         ...
@@ -181,6 +187,14 @@ class Event(Generic[V], metaclass=_EventMetaclass):
                 | kwargs
             )
         )
+
+
+class ReplacementEvent(Event):
+    replacement_effect: ReplacementEffect
+    replacing: Event
+
+    def resolve(self) -> None:
+        self.replacement_effect.resolve(self.replacing)
 
 
 class Effect:

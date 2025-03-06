@@ -4,6 +4,13 @@ anemone polyp {1} x1
  - units melee attacking this suffers paralysis 6 for 3 rounds
  - when this unit moves, stun it
 
+anti-tank mine {1} x2
+health 1, movement 1, sight 0, S
+deploy
+    ability
+    this unit dies leaving no corpse. apply status anti-tank mined to terrain
+        when L ground unit moves in, it suffers 3 damage with 2 ap, and remove this status.
+
 cactus {1} x1
 health 3, movement 0, sight 0, energy 0/2, M
 grow
@@ -49,6 +56,20 @@ health 1, movement 1, sight 2, M
 skittering grub {1w} x1
 health 3, movement 3, sight 0, S
 
+ambush mine {2} x3
+health 2, movement 2, sight 1, S
+burrow
+    ability
+    gains status burrowed, -1 movement
+        rooted
+        stealth
+        ranged/aoe resistant
+unburrow
+    combinable ability
+    removes status burrowed, -1 movement
+- presence vision
+- when an enemy unit moves onto an adjacent hex while this unit is burrowed, this unit dies leaving no corpse, and the enemy unit suffers 3 aoe damage
+
 gnome {2} x3
 health 3, movement 2, sight 1, S
 spear
@@ -56,7 +77,13 @@ spear
     2 damage
 
 lumbering pillar {2} x2
-health 8, movement 1, sight 0, armor 2, L
+health 7, movement 1, sight 0, armor 2, L
+
+snap-jaw grub {2} x2
+health 3, movement 2, sight 1, S
+jaws
+    melee attack
+    3 damage, no movement
 
 snapping turtle {2} x1
 health 1, movement 2, sight 1, armor 1, S
@@ -65,6 +92,13 @@ bite
     -1 movement
     2 damage
 - aquatic
+
+blind oracle {2p} x1
+health 2, movement 2, sight 0, energy 2/3, M
+vision
+    aoe ability 2 energy
+    aot type hex, 6 range, NLoS, no movement
+    applies revealed to hex for 1 round
 
 mud pest {2p} x1
 health 1, movement, 1, sight 1, energy 0/4, S
@@ -129,6 +163,13 @@ health 10, movement 2, sight 1, armor -1, L
 marshmallow fist
     melee attack
     2 damage
+
+sentry turret {3}
+health 4, movement 0, sight 2, M
+gun
+    ranged attack
+    3 damage, 3 range
+- immobile
 
 slingshot goblin {3} x3
 health 3, movement 3, sight 2, S
@@ -330,6 +371,28 @@ battle hammer
     melee attack
     3 damage
 
+shrine keeper {5pp} x1
+health 4, movement 3, sight 2, 4 energy, S
+raise shrine
+    ability 3 energy, -2 movement
+    target hex 1 range
+    applies status shrine to terrain
+        units on this hex has +1 mana regen
+        whenever a unit within 1 range skips, heal it 1
+        whenever a unit enters this hex, apply buff fortified for 4 rounds
+            unstackable, refreshable
+            +1 max health
+lucky charm
+    ability 1 energy
+    target different allied unit 1 range
+    applies buff lucky charm for 3 rounds
+        unstackable, refreshable
+        if this unit would suffer exactly one damage, instead remove this buff
+clean up
+    combineable ability 2 energy, -2 movement
+    target hex 1 range
+    removes all statuses from hex
+
 lucky goblin {5p}
 health 4, movement 3, sight 2, S
 strike
@@ -366,7 +429,20 @@ blow up
     ability
     this unit dies
 - explode
-    when unit dies, every adjacent unit suffers 5 aoe damage.
+    when this unit dies, every unit within 1 range suffers 5 aoe damage.
+
+desolation trooper {6} x2
+health 6, movement 3, sight 2, energy 4, M
+beam
+    ranged attack
+    3 damage, 2 range, -1 movement
+    armor piercing
+    deals damage in the form of radiated
+desecrate ground
+    aoe ability 3 energy, -2 movement
+    aoe type hex size 1 centered on this unit
+    applies 2 radiated and radiation 1 to terrain
+- greater resistance to damage from radiated
 
 zone trooper {6} x2
 health 6, movement 3, sight 2, M
@@ -379,6 +455,15 @@ hunker down
     -1 movement
     applies hunkered buff to self until moves
         +1 ranged/aoe protection
+
+ambush viper {6p}
+health 4, movement 3, sight 1, S
+venomous fangs
+    melee attack, no movement
+    2 damage
+    applies 1 poison and paralysis n+1 for 2 rounds where n is targets movement
+- stealth
+- when an enemy unit engages this unit, while this unit is ready, if this unit can attack the enemy unit, it does, and is exhausted.
 
 ap rifle squad {6r} x2
 health 5, movement 2, sight 2, M
@@ -395,6 +480,16 @@ health 4, movement 3, armor 2, sight 1, M
 claw
     melee attack
     3 damage, -1 movement
+
+bat {6u} x1
+health 4, movement 3, sight 2, M
+claws
+    melee attack
+    2 damage
+    can attack units only seen as presence
+- flying
+- stealth
+- detection presence vision
 
 jumper bug {6w} x2
 health 4, movement 4, sight 2, S
@@ -496,7 +591,7 @@ evil eye
     apply 1 poison
 
 woodland shaman {6pp} x1
-health 4, movement 3, sight 2, energy 5, M
+health 4, movement 3, sight 2, energy 4, M
 wrath of nature
     ranged attack
     2 damage, 2 range, -2 movement
@@ -517,7 +612,7 @@ consecrate land
 
 diamond golem {7} x2
 health 1, movement 3, armor 3, sight 2, M
-punch
+diamond fist
     melee attack
     4 damage
 - immune to damage from statuses
@@ -614,7 +709,7 @@ lay mine
     applies minefield status to current terrain
         unstackable
         hidden
-        when enemy unit moves into this hex, remove this status, and it deals 2 terrain piercing aoe damage to it.
+        when enemy ground unit moves into this hex, remove this status, and it deals 2 damage to it.
 
 mule beast {7g}
 health 8, movement 3, sight 2, M
@@ -703,11 +798,7 @@ health 4, movement 1, sight 3, energy 4, M
 scan
     aoe ability 3 energy
     aoe type triangle size 1 range 8 NLoS, no movement
-    applies scan status to terrain
-        1 round duration
-        unstackable, refreshable
-        hidden
-        you have detection vision of hex
+    applies revealed status to terrain for 1 round
 
 void sprite {7ww} x1
 health 5, movement 1, sight 2, energy 7, S
@@ -720,7 +811,7 @@ jaunt
     teleport to that hex
 
 bee shaman {7wrp} x2
-health 4, movement 3, sight 2, energy 4, S
+health 4, movement 3, sight 2, energy 3, S
 summon bees
     ability 2 energy
     target hex 2 range LoS, -2 movement
@@ -783,6 +874,14 @@ acid spit
 - when a unit melee attacks this unit, apply corrosion to the attacker for 2 rounds
 - +1 ranged protection against non-adjacent
 
+boulder hurler oaf {8g} x1
+health 9, movement 3, sight 2, L
+hurl boulder
+    ranged attack
+    5 damage, 2 range, no movement
+    +1 damage on rock terrain
+- cannot see adjacent spaces
+
 hellion car {8w} x2
 health 4, movement 4, sight 2, M
 flamethrower
@@ -830,7 +929,7 @@ flail
     6 damage, -1 movement
 
 greater bugling {8ww} x1
-health 6, movement 5, sight 2, M
+health 6, movement 5, sight 2, S
 claws
     multi 2x max activations combinable melee attack
     2 damage
@@ -852,11 +951,24 @@ health 7, movement 3, armor 1, sight 2, energy 4, M
 righteous strike
     melee attack
     3 damage
-    +1 damage against undamaged units
+    +1 damage against with 5 or more health
 purifying nova
     ability 4 energy
     no movement
     each adjacent enemy unit suffers 2 pure damage. heal each adjacent allied unit 2.
+
+gigantomancer {8gpp}
+health 5, movement 3, sight 2, energy 4, S
+claw
+    melee attack
+    2 damage, -1 movement
+giant growth
+    combineable ability 3 energy, -1 movement
+    target M- unit, 2 range LoS
+    applies giant growth for 2 rounds
+        unit is L
+        +3 max health
+        +2 damage to melee attacks
 
 iron warlock {8uppp} x1
 health 5, movement 3, armor 1, sight 2, energy 6, M
@@ -885,7 +997,7 @@ translocate
     teleport to that hex 
 swap
     ability 3 energy
-    target unit 2 range
+    target unit 2 range LoS
     -1 movement
     swap position with the target
 
@@ -938,26 +1050,25 @@ blast
     5 damage, 2 range, no movement
 - if this unit would receive more than 2 damage in a single instance while it has 2 or more energy, it receives 2 instead and loses 2 energy
 
-sludge slug {9p} x1
-health 12, movement 2, sight 1, energy 3, M
+sludge slug {9gp} x1
+health 11, movement 2, sight 1, energy 3, M
 spew
     ranged attack
-    4 damage, 1 range, -1 movement
+    4 damage, 1 range, no movement
     ground only
     damaged units receive slimed debuff for 2 rounds
         unstackable, refreshable
         -1 movement
 belch
-    aoe ability 3 energy
+    aoe ability 3 energy, -1 movement
     aoe type triangle size 1 range 2 NLoS
-    -1 movement
     applies slimed debuff to all units for 2 rounds
-    applies sludged status to terrain
-        2 round duration
+    applies sludged status to terrain for 2 rounds
         +1 move in/out penalty to hex
         units entering receive slimed debuff for 2 rounds
 - immune to slimed debuff and sludged status
 - when enters space, applies sludged status to terrain for 2 rounds
+- units melee attacking this unit suffers slimed for 2 rounds
 
 broodmother {9pp} x1
 health 8, movement 3, sight 1, energy 6, L
