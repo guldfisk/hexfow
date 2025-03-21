@@ -1,4 +1,4 @@
-from events.eventsystem import EventSystem, Event
+from events.eventsystem import Event, ES
 from events.tests.game_objects.dummy import (
     HitDummy,
     Dummy,
@@ -8,36 +8,36 @@ from events.tests.game_objects.dummy import (
 )
 
 
-def test_event_searches_history(es: EventSystem):
+def test_event_searches_history():
     class EchoAttack(Event[None]):
 
-        def resolve(self, es: EventSystem) -> None:
-            if previous_hit := es.last_event_of_type(HitDummy):
-                es.resolve(HitDummy(previous_hit.value))
+        def resolve(self) -> None:
+            if previous_hit := ES.last_event_of_type(HitDummy):
+                ES.resolve(HitDummy(previous_hit.value))
 
-    es.resolve(EchoAttack())
-    assert es.history == [EchoAttack()]
+    ES.resolve(EchoAttack())
+    assert ES.history == [EchoAttack()]
     assert Dummy.damage == 0
 
-    es.resolve(HitDummy(1))
+    ES.resolve(HitDummy(1))
     assert Dummy.damage == 1
 
-    es.resolve(EchoAttack())
+    ES.resolve(EchoAttack())
     assert Dummy.damage == 2
 
-    es.resolve(HitDummy(2))
+    ES.resolve(HitDummy(2))
     assert Dummy.damage == 4
 
-    es.resolve(EchoAttack())
+    ES.resolve(EchoAttack())
     assert Dummy.damage == 6
 
 
-def test_event_searches_historic_event_children(es: EventSystem):
+def test_event_searches_historic_event_children():
     class EchoPainAttack(Event[None]):
 
-        def resolve(self, es: EventSystem) -> None:
-            if previous_hit := es.last_event_of_type(HitDummy):
-                es.resolve(
+        def resolve(self) -> None:
+            if previous_hit := ES.last_event_of_type(HitDummy):
+                ES.resolve(
                     HitDummy(
                         sum(e.value for e in previous_hit.iter_type(DummyLossHealth))
                     )
@@ -45,26 +45,26 @@ def test_event_searches_historic_event_children(es: EventSystem):
 
     Dummy.armor = 1
 
-    es.resolve(EchoPainAttack())
-    assert es.history == [EchoPainAttack()]
+    ES.resolve(EchoPainAttack())
+    assert ES.history == [EchoPainAttack()]
     assert Dummy.damage == 0
 
-    es.resolve(HitDummy(3))
+    ES.resolve(HitDummy(3))
     assert Dummy.damage == 2
 
-    es.resolve(EchoPainAttack())
+    ES.resolve(EchoPainAttack())
     assert Dummy.damage == 3
 
-    es.resolve(EchoPainAttack())
+    ES.resolve(EchoPainAttack())
     assert Dummy.damage == 3
 
-    es.register_effect(DamageAlsoMoves())
-    es.register_effect(MoveToDamage())
+    ES.register_effect(DamageAlsoMoves())
+    ES.register_effect(MoveToDamage())
 
     Dummy.damage = 0
 
-    es.resolve(HitDummy(3))
+    ES.resolve(HitDummy(3))
     assert Dummy.damage == 4
 
-    es.resolve(EchoPainAttack())
+    ES.resolve(EchoPainAttack())
     assert Dummy.damage == 10

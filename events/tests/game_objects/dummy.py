@@ -1,6 +1,6 @@
 import dataclasses
 
-from events.eventsystem import EventSystem, Event, ReplacementEffect, E, TriggerEffect
+from events.eventsystem import Event, ReplacementEffect, E, TriggerEffect, ES
 
 
 class Dummy:
@@ -36,7 +36,7 @@ class DummyLossHealth(Event[int]):
     def is_valid(self) -> bool:
         return self.value > 0
 
-    def resolve(self, es: EventSystem) -> int:
+    def resolve(self) -> int:
         Dummy.deal_damage(self.value)
         return self.value
 
@@ -48,9 +48,9 @@ class DamageDummy(Event[int]):
     def is_valid(self) -> bool:
         return self.value > 0
 
-    def resolve(self, es: EventSystem) -> int:
+    def resolve(self) -> int:
         damage_value = max(self.value - Dummy.armor, 0)
-        es.resolve(DummyLossHealth(damage_value))
+        ES.resolve(DummyLossHealth(damage_value))
         return damage_value
 
 
@@ -61,8 +61,8 @@ class HitDummy(Event[None]):
     def is_valid(self) -> bool:
         return self.value > 0
 
-    def resolve(self, es: EventSystem) -> None:
-        es.resolve(DamageDummy(self.value))
+    def resolve(self) -> None:
+        ES.resolve(DamageDummy(self.value))
 
 
 @dataclasses.dataclass
@@ -72,7 +72,7 @@ class MoveDummy(Event[int]):
     def is_valid(self) -> bool:
         return self.distance != 0
 
-    def resolve(self, es: EventSystem) -> int:
+    def resolve(self) -> int:
         Dummy.move(self.distance)
         return self.distance
 
@@ -84,89 +84,89 @@ class ChargeDummy(Event[int]):
     def is_valid(self) -> bool:
         return self.value > 0
 
-    def resolve(self, es: EventSystem) -> int:
+    def resolve(self) -> int:
         Dummy.charge(self.value)
         return self.value
 
 
 class ResetEnergy(Event[None]):
-    def resolve(self, es: EventSystem) -> None:
+    def resolve(self) -> None:
         Dummy.energy = 0
 
 
 class DoubleDamage(ReplacementEffect[DamageDummy]):
     priority = 0
 
-    def resolve(self, es: EventSystem, event: E) -> None:
-        es.resolve(event.branch(value=event.value * 2))
+    def resolve(self, event: E) -> None:
+        ES.resolve(event.branch(value=event.value * 2))
 
 
 class AdditionalDamage(ReplacementEffect[DamageDummy]):
     priority = 1
 
-    def resolve(self, es: EventSystem, event: DamageDummy) -> None:
-        es.resolve(event.branch(value=event.value + 1))
+    def resolve(self, event: DamageDummy) -> None:
+        ES.resolve(event.branch(value=event.value + 1))
 
 
 class PreventDamage(ReplacementEffect[DamageDummy]):
     priority = 2
 
-    def resolve(self, es: EventSystem, event: DamageDummy) -> None:
+    def resolve(self, event: DamageDummy) -> None:
         return None
 
 
 class DamageToMove(ReplacementEffect[DamageDummy]):
     priority = 3
 
-    def resolve(self, es: EventSystem, event: DamageDummy) -> None:
-        es.resolve(MoveDummy(distance=event.value))
+    def resolve(self, event: DamageDummy) -> None:
+        ES.resolve(MoveDummy(distance=event.value))
 
 
 class MoveToDamage(ReplacementEffect[MoveDummy]):
     priority = 4
 
-    def resolve(self, es: EventSystem, event: MoveDummy) -> None:
-        es.resolve(DamageDummy(value=event.distance))
+    def resolve(self, event: MoveDummy) -> None:
+        ES.resolve(DamageDummy(value=event.distance))
 
 
 class DamageAlsoMoves(ReplacementEffect[DamageDummy]):
     priority = -1
 
-    def resolve(self, es: EventSystem, event: DamageDummy) -> None:
-        es.resolve(MoveDummy(distance=event.value))
-        es.resolve(event)
+    def resolve(self, event: DamageDummy) -> None:
+        ES.resolve(MoveDummy(distance=event.value))
+        ES.resolve(event)
 
 
 class StaggerTrigger(TriggerEffect[DamageDummy]):
     priority = 0
 
-    def resolve(self, es: EventSystem, event: DamageDummy) -> None:
-        es.resolve(MoveDummy(-event.value))
+    def resolve(self, event: DamageDummy) -> None:
+        ES.resolve(MoveDummy(-event.value))
 
 
 class DynamoChargeTrigger(TriggerEffect[MoveDummy]):
     priority = 0
 
-    def resolve(self, es: EventSystem, event: MoveDummy) -> None:
-        es.resolve(ChargeDummy(abs(event.distance)))
+    def resolve(self, event: MoveDummy) -> None:
+        ES.resolve(ChargeDummy(abs(event.distance)))
 
 
 class DropBatteriesTrigger(TriggerEffect[MoveDummy]):
     priority = 1
 
-    def resolve(self, es: EventSystem, event: MoveDummy) -> None:
-        es.resolve(ResetEnergy())
+    def resolve(self, event: MoveDummy) -> None:
+        ES.resolve(ResetEnergy())
 
 
 class OverheatTrigger(TriggerEffect[ChargeDummy]):
     priority = 0
 
-    def resolve(self, es: EventSystem, event: ChargeDummy) -> None:
-        es.resolve(DamageDummy(event.value))
+    def resolve(self, event: ChargeDummy) -> None:
+        ES.resolve(DamageDummy(event.value))
 
 
 class HitOnDamageTrigger(TriggerEffect[DamageDummy]):
     priority = 10
 
-    def resolve(self, es: EventSystem, event: DamageDummy) -> None:
-        es.resolve(HitDummy(1))
+    def resolve(self, event: DamageDummy) -> None:
+        ES.resolve(HitDummy(1))

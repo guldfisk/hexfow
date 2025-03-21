@@ -4,18 +4,11 @@ anemone polyp {1} x1
  - units melee attacking this suffers paralysis 6 for 3 rounds
  - when this unit moves, stun it
 
-anti-tank mine {1} x2
-health 1, movement 1, sight 0, S
-deploy
-    ability
-    this unit dies leaving no corpse. apply status anti-tank mined to terrain
-        when L ground unit moves in, it suffers 3 damage with 2 ap, and remove this status.
-
 cactus {1} x1
 health 3, movement 0, sight 0, energy 0/2, M
 grow
     ability 2 energy
-    heals one
+    heals 1
 - units melee attacking this unit suffers 2 damage
 - immobile
 
@@ -40,7 +33,27 @@ sharpen
  - immobile
  - aquatic
 
-lotus bud {1} x1
+skittering grub {1} x1
+health 3, movement 3, sight 0, S
+
+vicious grub {1} x2
+health 2, movement 1, sight 0, S
+spikes
+    melee attack
+    2 damage
+
+anti-tank mine {1p} x2
+health 1, movement 1, sight 0, S
+deploy
+    ability
+    this unit dies leaving no corpse. apply status anti-tank mined to terrain
+        when L ground unit moves in, it suffers 3 damage with 2 ap, and remove this status.
+
+balloon {1u} x1
+health 1, movement 1, sight 1, M
+- flying
+
+lotus bud {1p} x1
 health 3, movement 0, sight 0, energy 0/2, S
 bloom
     ability 2 energy
@@ -48,13 +61,6 @@ bloom
     heals each adjacent unit 1
  - immobile
  - allied units can move unto this unit. when they do, this unit dies, and the allied unit is healed 1.
-
-balloon {1u} x1
-health 1, movement 1, sight 2, M
-- flying
-
-skittering grub {1w} x1
-health 3, movement 3, sight 0, S
 
 ambush mine {2} x3
 health 2, movement 2, sight 1, S
@@ -89,8 +95,7 @@ snapping turtle {2} x1
 health 1, movement 2, sight 1, armor 1, S
 bite
     melee attack
-    -1 movement
-    2 damage
+    2 damage, -1 movement
 - aquatic
 
 blind oracle {2p} x1
@@ -293,6 +298,7 @@ splat
     0 damage
     applies blind to target for 2 rounds
     this unit dies
+- flying
 
 stim drone {4pp} x1
 health 3, movement 2, sight 1, energy 3, S
@@ -371,34 +377,26 @@ battle hammer
     melee attack
     3 damage
 
-shrine keeper {5pp} x1
-health 4, movement 3, sight 2, 4 energy, S
-raise shrine
-    ability 3 energy, -2 movement
-    target hex 1 range
-    applies status shrine to terrain
-        units on this hex has +1 mana regen
-        whenever a unit within 1 range skips, heal it 1
-        whenever a unit enters this hex, apply buff fortified for 4 rounds
-            unstackable, refreshable
-            +1 max health
-lucky charm
-    ability 1 energy
-    target different allied unit 1 range
-    applies buff lucky charm for 3 rounds
-        unstackable, refreshable
-        if this unit would suffer exactly one damage, instead remove this buff
-clean up
-    combineable ability 2 energy, -2 movement
-    target hex 1 range
-    removes all statuses from hex
-
 lucky goblin {5p}
 health 4, movement 3, sight 2, S
 strike
     melee attack
     2 damage
 - whenever a buff is applied to an adjacent unit, it is also applied to this unit.
+
+masquerade assassin {5p} x2
+health 4, movement 3, sight 2, energy 4, M
+backstab
+    melee attack
+    2 damage, -1 movement
+    +2 damage against exhausted units
+disguise
+    combinable ability 3 energy
+    target unit range 3, LoS
+    applies status disguised to self for 4 rounds
+        replaceable
+        hidden
+        this unit appears to opponents as the targeted unit
 
 yeti scout {5w} x1
 health 5, movement 3, sight 2, S
@@ -422,6 +420,28 @@ prick
     melee attack
     1 damage, -1 movement
     +1 damage against exhausted units
+
+shrine keeper {5pp} x1
+health 4, movement 3, sight 2, 4 energy, S
+raise shrine
+    ability 3 energy, -2 movement
+    target hex 1 range
+    applies status shrine to terrain
+        units on this hex has +1 mana regen
+        whenever a unit within 1 range skips, heal it 1
+        whenever a unit enters this hex, apply buff fortified for 4 rounds
+            unstackable, refreshable
+            +1 max health
+lucky charm
+    ability 1 energy
+    target different allied unit 1 range
+    applies buff lucky charm for 3 rounds
+        unstackable, refreshable
+        if this unit would suffer exactly one damage, instead remove this buff
+clean up
+    combinable ability 2 energy, -2 movement
+    target hex 1 range
+    removes all statuses from hex
 
 bomb truck {6} x2
 health 5, movement 3, sight 1, M
@@ -463,7 +483,7 @@ venomous fangs
     2 damage
     applies 1 poison and paralysis n+1 for 2 rounds where n is targets movement
 - stealth
-- when an enemy unit engages this unit, while this unit is ready, if this unit can attack the enemy unit, it does, and is exhausted.
+- when an enemy unit engages this unit while this unit is ready, if this unit can attack the enemy unit, it does, and is exhausted.
 
 ap rifle squad {6r} x2
 health 5, movement 2, sight 2, M
@@ -522,7 +542,7 @@ stare
 bombard canon {6rr} x2
 health 4, movement 1, sight 1, M
 solid munition
-    ranked attack
+    ranged attack
     4 damage, 4 range, no movement
     stun this unit
 
@@ -709,7 +729,7 @@ lay mine
     applies minefield status to current terrain
         unstackable
         hidden
-        when enemy ground unit moves into this hex, remove this status, and it deals 2 damage to it.
+        when ground unit moves into this hex, remove this status, and the unit suffers 2 damage.
 
 mule beast {7g}
 health 8, movement 3, sight 2, M
@@ -731,7 +751,7 @@ dig trench
     applies status trenches to current hex
         M- units gets minimum 0/2/2 terrain protection
 emplace barbed wire
-    multi 3x max activations combinable ability 1 energy
+    multi 2x max activations combinable ability 1 energy
     target hex 1 range not occupied by enemy unit
     applies status barbed wire to hex
         +1 move in/out penalty for M- ground units
@@ -951,7 +971,7 @@ health 7, movement 3, armor 1, sight 2, energy 4, M
 righteous strike
     melee attack
     3 damage
-    +1 damage against with 5 or more health
+    +1 damage against with 5 or more max health
 purifying nova
     ability 4 energy
     no movement
@@ -963,12 +983,12 @@ claw
     melee attack
     2 damage, -1 movement
 giant growth
-    combineable ability 3 energy, -1 movement
+    combinable ability 3 energy, -1 movement
     target M- unit, 2 range LoS
     applies giant growth for 2 rounds
         unit is L
         +3 max health
-        +2 damage to melee attacks
+        +2 attack power to melee attacks
 
 iron warlock {8uppp} x1
 health 5, movement 3, armor 1, sight 2, energy 6, M
@@ -1007,7 +1027,7 @@ punch
     melee attack
     3 damage
     dispell all statuses on target
-- this unit can not have dispellable statuses
+- dispellable statuses cannot be applied to this unit
 
 radiation demon {9} x2
 health 8, movement 3, sight 2, L
@@ -1050,26 +1070,6 @@ blast
     5 damage, 2 range, no movement
 - if this unit would receive more than 2 damage in a single instance while it has 2 or more energy, it receives 2 instead and loses 2 energy
 
-sludge slug {9gp} x1
-health 11, movement 2, sight 1, energy 3, M
-spew
-    ranged attack
-    4 damage, 1 range, no movement
-    ground only
-    damaged units receive slimed debuff for 2 rounds
-        unstackable, refreshable
-        -1 movement
-belch
-    aoe ability 3 energy, -1 movement
-    aoe type triangle size 1 range 2 NLoS
-    applies slimed debuff to all units for 2 rounds
-    applies sludged status to terrain for 2 rounds
-        +1 move in/out penalty to hex
-        units entering receive slimed debuff for 2 rounds
-- immune to slimed debuff and sludged status
-- when enters space, applies sludged status to terrain for 2 rounds
-- units melee attacking this unit suffers slimed for 2 rounds
-
 broodmother {9pp} x1
 health 8, movement 3, sight 1, energy 6, L
 spawn
@@ -1092,11 +1092,11 @@ berserk
     combinable ability
     gains buff berserk for 1 round
         +1 movement
-        +1 damage
+        +1 attack power
         ignores 1 terrain penalty per turn
     suffers 2 non-lethal pure damage
 - when dies, applies status courageous battleground to hex
-    +1 melee damage to allied units
+    +1 melee attack power to allied units
 
 giant toad {9wg} x2
 health 9, movement 2, sight 2, energy 6, L
@@ -1106,7 +1106,7 @@ tongue lash
     can attack air
 jump
     combinable ability 3 energy
-    target hex 2 range NLoS vision required
+    target hex 2 range LoS vision required
     -1 movement
     teleport to target
 - unit melee attacking this unit suffers 1 poison
@@ -1134,14 +1134,34 @@ howl
     -2 movement
     applies debuff intimidate to all enemy units within 2 range for 2 rounds
         unstackable, refreshable
-        -1 attack
+        -1 attack power
+
+sludge slug {9gp} x1
+health 11, movement 2, sight 1, energy 3, M
+spew
+    ranged attack
+    4 damage, 1 range, no movement
+    ground only
+    damaged units receive slimed debuff for 2 rounds
+        unstackable, refreshable
+        -1 movement
+belch
+    aoe ability 3 energy, -1 movement
+    aoe type triangle size 1 range 2 NLoS
+    applies slimed debuff to all units for 2 rounds
+    applies sludged status to terrain for 2 rounds
+        +1 move in/out penalty to hex
+        units entering receive slimed debuff for 2 rounds
+- immune to slimed debuff and sludged status
+- when enters space, applies sludged status to terrain for 2 rounds
+- units melee attacking this unit suffers slimed for 2 rounds
 
 sniper {9rr} x2
 health 3, movement 3, sight 2, S
 snipe
     ranged attack
     4 damage, 4 range, no movement
-    cannot target adjacent
+    cannot target adjacent units
     -2 damage against air
 - stealth while not moving
 

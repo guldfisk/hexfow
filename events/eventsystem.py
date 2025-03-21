@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import dataclasses
+import functools
+import inspect
 import re
 from abc import ABC, abstractmethod, ABCMeta
 from collections import defaultdict
@@ -13,17 +15,17 @@ from typing import (
     Generic,
     get_args,
     Iterator,
-    Sequence,
+    Callable,
 )
-
-from debug_utils import dp
 
 
 T = TypeVar("T")
 V = TypeVar("V")
 C = TypeVar("C")
+A = TypeVar("A", bound=Callable)
 
 
+# TODO maybe triggers can't cause triggers to trigger?
 class TriggerLoopError(Exception): ...
 
 
@@ -43,6 +45,7 @@ class EventSystem:
         )
         self._pending_triggers: list[tuple[TriggerEffect, Event]] = []
 
+        # TODO prob want both event begins and ends.
         self.history: list[Event] = []
 
         self._active_event: Event | None = None
@@ -59,7 +62,7 @@ class EventSystem:
 
         # The same attribute modifier can only modify the attribute once during
         # each attribute get.
-        self._evaluated_attributes: set[tuple[object, ModifiableAttribute]] = set()
+        self._evaluated_state_modifiers: set[tuple[object, Any]] = set()
 
     def has_pending_triggers(self) -> bool:
         return bool(self._pending_triggers)
@@ -76,21 +79,19 @@ class EventSystem:
         self._effects[effect.effect_type][effect.target].remove(effect)
         return effect
 
-    def determine_attribute(
-        self, obj: object, attribute: ModifiableAttribute, value: V
-    ) -> V:
+    def determine_modifiable(self, obj: object, key: Any, request: Any, value: V) -> V:
         for attribute_modifier in sorted(
             (
                 _modifier
-                for _modifier in self._get_effects(AttributeModifierEffect, attribute)
-                if (obj, attribute) not in self._evaluated_attributes
-                and _modifier.should_modify(obj, value, self)
+                for _modifier in self._get_effects(StateModifierEffect, key)
+                if (obj, key) not in self._evaluated_state_modifiers
+                and _modifier.should_modify(obj, request, value)
             ),
             key=lambda e: e.priority,
         ):
-            self._evaluated_attributes.add((obj, attribute))
-            value = attribute_modifier.modify(obj, value, self)
-            self._evaluated_attributes.remove((obj, attribute))
+            self._evaluated_state_modifiers.add((obj, key))
+            value = attribute_modifier.modify(obj, request, value)
+            self._evaluated_state_modifiers.remove((obj, key))
         return value
 
     def resolve(self, event: Event[V]) -> EventResolution:
@@ -101,16 +102,15 @@ class EventSystem:
             replacement_effect
             for replacement_effect in self._get_effects(ReplacementEffect, event.name)
             if replacement_effect not in self._exhausted_replacement_effects
-            and replacement_effect.can_replace(self, event)
+            and replacement_effect.can_replace(event)
         ]:
-
             replacement_effect = min(eligible_replacements, key=lambda r: r.priority)
 
             self._exhausted_replacement_effects.add(replacement_effect)
             previous_active_replacement_effect = self._active_replacement_effect
             self._active_replacement_effect = replacement_effect
             previous_replacement_results = self._replacement_results
-            replacement_effect.resolve(self, event)
+            replacement_effect.resolve(event)
             self._active_replacement_effect = previous_active_replacement_effect
             self._exhausted_replacement_effects.remove(replacement_effect)
             resolution = EventResolution(self._replacement_results)
@@ -123,9 +123,9 @@ class EventSystem:
 
         # TODO after instead?
         for trigger_effect in self._get_effects(TriggerEffect, event.name):
-            if trigger_effect.should_trigger(self, event):
+            if trigger_effect.should_trigger(event):
                 self._pending_triggers.append((trigger_effect, event))
-                if trigger_effect.should_deregister(self, event):
+                if trigger_effect.should_deregister(event):
                     self.deregister_effect(trigger_effect)
 
         previous_active_replacement_effect = self._active_replacement_effect
@@ -134,7 +134,7 @@ class EventSystem:
             self._active_event = event
         self._active_replacement_effect = None
 
-        event.result = event.resolve(self)
+        event.result = event.resolve()
 
         if not previous_active_replacement_effect:
             self._active_event = previous_active_event
@@ -171,7 +171,7 @@ class EventSystem:
                     self._exhausted_replacement_effects = set()
                     self._active_replacement_effect = None
                     self._replacement_results = []
-                    trigger_effect.resolve(self, trigger_event)
+                    trigger_effect.resolve(trigger_event)
                     self._active_event = previous_active_event
                     self._exhausted_replacement_effects = previous_replacement_effects
                     self._active_replacement_effect = previous_active_replacement_effect
@@ -179,6 +179,46 @@ class EventSystem:
             else:
                 return
         raise TriggerLoopError()
+
+
+class ScopedEventSystem(EventSystem):
+
+    def __init__(self):
+        self._es: EventSystem | None = None
+
+    @property
+    def history(self) -> list[Event]:
+        return self._es.history
+
+    def bind(self, es: EventSystem) -> None:
+        self._es = es
+
+    def has_pending_triggers(self) -> bool:
+        return self._es.has_pending_triggers()
+
+    def register_effect(self, effect: F) -> F:
+        return self._es.register_effect(effect)
+
+    def _get_effects(self, effect_type: type[F] | F, target: Any) -> list[F]:
+        return self._es._get_effects(effect_type, target)
+
+    def deregister_effect(self, effect: F) -> F:
+        return self._es.deregister_effect(effect)
+
+    def determine_modifiable(self, obj: object, key: Any, request: Any, value: V) -> V:
+        return self._es.determine_modifiable(obj, key, request, value)
+
+    def resolve(self, event: Event[V]) -> EventResolution:
+        return self._es.resolve(event)
+
+    def last_event_of_type(self, event_type: type[E]) -> E | None:
+        return self._es.last_event_of_type(event_type)
+
+    def resolve_pending_triggers(self, parent_event: Event | None = None) -> None:
+        self._es.resolve_pending_triggers(parent_event)
+
+
+ES = ScopedEventSystem()
 
 
 class _EventMeta(type):
@@ -217,7 +257,7 @@ class Event(Generic[V], metaclass=_EventMeta):
         return True
 
     @abstractmethod
-    def resolve(self, es: EventSystem) -> V: ...
+    def resolve(self) -> V: ...
 
     def branch(self, event_type: type[Event] | None = None, **kwargs) -> Self:
         return (event_type or self.__class__)(
@@ -302,65 +342,61 @@ class EventResolution:
 class ReplacementEffect(EventEffect, Generic[E], ABC):
     effect_type = "replacement"
 
-    def can_replace(self, es: EventSystem, event: E) -> bool:
+    def can_replace(self, event: E) -> bool:
         return True
 
     @abstractmethod
-    def resolve(self, es: EventSystem, event: E) -> None: ...
+    def resolve(self, event: E) -> None: ...
 
 
 class TriggerEffect(EventEffect, Generic[E], ABC):
     effect_type = "trigger"
 
-    def should_trigger(self, es: EventSystem, event: E) -> bool:
+    def should_trigger(self, event: E) -> bool:
         return True
 
-    def should_deregister(self, es: EventSystem, event: E) -> bool:
+    def should_deregister(self, event: E) -> bool:
         return False
 
     @abstractmethod
-    def resolve(self, es: EventSystem, event: E) -> None: ...
+    def resolve(self, event: E) -> None: ...
 
 
 @dataclasses.dataclass
-class Modifiable(Generic[V]):
-    attribute: ModifiableAttribute[V]
+class _BoundModifiableAttribute(Generic[T, V]):
+    attribute: ModifiableAttribute[T, V]
     instance: object
 
     def get_base(self) -> V:
         return self.attribute.get_base(self.instance)
 
-    def get(self, es: EventSystem) -> V:
-        return self.attribute.get(self.instance, es)
+    def get(self, request: T) -> V:
+        return self.attribute.get(self.instance, request)
 
     def set(self, value: V) -> None:
         setattr(self.instance, self.attribute.source_name, value)
 
 
 @dataclasses.dataclass(frozen=True)
-class ModifiableAttribute(Generic[V]):
+class ModifiableAttribute(Generic[T, V]):
     name: str
     source_name: str
 
-    def get(self, instance: object, es: EventSystem) -> V:
-        return es.determine_attribute(
-            instance, self, getattr(instance, self.source_name)
+    def get(self, instance: object, request: T) -> V:
+        return ES.determine_modifiable(
+            instance, self, request, getattr(instance, self.source_name)
         )
 
     def get_base(self, instance: object) -> V:
         return getattr(instance, self.source_name)
 
-    # TODO need context?
     def __get__(
         self, instance: object | None, owner
-    ) -> Modifiable[V] | ModifiableAttribute:
+    ) -> _BoundModifiableAttribute[T, V] | ModifiableAttribute:
         if instance is None:
             return self
-        return Modifiable(self, instance)
+        return _BoundModifiableAttribute(self, instance)
 
-    # TODO
-    def __set__(self, instance: object, value: V):
-        setattr(instance, self.source_name, value)
 
 @dataclasses.dataclass
 class _GetFreezer:
@@ -370,7 +406,7 @@ class _GetFreezer:
         return self.v
 
 
-class _AttributeModifierMeta(_EffectMeta):
+class _StateModifierMeta(_EffectMeta):
     def __new__(
         metacls,
         name: str,
@@ -382,29 +418,44 @@ class _AttributeModifierMeta(_EffectMeta):
         if ABC not in bases:
             if not (target := getattr(klass, "target", None)):
                 raise ValueError(f"{klass} missing target")
-            if not isinstance(target, ModifiableAttribute):
+
+            if isinstance(target, ModifiableAttribute):
+                # Very ugly hack, to make sure the ModifiableAttribute is never bound
+                # to an instance when accessed from the modifier.
+                klass.target = _GetFreezer(klass.target)
+            elif getattr(target, "__target__", None):
+                klass.target = target.__target__
+            else:
                 raise ValueError(f"{klass} has invalid target {target}")
-            # Very ugly hack, to make sure the ModifiableAttribute is never bound
-            # to an instance when accessed from the modifier.
-            klass.target = _GetFreezer(klass.target)
 
         return klass
 
 
-class AttributeModifierEffect(
-    Effect, Generic[T, V], ABC, metaclass=_AttributeModifierMeta
-):
-    effect_type = "attribute_modifier"
-    target: ClassVar[ModifiableAttribute]
+class StateModifierEffect(Effect, Generic[T, C, V], ABC, metaclass=_StateModifierMeta):
+    effect_type = "state_modifier"
+
+    def should_modify(self, obj: T, request: C, value: V) -> bool:
+        return True
 
     @abstractmethod
-    def should_modify(self, obj: T, value: V, es: EventSystem) -> bool: ...
-
-    @abstractmethod
-    def modify(self, obj: T, value: V, es: EventSystem) -> V: ...
+    def modify(self, obj: T, request: C, value: V) -> V: ...
 
 
-class WithModifiableAttributesMeta(type):
+def modifiable(f: A) -> A:
+    f.__modifiable__ = True
+    return f
+
+
+def _wrap_method(f: A) -> A:
+    @functools.wraps(f)
+    def _wrapper(self: object, request: Any) -> Any:
+        v = f(self, request)
+        return ES.determine_modifiable(self, f.__target__, request, v)
+
+    return _wrapper
+
+
+class ModifiableMeta(ABCMeta):
 
     def __new__(
         metacls,
@@ -413,17 +464,25 @@ class WithModifiableAttributesMeta(type):
         attributes: dict[str, Any],
         **kwargs,
     ) -> type:
+        modifiable_methods = []
+        if ABC not in bases:
+            for key, value in attributes.items():
+                if not key.startswith("_") and getattr(value, "__modifiable__", None):
+                    assert len(inspect.signature(value).parameters) == 2
+                    attributes[key] = _wrap_method(value)
+                    modifiable_methods.append((key, value, attributes[key]))
+
         for key, annotation in attributes.get("__annotations__", {}).items():
             if isinstance(annotation, str):
                 annotation = eval(annotation)
-            if (
-                hasattr(annotation, "__origin__")
-                and issubclass(annotation.__origin__, ModifiableAttribute)
-                # TODO
-                # and not key in attributes
+            if hasattr(annotation, "__origin__") and issubclass(
+                annotation.__origin__, ModifiableAttribute
             ):
                 attributes[key] = ModifiableAttribute(key, "_" + key)
-        return super().__new__(metacls, name, bases, attributes)
+        klass = super().__new__(metacls, name, bases, attributes)
+        for name, modifiable_method, wrapper in modifiable_methods:
+            modifiable_method.__target__ = wrapper.__target__ = (klass, name)
+        return klass
 
 
-class WithModifiableAttributes(metaclass=WithModifiableAttributesMeta): ...
+class Modifiable(ABC, metaclass=ModifiableMeta): ...

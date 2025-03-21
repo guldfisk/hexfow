@@ -1,17 +1,13 @@
 from __future__ import annotations
 
 import dataclasses
-from abc import ABC
 from enum import Enum, auto
 
-from debug_utils import dp
 from events.eventsystem import (
-    EventSystem,
     Event,
-    V,
     ModifiableAttribute,
-    AttributeModifierEffect,
-    WithModifiableAttributes,
+    Modifiable,
+    modifiable, ES,
 )
 
 
@@ -24,10 +20,10 @@ class Player: ...
 
 
 # @dataclasses.dataclass
-class Unit(WithModifiableAttributes):
-    power: ModifiableAttribute[int]
-    toughness: ModifiableAttribute[int]
-    flying: ModifiableAttribute[bool]
+class Unit(Modifiable):
+    power: ModifiableAttribute[None, int]
+    toughness: ModifiableAttribute[None, int]
+    flying: ModifiableAttribute[None, bool]
 
     # def __hash__(self):
     #     return id(self)
@@ -51,20 +47,23 @@ class Unit(WithModifiableAttributes):
         self.controller = controller
 
 
-class Hex(WithModifiableAttributes):
+class Hex(Modifiable):
 
     def __init__(self, terrain_type: TerrainType = TerrainType.GROUND):
         self.terrain_type = terrain_type
         self.unit: Unit | None = None
 
-    def is_passable_to(self, unit: Unit, es: EventSystem) -> bool:
-        return self.terrain_type == TerrainType.GROUND or unit.flying.get(es)
+    @modifiable
+    def is_passable_to(self, unit: Unit) -> bool:
+        return self.terrain_type == TerrainType.GROUND or unit.flying.get(None)
 
-    def is_occupied_for(self, unit: Unit, es: EventSystem) -> bool:
+    @modifiable
+    def is_occupied_for(self, unit: Unit) -> bool:
         return not self.unit
 
-    def can_move_into(self, unit: Unit, es: EventSystem) -> bool:
-        return self.is_occupied_for(unit, es) and self.is_passable_to(unit, es)
+    @modifiable
+    def can_move_into(self, unit: Unit) -> bool:
+        return self.is_occupied_for(unit) and self.is_passable_to(unit)
 
 
 class Map:
@@ -85,7 +84,7 @@ class ChangePosition(Event[None]):
     map: Map
     to: Hex
 
-    def resolve(self, es: EventSystem) -> None:
+    def resolve(self) -> None:
         if previous_hex := self.map.get_position_off(self.unit):
             previous_hex.unit = None
         self.to.unit = self.unit
@@ -98,9 +97,9 @@ class Move(Event[Hex | None]):
     map: Map
     to: Hex
 
-    def resolve(self, es: EventSystem) -> Hex | None:
+    def resolve(self) -> Hex | None:
         if not self.to.unit:
-            es.resolve(self.branch(ChangePosition))
+            ES.resolve(self.branch(ChangePosition))
             return self.to
 
 
@@ -109,7 +108,7 @@ class Heal(Event[None]):
     unit: Unit
     amount: int
 
-    def resolve(self, es: EventSystem) -> None:
+    def resolve(self) -> None:
         self.unit.health += self.amount
 
 
@@ -117,5 +116,5 @@ class Heal(Event[None]):
 class Kill(Event[None]):
     unit: Unit
 
-    def resolve(self, es: EventSystem) -> None:
+    def resolve(self) -> None:
         self.unit.health = 0

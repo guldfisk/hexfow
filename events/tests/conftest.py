@@ -1,6 +1,6 @@
 import pytest
 
-from events.eventsystem import EventSystem
+from events.eventsystem import EventSystem, ES
 from events.tests.game_objects.dummy import Dummy
 
 
@@ -9,6 +9,6 @@ def dummy() -> None:
     Dummy.reset()
 
 
-@pytest.fixture
-def es() -> EventSystem:
-    return EventSystem()
+@pytest.fixture(autouse=True)
+def refresh_session() -> None:
+    ES.bind(EventSystem())

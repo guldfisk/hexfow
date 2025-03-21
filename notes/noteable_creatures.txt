@@ -1,0 +1,13 @@
+lucky goblin
+anything with break
+engages - anything with "moves from" - battle ball - guerrilla squad stakes
+presence vision + bat
+jaguar
+flame wall effects trigger timing - needs explicit support?
+ephemeral replacement effects - prob don't need explicit support, since it can be done in the resolve, plus all the
+    cases we need it statuses, which needs more complicated logic anyway.
+"ignore one per turn" etc. - need to maintain state.
+time knight pocket acceleration - don't think this is reasonably possible
+    maybe something like, collect all the relevant effects, and then manually call their resolve methods.
+
+CURSOR : time knight

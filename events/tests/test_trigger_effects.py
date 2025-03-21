@@ -4,12 +4,12 @@ from abc import ABC
 import pytest
 
 from events.eventsystem import (
-    EventSystem,
     TriggerLoopError,
     Event,
     ReplacementEffect,
     TriggerEffect,
     E,
+    ES,
 )
 from events.tests.game_objects.dummy import (
     StaggerTrigger,
@@ -27,104 +27,102 @@ from events.tests.game_objects.dummy import (
 from events.tests.game_objects.units import Unit, Damage, Move
 
 
-def test_trigger_effect(es: EventSystem):
-    es.register_effect(StaggerTrigger())
-    es.resolve(HitDummy(value=2))
+def test_trigger_effect():
+    ES.register_effect(StaggerTrigger())
+    ES.resolve(HitDummy(value=2))
     assert Dummy.damage == 2
     assert Dummy.position == 0
-    es.resolve_pending_triggers()
+    ES.resolve_pending_triggers()
     assert Dummy.position == -2
-    assert not es.has_pending_triggers()
+    assert not ES.has_pending_triggers()
 
 
-def test_multiple_trigger_effects(es: EventSystem):
+def test_multiple_trigger_effects():
     for _ in range(2):
-        es.register_effect(StaggerTrigger())
-    es.resolve(HitDummy(value=2))
+        ES.register_effect(StaggerTrigger())
+    ES.resolve(HitDummy(value=2))
     assert Dummy.damage == 2
     assert Dummy.position == 0
-    es.resolve_pending_triggers()
+    ES.resolve_pending_triggers()
     assert Dummy.position == -4
-    assert not es.has_pending_triggers()
+    assert not ES.has_pending_triggers()
 
 
-def test_trigger_on_replaced_effect(es: EventSystem):
-    es.register_effect(StaggerTrigger())
-    es.register_effect(DoubleDamage())
-    es.resolve(HitDummy(value=2))
+def test_trigger_on_replaced_effect():
+    ES.register_effect(StaggerTrigger())
+    ES.register_effect(DoubleDamage())
+    ES.resolve(HitDummy(value=2))
     assert Dummy.damage == 4
     assert Dummy.position == 0
-    es.resolve_pending_triggers()
+    ES.resolve_pending_triggers()
     assert Dummy.position == -4
-    assert not es.has_pending_triggers()
+    assert not ES.has_pending_triggers()
 
 
-def test_chained_triggers(es: EventSystem):
-    es.register_effect(DynamoChargeTrigger())
-    es.register_effect(StaggerTrigger())
-    es.resolve(HitDummy(value=2))
+def test_chained_triggers():
+    ES.register_effect(DynamoChargeTrigger())
+    ES.register_effect(StaggerTrigger())
+    ES.resolve(HitDummy(value=2))
     assert Dummy.damage == 2
     assert Dummy.position == 0
     assert Dummy.energy == 0
-    es.resolve_pending_triggers()
+    ES.resolve_pending_triggers()
     assert Dummy.position == -2
     assert Dummy.energy == 2
-    assert not es.has_pending_triggers()
+    assert not ES.has_pending_triggers()
 
 
-def test_trigger_event_prevented(es: EventSystem):
-    es.register_effect(StaggerTrigger())
-    es.register_effect(PreventDamage())
-    es.resolve(HitDummy(value=2))
+def test_trigger_event_prevented():
+    ES.register_effect(StaggerTrigger())
+    ES.register_effect(PreventDamage())
+    ES.resolve(HitDummy(value=2))
     assert Dummy.damage == 0
     assert Dummy.position == 0
-    assert not es.has_pending_triggers()
+    assert not ES.has_pending_triggers()
 
 
-def test_trigger_event_replaced_by_non_triggering_event(es: EventSystem):
-    es.register_effect(StaggerTrigger())
-    es.register_effect(DamageToMove())
-    es.resolve(HitDummy(value=2))
+def test_trigger_event_replaced_by_non_triggering_event():
+    ES.register_effect(StaggerTrigger())
+    ES.register_effect(DamageToMove())
+    ES.resolve(HitDummy(value=2))
     assert Dummy.damage == 0
     assert Dummy.position == 2
-    assert not es.has_pending_triggers()
+    assert not ES.has_pending_triggers()
 
 
-def test_trigger_order(es: EventSystem):
-    es.register_effect(DynamoChargeTrigger())
-    es.register_effect(DropBatteriesTrigger())
-    es.register_effect(DynamoChargeTrigger())
-    es.resolve(MoveDummy(distance=2))
+def test_trigger_order():
+    ES.register_effect(DynamoChargeTrigger())
+    ES.register_effect(DropBatteriesTrigger())
+    ES.register_effect(DynamoChargeTrigger())
+    ES.resolve(MoveDummy(distance=2))
     assert Dummy.position == 2
     assert Dummy.energy == 0
-    es.resolve_pending_triggers()
+    ES.resolve_pending_triggers()
     assert Dummy.energy == 0
 
 
-def test_trigger_order_nullified_previous_trigger_still_has_own_triggers(
-    es: EventSystem,
-):
-    es.register_effect(OverheatTrigger())
-    es.register_effect(DynamoChargeTrigger())
-    es.register_effect(DropBatteriesTrigger())
-    es.register_effect(DynamoChargeTrigger())
-    es.resolve(MoveDummy(distance=2))
+def test_trigger_order_nullified_previous_trigger_still_has_own_triggers():
+    ES.register_effect(OverheatTrigger())
+    ES.register_effect(DynamoChargeTrigger())
+    ES.register_effect(DropBatteriesTrigger())
+    ES.register_effect(DynamoChargeTrigger())
+    ES.resolve(MoveDummy(distance=2))
     assert Dummy.position == 2
     assert Dummy.damage == 0
-    es.resolve_pending_triggers()
+    ES.resolve_pending_triggers()
     assert Dummy.energy == 0
     assert Dummy.damage == 4
 
 
-def test_trigger_loop(es: EventSystem):
-    es.register_effect(HitOnDamageTrigger())
-    es.resolve(HitDummy(value=1))
+def test_trigger_loop():
+    ES.register_effect(HitOnDamageTrigger())
+    ES.resolve(HitDummy(value=1))
     assert Dummy.damage == 1
     with pytest.raises(TriggerLoopError):
-        es.resolve_pending_triggers()
+        ES.resolve_pending_triggers()
 
 
-def test_trigger_abc(es: EventSystem):
+def test_trigger_abc():
     @dataclasses.dataclass
     class UnitTrigger(TriggerEffect[E], ABC):
         unit: Unit
@@ -132,67 +130,69 @@ def test_trigger_abc(es: EventSystem):
     class MoveOnDamageUnitTrigger(UnitTrigger[Damage]):
         priority = 1
 
-        def resolve(self, es: EventSystem, event: Damage) -> None:
-            es.resolve(event.branch(Move))
+        def resolve(self, event: Damage) -> None:
+            ES.resolve(event.branch(Move))
 
     unit = Unit()
-    es.register_effect(MoveOnDamageUnitTrigger(unit))
-    es.resolve(Damage(unit, 1))
+    ES.register_effect(MoveOnDamageUnitTrigger(unit))
+    ES.resolve(Damage(unit, 1))
 
     assert unit.health == 9
-    es.resolve_pending_triggers()
+    ES.resolve_pending_triggers()
     assert unit.position == 1
 
 
-def test_delayed_trigger(es: EventSystem):
+def test_delayed_trigger():
     class RepeatDamage(TriggerEffect[Damage]):
         priority = 1
 
-        def should_deregister(self, es: EventSystem, event: Damage) -> bool:
+        def should_deregister(self, event: Damage) -> bool:
             return True
 
-        def resolve(self, es: EventSystem, event: Damage) -> None:
-            es.resolve(event.branch())
+        def resolve(self, event: Damage) -> None:
+            ES.resolve(event.branch())
 
     unit = Unit()
-    es.register_effect(RepeatDamage())
-    es.resolve(Damage(unit, 1))
-    es.resolve_pending_triggers()
+    ES.register_effect(RepeatDamage())
+    ES.resolve(Damage(unit, 1))
+    ES.resolve_pending_triggers()
     assert unit.health == 8
 
 
-def test_trigger_within_replacement(es: EventSystem):
+def test_trigger_within_replacement():
     units = [Unit() for _ in range(2)]
 
     @dataclasses.dataclass
     class MovePhase(Event[None]):
         speed: int
 
-        def resolve(self, es: EventSystem) -> None:
+        def resolve(
+            self,
+        ) -> None:
             for unit in units:
-                es.resolve(Move(unit, self.speed))
-            es.resolve_pending_triggers()
+                ES.resolve(Move(unit, self.speed))
+            ES.resolve_pending_triggers()
 
     class Speedy(ReplacementEffect[MovePhase]):
         priority = 1
 
-        def resolve(self, es: EventSystem, event: MovePhase) -> None:
-            es.resolve(event.branch(speed=event.speed * 2))
+        def resolve(self, event: MovePhase) -> None:
+            ES.resolve(event.branch(speed=event.speed * 2))
 
     class MovePhaseOnMove(TriggerEffect[Move]):
         priority = 1
 
-        def should_deregister(self, es: EventSystem, event: Move) -> bool:
+        def should_deregister(self, event: Move) -> bool:
             return True
 
-        def resolve(self, es: EventSystem, event: Move) -> None:
-            es.resolve(MovePhase(1))
+        def resolve(self, event: Move) -> None:
+            ES.resolve(MovePhase(1))
 
     for _ in range(2):
-        es.register_effect(Speedy())
-    es.register_effect(MovePhaseOnMove())
+        ES.register_effect(Speedy())
+    ES.register_effect(MovePhaseOnMove())
 
-    es.resolve(MovePhase(2))
+    ES.resolve(MovePhase(2))
 
     # Speedy replacement is applied to both movement phases, even though
     # the second it resolved within the first, since resolving a trigger
