@@ -15,7 +15,7 @@ from events.tests.game_objects.dummy import (
 
 
 def test_replace():
-    ES.register_effect(DoubleDamage())
+    ES.register_effects(DoubleDamage())
     assert (
         sum(
             e.value
@@ -28,7 +28,7 @@ def test_replace():
 
 def test_multiple_same_replacement_effect():
     for _ in range(3):
-        ES.register_effect(DoubleDamage())
+        ES.register_effects(DoubleDamage())
 
     assert ES.resolve(DamageDummy(value=3))
 
@@ -36,7 +36,7 @@ def test_multiple_same_replacement_effect():
 
 
 def test_multiple_replaced_events():
-    ES.register_effect(DoubleDamage())
+    ES.register_effects(DoubleDamage())
     for _ in range(2):
         ES.resolve(DamageDummy(value=2))
 
@@ -50,13 +50,13 @@ def test_deregister_replace():
 
 
 def test_prevent_event():
-    ES.register_effect(PreventDamage())
+    ES.register_effects(PreventDamage())
     assert not list(ES.resolve(DamageDummy(value=2)).iter_type(DamageDummy))
     assert Dummy.damage == 0
 
 
 def test_replace_swap_event_type():
-    ES.register_effect(DamageToMove())
+    ES.register_effects(DamageToMove())
     resolution = ES.resolve(DamageDummy(value=3))
     dp(resolution)
     assert not list(resolution.iter_type(DamageDummy))
@@ -67,8 +67,8 @@ def test_replace_swap_event_type():
 
 
 def test_double_swap():
-    ES.register_effect(MoveToDamage())
-    ES.register_effect(DamageToMove())
+    ES.register_effects(MoveToDamage())
+    ES.register_effects(DamageToMove())
     resolution = ES.resolve(DamageDummy(3))
     assert not list(resolution.iter_type(MoveDummy))
     assert sum(e.value for e in resolution.iter_type(DamageDummy)) == 3
@@ -78,14 +78,14 @@ def test_double_swap():
 
 
 def test_event_affected_by_multiple_different_replacements():
-    ES.register_effect(AdditionalDamage())
-    ES.register_effect(DoubleDamage())
+    ES.register_effects(AdditionalDamage())
+    ES.register_effects(DoubleDamage())
     ES.resolve(DamageDummy(2))
     assert Dummy.damage == 5
 
 
 def test_replacement_spawns_multiple_events():
-    ES.register_effect(DamageAlsoMoves())
+    ES.register_effects(DamageAlsoMoves())
     resolution = ES.resolve(DamageDummy(1))
     assert sum(e.distance for e in resolution.iter_type(MoveDummy)) == 1
     assert sum(e.value for e in resolution.iter_type(DamageDummy)) == 1
@@ -100,7 +100,7 @@ def test_replacement_spawns_multiple_events():
 
 def test_replacement_spawns_multiple_events_multiple_times():
     for _ in range(2):
-        ES.register_effect(DamageAlsoMoves())
+        ES.register_effects(DamageAlsoMoves())
     resolution = ES.resolve(DamageDummy(1))
     assert sum(e.distance for e in resolution.iter_type(MoveDummy)) == 2
     assert sum(e.value for e in resolution.iter_type(DamageDummy)) == 1

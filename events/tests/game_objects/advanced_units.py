@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import dataclasses
+from abc import ABC
 from enum import Enum, auto
 
 from events.eventsystem import (
     Event,
     ModifiableAttribute,
     Modifiable,
-    modifiable, ES,
+    modifiable,
+    ES,
+    StateModifierEffect,
+    V,
 )
 
 
@@ -24,6 +28,7 @@ class Unit(Modifiable):
     power: ModifiableAttribute[None, int]
     toughness: ModifiableAttribute[None, int]
     flying: ModifiableAttribute[None, bool]
+    broken: ModifiableAttribute[None, bool]
 
     # def __hash__(self):
     #     return id(self)
@@ -38,13 +43,16 @@ class Unit(Modifiable):
         toughness: int = 1,
         flying: bool = False,
         controller: Player | None = None,
+        health: int = 10
     ):
         # self.position = position
         self.power.set(power)
         self.toughness.set(toughness)
-        self.health = 10
+        self.health = health
+        self.energy = 0
         self.flying.set(flying)
         self.controller = controller
+        self.broken.set(False)
 
 
 class Hex(Modifiable):
@@ -118,3 +126,54 @@ class Kill(Event[None]):
 
     def resolve(self) -> None:
         self.unit.health = 0
+
+
+@dataclasses.dataclass
+class Charge(Event[None]):
+    unit: Unit
+    amount: int
+
+    def resolve(self) -> None:
+        self.unit.energy += self.amount
+
+
+@dataclasses.dataclass
+class LoseHealth(Event[int]):
+    unit: Unit
+    amount: int
+
+    def resolve(self) -> int:
+        amount = min(self.amount, self.unit.health)
+        self.unit.health -= amount
+        return amount
+
+
+@dataclasses.dataclass
+class Damage(Event[None]):
+    unit: Unit
+    amount: int
+
+    def resolve(self) -> None:
+        # self.unit.health -= self.amount
+        ES.resolve(self.branch(LoseHealth))
+
+
+@dataclasses.dataclass
+class Hit(Event[None]):
+    unit: Unit
+    amount: int
+
+    def resolve(self) -> None:
+        ES.resolve(self.branch(Damage))
+
+
+class UnitModifier(StateModifierEffect[Unit, None, V], ABC):
+    def __init__(self, target_unit: Unit):
+        self.target_unit = target_unit
+
+    def should_modify(self, obj: Unit, request: None, value: V) -> V:
+        return self.target_unit == obj
+
+
+class PowerModifier(UnitModifier[int], ABC):
+    target = Unit.power

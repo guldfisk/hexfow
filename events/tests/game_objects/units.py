@@ -118,7 +118,7 @@ class ToughnessAtLeastPower(ToughnessModifier):
         return max(value, obj.power.get(None))
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=False)
 class AttackShield(StateModifierEffect[Unit, Unit, bool]):
     priority: ClassVar[int] = 3
     target: ClassVar[object] = Unit.can_be_attacked_by
@@ -133,7 +133,7 @@ class AttackShield(StateModifierEffect[Unit, Unit, bool]):
         return False
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=False)
 class AttackShieldPenetrator(StateModifierEffect[Unit, Unit, bool]):
     priority: ClassVar[int] = 4
     target: ClassVar[object] = Unit.can_be_attacked_by

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import (
-    Sequence,
-)
+from typing import Sequence
 
 from game.game.player import Player
 
@@ -19,4 +17,3 @@ class TurnOrder:
     def advance(self) -> Player:
         self._active_player_index = (self._active_player_index + 1) % len(self._players)
         return self.active_player
-

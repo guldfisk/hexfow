@@ -28,7 +28,7 @@ from events.tests.game_objects.units import Unit, Damage, Move
 
 
 def test_trigger_effect():
-    ES.register_effect(StaggerTrigger())
+    ES.register_effects(StaggerTrigger())
     ES.resolve(HitDummy(value=2))
     assert Dummy.damage == 2
     assert Dummy.position == 0
@@ -39,7 +39,7 @@ def test_trigger_effect():
 
 def test_multiple_trigger_effects():
     for _ in range(2):
-        ES.register_effect(StaggerTrigger())
+        ES.register_effects(StaggerTrigger())
     ES.resolve(HitDummy(value=2))
     assert Dummy.damage == 2
     assert Dummy.position == 0
@@ -49,8 +49,8 @@ def test_multiple_trigger_effects():
 
 
 def test_trigger_on_replaced_effect():
-    ES.register_effect(StaggerTrigger())
-    ES.register_effect(DoubleDamage())
+    ES.register_effects(StaggerTrigger())
+    ES.register_effects(DoubleDamage())
     ES.resolve(HitDummy(value=2))
     assert Dummy.damage == 4
     assert Dummy.position == 0
@@ -60,8 +60,8 @@ def test_trigger_on_replaced_effect():
 
 
 def test_chained_triggers():
-    ES.register_effect(DynamoChargeTrigger())
-    ES.register_effect(StaggerTrigger())
+    ES.register_effects(DynamoChargeTrigger())
+    ES.register_effects(StaggerTrigger())
     ES.resolve(HitDummy(value=2))
     assert Dummy.damage == 2
     assert Dummy.position == 0
@@ -73,8 +73,8 @@ def test_chained_triggers():
 
 
 def test_trigger_event_prevented():
-    ES.register_effect(StaggerTrigger())
-    ES.register_effect(PreventDamage())
+    ES.register_effects(StaggerTrigger())
+    ES.register_effects(PreventDamage())
     ES.resolve(HitDummy(value=2))
     assert Dummy.damage == 0
     assert Dummy.position == 0
@@ -82,8 +82,8 @@ def test_trigger_event_prevented():
 
 
 def test_trigger_event_replaced_by_non_triggering_event():
-    ES.register_effect(StaggerTrigger())
-    ES.register_effect(DamageToMove())
+    ES.register_effects(StaggerTrigger())
+    ES.register_effects(DamageToMove())
     ES.resolve(HitDummy(value=2))
     assert Dummy.damage == 0
     assert Dummy.position == 2
@@ -91,9 +91,9 @@ def test_trigger_event_replaced_by_non_triggering_event():
 
 
 def test_trigger_order():
-    ES.register_effect(DynamoChargeTrigger())
-    ES.register_effect(DropBatteriesTrigger())
-    ES.register_effect(DynamoChargeTrigger())
+    ES.register_effects(DynamoChargeTrigger())
+    ES.register_effects(DropBatteriesTrigger())
+    ES.register_effects(DynamoChargeTrigger())
     ES.resolve(MoveDummy(distance=2))
     assert Dummy.position == 2
     assert Dummy.energy == 0
@@ -102,10 +102,10 @@ def test_trigger_order():
 
 
 def test_trigger_order_nullified_previous_trigger_still_has_own_triggers():
-    ES.register_effect(OverheatTrigger())
-    ES.register_effect(DynamoChargeTrigger())
-    ES.register_effect(DropBatteriesTrigger())
-    ES.register_effect(DynamoChargeTrigger())
+    ES.register_effects(OverheatTrigger())
+    ES.register_effects(DynamoChargeTrigger())
+    ES.register_effects(DropBatteriesTrigger())
+    ES.register_effects(DynamoChargeTrigger())
     ES.resolve(MoveDummy(distance=2))
     assert Dummy.position == 2
     assert Dummy.damage == 0
@@ -115,7 +115,7 @@ def test_trigger_order_nullified_previous_trigger_still_has_own_triggers():
 
 
 def test_trigger_loop():
-    ES.register_effect(HitOnDamageTrigger())
+    ES.register_effects(HitOnDamageTrigger())
     ES.resolve(HitDummy(value=1))
     assert Dummy.damage == 1
     with pytest.raises(TriggerLoopError):
@@ -123,7 +123,7 @@ def test_trigger_loop():
 
 
 def test_trigger_abc():
-    @dataclasses.dataclass
+    @dataclasses.dataclass(eq=False)
     class UnitTrigger(TriggerEffect[E], ABC):
         unit: Unit
 
@@ -134,7 +134,7 @@ def test_trigger_abc():
             ES.resolve(event.branch(Move))
 
     unit = Unit()
-    ES.register_effect(MoveOnDamageUnitTrigger(unit))
+    ES.register_effects(MoveOnDamageUnitTrigger(unit))
     ES.resolve(Damage(unit, 1))
 
     assert unit.health == 9
@@ -153,7 +153,7 @@ def test_delayed_trigger():
             ES.resolve(event.branch())
 
     unit = Unit()
-    ES.register_effect(RepeatDamage())
+    ES.register_effects(RepeatDamage())
     ES.resolve(Damage(unit, 1))
     ES.resolve_pending_triggers()
     assert unit.health == 8
@@ -189,8 +189,8 @@ def test_trigger_within_replacement():
             ES.resolve(MovePhase(1))
 
     for _ in range(2):
-        ES.register_effect(Speedy())
-    ES.register_effect(MovePhaseOnMove())
+        ES.register_effects(Speedy())
+    ES.register_effects(MovePhaseOnMove())
 
     ES.resolve(MovePhase(2))
 

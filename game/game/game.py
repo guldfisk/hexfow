@@ -12,120 +12,53 @@ from typing import (
     AbstractSet,
 )
 
-from game.game.map.hexmap import CubeCoordinate
+from game.game.map.hexmap import CubeCoordinate, HexMap
+from game.game.player import Player
+from game.game.turn_order import TurnOrder
 
 
 class Terrain:
     ...
 
 
-class Landscape:
-    terrain_map: Mapping[CubeCoordinate, Terrain]
-    deployment_zones: Collection[AbstractSet[CubeCoordinate]]
-
-
-class GameMap:
-    def __init__(self, landscape: Landscape):
-        self.landscape = landscape
-
-    def get_units(self) -> Iterator[Unit]:
-        ...
-
-    def get_player_map_state(self, player: Player) -> PlayerGameState:
-        ...
-
-
-class PlayerMapState:
-    ...
-
-
-class Log:
-    ...
-
-
-class LegalAction:
-    ...
-
-
-class TakenAction:
-    ...
-
-
-class ActionSpace:
-    options: Collection[LegalAction]
-
-
-class PlayerGameState:
-    map: PlayerMapState
-    logs: Sequence[Log]
-    action_space: ActionSpace | None
-
-
-class AgentInterface:
-    def __init__(self):
-        self._history: list[PlayerGameState] = []
-
-    def _send_to_remote(self, game_state: PlayerGameState) -> None:
-        ...
-
-    def send_game_state(self, game_state: PlayerGameState) -> None:
-        if (
-            not self._history
-            or game_state.action_space
-            or game_state != self._history[-1]
-        ):
-            self._history.append(game_state)
-            self._send_to_remote(game_state)
+# class Landscape:
+#     terrain_map: Mapping[CubeCoordinate, Terrain]
+    # TODO
+    # deployment_zones: Collection[AbstractSet[CubeCoordinate]]
 
 
 
+# class HexMap:
+#     terrain_map: Mapping[CubeCoordinate, Terrain]
 
+    # def __init__(self, landscape: Landscape):
+    #     self.landscape = landscape
 
-# class MapType(ABC):
-#
-#     @abstractmethod
-#     def generate_landscape(self) -> LandScape:
-#         ...
+    # def get_units(self) -> Iterator[Unit]:
+    #     ...
 
-
-class MapSpec(ABC):
-    @abstractmethod
-    def generate_landscape(self) -> Landscape:
-        ...
-
-
-# T = TypeVar('T')
-#
-# class GameSetting(ABC, Generic):
-#     @abstractmethod
-#     def validate
-
-
-class Settings:
-    map_spec: MapSpec
-    army_strength: int
-
-
-
-class Army:
-    units: Collection[Unit]
 
 
 class Game:
-    def __init__(self, settings: Settings, armies: Collection[Army]):
-        self.settings = settings
-        self.is_finished = False
-        self.turn_order = TurnOrder([Player() for _ in armies])
-        self.map = GameMap(settings.map_spec.generate_landscape())
+    instance: Game | None = None
 
-    def has_winner(self) -> bool:
-        return len({unit.controller for unit in self.map.get_units()}) < 2
+    def __init__(self, player_count: int):
+        # self.settings = settings
+        # self.is_finished = False
+        self.turn_order = TurnOrder([Player() for _ in range(player_count)])
+        # self.map = HexMap(settings.map_spec.generate_landscape())
+        self.map = HexMap()
 
-    def start(self):
-        while not self.is_finished:
-            if self.has_winner():
-                self.is_finished = True
-            self.turn_order.advance()
+    # def has_winner(self) -> bool:
+    #     return len({unit.controller for unit in self.map.get_units()}) < 2
+    #
+    # def start(self):
+    #     while not self.is_finished:
+    #         if self.has_winner():
+    #             self.is_finished = True
+    #         self.turn_order.advance()
 
 
-# class
+# TODO
+def GM() -> Game:
+    return Game.instance

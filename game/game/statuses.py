@@ -1,14 +1,21 @@
 import dataclasses
+from enum import StrEnum, auto
 
-from game.game.objects import GameObject
+from game.game.has_effects import HasEffects
 from game.game.player import Player
 
 
+class StatusType(StrEnum):
+    BUFF = auto()
+    DEBUFF = auto()
+    NEUTRAL = auto()
+
 @dataclasses.dataclass
-class Status(GameObject):
-    controller: Player = None
+class Status(HasEffects):
+    # controller: Player = None
+    type_: StatusType
 
 
 @dataclasses.dataclass
-class Statusable(GameObject):
+class HasStatuses(HasEffects):
     statuses: list[Status] = dataclasses.field(default_factory=list)

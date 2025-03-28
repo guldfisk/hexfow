@@ -58,8 +58,8 @@ def test_event_searches_historic_event_children():
     ES.resolve(EchoPainAttack())
     assert Dummy.damage == 3
 
-    ES.register_effect(DamageAlsoMoves())
-    ES.register_effect(MoveToDamage())
+    ES.register_effects(DamageAlsoMoves())
+    ES.register_effects(MoveToDamage())
 
     Dummy.damage = 0
 

@@ -12,6 +12,7 @@ pytest = "^7.4.0"
 #channels = {extras = ["daphne"], version = "^4.0.0"}
 #django-rest-framework = "^0.1.0"
 pydantic = "^2.10.6"
+bidict = "^0.23.1"
 
 [tool.poetry.dev-dependencies]
 black = "^23.7.0"

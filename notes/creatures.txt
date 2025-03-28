@@ -1620,7 +1620,7 @@ cursed blade
         when damaged, loses that much energy
 mark of stagnation
     ability 3 energy
-    target enemy unit 3 range LoS, -1 movement
+    target enemy unit 1 range LoS
     applies debuff stagnant for 3 rounds
         unstackable, refreshable
         unit can not gain health or energy
@@ -1649,7 +1649,7 @@ venomous spine
     applies horror parasite and (debilitating venom for 2 rounds) to target.
         unstackable, refreshable
         +1 move penalty
-        -1 attack
+        -1 attack power
 
 voidling {12wp} x1
 health 5, movement 3, sight 2, energy 4, S
@@ -1678,7 +1678,7 @@ riddle
     target enemy unit 2 range LoS, -1 movement
     applies confused for 2 rounds
         unstackable, refreshable
-        when this unit is activated and does not skip, stun it
+        when this unit ends its turn, if it skipped, dispell this debuff, otherwise stun the unit.
 mystic energy
     ability 2 energy
     target allied unit 3 range, LoS, -1 movement
@@ -1702,11 +1702,11 @@ flatten terrain
 fault line
     aoe ability 2 energy
     aoe type line length 3 range 3 NLoS, -2 movement
-    deals terrain piercing aoe damage to each unit equal to the aoe terrain protection (excluding elevation bonus) of their hex.
+    deals terrain piercing aoe damage to each ground unit equal to the aoe terrain protection (excluding elevation bonus) of their hex.
 landslide
     ability 2 energy
     target hex 3 range NLoS, -2 movement
-    if hex is lowground, deals 2*(amount of adjacent high ground hexes) (+1 if any of those are snow) aoe damage to unit on hex.
+    if hex is lowground, deals 2*(amount of adjacent high ground hexes) (+1 if any of those are snow) aoe damage to ground unit on hex.
 magma fissure
     ability 2 energy
     target hex 3 range NLoS, -1 movement
@@ -1749,7 +1749,7 @@ claw
     at the beginning of each round, accelerate this unit 1.
 
 lich {12gppp} x1
-health 6, movement 2, sight 2, energy 6, M
+health 5, movement 2, sight 2, energy 6, M
 death ray
     ranged attack
     4 damage, 2 range, -1 movement
@@ -2034,7 +2034,7 @@ ice breath
 tactical nuke platform {16rrrpppp} x1
 health 5, movement 1, sight 1, energy 0/10, L
 tactical nuke
-    aoe attack 16 energy
+    aoe attack 10 energy
     target hex 6 range NLoS
     no movement
     damage according to distance from center:
@@ -2253,7 +2253,7 @@ health 6, movement 3, sight 1
 bony grasp
     melee stack
     2 damage, -1 movement
-- if this unit is dealt 4 or more damage, it dies
+- if this unit is dealt 4 or more damage at once, it dies
 
 water elemental {-}
 health 4, movement 3, sight 2, M

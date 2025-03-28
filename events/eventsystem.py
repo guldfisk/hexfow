@@ -6,6 +6,7 @@ import inspect
 import re
 from abc import ABC, abstractmethod, ABCMeta
 from collections import defaultdict
+from collections.abc import Iterable, Sequence
 from typing import (
     TypeVar,
     ClassVar,
@@ -16,6 +17,7 @@ from typing import (
     get_args,
     Iterator,
     Callable,
+    Mapping,
 )
 
 
@@ -35,14 +37,46 @@ class TriggerLoopError(Exception): ...
 #  an ugly partial solution only.
 
 
+class EffectSet:
+
+    def __init__(self, effects: Iterable[Effect] | None = None):
+        # TODO ordered set?
+        self.effects: MutableMapping[str, MutableMapping[Any, dict[Effect, None]]] = (
+            defaultdict(lambda: defaultdict(dict))
+        )
+        if effects is not None:
+            self.register_effects(*effects)
+
+    def register_effect(self, effect: F) -> F:
+        self.effects[effect.effect_type][effect.target][effect] = None
+        for target, resolver in effect.hooks.items():
+            self.effects[HookEffect.effect_type][target][effect] = None
+        return effect
+
+    def deregister_effect(self, effect: F) -> F:
+        del self.effects[effect.effect_type][effect.target][effect]
+        for target, resolver in effect.hooks.items():
+            del self.effects[HookEffect.effect_type][target][effect]
+        return effect
+
+    def register_effects(self, *effects: Effect) -> None:
+        for effect in effects:
+            self.register_effect(effect)
+
+    def deregister_effects(self, *effects: Effect) -> None:
+        for effect in effects:
+            self.deregister_effect(effect)
+
+    # TODO type
+    def get_effects(self, effect_type: type[F] | F, target: Any) -> Iterable[F]:
+        return self.effects[effect_type.effect_type][target].keys()
+
+
 class EventSystem:
     MAX_TRIGGER_RECURSION: ClassVar[int] = 128
 
     def __init__(self):
-        # TODO ordered set?
-        self._effects: MutableMapping[str, MutableMapping[Any, list[Effect]]] = (
-            defaultdict(lambda: defaultdict(list))
-        )
+        self._effect_set = EffectSet()
         self._pending_triggers: list[tuple[TriggerEffect, Event]] = []
 
         # TODO prob want both event begins and ends.
@@ -68,22 +102,24 @@ class EventSystem:
         return bool(self._pending_triggers)
 
     def register_effect(self, effect: F) -> F:
-        self._effects[effect.effect_type][effect.target].append(effect)
+        self._effect_set.register_effect(effect)
         return effect
-
-    # TODO type
-    def _get_effects(self, effect_type: type[F] | F, target: Any) -> list[F]:
-        return self._effects[effect_type.effect_type][target]
 
     def deregister_effect(self, effect: F) -> F:
-        self._effects[effect.effect_type][effect.target].remove(effect)
+        self._effect_set.deregister_effect(effect)
         return effect
+
+    def register_effects(self, *effects: Effect) -> None:
+        self._effect_set.register_effects(*effects)
+
+    def deregister_effects(self, *effects: Effect) -> None:
+        self._effect_set.deregister_effects(*effects)
 
     def determine_modifiable(self, obj: object, key: Any, request: Any, value: V) -> V:
         for attribute_modifier in sorted(
             (
                 _modifier
-                for _modifier in self._get_effects(StateModifierEffect, key)
+                for _modifier in self._effect_set.get_effects(StateModifierEffect, key)
                 if (obj, key) not in self._evaluated_state_modifiers
                 and _modifier.should_modify(obj, request, value)
             ),
@@ -94,13 +130,25 @@ class EventSystem:
             self._evaluated_state_modifiers.remove((obj, key))
         return value
 
+    def check_triggers_against(self, event: Event, effect_set: EffectSet) -> None:
+        should_deregister = []
+        for trigger_effect in effect_set.get_effects(TriggerEffect, event.name):
+            if trigger_effect.should_trigger(event):
+                self._pending_triggers.append((trigger_effect, event))
+                if trigger_effect.should_deregister(event):
+                    should_deregister.append(trigger_effect)
+        for trigger_effect in should_deregister:
+            self.deregister_effects(trigger_effect)
+
     def resolve(self, event: Event[V]) -> EventResolution:
         if not event.is_valid():
             return EventResolution([])
 
         if eligible_replacements := [
             replacement_effect
-            for replacement_effect in self._get_effects(ReplacementEffect, event.name)
+            for replacement_effect in self._effect_set.get_effects(
+                ReplacementEffect, event.name
+            )
             if replacement_effect not in self._exhausted_replacement_effects
             and replacement_effect.can_replace(event)
         ]:
@@ -121,12 +169,11 @@ class EventSystem:
             event.parent = self._active_event
             self._active_event.children.append(event)
 
-        # TODO after instead?
-        for trigger_effect in self._get_effects(TriggerEffect, event.name):
-            if trigger_effect.should_trigger(event):
-                self._pending_triggers.append((trigger_effect, event))
-                if trigger_effect.should_deregister(event):
-                    self.deregister_effect(trigger_effect)
+        # # TODO after instead?
+        # self.check_triggers_against(event, self._effect_set)
+
+        for hook in self._effect_set.get_effects(HookEffect, event.name):
+            hook.resolve_hook_call(event)
 
         previous_active_replacement_effect = self._active_replacement_effect
         previous_active_event = self._active_event
@@ -146,6 +193,8 @@ class EventSystem:
             self._replacement_results.append(resolution)
 
         self.history.append(event)
+
+        self.check_triggers_against(event, self._effect_set)
 
         return resolution
 
@@ -183,6 +232,7 @@ class EventSystem:
 
 class ScopedEventSystem(EventSystem):
 
+    # TODO protocol/interface
     def __init__(self):
         self._es: EventSystem | None = None
 
@@ -197,16 +247,24 @@ class ScopedEventSystem(EventSystem):
         return self._es.has_pending_triggers()
 
     def register_effect(self, effect: F) -> F:
-        return self._es.register_effect(effect)
-
-    def _get_effects(self, effect_type: type[F] | F, target: Any) -> list[F]:
-        return self._es._get_effects(effect_type, target)
+        self._es.register_effects(effect)
+        return effect
 
     def deregister_effect(self, effect: F) -> F:
-        return self._es.deregister_effect(effect)
+        self._es.deregister_effect(effect)
+        return effect
+
+    def register_effects(self, *effects: Effect) -> None:
+        self._es.register_effects(*effects)
+
+    def deregister_effects(self, *effects: Effect) -> None:
+        self._es.deregister_effects(*effects)
 
     def determine_modifiable(self, obj: object, key: Any, request: Any, value: V) -> V:
         return self._es.determine_modifiable(obj, key, request, value)
+
+    def check_triggers_against(self, event: Event, effect_set: EffectSet) -> None:
+        return self._es.check_triggers_against(event, effect_set)
 
     def resolve(self, event: Event[V]) -> EventResolution:
         return self._es.resolve(event)
@@ -272,6 +330,14 @@ class Event(Generic[V], metaclass=_EventMeta):
         )
 
 
+def hook_on(event_type: type[E]) -> Callable[[C], C]:
+    def decorator(f: C) -> C:
+        f.__hook_target__ = event_type.name
+        return f
+
+    return decorator
+
+
 class _EffectMeta(ABCMeta):
     def __new__(
         metacls,
@@ -280,10 +346,17 @@ class _EffectMeta(ABCMeta):
         attributes: dict[str, Any],
         **kwargs,
     ) -> type:
+        hook_methods = {}
+        if ABC not in bases:
+            for key, value in attributes.items():
+                if not key.startswith("_") and getattr(value, "__hook_target__", None):
+                    assert len(inspect.signature(value).parameters) == 2
+                    hook_methods[value.__hook_target__] = value
         klass = super().__new__(metacls, name, bases, attributes, **kwargs)
         if ABC not in bases:
             if not hasattr(klass, "priority"):
                 raise ValueError(f"{klass} missing priority")
+            klass.hooks = hook_methods
 
         return klass
 
@@ -291,7 +364,12 @@ class _EffectMeta(ABCMeta):
 class Effect(ABC, metaclass=_EffectMeta):
     effect_type: ClassVar[str]
     target: ClassVar[Any]
+    # abstractmethod instead
     priority: ClassVar[int]
+    hooks: ClassVar[Mapping[str, Callable[[Effect, Event], None]]]
+
+    def resolve_hook_call(self, event: Event):
+        self.hooks[event.name](self, event)
 
 
 class _EventEffectMeta(_EffectMeta):
@@ -362,6 +440,14 @@ class TriggerEffect(EventEffect, Generic[E], ABC):
     def resolve(self, event: E) -> None: ...
 
 
+class HookEffect(EventEffect, Generic[E], ABC):
+    effect_type = "hook"
+    priority = 0
+
+    @abstractmethod
+    def resolve_hook_call(self, event: Event): ...
+
+
 @dataclasses.dataclass
 class _BoundModifiableAttribute(Generic[T, V]):
     attribute: ModifiableAttribute[T, V]
@@ -372,6 +458,10 @@ class _BoundModifiableAttribute(Generic[T, V]):
 
     def get(self, request: T) -> V:
         return self.attribute.get(self.instance, request)
+
+    # TODO yikes
+    def g(self) -> V:
+        return self.attribute.get(self.instance, None)
 
     def set(self, value: V) -> None:
         setattr(self.instance, self.attribute.source_name, value)
