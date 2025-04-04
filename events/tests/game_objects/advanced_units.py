@@ -43,7 +43,7 @@ class Unit(Modifiable):
         toughness: int = 1,
         flying: bool = False,
         controller: Player | None = None,
-        health: int = 10
+        health: int = 10,
     ):
         # self.position = position
         self.power.set(power)

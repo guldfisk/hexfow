@@ -18,4 +18,5 @@ class Status(HasEffects):
 
 @dataclasses.dataclass
 class HasStatuses(HasEffects):
-    statuses: list[Status] = dataclasses.field(default_factory=list)
+    statuses: list[Status] = dataclasses.field(default_factory=list, init=False)
+    # statuses: list[Status]

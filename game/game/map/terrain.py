@@ -1,6 +1,10 @@
-from enum import Enum
+from game.game.core import Terrain
 
 
-class TerrainType(Enum):
-    HILL = "hill"
-    MOUNTAIN = "mountain"
+class Ground(Terrain): ...
+
+
+class Water(Terrain):
+
+    def is_water(self) -> bool:
+        return True

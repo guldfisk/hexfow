@@ -5,7 +5,7 @@ from events.eventsystem import Effect, ES
 
 @dataclasses.dataclass
 class HasEffects:
-    effects: set[Effect] = dataclasses.field(default_factory=set)
+    effects: set[Effect] = dataclasses.field(default_factory=set, init=False)
 
     def register_effects(self, *effects: Effect) -> None:
         self.effects.update(effects)
