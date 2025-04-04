@@ -1,4 +1,3 @@
-from debug_utils import dp
 from events.eventsystem import ES
 from events.tests.game_objects.dummy import (
     DoubleDamage,
@@ -58,7 +57,6 @@ def test_prevent_event():
 def test_replace_swap_event_type():
     ES.register_effects(DamageToMove())
     resolution = ES.resolve(DamageDummy(value=3))
-    dp(resolution)
     assert not list(resolution.iter_type(DamageDummy))
     assert sum(e.distance for e in resolution.iter_type(MoveDummy)) == 3
     assert Dummy.damage == 0

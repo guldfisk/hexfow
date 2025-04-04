@@ -9,7 +9,6 @@ ephemeral replacement effects - prob don't need explicit support, since it can b
 "ignore one per turn" etc. - need to maintain state.
 time knight pocket acceleration - don't think this is reasonably possible
     maybe something like, collect all the relevant effects, and then manually call their resolve methods.
-    maybe something like, collect all the relevant effects, and then manually call their resolve methods.
 shadow operative - needs to have a "provides vision for" modifiable.
 terraforming mage - fault line - annoying level of context required for terrain protection
 kraken - movement ability - very annoying since its two different effects needing the same hook state. will need to do it as 3 separate effects.
@@ -18,5 +17,6 @@ serene master - needs to keep track of damage and debuff sources
     also trigger dependent on outcome of event
 gate fiend - open gate - all hexes needs to be checked for legal move into. better would prob be to have a modifiable "get_move_target_for_unit" on the map.
 colossus walker - need a lot of modifiables with a lot of context to support this, but think i want that anyway...
+missile mech lock on - need to be able to link effects
 
 radiated - status needs to have apply hook for the armor thing

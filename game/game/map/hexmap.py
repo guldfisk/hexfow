@@ -8,50 +8,31 @@ from typing import Mapping, Any, NamedTuple
 from bidict import bidict
 
 from game.game.has_effects import HasEffects
+from game.game.map.coordinates import CubeCoordinate
+from game.game.map.landscape import Landscape
+from game.game.map.terrain import TerrainType
 from game.game.statuses import HasStatuses
 from game.game.units.unit import Unit
-
-
-# from game.game.units import Unit
-
-
-JSON = Mapping[str, Any]
-
-
-class CubeCoordinate(NamedTuple):
-    r: int
-    h: int
-
-    @property
-    def l(self) -> int:
-        return -sum(self)
-
-
-class TerrainType(Enum):
-    HILL = "hill"
-    MOUNTAIN = "mountain"
 
 
 @dataclasses.dataclass
 class Hex(HasStatuses):
     position: CubeCoordinate
     terrain_type: TerrainType
-    # unit: Unit | None = None
+    map: HexMap
 
-    # def serialize(self) -> JSON:
-    #     return {
-    #         "position": tuple(self.position),
-    #         "terrain_type": self.terrain_type.value,
-    #     }
 
 class MovementException(Exception):
     ...
 
+
 # @dataclasses.dataclass
 class HexMap:
-
-    def __init__(self, hexes: dict[CubeCoordinate, Hex]):
-        self.hexes = hexes
+    def __init__(self, landscape: Landscape):
+        self.hexes = {
+            position: Hex(position=position, terrain_type=terrain_type, map=self)
+            for position, terrain_type in landscape.terrain_map.items()
+        }
         self.unit_positions: bidict[Unit, Hex] = bidict()
 
     def move_unit_to(self, unit: Unit, space: Hex) -> None:
@@ -64,10 +45,6 @@ class HexMap:
 
     def position_of(self, unit: Unit) -> Hex:
         return self.unit_positions[unit]
-
-    # def serialize(self) -> JSON:
-    #     return {"hexes": [h.serialize() for h in self.hexes.values()]}
-
 
 
 # def generate_super_map(radius: int = 9) -> HexMap:

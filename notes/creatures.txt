@@ -1196,7 +1196,7 @@ pocket acceleration
     aoe type hex range 2
     -1 movement
     trigger round end/begin effects of hex and any unit on it 3 times sequentially
-- if this unit would suffer damage except from delayed fate, of that damage. for each damage prevent this way apply a stack of delayed fate
+- if this unit would suffer damage except from delayed fate, prevent it. for each damage prevent this way apply a stack of delayed fate
 
 velociraptor {9ww} x2
 health 6, movement 5, sight 2, M
@@ -1208,7 +1208,7 @@ bite
 bulldozer {9gpp} x1
 health 11, movement 2, armor 2, sight 1, L
 - doze
-    can move into occupied squares. pushes unit back chainable. all units in push line take 1 damage, even if though can't be pushed (if it would push a unit into impassable terrain).
+    can move into occupied squares. pushes unit back chainable. all units in push line take 1 damage, even if they can't be pushed (if it would push a unit into impassable terrain).
 
 ink witch {9rpp} x1
 health 6, movement 3, sight 2, energy 5, M
@@ -1316,7 +1316,7 @@ bash
     melee attack
     5 damage, -1 movement
     +1 damage against S
-- adjacent enemy units have -1 attack
+- adjacent enemy units have -1 attack power
 
 porcupine beast {10g} x1
 health 7, movement 3, sight 2, M
@@ -1368,14 +1368,14 @@ empower frail
     combinable ability 2 energy
     target allied unit 1 range
     applies buff frailify for 2 rounds
-        next attack applies debuff frail for 2 rounds
+        next attack applies debuff frail 3 for 2 rounds
 empower break
     combinable ability 2 energy
     target allied unit 1 range
     applies buff breakify for 2 rounds
         next attack applies debuff broken for 2 rounds
 quicksand
-    aoe ability 2 energy
+    aoe ability 3 energy
     aoe type hex size 1 range 3 NLoS, -1 movement
     applies quicksand status to hexes for 3 rounds
         unstackable, refreshable
@@ -1461,7 +1461,7 @@ induce panic
     applies panicked for 3 rounds
         unstackable, refreshable
         at the end of each round, this unit suffers pure damage equal to the number of adjacent units.
-- whenever an adjacent unit is damaged or debuffed, this unit regens 1 energy
+- whenever an adjacent unit is damaged or rebuffed, this unit regens 1 energy
 
 raptor roc {10wu} x1
 health 6, movement 4, sight 2, M
@@ -1491,7 +1491,7 @@ riffle salvo
 HE grenade
     aoe attack 2 energy
     aoe type hex 2 range NLoS
-    3 damage
+    3 damage to ground units
 smoke grenade
     aoe ability 3 energy
     aoe type tri hex range 3 NLoS
@@ -1516,13 +1516,13 @@ slap
 - enemy ground units attempting to disengaging this unit suffer 3 melee damage first
 
 gladiator {11p} x1
-health 7, movement 3, sight 2, energy 3, M
+health 7, movement 3, sight 2, energy 4, M
 trident
     melee attack
     4 damage, -1 movement
     +1 damage against damaged units
 net
-    combinable ability 3 energy
+    combinable ability 4 energy
     target M- enemy unit 1 range, -1 movement
     applied entangled for 2 rounds
         disarmed
