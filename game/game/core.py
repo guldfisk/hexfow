@@ -7,10 +7,22 @@ from typing import Mapping
 
 from bidict import bidict
 
+from debug_utils import dp
 from events.eventsystem import Modifiable, ModifiableAttribute, modifiable
-from game.game.decisions import DecisionPoint, Option, TargetProfile, O, JSON
+from game.game.decisions import (
+    DecisionPoint,
+    Option,
+    TargetProfile,
+    O,
+    JSON,
+    NoTarget,
+    Serializable,
+    SerializationContext,
+    IDMap,
+)
 from game.game.has_effects import HasEffects
-from game.game.map.coordinates import CubeCoordinate
+from game.game.interface import Connection
+from game.game.map.coordinates import CC
 from game.game.player import Player
 from game.game.statuses import HasStatuses
 from game.game.turn_order import TurnOrder
@@ -21,18 +33,48 @@ A = TypeVar("A", bound=DecisionPoint)
 T = TypeVar("T")
 
 
-class SerializationContext: ...
+# class IDMap:
+#
+#     def __init__(self):
+#         self._ids: dict[int, str] = {}
+#         self._accessed: set[int] = set()
+#
+#     def get_id_for(self, obj: Any) -> str:
+#         _id = id(obj)
+#         if _id not in self._ids:
+#             self._ids[_id] = str(uuid4())
+#         self._accessed.add(_id)
+#         return self._ids[_id]
+#
+#     def prune(self) -> None:
+#         self._ids = {k: v for k, v in self._ids if k in self._accessed}
+#         self._accessed = set()
+#
+#
+# @dataclasses.dataclass
+# class SerializationContext:
+#     player: Player
+#     id_map: IDMap
 
 
-class Serializable(ABC):
+# class Serializable(ABC):
+#
+#     @abstractmethod
+#     def serialize(self, context: SerializationContext) -> JSON: ...
+
+
+class VisionBound(Serializable):
 
     @abstractmethod
-    def serialize(self, context: SerializationContext) -> JSON: ...
+    def serialize_values(self, context: SerializationContext) -> JSON: ...
+
+    def serialize(self, context: SerializationContext) -> JSON:
+        return {"id": context.id_map.get_id_for(self), **self.serialize_values(context)}
 
 
 class MoveOption(Option[O]):
 
-    def serialize_values(self) -> JSON:
+    def serialize_values(self, context: SerializationContext) -> JSON:
         return {}
 
 
@@ -40,12 +82,21 @@ class MoveOption(Option[O]):
 class EffortOption(Option[O]):
     facet: EffortFacet
 
-    def serialize_values(self) -> JSON:
-        return {"facet": self.facet.serialize(None)}
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        return {"facet": self.facet.serialize(context)}
+
+
+class SkipOption(Option[None]):
+
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        return {}
 
 
 class Facet(HasStatuses, Serializable):
-    name: ClassVar[str]
+    # TODO hmm
+    # name: ClassVar[str]
+    # TODO hm
+    display_type: ClassVar[str]
     description: ClassVar[str | None] = None
     flavor: ClassVar[str | None] = None
 
@@ -57,7 +108,7 @@ class Facet(HasStatuses, Serializable):
     def create_effects(self) -> None: ...
 
     def serialize(self, context: SerializationContext) -> JSON:
-        return {"name": self.name}
+        return {"name": self.__class__.__name__, "type": self.display_type}
 
 
 class EffortFacet(Facet, Modifiable):
@@ -77,6 +128,7 @@ class AttackFacet(EffortFacet): ...
 
 
 class MeleeAttackFacet(AttackFacet):
+    display_type = "MeleeAttack"
     damage: ClassVar[int]
 
     @modifiable
@@ -90,10 +142,13 @@ class MeleeAttackFacet(AttackFacet):
 
     @modifiable
     def can_be_activated(self, context: ActiveUnitContext) -> bool:
-        return self.has_sufficient_movement_points() and self.get_legal_targets()
+        return self.has_sufficient_movement_points(context) and self.get_legal_targets(
+            None
+        )
 
 
-class ActivatedAbilityFacet(EffortFacet): ...
+class ActivatedAbilityFacet(EffortFacet):
+    display_type = "ActivatedAbility"
 
 
 class StatickAbilityFacet(Facet): ...
@@ -115,7 +170,7 @@ class UnitBlueprint:
     facets: list[type[Facet]] = dataclasses.field(default_factory=list)
 
 
-class Unit(HasStatuses, Modifiable, Serializable):
+class Unit(HasStatuses, Modifiable, VisionBound):
     speed: ModifiableAttribute[None, int]
     sight: ModifiableAttribute[None, int]
     max_health: ModifiableAttribute[None, int]
@@ -135,6 +190,7 @@ class Unit(HasStatuses, Modifiable, Serializable):
 
         self.damage: int = 0
         self.max_health.set(blueprint.health)
+        self.speed.set(blueprint.speed)
         self.sight.set(blueprint.sight)
         self.max_energy.set(blueprint.energy)
         self.energy: int = (
@@ -173,31 +229,62 @@ class Unit(HasStatuses, Modifiable, Serializable):
         return True
 
     @modifiable
-    def get_legal_options(self, _: None = None) -> list[Option]:
+    def blocks_vision_for(self, player: Player) -> bool:
+        size = self.size.g()
+        if size == Size.LARGE:
+            return True
+        if size == Size.SMALL:
+            return False
+        return player != self.controller
+
+    # @modifiable
+    # def can_see(self, space: Hex) -> bool:
+
+    @modifiable
+    def get_legal_options(self, context: ActiveUnitContext) -> list[Option]:
         options = []
-        if moveable_hexes := [
-            _hex
-            for _hex in GS().map.get_neighbors_off(self)
-            if _hex.can_move_into(self)
-        ]:
-            options.append(MoveOption(target_profile=OneOfHexes(moveable_hexes)))
-        for facet in self.attacks:
-            if isinstance(facet, MeleeAttackFacet) and facet.can_be_activated(
-                GS().active_unit_context
-            ):
-                options.append(
-                    EffortOption(
-                        facet, target_profile=OneOfUnits(facet.get_legal_targets())
+        if context.movement_points > 0:
+            if moveable_hexes := [
+                _hex
+                for _hex in GS().map.get_neighbors_off(self)
+                if _hex.can_move_into(self)
+            ]:
+                options.append(MoveOption(target_profile=OneOfHexes(moveable_hexes)))
+            for facet in self.attacks:
+                if isinstance(facet, MeleeAttackFacet) and facet.can_be_activated(
+                    GS().active_unit_context
+                ):
+                    options.append(
+                        EffortOption(
+                            facet,
+                            target_profile=OneOfUnits(facet.get_legal_targets(None)),
+                        )
                     )
-                )
+        if not context.has_acted or options:
+            options.append(SkipOption(target_profile=NoTarget()))
         return options
 
     @property
     def health(self) -> int:
         return self.max_health.g() - self.damage
 
-    def serialize(self, context: SerializationContext) -> JSON:
-        return {"name": self.blueprint.name}
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        return {
+            "blueprint": self.blueprint.name,
+            "controller": self.controller.name,
+            "max_health": self.max_health.g(),
+            "damage": self.damage,
+            "speed": self.speed.g(),
+            "sight": self.sight.g(),
+            "max_energy": self.max_energy.g(),
+            "energy": self.energy,
+            "size": self.size.g(),
+            # "attack_power"
+            "exhausted": self.exhausted,
+        }
+
+    # def serialize(self, context: SerializationContext) -> JSON:
+    #     return {"name": self.blueprint.name}
 
     def __eq__(self, other: Any) -> bool:
         return self is other
@@ -210,8 +297,10 @@ class Unit(HasStatuses, Modifiable, Serializable):
 class OneOfUnits(TargetProfile[Unit]):
     units: list[Unit]
 
-    def serialize_values(self) -> JSON:
-        return {"units": [unit.serialize(None) for unit in self.units]}
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        return {
+            "units": [{"id": context.id_map.get_id_for(unit)} for unit in self.units]
+        }
 
     def parse_response(self, v: Any) -> Unit:
         return self.units[v["index"]]
@@ -219,7 +308,7 @@ class OneOfUnits(TargetProfile[Unit]):
 
 @dataclasses.dataclass
 class Landscape:
-    terrain_map: Mapping[CubeCoordinate, type[Terrain]]
+    terrain_map: Mapping[CC, type[Terrain]]
     # deployment_zones: Collection[AbstractSet[CubeCoordinate]]
 
 
@@ -231,7 +320,7 @@ class Terrain(HasEffects, ABC):
 
 @dataclasses.dataclass
 class Hex(Modifiable, HasStatuses, Serializable):
-    position: CubeCoordinate
+    position: CC
     terrain: Terrain
     map: HexMap
 
@@ -249,6 +338,16 @@ class Hex(Modifiable, HasStatuses, Serializable):
     def can_move_into(self, unit: Unit) -> bool:
         return self.is_occupied_for(unit) and self.is_passable_to(unit)
 
+    @modifiable
+    def blocks_vision_for(self, player: Player) -> bool:
+        if unit := self.map.unit_on(self):
+            return unit.blocks_vision_for(player)
+        return False
+
+    # TODO
+    # def serialize_values(self, context: SerializationContext) -> JSON:
+    #     pass
+
     def serialize(self, context: SerializationContext) -> JSON:
         return {
             "cc": {
@@ -256,6 +355,9 @@ class Hex(Modifiable, HasStatuses, Serializable):
                 "h": self.position.h,
             },
             "terrain": self.terrain.__class__.__name__,
+            "unit": (
+                unit.serialize(context) if (unit := self.map.unit_on(self)) else None
+            ),
         }
 
     def __eq__(self, other: Any) -> bool:
@@ -269,8 +371,8 @@ class Hex(Modifiable, HasStatuses, Serializable):
 class OneOfHexes(TargetProfile[Hex]):
     hexes: list[Hex]
 
-    def serialize_values(self) -> JSON:
-        return {"units": [_hex.serialize(None) for _hex in self.hexes]}
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        return {"options": [_hex.position.serialize() for _hex in self.hexes]}
 
     def parse_response(self, v: Any) -> Hex:
         return self.hexes[v["index"]]
@@ -298,48 +400,113 @@ class HexMap:
             raise MovementException()
         self.unit_positions[unit] = space
 
+    def remove_unit(self, unit: Unit) -> None:
+        del self.unit_positions[unit]
+
     def unit_on(self, space: Hex) -> Unit | None:
         return self.unit_positions.inverse.get(space)
 
     def position_of(self, unit: Unit) -> Hex:
         return self.unit_positions[unit]
 
-    def get_neighbors_off(self, off: CubeCoordinate | Unit) -> Iterator[Hex]:
+    def get_neighbors_off(self, off: CC | Unit) -> Iterator[Hex]:
         for neighbor_coordinate in (
-            self.unit_positions[off] if isinstance(off, Unit) else off
+            self.unit_positions[off].position if isinstance(off, Unit) else off
         ).neighbors():
             if _hex := self.hexes.get(neighbor_coordinate):
                 yield _hex
 
     def get_neighboring_units_off(
-        self, off: CubeCoordinate | Unit, controlled_by: Player | None = None
+        self, off: CC | Unit, controlled_by: Player | None = None
     ) -> Iterator[Unit]:
         for _hex in self.get_neighbors_off(off):
             if unit := self.unit_positions.inverse.get(_hex):
                 if controlled_by is None or controlled_by == unit.controller:
                     yield unit
 
+    def serialize(self, context: SerializationContext) -> JSON:
+        return {"hexes": [_hex.serialize(context) for _hex in self.hexes.values()]}
+
 
 @dataclasses.dataclass
 class ActiveUnitContext:
     unit: Unit
     movement_points: int
+    has_acted: bool = False
     should_stop: bool = False
 
 
 class GameState:
     instance: GameState | None = None
 
-    def __init__(self, player_count: int):
-        self.turn_order = TurnOrder([Player() for _ in range(player_count)])
+    def __init__(
+        self,
+        player_count: int,
+        # interface_class: type[Interface],
+        connection_class: type[Connection],
+        landscape: Landscape,
+    ):
+        self.turn_order = TurnOrder(
+            [Player(f"player {i+1}") for i in range(player_count)]
+        )
+        # self.interfaces = {
+        #     player: interface_class() for player in self.turn_order.players
+        # }
+        self.connections = {
+            player: connection_class(player) for player in self.turn_order.players
+        }
         # self.map = HexMap(settings.map_spec.generate_landscape())
-        self.map = HexMap()
+        self.map = HexMap(landscape)
         self.active_unit_context: ActiveUnitContext | None = None
         # self.points: dict[Player]
         self.target_points = 10
         self.round_counter = 0
 
-    def take_action(self, player: Player, action: DecisionPoint[T]) -> T: ...
+        # TODO move to player
+        # self._id_map = IDMap()
+        self.id_maps: dict[Player, IDMap] = {
+            player: IDMap() for player in self.turn_order.players
+        }
+
+        self.vision_obstruction_map: dict[Player, dict[CC, bool]] = {}
+        self.vision_map: dict[Player, dict[CC, bool]]
+
+    def update_vision(self) -> None:
+        for player in self.turn_order.players:
+            self.vision_obstruction_map = {
+                position: _hex.blocks_vision_for(player)
+                for position, _hex in self.map.hexes.items()
+            }
+
+    def serialize_for(
+        self, context: SerializationContext, decision_point: DecisionPoint | None
+    ) -> Mapping[str, Any]:
+        return {
+            "game_state": {
+                "players": {},
+                "round": self.round_counter,
+                "map": self.map.serialize(context),
+            },
+            "decision": decision_point.serialize(context) if decision_point else None,
+        }
+
+    def make_decision(self, player: Player, decision_point: DecisionPoint[O]) -> O:
+        for _player in self.turn_order.players:
+            if _player != player:
+                self.connections[_player].send(
+                    self.serialize_for(
+                        SerializationContext(_player, self.id_maps[_player]), None
+                    )
+                )
+        return decision_point.parse_response(
+            self.connections[player].get_response(
+                self.serialize_for(
+                    SerializationContext(player, self.id_maps[player]), decision_point
+                )
+            )
+        )
+
+        # return self.interfaces[player].make_decision(decision_point)
 
 
 # TODO

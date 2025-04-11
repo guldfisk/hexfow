@@ -1,6 +1,9 @@
 import dataclasses
 from abc import ABC, abstractmethod
 from typing import TypeVar, Generic, Any, TypeAlias, Mapping
+from uuid import uuid4
+
+from game.game.player import Player
 
 
 O = TypeVar("O")
@@ -8,64 +11,74 @@ O = TypeVar("O")
 JSON: TypeAlias = Mapping[str, Any]
 
 
-class DecisionPoint(ABC, Generic[O]):
+# TODO where this shit?
+class IDMap:
+
+    def __init__(self):
+        self._ids: dict[int, str] = {}
+        self._accessed: set[int] = set()
+
+    def get_id_for(self, obj: Any) -> str:
+        _id = id(obj)
+        if _id not in self._ids:
+            self._ids[_id] = str(uuid4())
+        self._accessed.add(_id)
+        return self._ids[_id]
+
+    def prune(self) -> None:
+        self._ids = {k: v for k, v in self._ids if k in self._accessed}
+        self._accessed = set()
+
+
+@dataclasses.dataclass
+class SerializationContext:
+    player: Player
+    id_map: IDMap
+
+
+class Serializable(ABC):
+
+    @abstractmethod
+    def serialize(self, context: SerializationContext) -> JSON: ...
+
+
+class DecisionPoint(Serializable, Generic[O]):
 
     @abstractmethod
     def get_explanation(self) -> str: ...
 
     @abstractmethod
-    def serialize_payload(self) -> JSON: ...
+    def serialize_payload(self, context: SerializationContext) -> JSON: ...
 
-    def serialize(self) -> JSON:
+    def serialize(self, context: SerializationContext) -> JSON:
         return {
             "explanation": self.get_explanation(),
-            "payload": self.serialize_payload(),
+            "type": self.__class__.__name__,
+            "payload": self.serialize_payload(context),
         }
 
     @abstractmethod
     def parse_response(self, v: Any) -> O: ...
 
 
-# class Option(ABC):
-#
-#     @abstractmethod
-#     def serialize_values(self) -> JSON: ...
-#
-#     def serialize(self) -> JSON:
-#         return {"type": type(self).__name__, "values": self.serialize_values()}
-#
-#
-# @dataclasses.dataclass
-# class SelectOptionAction(Action[Option]):
-#     options: list[Option]
-#     explanation: str
-#
-#     def get_explanation(self) -> str:
-#         return self.explanation
-#
-#     def serialize_payload(self) -> JSON:
-#         return {"options": [option.serialize() for option in self.options]}
-#
-#     def parse_response(self, v: Any) -> Option:
-#         return self.options[v["index"]]
-
-
 class TargetProfile(ABC, Generic[O]):
     @abstractmethod
-    def serialize_values(self) -> JSON: ...
+    def serialize_values(self, context: SerializationContext) -> JSON: ...
 
-    def serialize(self) -> JSON:
-        return {"type": type(self).__name__, "values": self.serialize_values()}
+    def serialize(self, context: SerializationContext) -> JSON:
+        return {"type": type(self).__name__, "values": self.serialize_values(context)}
 
     @abstractmethod
     def parse_response(self, v: Any) -> O: ...
 
 
-# T = TypeVar("T", bound=TargetProfile)
+class NoTarget(TargetProfile[None]):
 
-# @dataclasses.dataclass
-# class OneOfUnits(TargetProfile):
-#     ...
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        return {}
+
+    def parse_response(self, v: Any) -> None:
+        return None
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -73,13 +86,13 @@ class Option(ABC, Generic[O]):
     target_profile: TargetProfile[O]
 
     @abstractmethod
-    def serialize_values(self) -> JSON: ...
+    def serialize_values(self, context: SerializationContext) -> JSON: ...
 
-    def serialize(self) -> JSON:
+    def serialize(self, context: SerializationContext) -> JSON:
         return {
             "type": type(self).__name__,
-            "values": self.serialize_values(),
-            "target_profile": self.target_profile.serialize(),
+            "values": self.serialize_values(context),
+            "target_profile": self.target_profile.serialize(context),
         }
 
 
@@ -97,8 +110,8 @@ class SelectOptionDecisionPoint(DecisionPoint[OptionDecision]):
     def get_explanation(self) -> str:
         return self.explanation
 
-    def serialize_payload(self) -> JSON:
-        return {"options": [option.serialize() for option in self.options]}
+    def serialize_payload(self, context: SerializationContext) -> JSON:
+        return {"options": [option.serialize(context) for option in self.options]}
 
     def parse_response(self, v: Any) -> OptionDecision:
         option = self.options[v["index"]]
