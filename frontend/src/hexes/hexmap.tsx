@@ -1,7 +1,6 @@
 import { _ReactPixi, Container, Graphics, Sprite, useTick } from "@pixi/react";
 import React, { useCallback, useRef, useState } from "react";
 import { Graphics as PIXIGraphics } from "pixi.js";
-import { createSecretKey } from "crypto";
 import { HexData, MapData } from "../models/map";
 import { HexCoord } from "../models/types";
 
