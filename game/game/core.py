@@ -22,7 +22,8 @@ from game.game.decisions import (
 )
 from game.game.has_effects import HasEffects
 from game.game.interface import Connection
-from game.game.map.coordinates import CC
+from game.game.map.coordinates import CC, find_collisions, line_of_sight_obstructed
+from game.game.map.geometry import hex_circle
 from game.game.player import Player
 from game.game.statuses import HasStatuses
 from game.game.turn_order import TurnOrder
@@ -133,10 +134,40 @@ class MeleeAttackFacet(AttackFacet):
 
     @modifiable
     def get_legal_targets(self, _: None = None) -> list[Unit]:
+        # TODO handle vision
         return [
             unit
             for unit in GS().map.get_neighboring_units_off(self.owner)
             if unit.controller != self.owner.controller
+            and unit.can_be_attacked_by(self)
+        ]
+
+    @modifiable
+    def can_be_activated(self, context: ActiveUnitContext) -> bool:
+        return self.has_sufficient_movement_points(context) and self.get_legal_targets(
+            None
+        )
+
+
+class RangedAttackFacet(AttackFacet):
+    display_type = "RangedAttack"
+    range: ClassVar[int]
+    damage: ClassVar[int]
+
+    @modifiable
+    def get_legal_targets(self, _: None = None) -> list[Unit]:
+        return [
+            unit
+            for unit in GS().map.get_units_within_range_off(self.owner, self.range)
+            if unit.controller != self.owner.controller
+            and GS().vision_map[self.owner.controller][
+                GS().map.position_of(self.owner).position
+            ]
+            and not line_of_sight_obstructed(
+                GS().map.position_of(self.owner).position,
+                GS().map.position_of(unit).position,
+                GS().vision_obstruction_map[self.owner.controller].get,
+            )
             and unit.can_be_attacked_by(self)
         ]
 
@@ -163,6 +194,7 @@ class UnitBlueprint:
     health: int
     speed: int
     sight: int
+    armor: int = 0
     energy: int = 0
     starting_energy: int | FULL_ENERGY = FULL_ENERGY
     size: Size = Size.MEDIUM
@@ -174,6 +206,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
     speed: ModifiableAttribute[None, int]
     sight: ModifiableAttribute[None, int]
     max_health: ModifiableAttribute[None, int]
+    armor: ModifiableAttribute[None, int]
     max_energy: ModifiableAttribute[None, int]
     size: ModifiableAttribute[None, Size]
     attack_power: ModifiableAttribute[None, int]
@@ -192,6 +225,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
         self.max_health.set(blueprint.health)
         self.speed.set(blueprint.speed)
         self.sight.set(blueprint.sight)
+        self.armor.set(blueprint.armor)
         self.max_energy.set(blueprint.energy)
         self.energy: int = (
             blueprint.starting_energy
@@ -237,8 +271,36 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             return False
         return player != self.controller
 
-    # @modifiable
-    # def can_see(self, space: Hex) -> bool:
+    @modifiable
+    def can_see(self, space: Hex) -> bool:
+        if (
+            space.map.position_of(self).position.distance_to(space.position)
+            > self.sight.g()
+        ):
+            return False
+        return not line_of_sight_obstructed(
+            space.map.position_of(self).position,
+            space.position,
+            GS().vision_obstruction_map[self.controller].get,
+        )
+        # obstruction_map = GS().vision_obstruction_map[self.controller]
+        #
+        # collided_sides = [False, False]
+        #
+        # for coordinates in find_collisions(
+        #     space.map.position_of(self).position, space.position
+        # ):
+        #     if len(coordinates) == 1:
+        #         if obstruction_map[coordinates[0]]:
+        #             return False
+        #     else:
+        #         for idx, c in enumerate(coordinates):
+        #             if obstruction_map[c]:
+        #                 collided_sides[idx] = True
+        #         if all(collided_sides):
+        #             return False
+        #
+        # return True
 
     @modifiable
     def get_legal_options(self, context: ActiveUnitContext) -> list[Option]:
@@ -355,6 +417,7 @@ class Hex(Modifiable, HasStatuses, Serializable):
                 "h": self.position.h,
             },
             "terrain": self.terrain.__class__.__name__,
+            "visible": GS().vision_map[context.player][self.position],
             "unit": (
                 unit.serialize(context) if (unit := self.map.unit_on(self)) else None
             ),
@@ -424,6 +487,16 @@ class HexMap:
                 if controlled_by is None or controlled_by == unit.controller:
                     yield unit
 
+    def get_units_within_range_off(
+        self, off: CC | Unit, distance: int
+    ) -> Iterator[Unit]:
+        for _hex in hex_circle(
+            distance,
+            center=self.unit_positions[off].position if isinstance(off, Unit) else off,
+        ):
+            if unit := self.unit_positions.inverse.get(self.hexes[_hex]):
+                yield unit
+
     def serialize(self, context: SerializationContext) -> JSON:
         return {"hexes": [_hex.serialize(context) for _hex in self.hexes.values()]}
 
@@ -469,19 +542,26 @@ class GameState:
         }
 
         self.vision_obstruction_map: dict[Player, dict[CC, bool]] = {}
-        self.vision_map: dict[Player, dict[CC, bool]]
+        self.vision_map: dict[Player, dict[CC, bool]] = {}
 
     def update_vision(self) -> None:
         for player in self.turn_order.players:
-            self.vision_obstruction_map = {
+            self.vision_obstruction_map[player] = {
                 position: _hex.blocks_vision_for(player)
+                for position, _hex in self.map.hexes.items()
+            }
+
+            self.vision_map[player] = {
+                position: any(
+                    unit.can_see(_hex) for unit in self.map.units_controlled_by(player)
+                )
                 for position, _hex in self.map.hexes.items()
             }
 
     def serialize_for(
         self, context: SerializationContext, decision_point: DecisionPoint | None
     ) -> Mapping[str, Any]:
-        return {
+        v = {
             "game_state": {
                 "players": {},
                 "round": self.round_counter,
@@ -489,8 +569,12 @@ class GameState:
             },
             "decision": decision_point.serialize(context) if decision_point else None,
         }
+        # TODO lmao
+        context.id_map.prune()
+        return v
 
     def make_decision(self, player: Player, decision_point: DecisionPoint[O]) -> O:
+        self.update_vision()
         for _player in self.turn_order.players:
             if _player != player:
                 self.connections[_player].send(
@@ -505,8 +589,6 @@ class GameState:
                 )
             )
         )
-
-        # return self.interfaces[player].make_decision(decision_point)
 
 
 # TODO

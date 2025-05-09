@@ -21,6 +21,12 @@ const cardHeight = 200;
 
 const hexSize = 45;
 
+const enum CollisionType {
+  FULL,
+  LEFT_CORNER,
+  RIGHT_CORNER,
+}
+
 // const hexWidth = hexSize * 2;
 // const hexHeight = Math.sqrt(3) * hexSize;
 
@@ -176,8 +182,6 @@ const getCheckDirectionsForCartesian = (
       ];
     } else {
       return [
-        //   LMAO
-        { r: -1, h: 0 },
         { r: 0, h: -1 },
         { r: 1, h: -1 },
         { r: 1, h: 0 },
@@ -199,8 +203,8 @@ const getCheckDirections = (
 const findCartesianCollisions = (
   lineFrom: HexCoord,
   lineTo: HexCoord,
-): HexCoord[] => {
-  const collisions: HexCoord[] = [];
+): [HexCoord, CollisionType][] => {
+  const collisions: [HexCoord, CollisionType][] = [];
   const directions = getCheckDirections(lineFrom, lineTo);
   const realFrom = hexToPixelCoord(lineFrom);
   const realTo = hexToPixelCoord(lineTo);
@@ -221,13 +225,33 @@ const findCartesianCollisions = (
           realTo,
           hexVerts.map(([x, y]) => ({
             // LMAO
-            x: checkingRealPosition.x + x * 0.95,
-            y: checkingRealPosition.y + y * 0.95,
+            x: checkingRealPosition.x + x * 1.01,
+            y: checkingRealPosition.y + y * 1.01,
           })),
         )
       ) {
-        collisions.push(position);
-        checkingNext = position;
+        if (
+          collides(
+            realFrom,
+            realTo,
+            hexVerts.map(([x, y]) => ({
+              // LMAO
+              x: checkingRealPosition.x + x * 0.99,
+              y: checkingRealPosition.y + y * 0.99,
+            })),
+          )
+        ) {
+          collisions.push([position, CollisionType.FULL]);
+          checkingNext = position;
+        } else {
+          collisions.push([
+            position,
+            CollisionType.FULL,
+            // isLeft(realFrom, realTo, checkingRealPosition) > 0
+            //   ? CollisionType.LEFT_CORNER
+            //   : CollisionType.RIGHT_CORNER,
+          ]);
+        }
       }
     }
     currentChecking = checkingNext;
@@ -235,7 +259,10 @@ const findCartesianCollisions = (
   return collisions;
 };
 
-const findCollisions = (lineFrom: HexCoord, lineTo: HexCoord): HexCoord[][] => {
+const findCollisions = (
+  lineFrom: HexCoord,
+  lineTo: HexCoord,
+): [HexCoord, CollisionType][][] => {
   const relativeTo = { r: lineTo.r - lineFrom.r, h: lineTo.h - lineFrom.h };
   for (const [{ r, h }, backwards] of edgeCollisionDirections) {
     if (
@@ -251,11 +278,19 @@ const findCollisions = (lineFrom: HexCoord, lineTo: HexCoord): HexCoord[][] => {
         1,
         (r > 0 ? relativeTo.r / r : relativeTo.h / h) + 1,
       ).flatMap((i) => [
-        backwards.map((b) => ({
-          r: r * i + lineFrom.r - b.r,
-          h: h * i + lineFrom.h - b.h,
-        })),
-        [{ r: r * i + lineFrom.r, h: h * i + lineFrom.h }],
+        backwards.map((b) => [
+          {
+            r: r * i + lineFrom.r - b.r,
+            h: h * i + lineFrom.h - b.h,
+          },
+          CollisionType.FULL,
+        ]),
+        [
+          [
+            { r: r * i + lineFrom.r, h: h * i + lineFrom.h },
+            CollisionType.FULL,
+          ],
+        ],
       ]);
     }
   }
@@ -344,6 +379,13 @@ const findCollisionsFromVertToVert = (
   return collisions;
 };
 
+const hexDistance = (fromCoord: HexCoord, toCoord: HexCoord): number => {
+  const r = fromCoord.r - toCoord.r;
+  const h = fromCoord.h - toCoord.h;
+  // return Math.max(r, h, -(r + h));
+  return (Math.abs(r) + Math.abs(r + h) + Math.abs(h)) / 2;
+};
+
 async function setupApp() {
   const app = new Application();
   await app.init({ resizeTo: window, antialias: false });
@@ -375,7 +417,7 @@ async function setupApp() {
   const visibleHexShape = getHexShape("447744");
   const invisibleHexShape = getHexShape("black");
 
-  const hexMapRadius = 15;
+  const hexMapRadius = 2;
   const hexCoords = range(-hexMapRadius, hexMapRadius + 1)
     .flatMap((r) =>
       range(-hexMapRadius, hexMapRadius + 1).map((h) => ({
@@ -397,15 +439,26 @@ async function setupApp() {
 
   hexCoords.forEach((p) => setIsWall(p, false));
 
+  let lines: [HexCoord, HexCoord][] = [];
+
   const isBlocked = (lineFrom: HexCoord, lineTo: HexCoord): boolean => {
     const collidedSides = [false, false];
+    const collidedCorners = [false, false];
     for (const hexes of findCollisions(lineFrom, lineTo)) {
-      if (hexes.length == 1 && getIsWall(hexes[0])) {
-        return true;
+      if (hexes.length == 1 && getIsWall(hexes[0][0])) {
+        if (hexes[0][1] == CollisionType.FULL) {
+          return true;
+        } else {
+          collidedCorners[hexes[0][1] == CollisionType.LEFT_CORNER ? 0 : 1] =
+            true;
+          if (collidedCorners.every((v) => v)) {
+            return true;
+          }
+        }
       }
       if (hexes.length == 2) {
         for (const i of range(2)) {
-          if (getIsWall(hexes[i])) {
+          if (getIsWall(hexes[i][0])) {
             collidedSides[i] = true;
           }
         }
@@ -417,6 +470,7 @@ async function setupApp() {
     return false;
   };
 
+  let openLine: HexCoord | null = null;
   let linePointsTo = { r: 0, h: 0 };
   let worldTranslation = { x: 0, y: 0 };
   let worldScale = 1;
@@ -513,7 +567,8 @@ async function setupApp() {
 
         getIsWall(p)
           ? wallHexShape
-          : isBlocked({ r: 0, h: 0 }, p)
+          : // : isBlocked({ r: 0, h: 0 }, p)
+            isBlocked(linePointsTo, p)
             ? invisibleHexShape
             : visibleHexShape,
 
@@ -538,7 +593,10 @@ async function setupApp() {
       hexContainer.addChild(hex);
       hexContainer.position = realHexPosition;
 
-      const label = new Text({ text: `${p.r},${p.h}`, style: smallTextStyle });
+      const label = new Text({
+        text: `${p.r},${p.h}\n${hexDistance({ r: 0, h: 0 }, p)}`,
+        style: smallTextStyle,
+      });
       label.anchor = 0.5;
       // label.position = realHexPosition;
       hexContainer.addChild(label);
@@ -559,11 +617,29 @@ async function setupApp() {
       //   shouldRerender = true;
       // });
       hexContainer.on("pointerdown", (event) => {
-        if (event.button == 0) {
-          console.log("click", p);
+        console.log("click", event.button, p);
 
+        if (event.button == 0) {
           setIsWall(p, !getIsWall(p));
           shouldRerender = true;
+        } else if (event.button == 2) {
+          if (openLine) {
+            lines.push([p, openLine]);
+            console.log(lines);
+            openLine = null;
+            shouldRerender = true;
+          } else {
+            const lengthBefore = lines.length;
+            lines = lines.filter(
+              (points) =>
+                !points.some((point) => point.r == p.r && point.h == p.h),
+            );
+            if (lines.length == lengthBefore) {
+              openLine = p;
+            } else {
+              shouldRerender = true;
+            }
+          }
         }
       });
     });
@@ -635,12 +711,38 @@ async function setupApp() {
     //   }
     // }
 
-    let line = new Graphics()
-      .moveTo(...unrollPoint(center))
-      .lineTo(...unrollPoint(linePointsToReal))
-      .stroke({ color: "white", pixelLine: true });
-    line.eventMode = "none";
-    map.addChild(line);
+    // let line = new Graphics()
+    //   .moveTo(...unrollPoint(center))
+    //   .lineTo(...unrollPoint(linePointsToReal))
+    //   .stroke({ color: "white", pixelLine: true });
+    // line.eventMode = "none";
+    // map.addChild(line);
+
+    for (const [_from, _to] of lines) {
+      //       let line = new Graphics()
+      //   .moveTo(...unrollPoint(center))
+      //   .lineTo(...unrollPoint(linePointsToReal))
+      //   .stroke({ color: "white", pixelLine: true });
+      // line.eventMode = "none";
+      // map.addChild(line);
+
+      // console.log(hexToPixelCoord(_from));
+      // console.log(hexToPixelCoord(_to));
+      let line = new Graphics()
+        .moveTo(...unrollPoint(addPointData(hexToPixelCoord(_from), center)))
+        .lineTo(...unrollPoint(addPointData(hexToPixelCoord(_to), center)))
+        .stroke({ color: "white", pixelLine: true });
+      line.eventMode = "none";
+      map.addChild(line);
+      // console.log(hexToPixelCoord(_from));
+      // console.log(hexToPixelCoord(_to));
+      // let line = new Graphics()
+      //   .moveTo(...unrollPoint(center))
+      //   .lineTo(...unrollPoint(hexToPixelCoord(_to)))
+      //   .stroke({ color: "white", pixelLine: true });
+      // line.eventMode = "none";
+      // map.addChild(line);
+    }
 
     // console.log(linePointsTo);
     shouldRerender = false;
@@ -713,6 +815,11 @@ async function setupApp() {
   });
   app.stage.eventMode = "static";
   app.stage.hitArea = app.screen;
+
+  // YIKES
+  document.oncontextmenu = document.body.oncontextmenu = function () {
+    return false;
+  };
 
   app.ticker.add((ticker) => {
     if (shouldRerender) {

@@ -34,8 +34,9 @@ class MeleeAttack(Event[None]):
     attack: MeleeAttackFacet
 
     def resolve(self) -> None:
-        ES.resolve(Damage(self.defender, self.attack.damage))
-        # self.defender.health -= self.attack.damage
+        ES.resolve(
+            Damage(self.defender, max(self.attack.damage - self.defender.armor.g(), 0))
+        )
 
 
 @dataclasses.dataclass

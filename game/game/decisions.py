@@ -26,7 +26,7 @@ class IDMap:
         return self._ids[_id]
 
     def prune(self) -> None:
-        self._ids = {k: v for k, v in self._ids if k in self._accessed}
+        self._ids = {k: v for k, v in self._ids.items() if k in self._accessed}
         self._accessed = set()
 
 

@@ -1,11 +1,22 @@
 import dataclasses
 from abc import abstractmethod, ABC
-from typing import TypeVar, Mapping, Any, Callable, Iterator, cast
+from typing import (
+    TypeVar,
+    Mapping,
+    Any,
+    Callable,
+    Iterator,
+    cast,
+    TypeAlias,
+    Iterable,
+    Collection,
+    ClassVar,
+)
 
 import pytest
+from frozendict import frozendict
 
-from debug_utils import dp
-from events.eventsystem import ES
+from events.eventsystem import ES, StateModifierEffect
 from game.game.core import (
     Terrain,
     HexMap,
@@ -13,35 +24,47 @@ from game.game.core import (
     GameState,
     UnitBlueprint,
     Unit,
-    AttackFacet,
     MoveOption,
     GS,
     EffortOption,
     MeleeAttackFacet,
+    SkipOption,
 )
-from game.game.decisions import DecisionPoint, O, Option
 from game.game.events import SpawnUnit, MeleeAttack, Turn, Round
 from game.game.interface import Connection
 from game.game.map.coordinates import CC
+from game.game.map.geometry import hex_circle
 from game.game.map.terrain import Ground
 from game.game.player import Player
-from game.game.units.blueprints import CHICKEN, CACTUS
+from game.game.units.blueprints import (
+    CHICKEN,
+    CACTUS,
+    LIGHT_ARCHER,
+    LUMBERING_PILLAR,
+    MARSHMALLOW_TITAN,
+)
 from game.game.units.facets.attacks import Peck
 
 
 A = TypeVar("A")
+
+JSON_DICT: TypeAlias = Mapping[str, Any]
+
+Response: TypeAlias = JSON_DICT | Callable[[JSON_DICT, Player], JSON_DICT]
+
+QueuedResponse: TypeAlias = (
+    Response | tuple[Response, Callable[[JSON_DICT, Player], Any]]
+)
 
 
 class MockConnection(Connection):
 
     def __init__(self, player: Player):
         super().__init__(player)
-        self.queued_responses = []
-        self.history: list[Mapping[str, Any]] = []
+        self.queued_responses: list[QueuedResponse] = []
+        self.history: list[JSON_DICT] = []
 
-    def queue_responses(
-        self, *vs: Mapping[str, Any] | Callable[[Mapping[str, Any], Player], Mapping[str, Any]]
-    ) -> None:
+    def queue_responses(self, *vs: QueuedResponse) -> None:
         self.queued_responses.extend(vs)
 
     def send(self, values: Mapping[str, Any]) -> None:
@@ -49,13 +72,75 @@ class MockConnection(Connection):
 
     def get_response(self, values: Mapping[str, Any]) -> Mapping[str, Any]:
         self.history.append(values)
-        dp(values)
-        response = self.queued_responses.pop(0)
+        queues_response = self.queued_responses.pop(0)
+        if isinstance(queues_response, tuple):
+            response, asserter = queues_response
+            asserter(values, self.player)
+        else:
+            response = queues_response
         return (
             response(values, self.player)
             if isinstance(response, Callable)
             else response
         )
+
+
+class GSCheck(ABC):
+
+    @abstractmethod
+    def __call__(self, gs: JSON_DICT, player: Player) -> None:
+        pass
+
+
+@dataclasses.dataclass
+class GSChecks:
+    checks: list[GSCheck]
+
+    @abstractmethod
+    def __call__(self, gs: JSON_DICT, player: Player) -> None:
+        for check in self.checks:
+            check(gs, player)
+
+
+@dataclasses.dataclass
+class HasHexes(GSCheck):
+    coordinates: Iterable[CC]
+
+    def __call__(self, gs: JSON_DICT, player: Player) -> None:
+        assert {
+            frozendict(_hex["cc"]) for _hex in gs["game_state"]["map"]["hexes"]
+        } == {frozendict(c.serialize()) for c in self.coordinates}
+
+
+@dataclasses.dataclass
+class HexesVisible(GSCheck):
+    visible_coordinates: Iterable[CC]
+
+    def __call__(self, gs: JSON_DICT, player: Player) -> None:
+        visibles = {frozendict(c.serialize()) for c in self.visible_coordinates}
+
+        target = {
+            frozendict(_hex["cc"]): frozendict(_hex["cc"]) in visibles
+            for _hex in gs["game_state"]["map"]["hexes"]
+        }
+        result = {
+            frozendict(_hex["cc"]): _hex["visible"]
+            for _hex in gs["game_state"]["map"]["hexes"]
+        }
+
+        if target != result:
+            print("vision check error:")
+            print("has vision but should not:")
+            print(
+                {c for c, v in result.items() if v}
+                - {c for c, v in target.items() if v}
+            )
+            print("does have vision but should:")
+            print(
+                {c for c, v in target.items() if v}
+                - {c for c, v in result.items() if v}
+            )
+            assert False
 
 
 class TargetSelector:
@@ -104,20 +189,20 @@ class DecisionSelector(ABC):
 
 @dataclasses.dataclass
 class OptionSelector(DecisionSelector):
-    # option_type: type[Option]
-    target_selector: TargetSelector
+    target_selector: TargetSelector | None = None
 
     @abstractmethod
     def should_select(self, option: Mapping[str, Any]) -> bool: ...
 
     def __call__(self, values: Mapping[str, Any], player: Player) -> Mapping[str, Any]:
         for idx, option in enumerate(values["decision"]["payload"]["options"]):
-            # if option["type"] == self.option_type.__name__:
             if self.should_select(option):
                 return {
                     "index": idx,
-                    "target": self.target_selector.select(
-                        option["target_profile"], player
+                    "target": (
+                        self.target_selector.select(option["target_profile"], player)
+                        if self.target_selector is not None
+                        else None
                     ),
                 }
         raise ValueError("blah")
@@ -139,6 +224,12 @@ class MeleeAttackSelector(OptionSelector):
         )
 
 
+class SkipOptionSelector(OptionSelector):
+
+    def should_select(self, option: Mapping[str, Any]) -> bool:
+        return option["type"] == SkipOption.__name__
+
+
 @dataclasses.dataclass
 class UnitSelector(DecisionSelector):
     unit: Unit
@@ -157,16 +248,9 @@ def select_hex(coordinate: CC, values: Mapping[str, Any]) -> Mapping[str, Any]:
 
 
 def generate_hex_landscape(
-    radius: int = 1, terrain_type: type[Terrain] = Ground
+    radius: int = 2, terrain_type: type[Terrain] = Ground
 ) -> Landscape:
-    return Landscape(
-        {
-            CC(r, h): terrain_type
-            for r in range(-radius, radius + 1)
-            for h in range(-radius, radius + 1)
-            if -radius <= -(r + h) <= radius
-        }
-    )
+    return Landscape({cc: terrain_type for cc in hex_circle(radius)})
 
 
 @pytest.fixture
@@ -288,8 +372,7 @@ def test_fight(
         MeleeAttackSelector(OneOfUnitsSelector(evil_chicken)),
     )
     player2_connection.queue_responses(
-        UnitSelector(evil_chicken),
-        MeleeAttackSelector(OneOfUnitsSelector(chicken))
+        UnitSelector(evil_chicken), MeleeAttackSelector(OneOfUnitsSelector(chicken))
     )
 
     ES.resolve(Round())
@@ -306,13 +389,37 @@ def test_fight(
     assert len(player2_connection.history) == 6
 
 
+def test_armor(unit_spawner: UnitSpawner, player2: Player):
+    chicken = unit_spawner.spawn(CHICKEN, coordinate=CC(0, 0))
+    evil_pillar = unit_spawner.spawn(
+        LUMBERING_PILLAR, coordinate=CC(0, 1), controller=player2
+    )
+    evil_marshmallow = unit_spawner.spawn(
+        MARSHMALLOW_TITAN, coordinate=CC(1, 0), controller=player2
+    )
+    ES.resolve(MeleeAttack(chicken, evil_pillar, chicken.attacks[0]))
+    ES.resolve(MeleeAttack(chicken, evil_marshmallow, chicken.attacks[0]))
+
+    assert evil_pillar.damage == 0
+    assert evil_marshmallow.damage == 2
+
+
 def test_round(unit_spawner, player1_connection: MockConnection) -> None:
     chicken = unit_spawner.spawn(CHICKEN, coordinate=CC(0, 0))
     player1_connection.queue_responses(
+        (
+            UnitSelector(chicken),
+            GSChecks([HasHexes(hex_circle(2)), HexesVisible(hex_circle(1))]),
+        ),
+        (
+            MoveOptionSelector(OneOfHexesSelector(CC(1, 0))),
+            HexesVisible(hex_circle(1)),
+        ),
         UnitSelector(chicken),
-        MoveOptionSelector(OneOfHexesSelector(CC(1, 0))),
-        UnitSelector(chicken),
-        MoveOptionSelector(OneOfHexesSelector(CC(0, 0))),
+        (
+            MoveOptionSelector(OneOfHexesSelector(CC(0, 0))),
+            HexesVisible(hex_circle(1, center=CC(1, 0))),
+        ),
     )
     ES.resolve(Round())
     assert GS().map.unit_positions[chicken].position == CC(1, 0)
@@ -322,4 +429,57 @@ def test_round(unit_spawner, player1_connection: MockConnection) -> None:
     assert chicken.exhausted is True
 
 
-# def test_fight()
+def test_vision_blocked(
+    unit_spawner, player1_connection: MockConnection, player2: Player
+) -> None:
+    def _check(visible_hexes: Collection[CC]):
+        player1_connection.queue_responses(
+            (SkipOptionSelector(), HexesVisible(visible_hexes)),
+        )
+        ES.resolve(Turn(archer))
+
+    # Only allied archer, which has a sight 2, and can see the whole map.
+    archer = unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(0, 0))
+    _check(hex_circle(2))
+
+    # Spawn adjacent enemy archer which blocks vision of the space
+    # immediately behind it.
+    unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(1, 0), controller=player2)
+    _check(set(hex_circle(2, center=CC(0, 0))) - {CC(2, 0)})
+
+    # Spawning another enemy archer adjacent to both blocks vision both behind
+    # that one, and the space "in-between" behind the two archers.
+    unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(1, -1), controller=player2)
+    _check(set(hex_circle(2, center=CC(0, 0))) - {CC(2, 0), CC(2, -2), CC(2, -1)})
+
+    # Spawning an enemy chicken has no effect, since small units does not block
+    # vision.
+    unit_spawner.spawn(CHICKEN, coordinate=CC(0, -1), controller=player2)
+    _check(set(hex_circle(2, center=CC(0, 0))) - {CC(2, 0), CC(2, -2), CC(2, -1)})
+
+    # Spawn allied archer that can see behind one of the enemy ones.
+    different_allied_archer = unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(0, 1))
+    _check(set(hex_circle(2, center=CC(0, 0))) - {CC(2, -2), CC(2, -1)})
+
+    # Allied large units blocks vision (pillar is itself blind).
+    unit_spawner.spawn(LUMBERING_PILLAR, coordinate=CC(-1, 0))
+    _check(set(hex_circle(2, center=CC(0, 0))) - {CC(2, -2), CC(2, -1), CC(-2, 0)})
+
+    @dataclasses.dataclass(eq=False)
+    class CapVision(StateModifierEffect[Unit, None, int]):
+        priority: ClassVar[int] = 1
+        target: ClassVar[object] = Unit.sight
+
+        unit: Unit
+        value: int
+
+        def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+            return obj == self.unit
+
+        def modify(self, obj: Unit, request: None, value: int) -> int:
+            return min(value, self.value)
+
+    # Reducing the sight of the archers affects the vision.
+    ES.register_effect(CapVision(archer, 1))
+    ES.register_effect(CapVision(different_allied_archer, 0))
+    _check(hex_circle(1))
