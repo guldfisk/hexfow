@@ -10,9 +10,12 @@ from game.game.core import (
     MoveOption,
     EffortOption,
     SkipOption,
+    RangedAttackFacet,
+    ActivateUnitOption,
+    OneOfUnits,
 )
 from game.game.decision_points import SelectUnitDecisionPoint
-from game.game.decisions import OptionDecision, SelectOptionDecisionPoint
+from game.game.decisions import OptionDecision, SelectOptionDecisionPoint, NoTarget
 from game.game.player import Player
 from game.game.select import select_unit, select_targeted_option
 from game.game.units.facets.attacks import MeleeAttackFacet
@@ -27,11 +30,24 @@ class Damage(Event[None]):
         self.unit.damage += self.amount
 
 
+# TODO merge melee/ranged attack events?
 @dataclasses.dataclass
 class MeleeAttack(Event[None]):
     attacker: Unit
     defender: Unit
     attack: MeleeAttackFacet
+
+    def resolve(self) -> None:
+        ES.resolve(
+            Damage(self.defender, max(self.attack.damage - self.defender.armor.g(), 0))
+        )
+
+
+@dataclasses.dataclass
+class RangedAttack(Event[None]):
+    attacker: Unit
+    defender: Unit
+    attack: RangedAttackFacet
 
     def resolve(self) -> None:
         ES.resolve(
@@ -70,7 +86,22 @@ class MeleeAttackAction(Event[None]):
         ES.resolve(CheckAlive(self.defender))
         if defender_position.can_move_into(self.attacker):
             ES.resolve(MoveUnit(self.attacker, defender_position))
-        GS().active_unit_context.movement_points -= 1
+        # TODO movement cost of attack?
+        GS().active_unit_context.movement_points -= 1 + self.attack.movement_cost
+        GS().active_unit_context.should_stop = True
+
+
+@dataclasses.dataclass
+class RangedAttackAction(Event[None]):
+    attacker: Unit
+    defender: Unit
+    attack: RangedAttackFacet
+
+    def resolve(self) -> None:
+        ES.resolve(self.branch(RangedAttack))
+        ES.resolve(CheckAlive(self.defender))
+        GS().active_unit_context.movement_points -= self.attack.movement_cost
+        GS().active_unit_context.should_stop = True
 
 
 @dataclasses.dataclass
@@ -112,6 +143,14 @@ class MoveAction(Event[None]):
 
 
 @dataclasses.dataclass
+class SkipAction(Event[None]):
+    unit: Unit
+
+    def resolve(self) -> None:
+        GS().active_unit_context.should_stop = True
+
+
+@dataclasses.dataclass
 class Turn(Event[bool]):
     # player: Player
     unit: Unit
@@ -141,14 +180,23 @@ class Turn(Event[bool]):
             )
             # option, target = select_targeted_option(legal_options)
             if isinstance(decision.option, SkipOption):
-                ES.resolve_pending_triggers()
-                break
+                ES.resolve(SkipAction(self.unit))
+                # ES.resolve_pending_triggers()
+                # break
             elif isinstance(decision.option, MoveOption):
                 ES.resolve(MoveAction(self.unit, to_=decision.target))
             elif isinstance(decision.option, EffortOption):
                 if isinstance(decision.option.facet, MeleeAttackFacet):
                     ES.resolve(
                         MeleeAttackAction(
+                            attacker=self.unit,
+                            defender=decision.target,
+                            attack=decision.option.facet,
+                        )
+                    )
+                elif isinstance(decision.option.facet, RangedAttackFacet):
+                    ES.resolve(
+                        RangedAttackAction(
                             attacker=self.unit,
                             defender=decision.target,
                             attack=decision.option.facet,
@@ -173,6 +221,7 @@ class Round(Event[None]):
         gs = GS()
         gs.round_counter += 1
         skipped_players: set[Player] = set()
+        round_skipped_players: set[Player] = set()
         all_players = set(gs.turn_order.players)
         last_action_timestamps: dict[Player, int] = {
             player: 0 for player in gs.turn_order.players
@@ -185,6 +234,8 @@ class Round(Event[None]):
         while skipped_players != all_players:
             timestamp += 1
             player = gs.turn_order.advance()
+            if player in round_skipped_players:
+                continue
             activateable_units = [
                 unit
                 for unit in gs.map.units_controlled_by(player)
@@ -195,20 +246,42 @@ class Round(Event[None]):
                 continue
             skipped_players.discard(player)
 
-            if any(
-                turn.result
-                for turn in ES.resolve(
-                    Turn(
-                        gs.make_decision(
-                            player,
-                            SelectUnitDecisionPoint(
-                                activateable_units, "activate unit"
-                            ),
-                        )
-                    )
-                ).iter_type(Turn)
-            ):
-                last_action_timestamps[player] = timestamp
+            decision = GS().make_decision(
+                player,
+                SelectOptionDecisionPoint(
+                    [
+                        ActivateUnitOption(
+                            target_profile=OneOfUnits(activateable_units)
+                        ),
+                        SkipOption(target_profile=NoTarget()),
+                    ],
+                    explanation="activate unit?",
+                ),
+            )
+            if isinstance(decision.option, ActivateUnitOption):
+                if any(
+                    turn.result
+                    for turn in ES.resolve(Turn(decision.target)).iter_type(Turn)
+                ):
+                    last_action_timestamps[player] = timestamp
+            elif isinstance(decision.option, SkipOption):
+                skipped_players.add(player)
+                round_skipped_players.add(player)
+
+            # if any(
+            #     turn.result
+            #     for turn in ES.resolve(
+            #         Turn(
+            #             gs.make_decision(
+            #                 player,
+            #                 SelectUnitDecisionPoint(
+            #                     activateable_units, "activate unit"
+            #                 ),
+            #             )
+            #         )
+            #     ).iter_type(Turn)
+            # ):
+            #     last_action_timestamps[player] = timestamp
 
         gs.turn_order.set_player_order(
             sorted(gs.turn_order.players, key=lambda p: last_action_timestamps[p])

@@ -6,8 +6,7 @@ import inspect
 import re
 from abc import ABC, abstractmethod, ABCMeta
 from collections import defaultdict
-from collections.abc import Iterable, Sequence
-from inspect import get_annotations
+from collections.abc import Iterable
 from typing import (
     TypeVar,
     ClassVar,
@@ -21,6 +20,8 @@ from typing import (
     Mapping,
 )
 
+from events.exceptions import GameException
+
 
 T = TypeVar("T")
 V = TypeVar("V")
@@ -29,13 +30,19 @@ A = TypeVar("A", bound=Callable)
 
 
 # TODO maybe triggers can't cause triggers to trigger?
-class TriggerLoopError(Exception): ...
+class TriggerLoopError(GameException): ...
 
 
 # TODO need some way to handle ordering for stuff with the same priority.
 #  Prob some sorta timestamp, but the issue is that most units will be spawned
 #  simultaneously. Maybe update the timestamp when unit is activated, but that
 #  an ugly partial solution only.
+
+
+# TODO likely need to do a "target segmentation" thing for performance, where we
+#  have an additional key to route effects on, so, like an effect increasing the
+#  power of a unit routes not just on "attribute_power", but (<the unit>, "attribute_power").
+#  Still needs to support key-only routing as well.
 
 
 class EffectSet:
@@ -98,6 +105,12 @@ class EventSystem:
         # The same attribute modifier can only modify the attribute once during
         # each attribute get.
         self._evaluated_state_modifiers: set[tuple[object, Any]] = set()
+
+        # TODO blah
+        self._event_callbacks: list[Callable[[Event, bool], ...]] = []
+
+    def register_event_callback(self, callback: Callable[[Event, bool], ...]) -> None:
+        self._event_callbacks.append(callback)
 
     def has_pending_triggers(self) -> bool:
         return bool(self._pending_triggers)
@@ -182,7 +195,13 @@ class EventSystem:
             self._active_event = event
         self._active_replacement_effect = None
 
+        for callback in self._event_callbacks:
+            callback(event, True)
+
         event.result = event.resolve()
+
+        for callback in self._event_callbacks:
+            callback(event, False)
 
         if not previous_active_replacement_effect:
             self._active_event = previous_active_event
@@ -233,7 +252,7 @@ class EventSystem:
 
 class ScopedEventSystem(EventSystem):
 
-    # TODO protocol/interface
+    # TODO protocol/interface?
     def __init__(self):
         self._es: EventSystem | None = None
 
@@ -244,10 +263,14 @@ class ScopedEventSystem(EventSystem):
     def bind(self, es: EventSystem) -> None:
         self._es = es
 
+    def register_event_callback(self, callback: Callable[[Event, bool], ...]) -> None:
+        return self._es.register_event_callback(callback)
+
     def has_pending_triggers(self) -> bool:
         return self._es.has_pending_triggers()
 
     def register_effect(self, effect: F) -> F:
+        # TODO fix same return
         self._es.register_effects(effect)
         return effect
 
@@ -295,7 +318,7 @@ class _EventMeta(type):
         return super().__new__(metacls, name, bases, attributes, **kwargs)
 
 
-@dataclasses.dataclass(kw_only=True)
+@dataclasses.dataclass(kw_only=True, eq=False)
 class Event(Generic[V], metaclass=_EventMeta):
     name: ClassVar[str]
     parent: Event | None = None
@@ -324,7 +347,8 @@ class Event(Generic[V], metaclass=_EventMeta):
                 {
                     f.name: getattr(self, f.name)
                     for f in dataclasses.fields(event_type or self)
-                    if hasattr(self, f.name) and f.name not in ("children", "result")
+                    if hasattr(self, f.name)
+                    and f.name not in ("parent", "children", "result")
                 }
                 | kwargs
             )
@@ -365,7 +389,7 @@ class _EffectMeta(ABCMeta):
 class Effect(ABC, metaclass=_EffectMeta):
     effect_type: ClassVar[str]
     target: ClassVar[Any]
-    # abstractmethod instead
+    # TODO abstractmethod instead?
     priority: ClassVar[int]
     hooks: ClassVar[Mapping[str, Callable[[Effect, Event], None]]]
 

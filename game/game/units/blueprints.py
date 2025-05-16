@@ -1,5 +1,5 @@
 from game.game.core import UnitBlueprint
-from game.game.units.facets.attacks import Peck, MarshmallowFist
+from game.game.units.facets.attacks import Peck, MarshmallowFist, LightBow
 from game.game.units.facets.static_abilities import Prickly, Immobile
 from game.game.values import Size
 
@@ -23,11 +23,9 @@ LUMBERING_PILLAR = UnitBlueprint(
 )
 
 
-LIGHT_ARCHER = UnitBlueprint(name="Light Archer", health=4, speed=3, sight=2)
-
-# bow
-#     ranged attack
-#     1 damage, 3 range, -1 movement
+LIGHT_ARCHER = UnitBlueprint(
+    name="Light Archer", health=4, speed=3, sight=2, facets=[LightBow]
+)
 
 MARSHMALLOW_TITAN = UnitBlueprint(
     name="Marshmallow Titan",

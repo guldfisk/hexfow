@@ -34,36 +34,6 @@ A = TypeVar("A", bound=DecisionPoint)
 T = TypeVar("T")
 
 
-# class IDMap:
-#
-#     def __init__(self):
-#         self._ids: dict[int, str] = {}
-#         self._accessed: set[int] = set()
-#
-#     def get_id_for(self, obj: Any) -> str:
-#         _id = id(obj)
-#         if _id not in self._ids:
-#             self._ids[_id] = str(uuid4())
-#         self._accessed.add(_id)
-#         return self._ids[_id]
-#
-#     def prune(self) -> None:
-#         self._ids = {k: v for k, v in self._ids if k in self._accessed}
-#         self._accessed = set()
-#
-#
-# @dataclasses.dataclass
-# class SerializationContext:
-#     player: Player
-#     id_map: IDMap
-
-
-# class Serializable(ABC):
-#
-#     @abstractmethod
-#     def serialize(self, context: SerializationContext) -> JSON: ...
-
-
 class VisionBound(Serializable):
 
     @abstractmethod
@@ -85,6 +55,13 @@ class EffortOption(Option[O]):
 
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {"facet": self.facet.serialize(context)}
+
+
+@dataclasses.dataclass
+class ActivateUnitOption(Option[O]):
+
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        return {}
 
 
 class SkipOption(Option[None]):
@@ -201,6 +178,9 @@ class UnitBlueprint:
     aquatic: bool = False
     facets: list[type[Facet]] = dataclasses.field(default_factory=list)
 
+    def __repr__(self):
+        return f"{type(self).__name__}({self.name})"
+
 
 class Unit(HasStatuses, Modifiable, VisionBound):
     speed: ModifiableAttribute[None, int]
@@ -313,15 +293,17 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             ]:
                 options.append(MoveOption(target_profile=OneOfHexes(moveable_hexes)))
             for facet in self.attacks:
-                if isinstance(facet, MeleeAttackFacet) and facet.can_be_activated(
-                    GS().active_unit_context
-                ):
+                if isinstance(
+                    facet, (MeleeAttackFacet, RangedAttackFacet)
+                ) and facet.can_be_activated(GS().active_unit_context):
                     options.append(
                         EffortOption(
                             facet,
                             target_profile=OneOfUnits(facet.get_legal_targets(None)),
                         )
                     )
+                # if isinstance(facet, RangedAttackFacet) and facet.can_be_activated(GS().active_unit_context):
+                #     options.append()
         if not context.has_acted or options:
             options.append(SkipOption(target_profile=NoTarget()))
         return options
@@ -353,6 +335,9 @@ class Unit(HasStatuses, Modifiable, VisionBound):
 
     def __hash__(self) -> int:
         return hash(id(self))
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.blueprint.name}, {self.controller.name}, {id(self)})"
 
 
 @dataclasses.dataclass
@@ -429,6 +414,9 @@ class Hex(Modifiable, HasStatuses, Serializable):
     def __hash__(self) -> int:
         return hash(id(self))
 
+    def __repr__(self):
+        return f"{type(self).__name__}({self.position.r}, {self.position.h})"
+
 
 @dataclasses.dataclass
 class OneOfHexes(TargetProfile[Hex]):
@@ -469,6 +457,7 @@ class HexMap:
     def unit_on(self, space: Hex) -> Unit | None:
         return self.unit_positions.inverse.get(space)
 
+    # TODO maybe call hex off?
     def position_of(self, unit: Unit) -> Hex:
         return self.unit_positions[unit]
 
@@ -494,7 +483,9 @@ class HexMap:
             distance,
             center=self.unit_positions[off].position if isinstance(off, Unit) else off,
         ):
-            if unit := self.unit_positions.inverse.get(self.hexes[_hex]):
+            if _hex in self.hexes and (
+                unit := self.unit_positions.inverse.get(self.hexes[_hex])
+            ):
                 yield unit
 
     def serialize(self, context: SerializationContext) -> JSON:
@@ -522,6 +513,8 @@ class GameState:
         self.turn_order = TurnOrder(
             [Player(f"player {i+1}") for i in range(player_count)]
         )
+        # TODO this is really dumb, do this in a better way (want p1 to start).
+        self.turn_order.advance()
         # self.interfaces = {
         #     player: interface_class() for player in self.turn_order.players
         # }
@@ -582,13 +575,14 @@ class GameState:
                         SerializationContext(_player, self.id_maps[_player]), None
                     )
                 )
-        return decision_point.parse_response(
-            self.connections[player].get_response(
-                self.serialize_for(
-                    SerializationContext(player, self.id_maps[player]), decision_point
-                )
+        response = self.connections[player].get_response(
+            self.serialize_for(
+                SerializationContext(player, self.id_maps[player]), decision_point
             )
         )
+        # TODO
+        print("response in game state", response)
+        return decision_point.parse_response(response)
 
 
 # TODO

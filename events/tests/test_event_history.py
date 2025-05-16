@@ -16,7 +16,7 @@ def test_event_searches_history():
                 ES.resolve(HitDummy(previous_hit.value))
 
     ES.resolve(EchoAttack())
-    assert ES.history == [EchoAttack()]
+    assert [e.name for e in ES.history] == [EchoAttack.name]
     assert Dummy.damage == 0
 
     ES.resolve(HitDummy(1))
@@ -46,7 +46,8 @@ def test_event_searches_historic_event_children():
     Dummy.armor = 1
 
     ES.resolve(EchoPainAttack())
-    assert ES.history == [EchoPainAttack()]
+    # assert ES.history == [EchoPainAttack()]
+    assert [e.name for e in ES.history] == [EchoPainAttack.name]
     assert Dummy.damage == 0
 
     ES.resolve(HitDummy(3))

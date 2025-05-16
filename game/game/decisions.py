@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 from typing import TypeVar, Generic, Any, TypeAlias, Mapping
 from uuid import uuid4
 
+from bidict import bidict
+
 from game.game.player import Player
 
 
@@ -15,18 +17,25 @@ JSON: TypeAlias = Mapping[str, Any]
 class IDMap:
 
     def __init__(self):
-        self._ids: dict[int, str] = {}
+        #         self.unit_positions: bidict[Unit, Hex] = bidict()
+        self._ids: bidict[int, str] = bidict()
+        self._objects: dict[int, object] = {}
         self._accessed: set[int] = set()
 
     def get_id_for(self, obj: Any) -> str:
         _id = id(obj)
         if _id not in self._ids:
             self._ids[_id] = str(uuid4())
+            # TODO this is just for debugging
+            self._objects[_id] = obj
         self._accessed.add(_id)
         return self._ids[_id]
 
+    def get_object_for(self, id_: str) -> object:
+        return self._objects[self._ids.inverse[id_]]
+
     def prune(self) -> None:
-        self._ids = {k: v for k, v in self._ids.items() if k in self._accessed}
+        self._ids = bidict({k: v for k, v in self._ids.items() if k in self._accessed})
         self._accessed = set()
 
 

@@ -16,7 +16,8 @@ from typing import (
 import pytest
 from frozendict import frozendict
 
-from events.eventsystem import ES, StateModifierEffect
+from debug_utils import dp
+from events.eventsystem import ES, StateModifierEffect, Event
 from game.game.core import (
     Terrain,
     HexMap,
@@ -29,6 +30,8 @@ from game.game.core import (
     EffortOption,
     MeleeAttackFacet,
     SkipOption,
+    RangedAttackFacet,
+    ActivateUnitOption,
 )
 from game.game.events import SpawnUnit, MeleeAttack, Turn, Round
 from game.game.interface import Connection
@@ -44,6 +47,8 @@ from game.game.units.blueprints import (
     MARSHMALLOW_TITAN,
 )
 from game.game.units.facets.attacks import Peck
+from game.game.values import Size
+from game.tests.conftest import TestScope
 
 
 A = TypeVar("A")
@@ -72,6 +77,8 @@ class MockConnection(Connection):
 
     def get_response(self, values: Mapping[str, Any]) -> Mapping[str, Any]:
         self.history.append(values)
+        if TestScope.log_game_states:
+            dp(values, self.player)
         queues_response = self.queued_responses.pop(0)
         if isinstance(queues_response, tuple):
             response, asserter = queues_response
@@ -143,6 +150,35 @@ class HexesVisible(GSCheck):
             assert False
 
 
+@dataclasses.dataclass
+class HexesInvisible(GSCheck):
+    invisible_coordinates: Iterable[CC]
+
+    def __call__(self, gs: JSON_DICT, player: Player) -> None:
+        # visibles = {frozendict(c.serialize()) for c in self.invisible_coordinates}
+
+        target = {frozendict(c.serialize()): False for c in self.invisible_coordinates}
+        result = {
+            frozendict(_hex["cc"]): _hex["visible"]
+            for _hex in gs["game_state"]["map"]["hexes"]
+            if frozendict(_hex["cc"]) in target.keys()
+        }
+
+        if target != result:
+            print("vision check error:")
+            print("has vision but should not:")
+            print(
+                {c for c, v in result.items() if v}
+                - {c for c, v in target.items() if v}
+            )
+            # print("does have vision but should:")
+            # print(
+            #     {c for c, v in target.items() if v}
+            #     - {c for c, v in result.items() if v}
+            # )
+            assert False
+
+
 class TargetSelector:
 
     @abstractmethod
@@ -169,14 +205,47 @@ class OneOfHexesSelector(TargetSelector):
 @dataclasses.dataclass
 class OneOfUnitsSelector(TargetSelector):
     unit: Unit
+    available_choices: Iterable[Unit] | None = None
 
     def select(self, values: Mapping[str, Any], player: Player) -> Mapping[str, Any]:
-        # TODO player etc
-        _id = GS().id_maps[player].get_id_for(self.unit)
-        for idx, option in enumerate(values["values"]["units"]):
-            if option["id"] == _id:
-                return {"index": idx}
-        raise ValueError("Blah")
+        # # TODO player etc
+        # _id = GS().id_maps[player].get_id_for(self.unit)
+        # for idx, option in enumerate(values["values"]["units"]):
+        #     if option["id"] == _id:
+        #         return {"index": idx}
+
+        options = {
+            option["id"]: idx for idx, option in enumerate(values["values"]["units"])
+        }
+
+        if self.available_choices is not None:
+            unit_choices = {
+                GS().id_maps[player].get_id_for(unit): unit
+                for unit in self.available_choices
+            }
+            try:
+                assert options.keys() == unit_choices.keys()
+            except AssertionError:
+                print("Unexpected units available for selection:")
+                print(
+                    [
+                        GS().id_maps[player].get_object_for(_id)
+                        for _id in options.keys() - unit_choices.keys()
+                    ]
+                    # [unit_choices[_id] for _id in options.keys() - unit_choices.keys()]
+                )
+                print("Expected units not available for selection:")
+                print(
+                    [
+                        GS().id_maps[player].get_object_for(_id)
+                        for _id in unit_choices.keys() - options.keys()
+                    ]
+                )
+                raise
+
+        return {"index": options[GS().id_maps[player].get_id_for(self.unit)]}
+
+        # raise ValueError("Blah")
 
 
 class DecisionSelector(ABC):
@@ -224,22 +293,37 @@ class MeleeAttackSelector(OptionSelector):
         )
 
 
+class RangedAttackSelector(OptionSelector):
+
+    def should_select(self, option: Mapping[str, Any]) -> bool:
+        return (
+            option["type"] == EffortOption.__name__
+            and option["values"]["facet"]["type"] == RangedAttackFacet.display_type
+        )
+
+
 class SkipOptionSelector(OptionSelector):
 
     def should_select(self, option: Mapping[str, Any]) -> bool:
         return option["type"] == SkipOption.__name__
 
 
-@dataclasses.dataclass
-class UnitSelector(DecisionSelector):
-    unit: Unit
+# @dataclasses.dataclass
+# class UnitSelector(DecisionSelector):
+#     unit: Unit
+#
+#     def __call__(self, values: Mapping[str, Any], player: Player) -> Mapping[str, Any]:
+#         _id = GS().id_maps[player].get_id_for(self.unit)
+#         for idx, option in enumerate(values["decision"]["payload"]["units"]):
+#             if option["id"] == _id:
+#                 return {"index": idx}
+#         raise ValueError("blah")
 
-    def __call__(self, values: Mapping[str, Any], player: Player) -> Mapping[str, Any]:
-        _id = GS().id_maps[player].get_id_for(self.unit)
-        for idx, option in enumerate(values["decision"]["payload"]["units"]):
-            if option["id"] == _id:
-                return {"index": idx}
-        raise ValueError("blah")
+
+@dataclasses.dataclass
+class ActivateSelector(OptionSelector):
+    def should_select(self, option: Mapping[str, Any]) -> bool:
+        return option["type"] == ActivateUnitOption.__name__
 
 
 def select_hex(coordinate: CC, values: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -251,6 +335,7 @@ def generate_hex_landscape(
     radius: int = 2, terrain_type: type[Terrain] = Ground
 ) -> Landscape:
     return Landscape({cc: terrain_type for cc in hex_circle(radius)})
+
 
 
 @pytest.fixture
@@ -366,13 +451,14 @@ def test_fight(
     chicken = unit_spawner.spawn(CHICKEN, coordinate=CC(0, 0))
     evil_chicken = unit_spawner.spawn(CHICKEN, controller=player2, coordinate=CC(1, -1))
     player1_connection.queue_responses(
-        UnitSelector(chicken),
-        MeleeAttackSelector(OneOfUnitsSelector(evil_chicken)),
-        UnitSelector(chicken),
+        ActivateSelector(OneOfUnitsSelector(chicken)),
         MeleeAttackSelector(OneOfUnitsSelector(evil_chicken)),
     )
     player2_connection.queue_responses(
-        UnitSelector(evil_chicken), MeleeAttackSelector(OneOfUnitsSelector(chicken))
+        ActivateSelector(OneOfUnitsSelector(evil_chicken)),
+        MeleeAttackSelector(OneOfUnitsSelector(chicken)),
+        ActivateSelector(OneOfUnitsSelector(evil_chicken)),
+        MeleeAttackSelector(OneOfUnitsSelector(chicken)),
     )
 
     ES.resolve(Round())
@@ -381,12 +467,90 @@ def test_fight(
     assert GS().map.unit_positions[chicken].position == CC(0, 0)
     assert GS().map.unit_positions[evil_chicken].position == CC(1, -1)
     ES.resolve(Round())
-    assert chicken.health == 1
-    assert evil_chicken.health == 0
-    assert GS().map.unit_positions[chicken].position == CC(1, -1)
-    assert GS().map.unit_positions.get(evil_chicken) is None
+    assert evil_chicken.health == 1
+    assert chicken.health == 0
+    assert GS().map.unit_positions[evil_chicken].position == CC(0, 0)
+    assert GS().map.unit_positions.get(chicken) is None
 
     assert len(player2_connection.history) == 6
+
+
+def test_ranged_attack(
+    unit_spawner: UnitSpawner,
+    player2: Player,
+    player1_connection: MockConnection,
+    player2_connection: MockConnection,
+) -> None:
+    archer = unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(0, 0))
+    evil_archer = unit_spawner.spawn(
+        LIGHT_ARCHER, coordinate=CC(0, 2), controller=player2
+    )
+
+    # Shoots enemy archer.
+    player1_connection.queue_responses(
+        ActivateSelector(OneOfUnitsSelector(archer)),
+        RangedAttackSelector(
+            OneOfUnitsSelector(evil_archer, available_choices=[evil_archer])
+        ),
+    )
+    player2_connection.queue_responses(SkipOptionSelector())
+    ES.resolve(Round())
+    assert archer.damage == 0
+    assert evil_archer.damage == 1
+
+    # A different enemy archer is spawned in between the two archers, blocking
+    # vision of the original enemy archer.
+    # We shoot the new one instead.
+    different_evil_archer = unit_spawner.spawn(
+        LIGHT_ARCHER, coordinate=CC(0, 1), controller=player2
+    )
+    player1_connection.queue_responses(
+        ActivateSelector(OneOfUnitsSelector(archer)),
+        RangedAttackSelector(
+            OneOfUnitsSelector(
+                different_evil_archer,
+                # Only new one is available to be shot.
+                available_choices=[different_evil_archer],
+            )
+        ),
+    )
+    player2_connection.queue_responses(SkipOptionSelector())
+    ES.resolve(Round())
+    assert archer.damage == 0
+    assert evil_archer.damage == 1
+    assert different_evil_archer.damage == 1
+
+    @dataclasses.dataclass(eq=False)
+    class Shrink(StateModifierEffect[Unit, None, Size]):
+        priority: ClassVar[int] = 1
+        target: ClassVar[object] = Unit.size
+
+        unit: Unit
+
+        def should_modify(self, obj: Unit, request: None, value: Size) -> bool:
+            return obj == self.unit
+
+        def modify(self, obj: Unit, request: None, value: Size) -> Size:
+            return Size.SMALL
+
+    # The new archer is shrunk, causing it to no longer block vision, so we shoot
+    # the original one instead.
+    ES.register_effect(Shrink(different_evil_archer))
+    player1_connection.queue_responses(
+        ActivateSelector(OneOfUnitsSelector(archer)),
+        RangedAttackSelector(
+            OneOfUnitsSelector(
+                evil_archer,
+                # Both enemy archers are available to be shot now.
+                available_choices=[different_evil_archer, evil_archer],
+            )
+        ),
+    )
+    player2_connection.queue_responses(SkipOptionSelector())
+    ES.resolve(Round())
+    assert archer.damage == 0
+    assert evil_archer.damage == 2
+    assert different_evil_archer.damage == 1
 
 
 def test_armor(unit_spawner: UnitSpawner, player2: Player):
@@ -408,14 +572,14 @@ def test_round(unit_spawner, player1_connection: MockConnection) -> None:
     chicken = unit_spawner.spawn(CHICKEN, coordinate=CC(0, 0))
     player1_connection.queue_responses(
         (
-            UnitSelector(chicken),
+            ActivateSelector(OneOfUnitsSelector(chicken)),
             GSChecks([HasHexes(hex_circle(2)), HexesVisible(hex_circle(1))]),
         ),
         (
             MoveOptionSelector(OneOfHexesSelector(CC(1, 0))),
             HexesVisible(hex_circle(1)),
         ),
-        UnitSelector(chicken),
+        ActivateSelector(OneOfUnitsSelector(chicken)),
         (
             MoveOptionSelector(OneOfHexesSelector(CC(0, 0))),
             HexesVisible(hex_circle(1, center=CC(1, 0))),
@@ -447,7 +611,7 @@ def test_vision_blocked(
     unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(1, 0), controller=player2)
     _check(set(hex_circle(2, center=CC(0, 0))) - {CC(2, 0)})
 
-    # Spawning another enemy archer adjacent to both blocks vision both behind
+    # Spawning another enemy archer adjacent to both blocks vision, both behind
     # that one, and the space "in-between" behind the two archers.
     unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(1, -1), controller=player2)
     _check(set(hex_circle(2, center=CC(0, 0))) - {CC(2, 0), CC(2, -2), CC(2, -1)})
@@ -483,3 +647,12 @@ def test_vision_blocked(
     ES.register_effect(CapVision(archer, 1))
     ES.register_effect(CapVision(different_allied_archer, 0))
     _check(hex_circle(1))
+
+
+# def test_single_player_game(ground_landscape: Landscape) -> None:
+#     gs = GameState(1, MockConnection, ground_landscape)
+#     GameState.instance = gs
+#
+#     player1 = gs.turn_order.players[0]
+#     player1_connection = gs.connections[player1]
+

@@ -2,22 +2,17 @@ import "./style.css";
 
 import {
   Application,
-  Assets,
   Container,
   Graphics,
   GraphicsContext,
-  Sprite,
   Text,
   TextStyle,
 } from "pixi.js";
 import type { PointData } from "pixi.js/lib/maths/point/PointData";
 import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
 
-export type HexCoord = { r: number; h: number };
+type HexCoord = { r: number; h: number };
 export type CubeHexCoord = HexCoord & { l: number };
-
-const cardWidth = 140;
-const cardHeight = 200;
 
 const hexSize = 45;
 
@@ -27,20 +22,8 @@ const enum CollisionType {
   RIGHT_CORNER,
 }
 
-// const hexWidth = hexSize * 2;
-// const hexHeight = Math.sqrt(3) * hexSize;
-
 const hexWidth = Math.sqrt(3) * hexSize;
 const hexHeight = hexSize * 2;
-
-// const hexVerts: [number, number][] = [
-//   [hexSize, 0],
-//   [hexSize / 2, -hexHeight / 2],
-//   [-hexSize / 2, -hexHeight / 2],
-//   [-hexSize, 0],
-//   [-hexSize / 2, hexHeight / 2],
-//   [hexSize / 2, hexHeight / 2],
-// ];
 
 const hexVerts: [number, number][] = [
   [hexWidth / 2, -hexSize / 2],
@@ -100,21 +83,6 @@ const edgeCollisionDirections: [HexCoord, [HexCoord, HexCoord]][] = range(
   addHexPoints(hexDirections[i], hexDirections[(i + 1) % 6]),
   [hexDirections[i], hexDirections[(i + 1) % 6]],
 ]);
-
-//     [
-//   { r: -2, h: 1 },
-//   { r: -1, h: 2 },
-//   { r: 1, h: 1 },
-//   { r: 2, h: -1 },
-//   { r: 1, h: -2 },
-//   { r: -1, h: -1 },
-// ];
-
-// public bool isLeft(Point a, Point b, Point c) {
-//   return (b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x) > 0;
-// }
-
-// position = sign((Bx - Ax) * (Y - Ay) - (By - Ay) * (X - Ax))
 
 const isLeft = (
   lineFrom: PointData,
@@ -417,7 +385,7 @@ async function setupApp() {
   const visibleHexShape = getHexShape("447744");
   const invisibleHexShape = getHexShape("black");
 
-  const hexMapRadius = 2;
+  const hexMapRadius = 10;
   const hexCoords = range(-hexMapRadius, hexMapRadius + 1)
     .flatMap((r) =>
       range(-hexMapRadius, hexMapRadius + 1).map((h) => ({
