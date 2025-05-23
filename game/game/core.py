@@ -8,7 +8,7 @@ from typing import Mapping
 from bidict import bidict
 
 from debug_utils import dp
-from events.eventsystem import Modifiable, ModifiableAttribute, modifiable
+from events.eventsystem import Modifiable, ModifiableAttribute, modifiable, Event, ES
 from game.game.decisions import (
     DecisionPoint,
     Option,
@@ -28,6 +28,7 @@ from game.game.player import Player
 from game.game.statuses import HasStatuses
 from game.game.turn_order import TurnOrder
 from game.game.values import Size
+from game.tests.conftest import EventLogger
 
 
 A = TypeVar("A", bound=DecisionPoint)
@@ -289,7 +290,8 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             if moveable_hexes := [
                 _hex
                 for _hex in GS().map.get_neighbors_off(self)
-                if _hex.can_move_into(self)
+                if not GS().vision_map[self.controller][_hex.position]
+                or _hex.can_move_into(self)
             ]:
                 options.append(MoveOption(target_profile=OneOfHexes(moveable_hexes)))
             for facet in self.attacks:
@@ -363,6 +365,25 @@ class Terrain(HasEffects, ABC):
 
     def is_water(self) -> bool:
         return False
+
+    def is_highground(self) -> bool:
+        return False
+
+
+# TODO should be able to have these somewhere else like the unit blueprints.
+class Plains(Terrain): ...
+
+
+class Forest(Terrain): ...
+
+
+class Hill(Terrain): ...
+
+
+class Water(Terrain): ...
+
+
+class Magma(Terrain): ...
 
 
 @dataclasses.dataclass
@@ -457,7 +478,7 @@ class HexMap:
     def unit_on(self, space: Hex) -> Unit | None:
         return self.unit_positions.inverse.get(space)
 
-    # TODO maybe call hex off?
+    # TODO maybe called hex off?
     def position_of(self, unit: Unit) -> Hex:
         return self.unit_positions[unit]
 
@@ -493,11 +514,18 @@ class HexMap:
 
 
 @dataclasses.dataclass
-class ActiveUnitContext:
+class ActiveUnitContext(Serializable):
     unit: Unit
     movement_points: int
     has_acted: bool = False
     should_stop: bool = False
+
+    def serialize(self, context: SerializationContext) -> JSON:
+        return {
+            "unit": self.unit.serialize(context),
+            "movement_points": self.movement_points,
+            # 'has_acted': self.has_acted,
+        }
 
 
 class GameState:
@@ -537,6 +565,10 @@ class GameState:
         self.vision_obstruction_map: dict[Player, dict[CC, bool]] = {}
         self.vision_map: dict[Player, dict[CC, bool]] = {}
 
+        # TODO for debugging
+        self._event_log: list[str] = []
+        ES.register_event_callback(EventLogger(self._event_log.append))
+
     def update_vision(self) -> None:
         for player in self.turn_order.players:
             self.vision_obstruction_map[player] = {
@@ -555,12 +587,22 @@ class GameState:
         self, context: SerializationContext, decision_point: DecisionPoint | None
     ) -> Mapping[str, Any]:
         v = {
-            "game_state": {
-                "players": {},
-                "round": self.round_counter,
-                "map": self.map.serialize(context),
-            },
+            # "game_state": {
+            #     "players": {},
+            #     "round": self.round_counter,
+            #     "map": self.map.serialize(context),
+            # },
+            "players": {},
+            "round": self.round_counter,
+            "map": self.map.serialize(context),
             "decision": decision_point.serialize(context) if decision_point else None,
+            "active_unit_context": (
+                self.active_unit_context.serialize(context)
+                if self.active_unit_context
+                else None
+            ),
+            # TODO for debugging
+            "event_log": self._event_log,
         }
         # TODO lmao
         context.id_map.prune()

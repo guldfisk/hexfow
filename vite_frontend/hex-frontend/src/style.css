@@ -1,11 +1,10 @@
 body {
-    margin: 0;
-    display: flex;
-    place-items: center;
-    min-width: 320px;
-    min-height: 100vh;
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
 }
-
 
 /*#app {*/
 /*  max-width: 1280px;*/
@@ -14,6 +13,23 @@ body {
 /*  text-align: center;*/
 /*}*/
 
+.sidenav {
+  height: 100%; /* Full-height: remove this if you want "auto" height */
+  width: 500px; /* Set the width of the sidebar */
+  position: fixed; /* Fixed Sidebar (stay in place on scroll) */
+  z-index: 1; /* Stay on top */
+  top: 0; /* Stay at the top */
+  left: 0;
+  background-color: #111; /* Black */
+  overflow-x: hidden; /* Disable horizontal scroll */
+  padding-top: 20px;
+}
 
-
-
+.info-window {
+  height: 50%;
+  width: 100%;
+  /*border: 1px solid #ccc;*/
+  color: white;
+  overflow: auto;
+  white-space: pre-wrap;
+}

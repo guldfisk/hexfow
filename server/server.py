@@ -13,13 +13,13 @@ from websockets.sync.server import serve, ServerConnection
 from events.eventsystem import ES, EventSystem
 from events.exceptions import GameException
 from game.game.core import GameState, Landscape
-from game.game.events import SpawnUnit, Round
+from game.game.events import SpawnUnit, Round, Play
 from game.game.interface import Connection
 from game.game.map.coordinates import CC
 from game.game.map.geometry import hex_circle
 from game.game.map.terrain import Ground
 from game.game.player import Player
-from game.game.units.blueprints import CHICKEN
+from game.game.units.blueprints import CHICKEN, LUMBERING_PILLAR, LIGHT_ARCHER
 
 
 class GameClosed(GameException):
@@ -110,8 +110,22 @@ class Game(Thread):
                     space=gs.map.hexes[CC(0, 0)],
                 )
             )
+            ES.resolve(
+                SpawnUnit(
+                    blueprint=LUMBERING_PILLAR,
+                    controller=gs.turn_order.players[0],
+                    space=gs.map.hexes[CC(0, 1)],
+                )
+            )
+            ES.resolve(
+                SpawnUnit(
+                    blueprint=LIGHT_ARCHER,
+                    controller=gs.turn_order.players[0],
+                    space=gs.map.hexes[CC(1, 1)],
+                )
+            )
 
-            ES.resolve(Round())
+            ES.resolve(Play())
         except GameClosed:
             pass
         except:
@@ -134,6 +148,9 @@ def handle_connection(connection: ServerConnection) -> None:
         except ConnectionClosed:
             game.stop()
             break
+        except:
+            traceback.print_exc()
+            raise
     print("connection closed")
 
 

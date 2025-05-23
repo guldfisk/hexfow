@@ -1,6 +1,6 @@
-import {GameState} from "./gameState.ts";
-
+import { GameState } from "./gameState.ts";
 
 export interface ApplicationState {
-    gameState: GameState
+  gameState: GameState;
+  shouldRerender: boolean;
 }

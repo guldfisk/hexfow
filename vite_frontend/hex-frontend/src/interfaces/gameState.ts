@@ -28,7 +28,15 @@ export interface Map {
   hexes: Hex[];
 }
 
+export interface ActiveUnitContext {
+  unit: Unit;
+  movementPoints: number;
+}
+
 export interface GameState {
   round: number;
   map: Map;
+  eventLog: string[];
+  decision: { [key: string]: any } | null;
+  activeUnitContext: ActiveUnitContext | null;
 }

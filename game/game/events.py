@@ -1,5 +1,6 @@
 import dataclasses
 
+from debug_utils import dp
 from events.eventsystem import Event, ES, V
 from game.game.core import (
     Unit,
@@ -152,24 +153,16 @@ class SkipAction(Event[None]):
 
 @dataclasses.dataclass
 class Turn(Event[bool]):
-    # player: Player
     unit: Unit
 
     def resolve(self) -> bool:
-        # activateable_units = [
-        #     unit
-        #     for unit in GS().map.units_controlled_by(self.player)
-        #     if unit.can_be_activated()
-        # ]
-        # if not activateable_units:
-        #     return False
-        #
-        # # selected_unit = GS().take_action()
-        # selected_unit = select_unit(activateable_units)
-        # context =
         GS().active_unit_context = context = ActiveUnitContext(
             self.unit, self.unit.speed.g()
         )
+
+        # TODO this prob shouldn't be here. For now it is to make sure we have a
+        #  vision map when unit tests run just a turn.
+        GS().update_vision()
 
         while not context.should_stop and (
             legal_options := self.unit.get_legal_options(context)
@@ -178,11 +171,10 @@ class Turn(Event[bool]):
                 self.unit.controller,
                 SelectOptionDecisionPoint(legal_options, explanation="do shit"),
             )
-            # option, target = select_targeted_option(legal_options)
             if isinstance(decision.option, SkipOption):
                 ES.resolve(SkipAction(self.unit))
-                # ES.resolve_pending_triggers()
-                # break
+                ES.resolve_pending_triggers()
+                break
             elif isinstance(decision.option, MoveOption):
                 ES.resolve(MoveAction(self.unit, to_=decision.target))
             elif isinstance(decision.option, EffortOption):
@@ -267,6 +259,9 @@ class Round(Event[None]):
             elif isinstance(decision.option, SkipOption):
                 skipped_players.add(player)
                 round_skipped_players.add(player)
+            else:
+                dp(decision.option)
+                raise ValueError('AHLO')
 
             # if any(
             #     turn.result

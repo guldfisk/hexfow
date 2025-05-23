@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any
+from typing import Any, Callable
 
 import pytest
 
@@ -13,8 +13,9 @@ class TestScope:
 
 class EventLogger:
 
-    def __init__(self):
+    def __init__(self, callback: Callable[[str], ...] = print):
         self._stack_depth = 0
+        self._callback = callback
 
     def __call__(self, event: Event, is_before: bool) -> None:
         if is_before:
@@ -28,7 +29,8 @@ class EventLogger:
             stack_prepend = (
                 "  │" * (self._stack_depth - 1) + "  ┌" if self._stack_depth > 0 else ""
             )
-            print(f"{stack_prepend} {type(event).__name__}({values})")
+            self._callback(f"{stack_prepend} {type(event).__name__}({values})")
+            # print(f"{stack_prepend} {type(event).__name__}({values})")
         else:
             self._stack_depth -= 1
 

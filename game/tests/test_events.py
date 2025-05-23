@@ -115,7 +115,7 @@ class HasHexes(GSCheck):
 
     def __call__(self, gs: JSON_DICT, player: Player) -> None:
         assert {
-            frozendict(_hex["cc"]) for _hex in gs["game_state"]["map"]["hexes"]
+            frozendict(_hex["cc"]) for _hex in gs["map"]["hexes"]
         } == {frozendict(c.serialize()) for c in self.coordinates}
 
 
@@ -128,11 +128,11 @@ class HexesVisible(GSCheck):
 
         target = {
             frozendict(_hex["cc"]): frozendict(_hex["cc"]) in visibles
-            for _hex in gs["game_state"]["map"]["hexes"]
+            for _hex in gs["map"]["hexes"]
         }
         result = {
             frozendict(_hex["cc"]): _hex["visible"]
-            for _hex in gs["game_state"]["map"]["hexes"]
+            for _hex in gs["map"]["hexes"]
         }
 
         if target != result:
@@ -160,7 +160,7 @@ class HexesInvisible(GSCheck):
         target = {frozendict(c.serialize()): False for c in self.invisible_coordinates}
         result = {
             frozendict(_hex["cc"]): _hex["visible"]
-            for _hex in gs["game_state"]["map"]["hexes"]
+            for _hex in gs["map"]["hexes"]
             if frozendict(_hex["cc"]) in target.keys()
         }
 
@@ -179,6 +179,10 @@ class HexesInvisible(GSCheck):
             assert False
 
 
+class SelectionError(Exception):
+    pass
+
+
 class TargetSelector:
 
     @abstractmethod
@@ -195,7 +199,7 @@ class OneOfHexesSelector(TargetSelector):
         for idx, v in enumerate(values["values"]["options"]):
             if CC(**v) == self.coordinate:
                 return {"index": idx}
-        raise ValueError("blah")
+        raise SelectionError()
         # options = {
         #     CC(**v["cc"]): idx for idx, v in enumerate(values["values"]["options"])
         # }
@@ -274,7 +278,7 @@ class OptionSelector(DecisionSelector):
                         else None
                     ),
                 }
-        raise ValueError("blah")
+        raise SelectionError()
 
 
 # @dataclasses.dataclass
@@ -335,7 +339,6 @@ def generate_hex_landscape(
     radius: int = 2, terrain_type: type[Terrain] = Ground
 ) -> Landscape:
     return Landscape({cc: terrain_type for cc in hex_circle(radius)})
-
 
 
 @pytest.fixture
@@ -440,6 +443,31 @@ def test_move(unit_spawner: UnitSpawner, player1_connection: MockConnection) -> 
     )
     ES.resolve(Turn(chicken))
     assert GS().map.unit_positions[chicken].position == CC(1, -1)
+
+
+def test_move_is_blocked(
+    unit_spawner: UnitSpawner, player1_connection: MockConnection
+) -> None:
+    chicken = unit_spawner.spawn(CHICKEN, coordinate=CC(0, 0))
+    unit_spawner.spawn(CHICKEN, coordinate=CC(1, -1))
+    player1_connection.queue_responses(
+        MoveOptionSelector(OneOfHexesSelector(CC(1, -1)))
+    )
+    with pytest.raises(SelectionError):
+        ES.resolve(Turn(chicken))
+
+
+def test_move_fails(
+    unit_spawner: UnitSpawner, player2: Player, player1_connection: MockConnection
+) -> None:
+    pillar = unit_spawner.spawn(LUMBERING_PILLAR, coordinate=CC(0, 0))
+    unit_spawner.spawn(CHICKEN, coordinate=CC(1, -1), controller=player2)
+    player1_connection.queue_responses(
+        MoveOptionSelector(OneOfHexesSelector(CC(1, -1)))
+    )
+    # with pytest.raises(SelectionError):
+    ES.resolve(Turn(pillar))
+    assert GS().map.unit_positions[pillar].position == CC(0, 0)
 
 
 def test_fight(
@@ -655,4 +683,3 @@ def test_vision_blocked(
 #
 #     player1 = gs.turn_order.players[0]
 #     player1_connection = gs.connections[player1]
-
