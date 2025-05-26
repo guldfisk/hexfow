@@ -223,10 +223,12 @@ class EventSystem:
             if isinstance(event, event_type):
                 return event
 
-    def resolve_pending_triggers(self, parent_event: Event | None = None) -> None:
+    def resolve_pending_triggers(self, parent_event: Event | None = None) -> bool:
         # TODO disallow triggering multiple times in some way as well?
+        resolved_triggers = False
         for _ in range(self.MAX_TRIGGER_RECURSION):
             if self._pending_triggers:
+                resolved_triggers = True
                 triggers = self._pending_triggers
                 self._pending_triggers = []
                 for trigger_effect, trigger_event in sorted(
@@ -246,7 +248,7 @@ class EventSystem:
                     self._active_replacement_effect = previous_active_replacement_effect
                     self._replacement_results = previous_replacement_results
             else:
-                return
+                return resolved_triggers
         raise TriggerLoopError()
 
 
@@ -296,8 +298,8 @@ class ScopedEventSystem(EventSystem):
     def last_event_of_type(self, event_type: type[E]) -> E | None:
         return self._es.last_event_of_type(event_type)
 
-    def resolve_pending_triggers(self, parent_event: Event | None = None) -> None:
-        self._es.resolve_pending_triggers(parent_event)
+    def resolve_pending_triggers(self, parent_event: Event | None = None) -> bool:
+        return self._es.resolve_pending_triggers(parent_event)
 
 
 ES = ScopedEventSystem()

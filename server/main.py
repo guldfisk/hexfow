@@ -18,7 +18,6 @@ from game.game.events import Play, Round, SpawnUnit
 from game.game.interface import Connection
 from game.game.map.coordinates import CC
 from game.game.map.geometry import hex_circle
-from game.game.map.terrain import Ground
 from game.game.player import Player
 from game.game.units.blueprints import CHICKEN
 from game.tests.test_events import MockConnection

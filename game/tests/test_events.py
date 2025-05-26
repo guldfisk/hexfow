@@ -32,12 +32,13 @@ from game.game.core import (
     SkipOption,
     RangedAttackFacet,
     ActivateUnitOption,
+    Hex,
 )
 from game.game.events import SpawnUnit, MeleeAttack, Turn, Round
 from game.game.interface import Connection
 from game.game.map.coordinates import CC
 from game.game.map.geometry import hex_circle
-from game.game.map.terrain import Ground
+from game.game.map.terrain import Water, Plains, Magma
 from game.game.player import Player
 from game.game.units.blueprints import (
     CHICKEN,
@@ -92,6 +93,11 @@ class MockConnection(Connection):
         )
 
 
+def make_hex_terrain(_hex: Hex, terrain_type: type[Terrain]) -> None:
+    _hex.terrain = terrain_type()
+    _hex.terrain.create_effects(_hex)
+
+
 class GSCheck(ABC):
 
     @abstractmethod
@@ -114,9 +120,9 @@ class HasHexes(GSCheck):
     coordinates: Iterable[CC]
 
     def __call__(self, gs: JSON_DICT, player: Player) -> None:
-        assert {
-            frozendict(_hex["cc"]) for _hex in gs["map"]["hexes"]
-        } == {frozendict(c.serialize()) for c in self.coordinates}
+        assert {frozendict(_hex["cc"]) for _hex in gs["map"]["hexes"]} == {
+            frozendict(c.serialize()) for c in self.coordinates
+        }
 
 
 @dataclasses.dataclass
@@ -131,8 +137,7 @@ class HexesVisible(GSCheck):
             for _hex in gs["map"]["hexes"]
         }
         result = {
-            frozendict(_hex["cc"]): _hex["visible"]
-            for _hex in gs["map"]["hexes"]
+            frozendict(_hex["cc"]): _hex["visible"] for _hex in gs["map"]["hexes"]
         }
 
         if target != result:
@@ -336,7 +341,7 @@ def select_hex(coordinate: CC, values: Mapping[str, Any]) -> Mapping[str, Any]:
 
 
 def generate_hex_landscape(
-    radius: int = 2, terrain_type: type[Terrain] = Ground
+    radius: int = 2, terrain_type: type[Terrain] = Plains
 ) -> Landscape:
     return Landscape({cc: terrain_type for cc in hex_circle(radius)})
 
@@ -677,9 +682,41 @@ def test_vision_blocked(
     _check(hex_circle(1))
 
 
-# def test_single_player_game(ground_landscape: Landscape) -> None:
-#     gs = GameState(1, MockConnection, ground_landscape)
-#     GameState.instance = gs
-#
-#     player1 = gs.turn_order.players[0]
-#     player1_connection = gs.connections[player1]
+def test_impassable_terrain(
+    unit_spawner, player1_connection: MockConnection, player2: Player
+) -> None:
+    make_hex_terrain(GS().map.hexes[CC(0, 1)], Water)
+    chicken = unit_spawner.spawn(CHICKEN, coordinate=CC(0, 0))
+    player1_connection.queue_responses(MoveOptionSelector(OneOfHexesSelector(CC(0, 1))))
+    with pytest.raises(SelectionError):
+        ES.resolve(Turn(chicken))
+    assert GS().map.unit_positions[chicken].position == CC(0, 0)
+
+
+def test_walk_onto_magma(
+    unit_spawner, player1_connection: MockConnection, player2: Player
+) -> None:
+    make_hex_terrain(GS().map.hexes[CC(0, 1)], Magma)
+    chicken = unit_spawner.spawn(CHICKEN, coordinate=CC(0, 0))
+    player1_connection.queue_responses(
+        ActivateSelector(OneOfUnitsSelector(chicken)),
+        MoveOptionSelector(OneOfHexesSelector(CC(0, 1))),
+    )
+    ES.resolve(Round())
+    assert GS().map.unit_positions[chicken].position == CC(0, 1)
+
+    assert chicken.damage == 1
+
+
+def test_unit_dies_mid_turn(
+    unit_spawner: UnitSpawner, player1_connection: MockConnection, player2: Player
+) -> None:
+    make_hex_terrain(GS().map.hexes[CC(0, 1)], Magma)
+    archer = unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(0, 0))
+    archer.damage = archer.max_health.g() - 1
+    player1_connection.queue_responses(
+        ActivateSelector(OneOfUnitsSelector(archer)),
+        MoveOptionSelector(OneOfHexesSelector(CC(0, 1))),
+    )
+    ES.resolve(Round())
+    assert not archer.on_map()

@@ -21,6 +21,11 @@ import pillarImageUrl from "./images/pillar_small.png";
 import archerImageUrl from "./images/archer_small.png";
 
 import forestImageUrl from "./images/terrain_forest_square.png";
+import hillImageUrl from "./images/terrain_hill_square.png";
+import magmaImageUrl from "./images/terrain_magma_square.png";
+import waterImageUrl from "./images/terrain_water_square.png";
+import plainsImageUrl from "./images/terrain_plains_square.png";
+import { randomChoice } from "./utils/random.ts";
 
 const hexSize = 160;
 
@@ -129,7 +134,10 @@ const renderMap = (
     const hexContainer = new Container();
     map.addChild(hexContainer);
 
-    const terrainSprite = new Sprite(textureMap["forest"]);
+    const terrainSprite = new Sprite(
+      // textureMap[randomChoice(["Forest", "Hill", "Water", "Magma", "Plains"])],
+      textureMap[hexData.terrain],
+    );
     terrainSprite.anchor = 0.5;
 
     let hex = new Graphics(
@@ -269,7 +277,15 @@ async function main() {
   textureMap["Lumbering Pillar"] = await Assets.load(pillarImageUrl);
   textureMap["Light Archer"] = await Assets.load(archerImageUrl);
 
-  textureMap["forest"] = await Assets.load(forestImageUrl);
+  for (const [key, url] of [
+    ["Forest", forestImageUrl],
+    ["Hill", hillImageUrl],
+    ["Water", waterImageUrl],
+    ["Magma", magmaImageUrl],
+    ["Plains", plainsImageUrl],
+  ]) {
+    textureMap[key] = await Assets.load(url);
+  }
 
   const gameConnection = new WebSocket("ws://localhost:8765/ws");
   gameConnection.onmessage = (event) => {

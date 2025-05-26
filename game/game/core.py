@@ -84,6 +84,7 @@ class Facet(HasStatuses, Serializable):
 
         self.owner = owner
 
+    # TODO common interface?
     def create_effects(self) -> None: ...
 
     def serialize(self, context: SerializationContext) -> JSON:
@@ -310,6 +311,9 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             options.append(SkipOption(target_profile=NoTarget()))
         return options
 
+    def on_map(self) -> bool:
+        return self in GS().map.unit_positions
+
     @property
     def health(self) -> int:
         return self.max_health.g() - self.damage
@@ -363,27 +367,13 @@ class Landscape:
 
 class Terrain(HasEffects, ABC):
 
+    def create_effects(self, space: Hex) -> None: ...
+
     def is_water(self) -> bool:
         return False
 
     def is_highground(self) -> bool:
         return False
-
-
-# TODO should be able to have these somewhere else like the unit blueprints.
-class Plains(Terrain): ...
-
-
-class Forest(Terrain): ...
-
-
-class Hill(Terrain): ...
-
-
-class Water(Terrain): ...
-
-
-class Magma(Terrain): ...
 
 
 @dataclasses.dataclass
@@ -460,6 +450,8 @@ class HexMap:
             position: Hex(position=position, terrain=terrain_type(), map=self)
             for position, terrain_type in landscape.terrain_map.items()
         }
+        for _hex in self.hexes.values():
+            _hex.terrain.create_effects(_hex)
         self.unit_positions: bidict[Unit, Hex] = bidict()
 
     def units_controlled_by(self, player: Player) -> Iterator[Unit]:

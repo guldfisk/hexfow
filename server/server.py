@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import random
 import threading
 import traceback
 from queue import Empty, SimpleQueue
@@ -13,11 +14,11 @@ from websockets.sync.server import serve, ServerConnection
 from events.eventsystem import ES, EventSystem
 from events.exceptions import GameException
 from game.game.core import GameState, Landscape
-from game.game.events import SpawnUnit, Round, Play
+from game.game.events import SpawnUnit, Play
 from game.game.interface import Connection
 from game.game.map.coordinates import CC
 from game.game.map.geometry import hex_circle
-from game.game.map.terrain import Ground
+from game.game.map.terrain import Plains, Forest, Magma, Water
 from game.game.player import Player
 from game.game.units.blueprints import CHICKEN, LUMBERING_PILLAR, LIGHT_ARCHER
 
@@ -99,7 +100,7 @@ class Game(Thread):
                     raise GameClosed()
 
             gs = GameState(
-                1, WebsocketConnection, Landscape({cc: Ground for cc in hex_circle(2)})
+                1, WebsocketConnection, Landscape({cc: random.choice([Plains, Forest, Magma, Water]) for cc in hex_circle(2)})
             )
             GameState.instance = gs
 
@@ -110,13 +111,13 @@ class Game(Thread):
                     space=gs.map.hexes[CC(0, 0)],
                 )
             )
-            ES.resolve(
-                SpawnUnit(
-                    blueprint=LUMBERING_PILLAR,
-                    controller=gs.turn_order.players[0],
-                    space=gs.map.hexes[CC(0, 1)],
-                )
-            )
+            # ES.resolve(
+            #     SpawnUnit(
+            #         blueprint=LUMBERING_PILLAR,
+            #         controller=gs.turn_order.players[0],
+            #         space=gs.map.hexes[CC(0, 1)],
+            #     )
+            # )
             ES.resolve(
                 SpawnUnit(
                     blueprint=LIGHT_ARCHER,

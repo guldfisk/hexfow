@@ -10,6 +10,7 @@ from game.game.events import MeleeAttack, Damage, MoveAction
 
 @dataclasses.dataclass(eq=False)
 class PricklyTrigger(TriggerEffect[MeleeAttack]):
+    # TODO handle priority in shared enum or some shit
     priority: ClassVar[int] = 0
 
     unit: Unit

@@ -23,6 +23,26 @@ from game.game.units.facets.attacks import MeleeAttackFacet
 
 
 @dataclasses.dataclass
+class Kill(Event[None]):
+    unit: Unit
+
+    def resolve(self) -> None:
+        GS().map.remove_unit(self.unit)
+
+
+# TODO don't think this should be an event?
+@dataclasses.dataclass
+class CheckAlive(Event[bool]):
+    unit: Unit
+
+    def resolve(self) -> bool:
+        if self.unit.health <= 0:
+            ES.resolve(Kill(self.unit))
+            return False
+        return True
+
+
+@dataclasses.dataclass
 class Damage(Event[None]):
     unit: Unit
     amount: int
@@ -54,25 +74,6 @@ class RangedAttack(Event[None]):
         ES.resolve(
             Damage(self.defender, max(self.attack.damage - self.defender.armor.g(), 0))
         )
-
-
-@dataclasses.dataclass
-class Kill(Event[None]):
-    unit: Unit
-
-    def resolve(self) -> None:
-        GS().map.remove_unit(self.unit)
-
-
-@dataclasses.dataclass
-class CheckAlive(Event[bool]):
-    unit: Unit
-
-    def resolve(self) -> bool:
-        if self.unit.health <= 0:
-            ES.resolve(Kill(self.unit))
-            return False
-        return True
 
 
 @dataclasses.dataclass
@@ -151,6 +152,20 @@ class SkipAction(Event[None]):
         GS().active_unit_context.should_stop = True
 
 
+# TODO where should this be?
+# TODO currently only checed in turn, should prob be checked in round as well.
+def do_state_based_check() -> None:
+    has_changed = True
+    while has_changed:
+        has_changed = ES.resolve_pending_triggers()
+        # TODO order?
+        for unit in list(GS().map.unit_positions.keys()):
+            if unit.health <= 0:
+                has_changed = True
+                ES.resolve(Kill(unit))
+
+
+
 @dataclasses.dataclass
 class Turn(Event[bool]):
     unit: Unit
@@ -164,8 +179,10 @@ class Turn(Event[bool]):
         #  vision map when unit tests run just a turn.
         GS().update_vision()
 
-        while not context.should_stop and (
-            legal_options := self.unit.get_legal_options(context)
+        while (
+            not context.should_stop
+            and self.unit.on_map()
+            and (legal_options := self.unit.get_legal_options(context))
         ):
             decision = GS().make_decision(
                 self.unit.controller,
@@ -173,7 +190,7 @@ class Turn(Event[bool]):
             )
             if isinstance(decision.option, SkipOption):
                 ES.resolve(SkipAction(self.unit))
-                ES.resolve_pending_triggers()
+                do_state_based_check()
                 break
             elif isinstance(decision.option, MoveOption):
                 ES.resolve(MoveAction(self.unit, to_=decision.target))
@@ -198,7 +215,8 @@ class Turn(Event[bool]):
                     raise ValueError("blah")
             else:
                 raise ValueError("blah")
-            ES.resolve_pending_triggers()
+
+            do_state_based_check()
             context.has_acted = True
 
         self.unit.exhausted = True
@@ -261,7 +279,7 @@ class Round(Event[None]):
                 round_skipped_players.add(player)
             else:
                 dp(decision.option)
-                raise ValueError('AHLO')
+                raise ValueError("AHLO")
 
             # if any(
             #     turn.result
