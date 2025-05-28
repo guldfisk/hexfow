@@ -224,6 +224,11 @@ class Turn(Event[bool]):
 
         return context.has_acted
 
+class Upkeep(Event[None]):
+
+    def resolve(self) -> None:
+        ...
+
 
 class Round(Event[None]):
 
@@ -240,6 +245,10 @@ class Round(Event[None]):
 
         for unit in gs.map.unit_positions.keys():
             unit.exhausted = False
+
+        # TODO very unclear how this all works
+        ES.resolve(Upkeep())
+        do_state_based_check()
 
         while skipped_players != all_players:
             timestamp += 1

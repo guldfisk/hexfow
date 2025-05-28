@@ -2,8 +2,8 @@ import dataclasses
 from typing import ClassVar
 
 from events.eventsystem import TriggerEffect, ES
-from game.game.core import Terrain, Hex
-from game.game.events import MoveUnit, Damage
+from game.game.core import Terrain, Hex, GS
+from game.game.events import MoveUnit, Damage, Upkeep
 
 
 class Plains(Terrain): ...
@@ -22,7 +22,7 @@ class Water(Terrain):
 
 
 @dataclasses.dataclass(eq=False)
-class FireTerrainTrigger(TriggerEffect[MoveUnit]):
+class DamageOnWalkIn(TriggerEffect[MoveUnit]):
     priority: ClassVar[int] = 0
 
     hex: Hex
@@ -35,7 +35,22 @@ class FireTerrainTrigger(TriggerEffect[MoveUnit]):
         ES.resolve(Damage(event.unit, self.amount))
 
 
+@dataclasses.dataclass(eq=False)
+class DamageOnUpkeep(TriggerEffect[Upkeep]):
+    priority: ClassVar[int] = 0
+
+    hex: Hex
+    amount: int
+
+    def should_trigger(self, event: Upkeep) -> bool:
+        return GS().map.unit_on(self.hex) is not None
+
+    def resolve(self, event: Upkeep) -> None:
+        if unit := GS().map.unit_on(self.hex):
+            ES.resolve(Damage(unit, self.amount))
+
+
 class Magma(Terrain):
 
     def create_effects(self, space: Hex) -> None:
-        self.register_effects(FireTerrainTrigger(space, 1))
+        self.register_effects(DamageOnWalkIn(space, 1), DamageOnUpkeep(space, 1))
