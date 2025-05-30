@@ -3,6 +3,8 @@ export interface CC {
   h: number;
 }
 
+export type Size = "S" | "M" | "L";
+
 export interface Unit {
   id: string;
   blueprint: string;
@@ -13,7 +15,7 @@ export interface Unit {
   sight: number;
   max_energy: number;
   energy: number;
-  size: string;
+  size: Size;
   exhausted: boolean;
 }
 
@@ -34,6 +36,7 @@ export interface ActiveUnitContext {
 }
 
 export interface GameState {
+  player: string,
   round: number;
   map: Map;
   eventLog: string[];

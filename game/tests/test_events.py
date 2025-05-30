@@ -486,10 +486,10 @@ def test_fight(
     player1_connection.queue_responses(
         ActivateSelector(OneOfUnitsSelector(chicken)),
         MeleeAttackSelector(OneOfUnitsSelector(evil_chicken)),
+        ActivateSelector(OneOfUnitsSelector(chicken)),
+        MeleeAttackSelector(OneOfUnitsSelector(evil_chicken)),
     )
     player2_connection.queue_responses(
-        ActivateSelector(OneOfUnitsSelector(evil_chicken)),
-        MeleeAttackSelector(OneOfUnitsSelector(chicken)),
         ActivateSelector(OneOfUnitsSelector(evil_chicken)),
         MeleeAttackSelector(OneOfUnitsSelector(chicken)),
     )
@@ -500,12 +500,12 @@ def test_fight(
     assert GS().map.unit_positions[chicken].position == CC(0, 0)
     assert GS().map.unit_positions[evil_chicken].position == CC(1, -1)
     ES.resolve(Round())
-    assert evil_chicken.health == 1
-    assert chicken.health == 0
-    assert GS().map.unit_positions[evil_chicken].position == CC(0, 0)
-    assert GS().map.unit_positions.get(chicken) is None
+    assert evil_chicken.health == 0
+    assert chicken.health == 1
+    assert GS().map.unit_positions[chicken].position == CC(1, -1)
+    assert GS().map.unit_positions.get(evil_chicken) is None
 
-    assert len(player2_connection.history) == 6
+    assert len(player1_connection.history) == 6
 
 
 def test_ranged_attack(

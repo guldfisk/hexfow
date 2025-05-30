@@ -14,12 +14,15 @@ from game.game.core import (
     RangedAttackFacet,
     ActivateUnitOption,
     OneOfUnits,
+    TerrainProtectionRequest,
 )
+from game.game.damage import DamageSignature
 from game.game.decision_points import SelectUnitDecisionPoint
 from game.game.decisions import OptionDecision, SelectOptionDecisionPoint, NoTarget
 from game.game.player import Player
 from game.game.select import select_unit, select_targeted_option
 from game.game.units.facets.attacks import MeleeAttackFacet
+from game.game.values import DamageType
 
 
 @dataclasses.dataclass
@@ -28,6 +31,7 @@ class Kill(Event[None]):
 
     def resolve(self) -> None:
         GS().map.remove_unit(self.unit)
+        self.unit.deregister()
 
 
 # TODO don't think this should be an event?
@@ -43,12 +47,43 @@ class CheckAlive(Event[bool]):
 
 
 @dataclasses.dataclass
-class Damage(Event[None]):
+class Damage(Event[int]):
     unit: Unit
-    amount: int
+    # amount: int
+    # damage_type: DamageType = DamageType.PHYSICAL
+    # ap: int = 0
+    signature: DamageSignature
 
-    def resolve(self) -> None:
-        self.unit.damage += self.amount
+    def resolve(self) -> int:
+        defender_armor = self.unit.armor.g()
+        damage = max(
+            self.signature.amount
+            - min(defender_armor, max(defender_armor - self.signature.ap, 0)),
+            0,
+        )
+        self.unit.damage += damage
+        return damage
+
+
+# TODO idk where
+def get_terrain_modified_damage(
+    # amount: int, defender: Unit, damage_type: DamageType
+    damage_signature: DamageSignature,
+    defender: Unit,
+) -> DamageSignature:
+    return DamageSignature(
+        max(
+            damage_signature.amount
+            - GS()
+            .map.position_of(defender)
+            .get_terrain_protection_for(
+                TerrainProtectionRequest(defender, damage_signature.type)
+            ),
+            min(damage_signature.amount, 1),
+        ),
+        type=damage_signature.type,
+        ap=damage_signature.ap,
+    )
 
 
 # TODO merge melee/ranged attack events?
@@ -60,8 +95,25 @@ class MeleeAttack(Event[None]):
 
     def resolve(self) -> None:
         ES.resolve(
-            Damage(self.defender, max(self.attack.damage - self.defender.armor.g(), 0))
+            Damage(
+                self.defender,
+                get_terrain_modified_damage(
+                    self.attack.get_damage_signature_against(self.defender),
+                    self.defender,
+                ),
+            )
         )
+        # ES.resolve(
+        #     Damage(
+        #         self.defender,
+        #         DamageSignature(
+        #             get_terrain_modified_damage(
+        #                 self.attack.damage, self.defender, DamageType.MELEE
+        #             ),
+        #             DamageType.MELEE,
+        #         ),
+        #     )
+        # )
 
 
 @dataclasses.dataclass
@@ -72,8 +124,26 @@ class RangedAttack(Event[None]):
 
     def resolve(self) -> None:
         ES.resolve(
-            Damage(self.defender, max(self.attack.damage - self.defender.armor.g(), 0))
+            Damage(
+                self.defender,
+                get_terrain_modified_damage(
+                    self.attack.get_damage_signature_against(self.defender),
+                    self.defender,
+                ),
+            )
         )
+        # ES.resolve(
+        #     Damage(
+        #         self.defender,
+        #         DamageSignature(
+        #             get_terrain_modified_damage(
+        #                 self.attack.damage, self.defender, DamageType.RANGED
+        #             ),
+        #             DamageType.RANGED,
+        #             # ap=self.attack.ap,
+        #         ),
+        #     )
+        # )
 
 
 @dataclasses.dataclass
@@ -83,14 +153,19 @@ class MeleeAttackAction(Event[None]):
     attack: MeleeAttackFacet
 
     def resolve(self) -> None:
-        defender_position = GS().map.unit_positions[self.defender]
+        defender_position = GS().map.position_of(self.defender)
+        movement_penalty = GS().map.position_of(self.attacker).get_move_out_penalty_for(
+            self.attacker
+        ) + defender_position.get_move_in_penalty_for(self.attacker)
         ES.resolve(self.branch(MeleeAttack))
         ES.resolve(CheckAlive(self.defender))
         if defender_position.can_move_into(self.attacker):
             ES.resolve(MoveUnit(self.attacker, defender_position))
         # TODO movement cost of attack?
-        GS().active_unit_context.movement_points -= 1 + self.attack.movement_cost
-        GS().active_unit_context.should_stop = True
+        GS().active_unit_context.movement_points -= (
+            1 + movement_penalty + self.attack.movement_cost
+        )
+        # GS().active_unit_context.should_stop = True
 
 
 @dataclasses.dataclass
@@ -103,7 +178,7 @@ class RangedAttackAction(Event[None]):
         ES.resolve(self.branch(RangedAttack))
         ES.resolve(CheckAlive(self.defender))
         GS().active_unit_context.movement_points -= self.attack.movement_cost
-        GS().active_unit_context.should_stop = True
+        # GS().active_unit_context.should_stop = True
 
 
 @dataclasses.dataclass
@@ -140,8 +215,11 @@ class MoveAction(Event[None]):
     to_: Hex
 
     def resolve(self) -> None:
+        movement_penalty = GS().map.position_of(self.unit).get_move_out_penalty_for(
+            self.unit
+        ) + self.to_.get_move_in_penalty_for(self.unit)
         ES.resolve(self.branch(MoveUnit))
-        GS().active_unit_context.movement_points -= 1
+        GS().active_unit_context.movement_points -= 1 + movement_penalty
 
 
 @dataclasses.dataclass
@@ -165,7 +243,6 @@ def do_state_based_check() -> None:
                 ES.resolve(Kill(unit))
 
 
-
 @dataclasses.dataclass
 class Turn(Event[bool]):
     unit: Unit
@@ -175,15 +252,15 @@ class Turn(Event[bool]):
             self.unit, self.unit.speed.g()
         )
 
-        # TODO this prob shouldn't be here. For now it is to make sure we have a
-        #  vision map when unit tests run just a turn.
-        GS().update_vision()
+        while not context.should_stop and self.unit.on_map():
 
-        while (
-            not context.should_stop
-            and self.unit.on_map()
-            and (legal_options := self.unit.get_legal_options(context))
-        ):
+            # TODO this prob shouldn't be here. For now it is to make sure we have a
+            #  vision map when unit tests run just a turn.
+            GS().update_vision()
+
+            if not (legal_options := self.unit.get_legal_options(context)):
+                break
+
             decision = GS().make_decision(
                 self.unit.controller,
                 SelectOptionDecisionPoint(legal_options, explanation="do shit"),
@@ -195,6 +272,7 @@ class Turn(Event[bool]):
             elif isinstance(decision.option, MoveOption):
                 ES.resolve(MoveAction(self.unit, to_=decision.target))
             elif isinstance(decision.option, EffortOption):
+                context.activated_facets[decision.option.facet.__class__.__name__] += 1
                 if isinstance(decision.option.facet, MeleeAttackFacet):
                     ES.resolve(
                         MeleeAttackAction(
@@ -213,6 +291,9 @@ class Turn(Event[bool]):
                     )
                 else:
                     raise ValueError("blah")
+                # TODO unclear which of this logic should be on the action event, and which should be here...
+                if not decision.option.facet.combineable:
+                    context.should_stop = True
             else:
                 raise ValueError("blah")
 
@@ -224,10 +305,10 @@ class Turn(Event[bool]):
 
         return context.has_acted
 
+
 class Upkeep(Event[None]):
 
-    def resolve(self) -> None:
-        ...
+    def resolve(self) -> None: ...
 
 
 class Round(Event[None]):
@@ -252,9 +333,13 @@ class Round(Event[None]):
 
         while skipped_players != all_players:
             timestamp += 1
-            player = gs.turn_order.advance()
+            player = gs.turn_order.active_player
+            gs.turn_order.advance()
             if player in round_skipped_players:
                 continue
+
+            GS().update_vision()
+
             activateable_units = [
                 unit
                 for unit in gs.map.units_controlled_by(player)
@@ -290,21 +375,6 @@ class Round(Event[None]):
                 dp(decision.option)
                 raise ValueError("AHLO")
 
-            # if any(
-            #     turn.result
-            #     for turn in ES.resolve(
-            #         Turn(
-            #             gs.make_decision(
-            #                 player,
-            #                 SelectUnitDecisionPoint(
-            #                     activateable_units, "activate unit"
-            #                 ),
-            #             )
-            #         )
-            #     ).iter_type(Turn)
-            # ):
-            #     last_action_timestamps[player] = timestamp
-
         gs.turn_order.set_player_order(
             sorted(gs.turn_order.players, key=lambda p: last_action_timestamps[p])
         )
@@ -317,6 +387,8 @@ class Play(Event[None]):
         gs = GS()
         while (
             not any(p.points >= gs.target_points for p in gs.turn_order.players)
-            and gs.round_counter < 20
+            # TODO do want something like this prob, annoying when testing
+            # and gs.round_counter < 20
         ):
             ES.resolve(Round())
+        # TODO push last game state and result to clients

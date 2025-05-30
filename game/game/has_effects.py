@@ -17,5 +17,5 @@ class HasEffects:
         ES.deregister_effects(*effects)
 
     def deregister(self) -> None:
-        ES.deregister_effects(self.effects)
+        ES.deregister_effects(*self.effects)
         self.effects = set()

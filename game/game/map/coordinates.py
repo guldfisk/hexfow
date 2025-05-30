@@ -185,7 +185,11 @@ def find_collisions(line_from: CC, line_to: CC) -> list[list[CC]]:
                     *(
                         [
                             [offset * i + line_from - b for b in backwards],
-                            [offset * i + line_from],
+                            *(
+                                ([offset * i + line_from],)
+                                if offset * i + line_from != line_to
+                                else ()
+                            ),
                         ]
                         for i in range(
                             1,
@@ -205,18 +209,14 @@ def find_collisions(line_from: CC, line_to: CC) -> list[list[CC]]:
 def line_of_sight_obstructed(
     line_from: CC, line_to: CC, obstruction_getter: Callable[[CC], bool]
 ) -> bool:
-    # obstruction_map = GS().vision_obstruction_map[self.controller]
-
     collided_sides = [False, False]
 
     for coordinates in find_collisions(line_from, line_to):
         if len(coordinates) == 1:
-            # if obstruction_map[coordinates[0]]:
             if obstruction_getter(coordinates[0]):
                 return True
         else:
             for idx, c in enumerate(coordinates):
-                # if obstruction_map[c]:
                 if obstruction_getter(c):
                     collided_sides[idx] = True
             if all(collided_sides):

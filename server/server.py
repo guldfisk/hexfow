@@ -20,7 +20,16 @@ from game.game.map.coordinates import CC
 from game.game.map.geometry import hex_circle
 from game.game.map.terrain import Plains, Forest, Magma, Water
 from game.game.player import Player
-from game.game.units.blueprints import CHICKEN, LUMBERING_PILLAR, LIGHT_ARCHER
+from game.game.units.blueprints import (
+    CHICKEN,
+    LUMBERING_PILLAR,
+    LIGHT_ARCHER,
+    AP_GUNNER,
+    BUGLING,
+    CYCLOPS,
+    CACTUS,
+    BOULDER_HURLER_OAF,
+)
 
 
 class GameClosed(GameException):
@@ -87,7 +96,8 @@ class Game(Thread):
 
                 def send(self, values: Mapping[str, Any]) -> None:
                     # game.out_queue.put(values)
-                    raise NotImplemented()
+                    # raise NotImplemented()
+                    pass
 
                 def get_response(self, values: Mapping[str, Any]) -> Mapping[str, Any]:
                     game.connection.send(json.dumps(values))
@@ -100,29 +110,79 @@ class Game(Thread):
                     raise GameClosed()
 
             gs = GameState(
-                1, WebsocketConnection, Landscape({cc: random.choice([Plains, Forest, Magma, Water]) for cc in hex_circle(2)})
+                2,
+                WebsocketConnection,
+                Landscape(
+                    {
+                        cc: random.choice(
+                            [
+                                Plains,
+                                Forest,
+                                Magma,
+                                # Water,
+                            ]
+                        )
+                        for cc in hex_circle(2)
+                    }
+                ),
             )
             GameState.instance = gs
 
-            ES.resolve(
-                SpawnUnit(
-                    blueprint=CHICKEN,
-                    controller=gs.turn_order.players[0],
-                    space=gs.map.hexes[CC(0, 0)],
-                )
-            )
             # ES.resolve(
             #     SpawnUnit(
-            #         blueprint=LUMBERING_PILLAR,
+            #         blueprint=BOULDER_HURLER_OAF,
             #         controller=gs.turn_order.players[0],
-            #         space=gs.map.hexes[CC(0, 1)],
+            #         space=gs.map.hexes[CC(0, 0)],
             #     )
             # )
             ES.resolve(
                 SpawnUnit(
+                    blueprint=LUMBERING_PILLAR,
+                    controller=gs.turn_order.players[0],
+                    space=gs.map.hexes[CC(1, -1)],
+                )
+            )
+            ES.resolve(
+                SpawnUnit(
                     blueprint=LIGHT_ARCHER,
                     controller=gs.turn_order.players[0],
-                    space=gs.map.hexes[CC(1, 1)],
+                    space=gs.map.hexes[CC(1, 0)],
+                )
+            )
+            ES.resolve(
+                SpawnUnit(
+                    blueprint=BUGLING,
+                    controller=gs.turn_order.players[0],
+                    space=gs.map.hexes[CC(0, 0)],
+                )
+            )
+            ES.resolve(
+                SpawnUnit(
+                    blueprint=CYCLOPS,
+                    controller=gs.turn_order.players[0],
+                    space=gs.map.hexes[CC(-1, 0)],
+                )
+            )
+
+            ES.resolve(
+                SpawnUnit(
+                    blueprint=LIGHT_ARCHER,
+                    controller=gs.turn_order.players[1],
+                    space=gs.map.hexes[CC(0, -1)],
+                )
+            )
+            ES.resolve(
+                SpawnUnit(
+                    blueprint=AP_GUNNER,
+                    controller=gs.turn_order.players[1],
+                    space=gs.map.hexes[CC(0, -2)],
+                )
+            )
+            ES.resolve(
+                SpawnUnit(
+                    blueprint=CACTUS,
+                    controller=gs.turn_order.players[1],
+                    space=gs.map.hexes[CC(-1, 1)],
                 )
             )
 

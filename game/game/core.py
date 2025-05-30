@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import dataclasses
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from typing import ClassVar, Literal, Any, TypeVar, Iterator
 from typing import Mapping
 
 from bidict import bidict
 
-from debug_utils import dp
-from events.eventsystem import Modifiable, ModifiableAttribute, modifiable, Event, ES
+from events.eventsystem import Modifiable, ModifiableAttribute, modifiable, ES
+from game.game.damage import DamageSignature
 from game.game.decisions import (
     DecisionPoint,
     Option,
@@ -22,12 +23,12 @@ from game.game.decisions import (
 )
 from game.game.has_effects import HasEffects
 from game.game.interface import Connection
-from game.game.map.coordinates import CC, find_collisions, line_of_sight_obstructed
+from game.game.map.coordinates import CC, line_of_sight_obstructed
 from game.game.map.geometry import hex_circle
 from game.game.player import Player
 from game.game.statuses import HasStatuses
 from game.game.turn_order import TurnOrder
-from game.game.values import Size
+from game.game.values import Size, DamageType
 from game.tests.conftest import EventLogger
 
 
@@ -93,6 +94,7 @@ class Facet(HasStatuses, Serializable):
 
 class EffortFacet(Facet, Modifiable):
     movement_cost: ClassVar[int | None]
+    combineable: ClassVar[bool] = False
 
     @modifiable
     def has_sufficient_movement_points(self, context: ActiveUnitContext) -> bool:
@@ -107,9 +109,25 @@ class EffortFacet(Facet, Modifiable):
 class AttackFacet(EffortFacet): ...
 
 
-class MeleeAttackFacet(AttackFacet):
-    display_type = "MeleeAttack"
+class SingleTargetAttackFacet(AttackFacet):
+    damage_type: ClassVar[DamageType]
     damage: ClassVar[int]
+    ap: ClassVar[int] = 0
+
+    @modifiable
+    def get_damage_against(self, unit: Unit) -> int:
+        return self.damage
+
+    @modifiable
+    def get_damage_signature_against(self, unit: Unit) -> DamageSignature:
+        return DamageSignature(
+            self.get_damage_against(unit), type=self.damage_type, ap=self.ap
+        )
+
+
+class MeleeAttackFacet(SingleTargetAttackFacet):
+    display_type = "MeleeAttack"
+    damage_type = DamageType.MELEE
 
     @modifiable
     def get_legal_targets(self, _: None = None) -> list[Unit]:
@@ -119,28 +137,49 @@ class MeleeAttackFacet(AttackFacet):
             for unit in GS().map.get_neighboring_units_off(self.owner)
             if unit.controller != self.owner.controller
             and unit.can_be_attacked_by(self)
+            # TODO test
+            and GS().map.position_of(unit).is_passable_to(self.owner)
         ]
 
     @modifiable
     def can_be_activated(self, context: ActiveUnitContext) -> bool:
-        return self.has_sufficient_movement_points(context) and self.get_legal_targets(
-            None
+        return (
+            not context.activated_facets[self.__class__.__name__]
+            and self.has_sufficient_movement_points(context)
+            and self.get_legal_targets(None)
         )
 
 
-class RangedAttackFacet(AttackFacet):
+class RangedAttackFacet(SingleTargetAttackFacet):
     display_type = "RangedAttack"
+    damage_type = DamageType.RANGED
     range: ClassVar[int]
-    damage: ClassVar[int]
 
     @modifiable
     def get_legal_targets(self, _: None = None) -> list[Unit]:
+        print("legal targets for", self)
+        for unit in GS().map.get_units_within_range_off(self.owner, self.range):
+            print("against", unit)
+            print(
+                GS().vision_map[self.owner.controller][
+                    GS().map.position_of(unit).position
+                ]
+            )
+            print(
+                not line_of_sight_obstructed(
+                    GS().map.position_of(self.owner).position,
+                    GS().map.position_of(unit).position,
+                    GS().vision_obstruction_map[self.owner.controller].get,
+                )
+            )
+            print(unit.can_be_attacked_by(self))
         return [
             unit
             for unit in GS().map.get_units_within_range_off(self.owner, self.range)
             if unit.controller != self.owner.controller
+            # TODO test on this
             and GS().vision_map[self.owner.controller][
-                GS().map.position_of(self.owner).position
+                GS().map.position_of(unit).position
             ]
             and not line_of_sight_obstructed(
                 GS().map.position_of(self.owner).position,
@@ -152,8 +191,10 @@ class RangedAttackFacet(AttackFacet):
 
     @modifiable
     def can_be_activated(self, context: ActiveUnitContext) -> bool:
-        return self.has_sufficient_movement_points(context) and self.get_legal_targets(
-            None
+        return (
+            not context.activated_facets[self.__class__.__name__]
+            and self.has_sufficient_movement_points(context)
+            and self.get_legal_targets(None)
         )
 
 
@@ -328,7 +369,8 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             "sight": self.sight.g(),
             "max_energy": self.max_energy.g(),
             "energy": self.energy,
-            "size": self.size.g(),
+            # TODO
+            "size": self.size.g().name[0],
             # "attack_power"
             "exhausted": self.exhausted,
         }
@@ -365,12 +407,30 @@ class Landscape:
     # deployment_zones: Collection[AbstractSet[CubeCoordinate]]
 
 
+@dataclasses.dataclass
+class TerrainProtectionRequest:
+    unit: Unit
+    damage_type: DamageType
+
+
 class Terrain(HasEffects, ABC):
 
     def create_effects(self, space: Hex) -> None: ...
 
     def is_water(self) -> bool:
         return False
+
+    def blocks_vision(self) -> bool:
+        return False
+
+    def get_move_in_penalty_for(self, unit: Unit) -> int:
+        return 0
+
+    def get_move_out_penalty_for(self, unit: Unit) -> int:
+        return 0
+
+    def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
+        return 0
 
     def is_highground(self) -> bool:
         return False
@@ -397,10 +457,24 @@ class Hex(Modifiable, HasStatuses, Serializable):
         return self.is_occupied_for(unit) and self.is_passable_to(unit)
 
     @modifiable
+    def get_move_in_penalty_for(self, unit: Unit) -> int:
+        return self.terrain.get_move_in_penalty_for(unit)
+
+    @modifiable
+    def get_move_out_penalty_for(self, unit: Unit) -> int:
+        return self.terrain.get_move_out_penalty_for(unit)
+
+    @modifiable
     def blocks_vision_for(self, player: Player) -> bool:
+        if self.terrain.blocks_vision():
+            return True
         if unit := self.map.unit_on(self):
             return unit.blocks_vision_for(player)
         return False
+
+    @modifiable
+    def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
+        return self.terrain.get_terrain_protection_for(request)
 
     # TODO
     # def serialize_values(self, context: SerializationContext) -> JSON:
@@ -413,9 +487,11 @@ class Hex(Modifiable, HasStatuses, Serializable):
                 "h": self.position.h,
             },
             "terrain": self.terrain.__class__.__name__,
-            "visible": GS().vision_map[context.player][self.position],
+            "visible": (visible := GS().vision_map[context.player][self.position]),
             "unit": (
-                unit.serialize(context) if (unit := self.map.unit_on(self)) else None
+                (unit.serialize(context) if (unit := self.map.unit_on(self)) else None)
+                if visible
+                else None
             ),
         }
 
@@ -511,6 +587,9 @@ class ActiveUnitContext(Serializable):
     movement_points: int
     has_acted: bool = False
     should_stop: bool = False
+    activated_facets: defaultdict[str, int] = dataclasses.field(
+        default_factory=lambda: defaultdict(int)
+    )
 
     def serialize(self, context: SerializationContext) -> JSON:
         return {
@@ -534,7 +613,7 @@ class GameState:
             [Player(f"player {i+1}") for i in range(player_count)]
         )
         # TODO this is really dumb, do this in a better way (want p1 to start).
-        self.turn_order.advance()
+        # self.turn_order.advance()
         # self.interfaces = {
         #     player: interface_class() for player in self.turn_order.players
         # }
@@ -584,6 +663,7 @@ class GameState:
             #     "round": self.round_counter,
             #     "map": self.map.serialize(context),
             # },
+            "player": context.player.name,
             "players": {},
             "round": self.round_counter,
             "map": self.map.serialize(context),
@@ -601,7 +681,7 @@ class GameState:
         return v
 
     def make_decision(self, player: Player, decision_point: DecisionPoint[O]) -> O:
-        self.update_vision()
+        # self.update_vision()
         for _player in self.turn_order.players:
             if _player != player:
                 self.connections[_player].send(

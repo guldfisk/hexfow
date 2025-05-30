@@ -20,6 +20,7 @@ from typing import (
     Mapping,
 )
 
+from debug_utils import dp
 from events.exceptions import GameException
 
 
