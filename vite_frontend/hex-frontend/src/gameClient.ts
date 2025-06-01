@@ -25,6 +25,10 @@ import buglingImageUrl from "./images/bugling_small.png";
 import cyclopsImageUrl from "./images/cyclops_small.png";
 import cactusImageUrl from "./images/cactus_small.png";
 import oathImageUrl from "./images/boulder_hurler_oaf_small.png";
+import rhinoImageUrl from "./images/rhino_small.png";
+import goblinAssassinImageUrl from "./images/goblin_assassin_small.png";
+import marshmallowTitanImageUrl from "./images/marshmallow_titan_small.png";
+import direWolfImageUrl from "./images/dire_wolf_small.png";
 
 import forestImageUrl from "./images/terrain_forest_square.png";
 import hillImageUrl from "./images/terrain_hill_square.png";
@@ -346,6 +350,10 @@ async function main() {
     ["Cyclops", cyclopsImageUrl],
     ["Cactus", cactusImageUrl],
     ["Boulder Hurler Oaf", oathImageUrl],
+    ["Rhino", rhinoImageUrl],
+    ["Goblin Assassin", goblinAssassinImageUrl],
+    ["Marshmallow Titan", marshmallowTitanImageUrl],
+    ["Dire Wolf", direWolfImageUrl],
 
     //   Terrain
     ["Forest", forestImageUrl],

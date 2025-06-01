@@ -50,7 +50,9 @@ class UUIDNames:
         UUIDNames.instance = None
 
 
-def obj_to_string(obj: Any, indent: int = 0) -> str:
+def obj_to_string(
+    obj: Any, indent: int = 0, seen_objects: frozenset[int] = frozenset()
+) -> str:
     idn = " " * 4 * indent
     if (
         isinstance(obj, UUID)
@@ -64,9 +66,11 @@ def obj_to_string(obj: Any, indent: int = 0) -> str:
             + type(obj).__name__
             + " {\n"
             + "\n".join(
-                obj_to_string(column.name, indent=indent + 1)
+                obj_to_string(column.name, indent=indent + 1, seen_objects=seen_objects)
                 + ": "
-                + obj_to_string(getattr(obj, column.name), indent + 1).lstrip()
+                + obj_to_string(
+                    getattr(obj, column.name), indent + 1, seen_objects=seen_objects
+                ).lstrip()
                 + ","
                 for column in obj.__table__.columns
             )
@@ -80,9 +84,11 @@ def obj_to_string(obj: Any, indent: int = 0) -> str:
             + type(obj).__name__
             + " {\n"
             + "\n".join(
-                obj_to_string(field_name, indent=indent + 1)
+                obj_to_string(field_name, indent=indent + 1, seen_objects=seen_objects)
                 + ": "
-                + obj_to_string(getattr(obj, field_name), indent + 1).lstrip()
+                + obj_to_string(
+                    getattr(obj, field_name), indent + 1, seen_objects=seen_objects
+                ).lstrip()
                 + ","
                 for field_name in obj.model_fields.keys()
             )
@@ -91,14 +97,24 @@ def obj_to_string(obj: Any, indent: int = 0) -> str:
             + "}"
         )
     if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
+        if id(obj) in seen_objects:
+            return idn+"..."
+            # return idn+type(obj).__name__
+        seen_objects |= frozenset((id(obj),))
         return (
             idn
             + type(obj).__name__
             + " {\n"
             + "\n".join(
-                obj_to_string(field.name, indent=indent + 1)
+                obj_to_string(field.name, indent=indent + 1, seen_objects=seen_objects)
                 + ": "
-                + obj_to_string(getattr(obj, field.name), indent + 1).lstrip()
+                + (
+                    obj_to_string(
+                        getattr(obj, field.name), indent + 1, seen_objects=seen_objects
+                    ).lstrip()
+                    if field.name not in ("parent", "children")
+                    else "..."
+                )
                 + ","
                 for field in dataclasses.fields(obj)
             )
@@ -111,9 +127,9 @@ def obj_to_string(obj: Any, indent: int = 0) -> str:
             idn
             + "{\n"
             + "\n".join(
-                obj_to_string(k, indent=indent + 1)
+                obj_to_string(k, indent=indent + 1, seen_objects=seen_objects)
                 + ": "
-                + obj_to_string(v, indent + 1).lstrip()
+                + obj_to_string(v, indent + 1, seen_objects=seen_objects).lstrip()
                 + ","
                 for k, v in obj.items()
             )
@@ -127,7 +143,10 @@ def obj_to_string(obj: Any, indent: int = 0) -> str:
             idn
             + brackets[0]
             + "\n"
-            + "\n".join(obj_to_string(v, indent + 1) + "," for v in obj)
+            + "\n".join(
+                obj_to_string(v, indent + 1, seen_objects=seen_objects) + ","
+                for v in obj
+            )
             + "\n"
             + idn
             + brackets[1]

@@ -1,7 +1,7 @@
 import dataclasses
 
 from debug_utils import dp
-from events.eventsystem import Event, ES, V
+from events.eventsystem import Event, ES
 from game.game.core import (
     Unit,
     Hex,
@@ -15,14 +15,11 @@ from game.game.core import (
     ActivateUnitOption,
     OneOfUnits,
     TerrainProtectionRequest,
+    MeleeAttackFacet,
 )
 from game.game.damage import DamageSignature
-from game.game.decision_points import SelectUnitDecisionPoint
-from game.game.decisions import OptionDecision, SelectOptionDecisionPoint, NoTarget
+from game.game.decisions import SelectOptionDecisionPoint, NoTarget
 from game.game.player import Player
-from game.game.select import select_unit, select_targeted_option
-from game.game.units.facets.attacks import MeleeAttackFacet
-from game.game.values import DamageType
 
 
 @dataclasses.dataclass
@@ -94,6 +91,9 @@ class MeleeAttack(Event[None]):
     attack: MeleeAttackFacet
 
     def resolve(self) -> None:
+        # TODO some way to formalize this?
+        if not self.attacker.on_map() or not self.defender.on_map():
+            return
         ES.resolve(
             Damage(
                 self.defender,
@@ -243,6 +243,15 @@ def do_state_based_check() -> None:
                 ES.resolve(Kill(unit))
 
 
+# TODO IDK
+@dataclasses.dataclass()
+class TurnUpkeep(Event[None]):
+    unit: Unit
+
+    def resolve(self) -> None:
+        ...
+
+
 @dataclasses.dataclass
 class Turn(Event[bool]):
     unit: Unit
@@ -252,8 +261,10 @@ class Turn(Event[bool]):
             self.unit, self.unit.speed.g()
         )
 
-        while not context.should_stop and self.unit.on_map():
+        ES.resolve(TurnUpkeep(unit=self.unit))
+        do_state_based_check()
 
+        while not context.should_stop and self.unit.on_map():
             # TODO this prob shouldn't be here. For now it is to make sure we have a
             #  vision map when unit tests run just a turn.
             GS().update_vision()
@@ -307,12 +318,11 @@ class Turn(Event[bool]):
 
 
 class Upkeep(Event[None]):
-
-    def resolve(self) -> None: ...
+    def resolve(self) -> None:
+        ...
 
 
 class Round(Event[None]):
-
     def resolve(self) -> None:
         gs = GS()
         gs.round_counter += 1
@@ -372,7 +382,6 @@ class Round(Event[None]):
                 skipped_players.add(player)
                 round_skipped_players.add(player)
             else:
-                dp(decision.option)
                 raise ValueError("AHLO")
 
         gs.turn_order.set_player_order(
@@ -382,7 +391,6 @@ class Round(Event[None]):
 
 @dataclasses.dataclass
 class Play(Event[None]):
-
     def resolve(self) -> None:
         gs = GS()
         while (

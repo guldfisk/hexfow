@@ -3,10 +3,16 @@ from __future__ import annotations
 import dataclasses
 from typing import ClassVar
 
-from events.eventsystem import TriggerEffect, ES, ReplacementEffect, StateModifierEffect
-from game.game.core import StatickAbilityFacet, Unit, Hex, GS
+from events.eventsystem import (
+    TriggerEffect,
+    ES,
+    ReplacementEffect,
+    StateModifierEffect,
+    E,
+)
+from game.game.core import StatickAbilityFacet, Unit, Hex, GS, MeleeAttackFacet
 from game.game.damage import DamageSignature
-from game.game.events import MeleeAttack, Damage, MoveAction
+from game.game.events import MeleeAttack, Damage, MoveAction, MeleeAttackAction
 from game.game.values import DamageType
 
 
@@ -26,7 +32,6 @@ class PricklyTrigger(TriggerEffect[MeleeAttack]):
 
 
 class Prickly(StatickAbilityFacet):
-
     def create_effects(self) -> None:
         self.register_effects(PricklyTrigger(self.owner, 2))
 
@@ -41,11 +46,11 @@ class NoMoveAction(ReplacementEffect[MoveAction]):
     def can_replace(self, event: MoveAction) -> bool:
         return event.unit == self.unit
 
-    def resolve(self, event: MoveAction) -> None: ...
+    def resolve(self, event: MoveAction) -> None:
+        ...
 
 
 class Immobile(StatickAbilityFacet):
-
     def create_effects(self) -> None:
         self.register_effects(NoMoveAction(self.owner))
 
@@ -71,6 +76,46 @@ class FarsightedModifier(StateModifierEffect[Unit, Hex, bool]):
 
 
 class Farsighted(StatickAbilityFacet):
-
     def create_effects(self) -> None:
         self.register_effects(FarsightedModifier(self.owner))
+
+
+@dataclasses.dataclass(eq=False)
+class PackHunterTrigger(TriggerEffect[MeleeAttackAction]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def should_trigger(self, event: MeleeAttackAction) -> bool:
+        return (
+            event.defender.controller != self.unit.controller
+            and event.attacker != self.unit
+            # TODO really awkward having to be defencive about this here, maybe
+            #  good argument for triggers being queued before event execution?
+            and event.defender.on_map()
+            and GS()
+            .map.position_of(self.unit)
+            .position.distance_to(GS().map.position_of(event.defender).position)
+            <= 1
+        )
+
+    def resolve(self, event: MeleeAttackAction) -> None:
+        ES.resolve(
+            MeleeAttack(
+                attacker=self.unit,
+                defender=event.defender,
+                # TODO yikes
+                attack=next(
+                    iter(
+                        facet
+                        for facet in self.unit.attacks
+                        if isinstance(facet, MeleeAttackFacet)
+                    )
+                ),
+            )
+        )
+
+
+class PackHunter(StatickAbilityFacet):
+    def create_effects(self) -> None:
+        self.register_effects(PackHunterTrigger(self.owner))

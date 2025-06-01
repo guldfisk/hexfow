@@ -81,7 +81,7 @@ class Facet(HasStatuses, Serializable):
     flavor: ClassVar[str | None] = None
 
     def __init__(self, owner: Unit):
-        super().__init__()
+        super().__init__(parent=owner)
 
         self.owner = owner
 

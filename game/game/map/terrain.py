@@ -25,6 +25,7 @@ class Forest(Terrain):
 
         if request.damage_type == DamageType.RANGED:
             return 1
+        return 0
 
     def blocks_vision(self) -> bool:
         return True

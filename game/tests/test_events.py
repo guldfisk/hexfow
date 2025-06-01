@@ -64,7 +64,6 @@ QueuedResponse: TypeAlias = (
 
 
 class MockConnection(Connection):
-
     def __init__(self, player: Player):
         super().__init__(player)
         self.queued_responses: list[QueuedResponse] = []
@@ -99,7 +98,6 @@ def make_hex_terrain(_hex: Hex, terrain_type: type[Terrain]) -> None:
 
 
 class GSCheck(ABC):
-
     @abstractmethod
     def __call__(self, gs: JSON_DICT, player: Player) -> None:
         pass
@@ -189,11 +187,9 @@ class SelectionError(Exception):
 
 
 class TargetSelector:
-
     @abstractmethod
-    def select(
-        self, values: Mapping[str, Any], player: Player
-    ) -> Mapping[str, Any]: ...
+    def select(self, values: Mapping[str, Any], player: Player) -> Mapping[str, Any]:
+        ...
 
 
 @dataclasses.dataclass
@@ -258,11 +254,9 @@ class OneOfUnitsSelector(TargetSelector):
 
 
 class DecisionSelector(ABC):
-
     @abstractmethod
-    def __call__(
-        self, values: Mapping[str, Any], player: Player
-    ) -> Mapping[str, Any]: ...
+    def __call__(self, values: Mapping[str, Any], player: Player) -> Mapping[str, Any]:
+        ...
 
 
 @dataclasses.dataclass
@@ -270,7 +264,8 @@ class OptionSelector(DecisionSelector):
     target_selector: TargetSelector | None = None
 
     @abstractmethod
-    def should_select(self, option: Mapping[str, Any]) -> bool: ...
+    def should_select(self, option: Mapping[str, Any]) -> bool:
+        ...
 
     def __call__(self, values: Mapping[str, Any], player: Player) -> Mapping[str, Any]:
         for idx, option in enumerate(values["decision"]["payload"]["options"]):
@@ -288,13 +283,11 @@ class OptionSelector(DecisionSelector):
 
 # @dataclasses.dataclass
 class MoveOptionSelector(OptionSelector):
-
     def should_select(self, option: Mapping[str, Any]) -> bool:
         return option["type"] == MoveOption.__name__
 
 
 class MeleeAttackSelector(OptionSelector):
-
     def should_select(self, option: Mapping[str, Any]) -> bool:
         return (
             option["type"] == EffortOption.__name__
@@ -303,7 +296,6 @@ class MeleeAttackSelector(OptionSelector):
 
 
 class RangedAttackSelector(OptionSelector):
-
     def should_select(self, option: Mapping[str, Any]) -> bool:
         return (
             option["type"] == EffortOption.__name__
@@ -312,7 +304,6 @@ class RangedAttackSelector(OptionSelector):
 
 
 class SkipOptionSelector(OptionSelector):
-
     def should_select(self, option: Mapping[str, Any]) -> bool:
         return option["type"] == SkipOption.__name__
 
@@ -386,7 +377,6 @@ def ground_map(game_state: GameState) -> HexMap:
 
 
 class UnitSpawner:
-
     def __init__(self, hex_map: HexMap, default_player: Player):
         self.hex_map = hex_map
         self.default_controller = default_player

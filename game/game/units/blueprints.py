@@ -7,8 +7,16 @@ from game.game.units.facets.attacks import (
     BuglingClaw,
     GiantClub,
     HurlBoulder,
+    Gore,
+    HiddenBlade,
+    Bite,
 )
-from game.game.units.facets.static_abilities import Prickly, Immobile, Farsighted
+from game.game.units.facets.static_abilities import (
+    Prickly,
+    Immobile,
+    Farsighted,
+    PackHunter,
+)
 from game.game.values import Size
 
 
@@ -87,6 +95,9 @@ CYCLOPS = UnitBlueprint(
 #     4 damage
 #     +2 damage if this unit was not adjacent to target at the beginning of turn
 
+RHINO_BEAST = UnitBlueprint(
+    "Rhino", health=10, speed=4, sight=2, size=Size.LARGE, facets=[Gore]
+)
 
 BOULDER_HURLER_OAF = UnitBlueprint(
     "Boulder Hurler Oaf",
@@ -94,5 +105,41 @@ BOULDER_HURLER_OAF = UnitBlueprint(
     speed=3,
     sight=2,
     size=Size.LARGE,
-    facets=[HurlBoulder, Farsighted],
+    facets=[
+        HurlBoulder,
+        Farsighted,
+    ],
+)
+
+# gnome commando {3w} x2
+# health 4, movement 3, sight 1, S
+# spear
+#     melee attack
+#     2 damage
+# - ignores first move penalty each turn
+
+# goblin assassin {4} x2
+# health 3, movement 3, sight 2, S
+# hidden blade
+#     melee attack
+#     1 damage
+#     +1 damage against exhausted units
+# - stealth
+
+
+GOBLIN_ASSASSIN = UnitBlueprint(
+    "Goblin Assassin", health=3, speed=3, sight=2, size=Size.SMALL, facets=[HiddenBlade]
+)
+
+
+# dire wolf {9w} x2
+# health 7, movement 4, sight 2, M
+# bite
+#     melee attack
+#     3 damage
+# - pack hunter
+#     when adjacent enemy unit is melee attacked by different allied unit, dire wolf also hits it.
+
+DIRE_WOLF = UnitBlueprint(
+    "Dire Wolf", health=7, speed=4, sight=2, facets=[Bite, PackHunter]
 )
