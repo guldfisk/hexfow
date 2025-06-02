@@ -137,7 +137,8 @@ class Game(Thread):
                     gs.turn_order.players[1],
                     (
                         BUGLING,
-                        CYCLOPS
+                        CYCLOPS,
+                        CYCLOPS,
                         # (LIGHT_ARCHER, CC(0, 1)),
                         # CYCLOPS,
                         # LUMBERING_PILLAR,
@@ -257,7 +258,8 @@ def handle_connection(connection: ServerConnection) -> None:
 def main():
     print("running server")
     try:
-        with serve(handle_connection, "localhost", 8765) as server:
+        # with serve(handle_connection, "localhost", 8765) as server:
+        with serve(handle_connection, "0.0.0.0", 8765) as server:
             server.serve_forever()
     except:
         GM.stop_all()

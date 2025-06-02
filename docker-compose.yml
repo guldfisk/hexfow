@@ -1,55 +1,20 @@
-version: '3.8'
-
 services:
 
-  #  pdb:
-  #    image: postgres
-  #    restart: always
-  #    environment:
-  #      POSTGRES_DB: 'hexfow'
-  #      POSTGRES_USER: 'phdk'
-  #      POSTGRES_PASSWORD: "password"
-  #      POSTGRES_ROOT_PASSWORD: "password"
-  #    networks:
-  #      - database_network
-
-  web:
+  game-server:
     build: .
     image: app-image
+    command: "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- python server/server.py"
     restart: always
     volumes:
       - .:/code
-    #      - ./appdirs/:/root/.local/share/
-    #      - ~/.local/share/mtgimg:/root/.local/share/mtgimg
-    #      - ~/.local/share/mtgorp:/root/.local/share/mtgorp
-    #      - static_volume:/opt/services/hexfow/static
-    #      - media_volume:/opt/services/hexfow/meda
-    #    depends_on:
-    #      - pdb
-    networks:
-      - database_network
-    #    env_file:
-    #      - .env
-    environment:
-      - DEBUG=1
     ports:
-      - "9000:9000"
+      - "8765:8765"
 
-  frontend:
+  client:
     image: app-image
-    working_dir: /code/frontend
-    command: npm run start
-    restart: always
+    working_dir: /code/vite_frontend/hex-frontend
+    command: "npm run dev -- --host 0.0.0.0"
     volumes:
       - .:/code
-    environment:
-      - DEBUG=1
-
-networks:
-  database_network:
-    driver: bridge
-
-volumes:
-  db:
-  static_volume:
-  media_volume:
+    ports:
+      - "5173:5173"
