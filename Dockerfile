@@ -1,15 +1,29 @@
-FROM python:3
-#ENV PYTHONUNBUFFERED 1
+FROM python:3.11-slim
 
+
+
+
+WORKDIR /code
+
+ENV POETRY_VIRTUALENVS_CREATE=false
+ENV POETRY_VIRTUALENVS_IN_PROJECT=false
+ENV POETRY_NO_INTERACTION=1
+RUN pip install poetry==2.0.0
+
+## Copy dependency definitions
+COPY poetry.lock /code
+COPY pyproject.toml /code
+
+RUN poetry install --with dev
+
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs
 
 RUN mkdir -p /code
 COPY . /code
 WORKDIR /code
 
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs
-
-RUN pip3 install --upgrade pip
-RUN pip3 install .
+#RUN pip3 install --upgrade pip
+#RUN pip3 install .
 
 #COPY ./appdirs/ /root/.local/share/
 
@@ -26,3 +40,5 @@ RUN pip3 install .
 #RUN apt install -y postgresql-client-13
 
 CMD ["bash", "./entrypoint.sh"]
+
+
