@@ -482,8 +482,11 @@ venomous fangs
     melee attack, no movement
     2 damage
     applies 1 poison and paralysis n+1 for 2 rounds where n is targets movement
+lie in wait
+    ability
+    gains prepared to strike until next activation
+        when an enemy unit engages, if this unit can attack it, it does and remove this buff
 - stealth
-- when an enemy unit engages this unit while this unit is ready, if this unit can attack the enemy unit, it does, and is exhausted.
 
 ap rifle squad {6r} x2
 health 5, movement 2, sight 2, M
@@ -769,7 +772,7 @@ aa missiles
 
 cult brute {7wp} x1
 health 7, movement 3, sight 2, M
-fate binding blade
+ritual dagger
     melee attack
     3 damage
     before damage, apply entangled doom to target
@@ -965,13 +968,14 @@ poison dart
     target enemy unit range 2, LoS, -1 movement
     applies 1 poison
 - stealth
+- invisible on your turn
 
 paladin {8gp} x1
 health 7, movement 3, armor 1, sight 2, energy 4, M
 righteous strike
     melee attack
     3 damage
-    +1 damage against with 5 or more max health
+    +1 damage against units with 5 or more max health
 purifying nova
     ability 4 energy
     no movement

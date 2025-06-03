@@ -16,26 +16,7 @@ import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
 import { ApplicationState } from "./interfaces/applicationState.ts";
 import { recursiveCamelCase } from "./utils/case.ts";
 
-// TODO fix this trash
-import chickenImageUrl from "./images/chicken_small.png";
-import pillarImageUrl from "./images/pillar_small.png";
-import archerImageUrl from "./images/archer_small.png";
-import apGunnerImageUrl from "./images/ap_gunner_small.png";
-import buglingImageUrl from "./images/bugling_small.png";
-import cyclopsImageUrl from "./images/cyclops_small.png";
-import cactusImageUrl from "./images/cactus_small.png";
-import oathImageUrl from "./images/boulder_hurler_oaf_small.png";
-import rhinoImageUrl from "./images/rhino_small.png";
-import goblinAssassinImageUrl from "./images/goblin_assassin_small.png";
-import marshmallowTitanImageUrl from "./images/marshmallow_titan_small.png";
-import direWolfImageUrl from "./images/dire_wolf_small.png";
-
-import forestImageUrl from "./images/terrain_forest_square.png";
-import hillImageUrl from "./images/terrain_hill_square.png";
-import magmaImageUrl from "./images/terrain_magma_square.png";
-import waterImageUrl from "./images/terrain_water_square.png";
-import plainsImageUrl from "./images/terrain_plains_square.png";
-import { randomChoice } from "./utils/random.ts";
+import {GameObjectDetails} from "./interfaces/gameObjectDetails.ts";
 
 const hexSize = 160;
 
@@ -79,6 +60,7 @@ const textureMap: { [key: string]: Texture } = {};
 const renderMap = (
   app: Application,
   gameState: GameState,
+  gameObjectDetails: GameObjectDetails,
   gameConnection: WebSocket,
 ): Container => {
   // TODO this shouldn't be here
@@ -335,35 +317,26 @@ async function main() {
   let applicationState: ApplicationState = {
     shouldRerender: false,
     gameState: null,
+    gameObjectDetails: null,
   };
 
-  textureMap["Chicken"] = await Assets.load(chickenImageUrl);
-  textureMap["Lumbering Pillar"] = await Assets.load(pillarImageUrl);
-  textureMap["Light Archer"] = await Assets.load(archerImageUrl);
+  fetch('http://localhost:8000/game-object-details').then(
+      async response => {
+        let jsonResponse = recursiveCamelCase(await response.json());
 
-  for (const [key, url] of [
-    ["Chicken", chickenImageUrl],
-    ["Lumbering Pillar", pillarImageUrl],
-    ["Light Archer", archerImageUrl],
-    ["AP Gunner", apGunnerImageUrl],
-    ["Bugling", buglingImageUrl],
-    ["Cyclops", cyclopsImageUrl],
-    ["Cactus", cactusImageUrl],
-    ["Boulder Hurler Oaf", oathImageUrl],
-    ["Rhino", rhinoImageUrl],
-    ["Goblin Assassin", goblinAssassinImageUrl],
-    ["Marshmallow Titan", marshmallowTitanImageUrl],
-    ["Dire Wolf", direWolfImageUrl],
+        for (const [identifier, unitDetails] of Object.entries(jsonResponse.units)) {
+          textureMap[unitDetails.identifier] = await Assets.load(unitDetails.smallImage);
+        }
 
-    //   Terrain
-    ["Forest", forestImageUrl],
-    ["Hill", hillImageUrl],
-    ["Water", waterImageUrl],
-    ["Magma", magmaImageUrl],
-    ["Plains", plainsImageUrl],
-  ]) {
-    textureMap[key] = await Assets.load(url);
-  }
+        for (const [identifier, terrainDetails] of Object.entries(jsonResponse.terrain)) {
+          textureMap[terrainDetails.identifier] = await Assets.load(terrainDetails.image)
+        }
+
+          applicationState.gameObjectDetails = jsonResponse;
+
+      }
+  )
+
 
   const gameConnection = new WebSocket("ws://localhost:8765/ws");
   gameConnection.onmessage = (event) => {
@@ -447,9 +420,9 @@ async function main() {
   document.addEventListener("keydown", keyHandler);
 
   app.ticker.add((ticker) => {
-    if (applicationState.shouldRerender && applicationState.gameState) {
+    if (applicationState.shouldRerender && applicationState.gameState && applicationState.gameObjectDetails) {
       app.stage.removeChild(map);
-      map = renderMap(app, applicationState.gameState, gameConnection);
+      map = renderMap(app, applicationState.gameState, applicationState.gameObjectDetails, gameConnection);
       app.stage.addChild(map);
       applicationState.shouldRerender = false;
     }

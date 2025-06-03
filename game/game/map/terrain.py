@@ -8,10 +8,12 @@ from game.game.events import MoveUnit, Damage, Upkeep
 from game.game.values import Size, DamageType
 
 
-class Plains(Terrain): ...
+class Plains(Terrain):
+    identifier = "plains"
 
 
 class Forest(Terrain):
+    identifier = "forest"
 
     def get_move_in_penalty_for(self, unit: Unit) -> int:
         return 1
@@ -31,10 +33,12 @@ class Forest(Terrain):
         return True
 
 
-class Hill(Terrain): ...
+class Hills(Terrain):
+    identifier = "hills"
 
 
 class Water(Terrain):
+    identifier = "water"
 
     def is_water(self) -> bool:
         return True
@@ -70,6 +74,7 @@ class DamageOnUpkeep(TriggerEffect[Upkeep]):
 
 
 class Magma(Terrain):
+    identifier = "magma"
 
     def create_effects(self, space: Hex) -> None:
         self.register_effects(DamageOnWalkIn(space, 1), DamageOnUpkeep(space, 1))

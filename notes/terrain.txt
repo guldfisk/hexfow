@@ -121,7 +121,7 @@ shallow water - wet
 
 mangrove - wet vegetation
 S-M: 2 protection
-L-G: 1 protection
+L: 1 protection
 2 move in penalty
 blocks LoS
 

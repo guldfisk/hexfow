@@ -16,6 +16,7 @@ from events.exceptions import GameException
 from game.game.core import GameState, Landscape
 from game.game.events import SpawnUnit, Play
 from game.game.interface import Connection
+from game.game.map.coordinates import CC
 from game.game.map.geometry import hex_circle
 from game.game.map.terrain import Plains
 from game.game.player import Player
@@ -116,7 +117,7 @@ class Game(Thread):
             )
             GameState.instance = gs
 
-            ccs = list(gs.map.hexes.keys())
+            ccs = sorted(gs.map.hexes.keys(), key=lambda cc: (cc.distance_to(CC(0, 0)), cc.r, CC.h))
 
             for player, values in (
                 (

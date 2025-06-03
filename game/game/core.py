@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import re
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import ClassVar, Literal, Any, TypeVar, Iterator
@@ -37,16 +38,15 @@ T = TypeVar("T")
 
 
 class VisionBound(Serializable):
-
     @abstractmethod
-    def serialize_values(self, context: SerializationContext) -> JSON: ...
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        ...
 
     def serialize(self, context: SerializationContext) -> JSON:
         return {"id": context.id_map.get_id_for(self), **self.serialize_values(context)}
 
 
 class MoveOption(Option[O]):
-
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {}
 
@@ -61,13 +61,11 @@ class EffortOption(Option[O]):
 
 @dataclasses.dataclass
 class ActivateUnitOption(Option[O]):
-
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {}
 
 
 class SkipOption(Option[None]):
-
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {}
 
@@ -86,7 +84,8 @@ class Facet(HasStatuses, Serializable):
         self.owner = owner
 
     # TODO common interface?
-    def create_effects(self) -> None: ...
+    def create_effects(self) -> None:
+        ...
 
     def serialize(self, context: SerializationContext) -> JSON:
         return {"name": self.__class__.__name__, "type": self.display_type}
@@ -103,10 +102,12 @@ class EffortFacet(Facet, Modifiable):
         )
 
     @abstractmethod
-    def can_be_activated(self, context: ActiveUnitContext) -> bool: ...
+    def can_be_activated(self, context: ActiveUnitContext) -> bool:
+        ...
 
 
-class AttackFacet(EffortFacet): ...
+class AttackFacet(EffortFacet):
+    ...
 
 
 class SingleTargetAttackFacet(AttackFacet):
@@ -202,7 +203,8 @@ class ActivatedAbilityFacet(EffortFacet):
     display_type = "ActivatedAbility"
 
 
-class StatickAbilityFacet(Facet): ...
+class StatickAbilityFacet(Facet):
+    ...
 
 
 FULL_ENERGY: Literal["FULL_ENERGY"] = "FULL_ENERGY"
@@ -220,6 +222,13 @@ class UnitBlueprint:
     size: Size = Size.MEDIUM
     aquatic: bool = False
     facets: list[type[Facet]] = dataclasses.field(default_factory=list)
+    identifier: str = dataclasses.field(default=None)
+
+    def __post_init__(self):
+        if self.identifier is None:
+            self.identifier = re.sub(
+                "_+", "_", re.sub("[^a-z]", "_", self.name.lower())
+            )
 
     def __repr__(self):
         return f"{type(self).__name__}({self.name})"
@@ -361,7 +370,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
 
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {
-            "blueprint": self.blueprint.name,
+            "blueprint": self.blueprint.identifier,
             "controller": self.controller.name,
             "max_health": self.max_health.g(),
             "damage": self.damage,
@@ -414,8 +423,11 @@ class TerrainProtectionRequest:
 
 
 class Terrain(HasEffects, ABC):
+    # TODO
+    identifier: ClassVar[str]
 
-    def create_effects(self, space: Hex) -> None: ...
+    def create_effects(self, space: Hex) -> None:
+        ...
 
     def is_water(self) -> bool:
         return False
@@ -486,7 +498,7 @@ class Hex(Modifiable, HasStatuses, Serializable):
                 "r": self.position.r,
                 "h": self.position.h,
             },
-            "terrain": self.terrain.__class__.__name__,
+            "terrain": self.terrain.__class__.identifier,
             "visible": (visible := GS().vision_map[context.player][self.position]),
             "unit": (
                 (unit.serialize(context) if (unit := self.map.unit_on(self)) else None)
@@ -516,7 +528,8 @@ class OneOfHexes(TargetProfile[Hex]):
         return self.hexes[v["index"]]
 
 
-class MovementException(Exception): ...
+class MovementException(Exception):
+    ...
 
 
 class HexMap:
