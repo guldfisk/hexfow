@@ -343,3 +343,8 @@ force field
 
 +1 attack should be "attack power"
 physical propagation is a meme
+
+"paranoia" debuff - unit does not provide vision when activated, and when it it is no other units does.
+	bit awkward in current implementation, since you need to have vision of a unit to activate it, so when it's not activated you still
+	need to have vision of the units hex, while you shouldn't have vision of even just the spaces allied units are on when it is activated.
+	maybe this should just be fixed so you can always activate your unit without vision...
