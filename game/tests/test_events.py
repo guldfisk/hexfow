@@ -17,7 +17,7 @@ import pytest
 from frozendict import frozendict
 
 from debug_utils import dp
-from events.eventsystem import ES, StateModifierEffect, Event
+from events.eventsystem import ES, StateModifierEffect
 from game.game.core import (
     Terrain,
     HexMap,
@@ -34,11 +34,11 @@ from game.game.core import (
     ActivateUnitOption,
     Hex,
 )
-from game.game.events import SpawnUnit, MeleeAttack, Turn, Round
+from game.game.events import SpawnUnit, SimpleAttack, Turn, Round
 from game.game.interface import Connection
 from game.game.map.coordinates import CC
 from game.game.map.geometry import hex_circle
-from game.game.map.terrain import Water, Plains, Magma
+from game.game.map.terrain import Water, Plains
 from game.game.player import Player
 from game.game.units.blueprints import (
     CHICKEN,
@@ -50,6 +50,7 @@ from game.game.units.blueprints import (
 from game.game.units.facets.attacks import Peck
 from game.game.values import Size
 from game.tests.conftest import TestScope
+from game.tests.test_terrain import InstantDamageMagma
 
 
 A = TypeVar("A")
@@ -423,7 +424,7 @@ def test_attack(unit_spawner: UnitSpawner) -> None:
     cactus = unit_spawner.spawn(CACTUS)
 
     ES.resolve(
-        MeleeAttack(attacker=chicken, defender=cactus, attack=get_attack(chicken, Peck))
+        SimpleAttack(attacker=chicken, defender=cactus, attack=get_attack(chicken, Peck))
     )
     ES.resolve_pending_triggers()
 
@@ -584,8 +585,8 @@ def test_armor(unit_spawner: UnitSpawner, player2: Player):
     evil_marshmallow = unit_spawner.spawn(
         MARSHMALLOW_TITAN, coordinate=CC(1, 0), controller=player2
     )
-    ES.resolve(MeleeAttack(chicken, evil_pillar, chicken.attacks[0]))
-    ES.resolve(MeleeAttack(chicken, evil_marshmallow, chicken.attacks[0]))
+    ES.resolve(SimpleAttack(chicken, evil_pillar, chicken.attacks[0]))
+    ES.resolve(SimpleAttack(chicken, evil_marshmallow, chicken.attacks[0]))
 
     assert evil_pillar.damage == 0
     assert evil_marshmallow.damage == 2
@@ -686,7 +687,7 @@ def test_impassable_terrain(
 def test_walk_onto_magma(
     unit_spawner, player1_connection: MockConnection, player2: Player
 ) -> None:
-    make_hex_terrain(GS().map.hexes[CC(0, 1)], Magma)
+    make_hex_terrain(GS().map.hexes[CC(0, 1)], InstantDamageMagma)
     chicken = unit_spawner.spawn(CHICKEN, coordinate=CC(0, 0))
     player1_connection.queue_responses(
         ActivateSelector(OneOfUnitsSelector(chicken)),
@@ -701,7 +702,7 @@ def test_walk_onto_magma(
 def test_unit_dies_mid_turn(
     unit_spawner: UnitSpawner, player1_connection: MockConnection, player2: Player
 ) -> None:
-    make_hex_terrain(GS().map.hexes[CC(0, 1)], Magma)
+    make_hex_terrain(GS().map.hexes[CC(0, 1)], InstantDamageMagma)
     archer = unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(0, 0))
     archer.damage = archer.max_health.g() - 1
     player1_connection.queue_responses(

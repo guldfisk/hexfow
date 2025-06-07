@@ -1289,6 +1289,17 @@ bell hammer
         unstackable, refreshable
         when unit is dealt 3 or more damage before modifications (but after terrain reductions), exhaust it
 
+chainsaw sadist {10p} x1
+health 7, movement 3, sight 2, M
+chainsaw
+    melee attack
+    3 damage, -1 movement
+    +2 damage against unarmored
+- when this unit kills a unit with an attack, each enemy unit that could see it suffers terrified for 2 rounds.
+    stackable, refreshable
+    -1 attack power
+- adjacent enemy units can't take actions that aren't skip, attack this unit, or move away from this unit
+
 demo operative {10p} x1
 health 6, movement 3, sight 2, energy 3, M
 machine gun
@@ -1465,7 +1476,7 @@ induce panic
     applies panicked for 3 rounds
         unstackable, refreshable
         at the end of each round, this unit suffers pure damage equal to the number of adjacent units.
-- whenever an adjacent unit is damaged or rebuffed, this unit regens 1 energy
+- whenever an adjacent unit is damaged or debuffed, this unit regens 1 energy
 
 raptor roc {10wu} x1
 health 6, movement 4, sight 2, M
@@ -1541,7 +1552,7 @@ fist
 bone chill
     aoe ability 3 energy, -2 movement
     aoe type hex size 1 range 2 NLoS
-    applies chilled for 3 rounds and frail 2 for 3 rounds
+    applies chilled for 3 rounds and frail 2 for 3 rounds. does not apply debuffs to this units.
 - at the end of each action applies chilled to each adjacent unit for 2 rounds
 
 ghost operative {11rp} x1
@@ -1585,6 +1596,28 @@ ruinous blow
 - whenever an enemy unit within 2 range loses energy (spending causes loss), it suffers 1 pure damage
 - resistant to damage not from attacks
 - if a debuff with a duration would be applied to this unit, it is applied with half, rounded up, duration instead
+
+zeus disciple {11pr} x1
+health 5, movement 3, sight 2, energy 5, M
+bolt
+    ability 3 energy
+    target hex 3 range LoS
+    -2 movement
+    deals 4 aoe damage and reveals hexes within 1 range of target
+chain lightning
+    ability 3 energy
+    target hex 3 range LoS
+    -2 movement
+    target up to 3 ordered hexes, each within 2 range of the previous. only first hex needs to be within range and LoS.
+    sequentially deals 3 aoe damage to units on selected hexes. stops if a hex is empty.
+static charge
+    ability 3 energy
+    target unit 3 range LoS
+    -1 movement
+    target gains statically charged for 2 rounds
+        whenever this unit activates an ability or is the target of an ability from a different unit, this status deals 1 true
+        damage to each adjacent unit, and their adjacent units, recursivly.
+ - whenever another unit within 2 range loses 3 or more energy (spending causes loss), this unit gains 1 energy.
 
 heavy artillery {11rrrg} x1
 health 5, movement 1, sight 1, L
@@ -1855,7 +1888,7 @@ strike
     also hits each other adjacent visible enemy unit
 - when damaged gets that many stacks of delayed regeneration with duration 3
     independently stackable
-    when expires, regens this unit 1
+    when expires, this unit heals 1
 
 kraken {14pg} x1
 health 10, movement 2, sight 2, L
@@ -2229,7 +2262,7 @@ punch
     melee attack
     3 damage
 - ignores 1 move in penalty on vegetation terrain
-- regenerates 1 health at the beginning of each round
+- heals 1 health at the beginning of each round
 
 rock elemental {-}
 health 7, movement 2, armor 1, sight 2, M

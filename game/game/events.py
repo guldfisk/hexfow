@@ -1,7 +1,6 @@
 import dataclasses
 
-from debug_utils import dp
-from events.eventsystem import Event, ES
+from events.eventsystem import Event, ES, V
 from game.game.core import (
     Unit,
     Hex,
@@ -16,10 +15,24 @@ from game.game.core import (
     OneOfUnits,
     TerrainProtectionRequest,
     MeleeAttackFacet,
+    SingleTargetAttackFacet,
+    ActivatedAbilityFacet,
+    UnitStatus,
+    StatusType,
 )
 from game.game.damage import DamageSignature
-from game.game.decisions import SelectOptionDecisionPoint, NoTarget
+from game.game.decisions import SelectOptionDecisionPoint, NoTarget, O
 from game.game.player import Player
+from game.game.values import DamageType
+
+
+# TODO yikes (have this rn so we can do stuff on kill before unit has it's effect
+#  deregistered, making it's effects not trigger lmao).
+@dataclasses.dataclass
+class KillUpkeep(Event[None]):
+    unit: Unit
+
+    def resolve(self) -> V: ...
 
 
 @dataclasses.dataclass
@@ -27,6 +40,7 @@ class Kill(Event[None]):
     unit: Unit
 
     def resolve(self) -> None:
+        ES.resolve(self.branch(KillUpkeep))
         GS().map.remove_unit(self.unit)
         self.unit.deregister()
 
@@ -37,26 +51,61 @@ class CheckAlive(Event[bool]):
     unit: Unit
 
     def resolve(self) -> bool:
-        if self.unit.health <= 0:
+        # TODO common logic
+        if self.unit.health <= 0 or not GS().map.position_of(self.unit).is_passable_to(
+            self.unit
+        ):
             ES.resolve(Kill(self.unit))
             return False
         return True
 
 
 @dataclasses.dataclass
+class Heal(Event[int]):
+    unit: Unit
+    amount: int
+
+    def is_valid(self) -> bool:
+        return self.amount > 0
+
+    def resolve(self) -> int:
+        heal_amount = min(self.amount, self.unit.damage)
+        self.unit.damage -= heal_amount
+        return heal_amount
+
+
+@dataclasses.dataclass
+class GainEnergy(Event[int]):
+    unit: Unit
+    amount: int
+
+    def is_valid(self) -> bool:
+        return self.amount > 0
+
+    def resolve(self) -> int:
+        amount = max(min(self.amount, self.unit.max_energy.g() - self.unit.energy), 0)
+        self.unit.energy += amount
+        return amount
+
+
+@dataclasses.dataclass
 class Damage(Event[int]):
     unit: Unit
-    # amount: int
-    # damage_type: DamageType = DamageType.PHYSICAL
-    # ap: int = 0
     signature: DamageSignature
+
+    def is_valid(self) -> bool:
+        return self.signature.amount > 0
 
     def resolve(self) -> int:
         defender_armor = self.unit.armor.g()
-        damage = max(
+        damage = (
             self.signature.amount
-            - min(defender_armor, max(defender_armor - self.signature.ap, 0)),
-            0,
+            if self.signature.type == DamageType.TRUE
+            else max(
+                self.signature.amount
+                - min(defender_armor, max(defender_armor - self.signature.ap, 0)),
+                0,
+            )
         )
         self.unit.damage += damage
         return damage
@@ -83,12 +132,11 @@ def get_terrain_modified_damage(
     )
 
 
-# TODO merge melee/ranged attack events?
 @dataclasses.dataclass
-class MeleeAttack(Event[None]):
+class SimpleAttack(Event[None]):
     attacker: Unit
     defender: Unit
-    attack: MeleeAttackFacet
+    attack: SingleTargetAttackFacet
 
     def resolve(self) -> None:
         # TODO some way to formalize this?
@@ -103,47 +151,6 @@ class MeleeAttack(Event[None]):
                 ),
             )
         )
-        # ES.resolve(
-        #     Damage(
-        #         self.defender,
-        #         DamageSignature(
-        #             get_terrain_modified_damage(
-        #                 self.attack.damage, self.defender, DamageType.MELEE
-        #             ),
-        #             DamageType.MELEE,
-        #         ),
-        #     )
-        # )
-
-
-@dataclasses.dataclass
-class RangedAttack(Event[None]):
-    attacker: Unit
-    defender: Unit
-    attack: RangedAttackFacet
-
-    def resolve(self) -> None:
-        ES.resolve(
-            Damage(
-                self.defender,
-                get_terrain_modified_damage(
-                    self.attack.get_damage_signature_against(self.defender),
-                    self.defender,
-                ),
-            )
-        )
-        # ES.resolve(
-        #     Damage(
-        #         self.defender,
-        #         DamageSignature(
-        #             get_terrain_modified_damage(
-        #                 self.attack.damage, self.defender, DamageType.RANGED
-        #             ),
-        #             DamageType.RANGED,
-        #             # ap=self.attack.ap,
-        #         ),
-        #     )
-        # )
 
 
 @dataclasses.dataclass
@@ -154,17 +161,27 @@ class MeleeAttackAction(Event[None]):
 
     def resolve(self) -> None:
         defender_position = GS().map.position_of(self.defender)
-        movement_penalty = GS().map.position_of(self.attacker).get_move_out_penalty_for(
-            self.attacker
-        ) + defender_position.get_move_in_penalty_for(self.attacker)
-        ES.resolve(self.branch(MeleeAttack))
+        attacker_position = GS().map.position_of(self.attacker)
+        move_out_penalty = MovePenalty(
+            self.attacker,
+            attacker_position,
+            attacker_position.get_move_out_penalty_for(self.attacker),
+            False,
+        )
+        move_in_penalty = MovePenalty(
+            self.attacker,
+            defender_position,
+            defender_position.get_move_in_penalty_for(self.attacker),
+            True,
+        )
+        ES.resolve(self.branch(SimpleAttack))
         ES.resolve(CheckAlive(self.defender))
         if defender_position.can_move_into(self.attacker):
             ES.resolve(MoveUnit(self.attacker, defender_position))
         # TODO movement cost of attack?
-        GS().active_unit_context.movement_points -= (
-            1 + movement_penalty + self.attack.movement_cost
-        )
+        GS().active_unit_context.movement_points -= 1 + self.attack.movement_cost
+        ES.resolve(move_out_penalty)
+        ES.resolve(move_in_penalty)
         # GS().active_unit_context.should_stop = True
 
 
@@ -175,10 +192,52 @@ class RangedAttackAction(Event[None]):
     attack: RangedAttackFacet
 
     def resolve(self) -> None:
-        ES.resolve(self.branch(RangedAttack))
+        ES.resolve(self.branch(SimpleAttack))
         ES.resolve(CheckAlive(self.defender))
         GS().active_unit_context.movement_points -= self.attack.movement_cost
         # GS().active_unit_context.should_stop = True
+
+
+@dataclasses.dataclass
+class ApplyStatus(Event[None]):
+    unit: Unit
+    status_type: type[UnitStatus]
+    by: Player | None
+    stacks: int | None = None
+    duration: int | None = None
+
+    def resolve(self) -> None:
+        self.unit.add_status(
+            # TODO clean up status inheritance, make that shit not dataclasses i think
+            self.status_type(
+                type_=(
+                    (
+                        StatusType.BUFF
+                        if self.unit.controller == self.by
+                        else StatusType.DEBUFF
+                    )
+                    if self.by
+                    else StatusType.NEUTRAL
+                ),
+                duration=self.duration,
+                original_duration=self.duration,
+                stacks=self.stacks,
+                parent=self.unit,
+            ),
+            self.by,
+        )
+
+
+@dataclasses.dataclass
+class ActivatedAbilityAction(Event[None]):
+    unit: Unit
+    ability: ActivatedAbilityFacet[O]
+    target: O
+
+    def resolve(self) -> None:
+        self.ability.perform(self.target)
+        GS().active_unit_context.movement_points -= self.ability.movement_cost
+        self.unit.energy -= self.ability.energy_cost
 
 
 @dataclasses.dataclass
@@ -186,9 +245,10 @@ class MoveUnit(Event[Hex | None]):
     unit: Unit
     to_: Hex
 
+    def is_valid(self) -> bool:
+        return self.to_.can_move_into(self.unit)
+
     def resolve(self) -> Hex | None:
-        if not self.to_.can_move_into(self.unit):
-            return None
         from_ = self.to_.map.position_of(self.unit)
         self.to_.map.move_unit_to(self.unit, self.to_)
         return from_
@@ -210,16 +270,33 @@ class SpawnUnit(Event[Unit | None]):
 
 
 @dataclasses.dataclass
+class MovePenalty(Event[None]):
+    unit: Unit
+    hex: Hex
+    amount: int
+    in_: bool
+
+    def resolve(self) -> None:
+        GS().active_unit_context.movement_points -= self.amount
+
+
+@dataclasses.dataclass
 class MoveAction(Event[None]):
     unit: Unit
     to_: Hex
 
     def resolve(self) -> None:
-        movement_penalty = GS().map.position_of(self.unit).get_move_out_penalty_for(
-            self.unit
-        ) + self.to_.get_move_in_penalty_for(self.unit)
+        _from = GS().map.position_of(self.unit)
+        move_out_penalty = MovePenalty(
+            self.unit, _from, _from.get_move_out_penalty_for(self.unit), False
+        )
+        move_in_penalty = MovePenalty(
+            self.unit, self.to_, self.to_.get_move_in_penalty_for(self.unit), True
+        )
         ES.resolve(self.branch(MoveUnit))
-        GS().active_unit_context.movement_points -= 1 + movement_penalty
+        GS().active_unit_context.movement_points -= 1
+        ES.resolve(move_out_penalty)
+        ES.resolve(move_in_penalty)
 
 
 @dataclasses.dataclass
@@ -238,7 +315,7 @@ def do_state_based_check() -> None:
         has_changed = ES.resolve_pending_triggers()
         # TODO order?
         for unit in list(GS().map.unit_positions.keys()):
-            if unit.health <= 0:
+            if unit.health <= 0 or not GS().map.position_of(unit).is_passable_to(unit):
                 has_changed = True
                 ES.resolve(Kill(unit))
 
@@ -248,8 +325,7 @@ def do_state_based_check() -> None:
 class TurnUpkeep(Event[None]):
     unit: Unit
 
-    def resolve(self) -> None:
-        ...
+    def resolve(self) -> None: ...
 
 
 @dataclasses.dataclass
@@ -300,10 +376,19 @@ class Turn(Event[bool]):
                             attack=decision.option.facet,
                         )
                     )
+                elif isinstance(decision.option.facet, ActivatedAbilityFacet):
+                    ES.resolve(
+                        ActivatedAbilityAction(
+                            unit=self.unit,
+                            ability=decision.option.facet,
+                            target=decision.target,
+                        )
+                    )
+
                 else:
                     raise ValueError("blah")
                 # TODO unclear which of this logic should be on the action event, and which should be here...
-                if not decision.option.facet.combineable:
+                if not decision.option.facet.combinable:
                     context.should_stop = True
             else:
                 raise ValueError("blah")
@@ -319,7 +404,11 @@ class Turn(Event[bool]):
 
 class Upkeep(Event[None]):
     def resolve(self) -> None:
-        ...
+        for unit in GS().map.unit_positions.keys():
+            if unit.energy < unit.max_energy.g():
+                ES.resolve(GainEnergy(unit, 1))
+            for status in list(unit.statuses):
+                status.decrement_duration()
 
 
 class Round(Event[None]):

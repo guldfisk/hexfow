@@ -16,7 +16,14 @@ import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
 import { ApplicationState } from "./interfaces/applicationState.ts";
 import { recursiveCamelCase } from "./utils/case.ts";
 
-import {GameObjectDetails} from "./interfaces/gameObjectDetails.ts";
+// TODO yikes this shit's back.
+// TODO also, get some structure on image folders / formats in general.
+import hexSelectionUrl from "./images/hex_selection.png";
+import hexSelectionRangedAttackUrl from "./images/hex_selection_ranged_attack.png";
+import hexSelectionMeleeAttackUrl from "./images/hex_selection_melee.png";
+import hexSelectionAbilityUrl from "./images/selection_ability.png";
+
+import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
 
 const hexSize = 160;
 
@@ -67,10 +74,6 @@ const renderMap = (
   let maxX = window.innerWidth;
   let maxY = window.innerHeight;
   let center = { x: maxX / 2, y: maxY / 2 };
-  //
-  // console.log("rendering", gameState);
-
-  // document.body.appendChild(app.canvas);
 
   const eventLog = document.getElementById("event-log");
 
@@ -112,6 +115,16 @@ const renderMap = (
     hexShape.stroke();
     return hexShape;
   };
+  const getDividerFrame = (num: number): GraphicsContext => {
+    return new GraphicsContext()
+      .rect(
+        (-hexWidth + hexWidth * num) / 2,
+        -hexHeight / 2,
+        hexWidth / 2,
+        hexHeight,
+      )
+      .fill("red");
+  };
   // const visibleHexShape = getHexShape("447744");
   // const invisibleHexShape = getHexShape("black");
   const visibleHexShape = getHexShape({ color: "447744", alpha: 0 });
@@ -119,6 +132,14 @@ const renderMap = (
   const fullHexShape = getHexShape("red");
 
   const selectableFrame = getHexFrame("blue");
+
+  // const dividerFrame = getDividerFrame();
+  const dividerFrames = [0, 1].map(getDividerFrame);
+
+  const statusFrame = new GraphicsContext().circle(0, 0, 20).fill();
+  const statusBorder = new GraphicsContext()
+    .circle(0, 0, 20)
+    .stroke({ color: "red", pixelLine: true });
 
   // TODO not here
   const smallTextStyle = new TextStyle({
@@ -133,6 +154,12 @@ const renderMap = (
     fill: 0xff1010,
     align: "center",
   });
+  const energyTextStyle = new TextStyle({
+    fontFamily: "Arial",
+    fontSize: 20,
+    fill: 0x2163f3,
+    align: "center",
+  });
   const largeTextStyle = new TextStyle({
     fontFamily: "Arial",
     fontSize: 80,
@@ -140,63 +167,91 @@ const renderMap = (
     align: "center",
     stroke: "white",
   });
+  const statusCountStyle = new TextStyle({
+    fontFamily: "Arial",
+    fontSize: 25,
+    fill: "white",
+    align: "center",
+    stroke: "black",
+    strokeThickness: 3,
+  });
 
   const map = new Container();
 
   app.stage.addChild(map);
 
+  const ccToKey = (cc: CC): string => `${cc.r},${cc.h}`;
+
   const unitHexes: { [key: string]: Hex } = Object.fromEntries(
     gameState.map.hexes.filter((h) => h.unit).map((h) => [h.unit.id, h]),
   );
 
-  type Action = { [key: string]: any };
-  const hexActionMap: { [key: string]: Action } = {};
+  type Action = { type: string; content: { [key: string]: any } };
+  const hexActionMap: { [key: string]: Action[] } = Object.fromEntries(
+    gameState.map.hexes.map((hex) => [ccToKey(hex.cc), []]),
+  );
 
-  const ccToKey = (cc: CC): string => `${cc.r},${cc.h}`;
+  const effortTypeMap: { [key: string]: string } = {
+    RangedAttack: "selection_ranged",
+    MeleeAttack: "selection_melee",
+    ActivatedAbility: "selection_ability",
+  };
 
   if (
     gameState.decision &&
     gameState.decision["type"] == "SelectOptionDecisionPoint"
   ) {
-    // console.log("ok");
     for (const [idx, option] of gameState.decision["payload"][
       "options"
     ].entries()) {
-      // console.log(option["targetProfile"]);
       if (option["targetProfile"]["type"] == "OneOfUnits") {
-        // console.log("units");
-
         for (const [targetIdx, unit] of option["targetProfile"]["values"][
           "units"
         ].entries()) {
-          // console.log(unitHexes[unit["id"]].cc);
-          // console.log(ccToKey(unitHexes[unit["id"]].cc));
-
-          hexActionMap[ccToKey(unitHexes[unit["id"]].cc)] = {
-            index: idx,
-            target: {
-              index: targetIdx,
+          hexActionMap[ccToKey(unitHexes[unit["id"]].cc)].push({
+            type:
+              option.values?.facet?.type in effortTypeMap
+                ? effortTypeMap[option.values?.facet?.type]
+                : "selection",
+            content: {
+              index: idx,
+              target: {
+                index: targetIdx,
+              },
             },
-          };
+          });
         }
       } else if (option["targetProfile"]["type"] == "OneOfHexes") {
-        // console.log("hexes");
-
         for (const [targetIdx, cc] of option["targetProfile"]["values"][
           "options"
         ].entries()) {
-          hexActionMap[ccToKey(cc)] = {
-            index: idx,
-            target: {
-              index: targetIdx,
+          hexActionMap[ccToKey(cc)].push({
+            type:
+              option.values?.facet?.type in effortTypeMap
+                ? effortTypeMap[option.values?.facet?.type]
+                : "selection",
+            content: {
+              index: idx,
+              target: {
+                index: targetIdx,
+              },
             },
-          };
+          });
         }
+      } else if (
+        option["type"] == "EffortOption" &&
+        option["targetProfile"]["type"] == "NoTarget" &&
+        gameState.activeUnitContext
+      ) {
+        hexActionMap[
+          ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
+        ].push({
+          type: "selection_ability",
+          content: { index: idx, target: null },
+        });
       }
     }
   }
-
-  console.log(hexActionMap);
 
   gameState.map.hexes.forEach((hexData) => {
     let realHexPosition = addRCs(CCToRC(hexData.cc), center);
@@ -215,7 +270,9 @@ const renderMap = (
     let hexMask = new Graphics(fullHexShape);
 
     hexContainer.addChild(hexMask);
-    terrainSprite.mask = hexMask;
+
+    // TODO this works apparently, but is it the correct way to do it??
+    hexContainer.mask = hexMask;
     hexContainer.addChild(terrainSprite);
 
     hexContainer.addChild(hex);
@@ -233,6 +290,29 @@ const renderMap = (
     });
     label.anchor = 0.5;
     hexContainer.addChild(label);
+
+    if (hexActionMap[ccToKey(hexData.cc)].length) {
+      if (hexActionMap[ccToKey(hexData.cc)].length == 1) {
+        const selectionSprite = new Sprite(
+          textureMap[hexActionMap[ccToKey(hexData.cc)][0].type],
+        );
+        selectionSprite.anchor = 0.5;
+        selectionSprite.alpha = 0.75;
+        hexContainer.addChild(selectionSprite);
+      } else if (hexActionMap[ccToKey(hexData.cc)].length == 2) {
+        for (const i of [0, 1]) {
+          const selectionSprite = new Sprite(
+            textureMap[hexActionMap[ccToKey(hexData.cc)][i].type],
+          );
+          selectionSprite.anchor = 0.5;
+          selectionSprite.alpha = 0.75;
+          hexContainer.addChild(selectionSprite);
+          let mask = new Graphics(dividerFrames[i]);
+          hexContainer.addChild(mask);
+          selectionSprite.mask = mask;
+        }
+      }
+    }
 
     if (hexData.unit) {
       const unitContainer = new Container();
@@ -255,6 +335,19 @@ const renderMap = (
         y: -unitSprite.height / 2 + 3,
       };
       unitContainer.addChild(healthText);
+
+      if (hexData.unit.energy || hexData.unit.maxEnergy) {
+        const energyText = new Text({
+          text: `${hexData.unit.energy}/${hexData.unit.maxEnergy}`,
+          style: energyTextStyle,
+        });
+        energyText.anchor = { x: 0, y: 1 };
+        energyText.position = {
+          x: -unitSprite.width / 2 + 3,
+          y: unitSprite.height / 2 - 3,
+        };
+        unitContainer.addChild(energyText);
+      }
 
       if (
         gameState.activeUnitContext &&
@@ -282,22 +375,78 @@ const renderMap = (
         unitContainer.angle = 90;
       }
 
+      for (const [idx, status] of hexData.unit.statuses.entries()) {
+        const statusContainer = new Container();
+        const statusSprite = new Sprite(textureMap[status.type]);
+
+        statusSprite.anchor = 0.5;
+        statusContainer.addChild(statusSprite);
+
+        // if (status.duration) {
+        //   const countdown = new Graphics().lineTo(50)
+        // }
+
+        const mask = new Graphics(statusFrame);
+        statusContainer.addChild(mask);
+        // mask.position = {x: -25 , y: -25 }
+        statusSprite.mask = mask;
+
+        statusContainer.position = {
+          x: -unitSprite.width / 2,
+          y:
+            -unitSprite.height / 2 +
+            (hexData.unit.statuses.length <= 4
+              ? idx * 43
+              : (150 / hexData.unit.statuses.length) * idx),
+        };
+
+        const border = new Graphics(statusBorder);
+        statusContainer.addChild(border);
+
+        const durationText = new Text({
+          // text: `${status.duration}/${status.originalDuration}`,
+          text: status.duration || status.stacks,
+          style: statusCountStyle,
+        });
+        durationText.x = 17;
+        durationText.y = -7;
+        durationText.anchor = 0.5;
+        statusContainer.addChild(durationText);
+
+        unitContainer.addChild(statusContainer);
+      }
+
       unitContainer.scale = sizeMap[hexData.unit.size];
 
       hexContainer.addChild(unitContainer);
     }
 
-    if (ccToKey(hexData.cc) in hexActionMap) {
-      const frameGraphic = new Graphics(selectableFrame);
-      hexContainer.addChild(frameGraphic);
-      frameGraphic.zIndex = 1;
-    }
-
-    hexContainer.eventMode = "static";
-    hexContainer.on("pointerdown", (event) => {
-      console.log("click", event.button);
-      if (event.button == 0 && ccToKey(hexData.cc) in hexActionMap) {
-        gameConnection.send(JSON.stringify(hexActionMap[ccToKey(hexData.cc)]));
+    // terrainSprite.eventMode = "static";
+    // terrainSprite.on("pointerdown", (event) => {
+      hexContainer.eventMode = "static";
+      hexContainer.on("pointerdown", (event) => {
+      console.log(
+        "click",
+        event.button,
+        hexData.cc,
+        // event.x,
+        // event.y,
+        // event.getLocalPosition(hexContainer),
+      );
+      if (event.button == 0 && hexActionMap[ccToKey(hexData.cc)].length) {
+        if (hexActionMap[ccToKey(hexData.cc)].length == 1) {
+          gameConnection.send(
+            JSON.stringify(hexActionMap[ccToKey(hexData.cc)][0].content),
+          );
+        } else {
+          gameConnection.send(
+            JSON.stringify(
+              hexActionMap[ccToKey(hexData.cc)][
+                event.getLocalPosition(hexContainer).x < 0 ? 0 : 1
+              ].content,
+            ),
+          );
+        }
       }
     });
   });
@@ -320,23 +469,42 @@ async function main() {
     gameObjectDetails: null,
   };
 
-  fetch('http://localhost:8000/game-object-details').then(
-      async response => {
-        let jsonResponse = recursiveCamelCase(await response.json());
+  textureMap["selection"] = await Assets.load(hexSelectionUrl);
+  textureMap["selection_ranged"] = await Assets.load(
+    hexSelectionRangedAttackUrl,
+  );
+  textureMap["selection_melee"] = await Assets.load(hexSelectionMeleeAttackUrl);
+  textureMap["selection_ability"] = await Assets.load(hexSelectionAbilityUrl);
 
-        for (const [identifier, unitDetails] of Object.entries(jsonResponse.units)) {
-          textureMap[unitDetails.identifier] = await Assets.load(unitDetails.smallImage);
-        }
+  fetch("http://localhost:8000/game-object-details").then(async (response) => {
+    let jsonResponse: GameObjectDetails = recursiveCamelCase(
+      await response.json(),
+    );
 
-        for (const [identifier, terrainDetails] of Object.entries(jsonResponse.terrain)) {
-          textureMap[terrainDetails.identifier] = await Assets.load(terrainDetails.image)
-        }
+    for (const [identifier, unitDetails] of Object.entries(
+      jsonResponse.units,
+    )) {
+      textureMap[unitDetails.identifier] = await Assets.load(
+        unitDetails.smallImage,
+      );
+    }
 
-          applicationState.gameObjectDetails = jsonResponse;
+    for (const [identifier, terrainDetails] of Object.entries(
+      jsonResponse.terrain,
+    )) {
+      textureMap[terrainDetails.identifier] = await Assets.load(
+        terrainDetails.image,
+      );
+    }
 
-      }
-  )
+    for (const statusDetails of Object.values(jsonResponse.statuses)) {
+      textureMap[statusDetails.identifier] = await Assets.load(
+        statusDetails.image,
+      );
+    }
 
+    applicationState.gameObjectDetails = jsonResponse;
+  });
 
   const gameConnection = new WebSocket("ws://localhost:8765/ws");
   gameConnection.onmessage = (event) => {
@@ -420,9 +588,18 @@ async function main() {
   document.addEventListener("keydown", keyHandler);
 
   app.ticker.add((ticker) => {
-    if (applicationState.shouldRerender && applicationState.gameState && applicationState.gameObjectDetails) {
+    if (
+      applicationState.shouldRerender &&
+      applicationState.gameState &&
+      applicationState.gameObjectDetails
+    ) {
       app.stage.removeChild(map);
-      map = renderMap(app, applicationState.gameState, applicationState.gameObjectDetails, gameConnection);
+      map = renderMap(
+        app,
+        applicationState.gameState,
+        applicationState.gameObjectDetails,
+        gameConnection,
+      );
       app.stage.addChild(map);
       applicationState.shouldRerender = false;
     }

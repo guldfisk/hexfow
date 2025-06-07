@@ -11,9 +11,8 @@ class Peck(MeleeAttackFacet):
     damage = 1
 
 
-# TODO combineable
 class BuglingClaw(MeleeAttackFacet):
-    combineable = True
+    combinable = True
     movement_cost = 0
     damage = 2
 
@@ -50,33 +49,63 @@ class Gore(MeleeAttackFacet):
 
 
 class MarshmallowFist(MeleeAttackFacet):
-    movement_cost = 0
     damage = 2
 
 
-class LightBow(RangedAttackFacet):
+class GnomeSpear(MeleeAttackFacet):
+    damage = 2
+
+
+class RazorTusk(MeleeAttackFacet):
+    damage = 3
+
+
+class Blaster(RangedAttackFacet):
+    damage = 3
+    range = 2
     movement_cost = 1
+
+
+class LightBlaster(RangedAttackFacet):
+    damage = 2
+    range = 3
+
+
+class Strafe(RangedAttackFacet):
+    damage = 2
+    range = 2
+    movement_cost = 1
+    combinable = True
+
+
+class Bayonet(MeleeAttackFacet):
+    damage = 3
+
+
+class Pinch(MeleeAttackFacet):
+    damage = 2
+    movement_cost = 1
+
+
+class Chainsaw(MeleeAttackFacet):
+    movement_cost = 1
+    damage = 3
+
+    def get_damage_against(self, unit: Unit) -> int:
+        return 3 if unit.armor.g() > 0 else 5
+
+
+class LightBow(RangedAttackFacet):
+    # TODO in notes or how should this be done?
+    movement_cost = 0
     range = 3
     damage = 1
-    ap = 1
-
-
-# ap rifle squad {6r} x2
-# health 5, movement 2, sight 2, M
-# ap rifle
-#     ranged attack
-#     3 damage, 3 range
-#     1 ap
-#     +1 damage against large
-#     -1 damage against air
-#     no movement
 
 
 class APGun(RangedAttackFacet):
     # TODO should be "no movement"
     movement_cost = 2
     range = 3
-    # damage = 3
     ap = 1
 
     def get_damage_against(self, unit: Unit) -> int:
@@ -89,15 +118,6 @@ class HurlBoulder(RangedAttackFacet):
     range = 2
     #     +1 damage on rock terrain
     damage = 5
-
-
-# goblin assassin {4} x2
-# health 3, movement 3, sight 2, S
-# hidden blade
-#     melee attack
-#     1 damage
-#     +1 damage against exhausted units
-# - stealth
 
 
 class HiddenBlade(MeleeAttackFacet):

@@ -4,7 +4,8 @@ import dataclasses
 import re
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import ClassVar, Literal, Any, TypeVar, Iterator
+from enum import StrEnum, auto
+from typing import ClassVar, Literal, Any, TypeVar, Iterator, Generic, Self
 from typing import Mapping
 
 from bidict import bidict
@@ -27,7 +28,6 @@ from game.game.interface import Connection
 from game.game.map.coordinates import CC, line_of_sight_obstructed
 from game.game.map.geometry import hex_circle
 from game.game.player import Player
-from game.game.statuses import HasStatuses
 from game.game.turn_order import TurnOrder
 from game.game.values import Size, DamageType
 from game.tests.conftest import EventLogger
@@ -37,10 +37,10 @@ A = TypeVar("A", bound=DecisionPoint)
 T = TypeVar("T")
 
 
+# TODO wtf if this
 class VisionBound(Serializable):
     @abstractmethod
-    def serialize_values(self, context: SerializationContext) -> JSON:
-        ...
+    def serialize_values(self, context: SerializationContext) -> JSON: ...
 
     def serialize(self, context: SerializationContext) -> JSON:
         return {"id": context.id_map.get_id_for(self), **self.serialize_values(context)}
@@ -70,6 +70,27 @@ class SkipOption(Option[None]):
         return {}
 
 
+@dataclasses.dataclass
+class HasStatuses(HasEffects):
+    statuses: list[Status] = dataclasses.field(default_factory=list, init=False)
+
+    # TODO by player, we need controller?
+    def add_status(self, status: Status, by: Player) -> None:
+        for existing_status in self.statuses:
+            if type(existing_status) == type(status) and existing_status.merge(status):
+                return
+        self.statuses.append(status)
+        status.create_effects()
+
+    def remove_status(self, status: Status) -> None:
+        self.statuses.remove(status)
+        status.deregister()
+
+
+H = TypeVar("H", bound=HasStatuses)
+
+
+# TODO a facet should not have statuses
 class Facet(HasStatuses, Serializable):
     # TODO hmm
     # name: ClassVar[str]
@@ -84,16 +105,15 @@ class Facet(HasStatuses, Serializable):
         self.owner = owner
 
     # TODO common interface?
-    def create_effects(self) -> None:
-        ...
+    def create_effects(self) -> None: ...
 
     def serialize(self, context: SerializationContext) -> JSON:
         return {"name": self.__class__.__name__, "type": self.display_type}
 
 
 class EffortFacet(Facet, Modifiable):
-    movement_cost: ClassVar[int | None]
-    combineable: ClassVar[bool] = False
+    movement_cost: ClassVar[int | None] = 0
+    combinable: ClassVar[bool] = False
 
     @modifiable
     def has_sufficient_movement_points(self, context: ActiveUnitContext) -> bool:
@@ -102,12 +122,10 @@ class EffortFacet(Facet, Modifiable):
         )
 
     @abstractmethod
-    def can_be_activated(self, context: ActiveUnitContext) -> bool:
-        ...
+    def can_be_activated(self, context: ActiveUnitContext) -> bool: ...
 
 
-class AttackFacet(EffortFacet):
-    ...
+class AttackFacet(EffortFacet): ...
 
 
 class SingleTargetAttackFacet(AttackFacet):
@@ -137,10 +155,16 @@ class MeleeAttackFacet(SingleTargetAttackFacet):
             unit
             for unit in GS().map.get_neighboring_units_off(self.owner)
             if unit.controller != self.owner.controller
+            and unit.is_visible_to(self.owner.controller)
             and unit.can_be_attacked_by(self)
             # TODO test
             and GS().map.position_of(unit).is_passable_to(self.owner)
         ]
+
+    # TODO how does overriding work with modifiable?
+    @modifiable
+    def has_sufficient_movement_points(self, context: ActiveUnitContext) -> bool:
+        return (self.movement_cost or 0) + 1 <= context.movement_points
 
     @modifiable
     def can_be_activated(self, context: ActiveUnitContext) -> bool:
@@ -158,30 +182,12 @@ class RangedAttackFacet(SingleTargetAttackFacet):
 
     @modifiable
     def get_legal_targets(self, _: None = None) -> list[Unit]:
-        print("legal targets for", self)
-        for unit in GS().map.get_units_within_range_off(self.owner, self.range):
-            print("against", unit)
-            print(
-                GS().vision_map[self.owner.controller][
-                    GS().map.position_of(unit).position
-                ]
-            )
-            print(
-                not line_of_sight_obstructed(
-                    GS().map.position_of(self.owner).position,
-                    GS().map.position_of(unit).position,
-                    GS().vision_obstruction_map[self.owner.controller].get,
-                )
-            )
-            print(unit.can_be_attacked_by(self))
         return [
             unit
             for unit in GS().map.get_units_within_range_off(self.owner, self.range)
             if unit.controller != self.owner.controller
             # TODO test on this
-            and GS().vision_map[self.owner.controller][
-                GS().map.position_of(unit).position
-            ]
+            and unit.is_visible_to(self.owner.controller)
             and not line_of_sight_obstructed(
                 GS().map.position_of(self.owner).position,
                 GS().map.position_of(unit).position,
@@ -199,12 +205,77 @@ class RangedAttackFacet(SingleTargetAttackFacet):
         )
 
 
-class ActivatedAbilityFacet(EffortFacet):
+class ActivatedAbilityFacet(EffortFacet, Generic[O]):
     display_type = "ActivatedAbility"
 
+    # TODO should prob just be on effort facet
+    energy_cost: ClassVar[int] = 0
 
-class StatickAbilityFacet(Facet):
-    ...
+    @abstractmethod
+    def get_target_profile(self) -> TargetProfile[O] | None: ...
+
+    @abstractmethod
+    def perform(self, target: O) -> None: ...
+
+    @modifiable
+    def has_sufficient_energy(self, context: ActiveUnitContext) -> bool:
+        return self.energy_cost <= context.unit.energy
+
+    @modifiable
+    def can_be_activated(self, context: ActiveUnitContext) -> bool:
+        return (
+            not context.activated_facets[self.__class__.__name__]
+            and self.has_sufficient_movement_points(context)
+            and self.has_sufficient_energy(context)
+            and self.get_target_profile() is not None
+        )
+
+
+class StaticAbilityFacet(Facet): ...
+
+
+# TODO where
+class StatusType(StrEnum):
+    BUFF = auto()
+    DEBUFF = auto()
+    NEUTRAL = auto()
+
+
+@dataclasses.dataclass(eq=False)
+class Status(HasEffects[H], Serializable):
+    # TODO?
+    # controller: Player = None
+    type_: StatusType
+    duration: int | None = None
+    original_duration: int | None = None
+    stacks: int | None = None
+    # TODO
+    identifier: ClassVar[str] = "MISSING"
+
+    def merge(self, incoming: Self) -> bool:
+        return False
+
+    def create_effects(self) -> None: ...
+
+    def serialize(self, context: SerializationContext) -> JSON:
+        return {
+            "type": self.__class__.identifier,
+            "duration": self.duration,
+            "original_duration": self.original_duration,
+            "stacks": self.stacks,
+        }
+
+    def decrement_duration(self) -> None:
+        if self.duration is None:
+            return
+        self.duration -= 1
+        if self.duration <= 0:
+            self.parent.remove_status(self)
+
+    def decrement_stacks(self) -> None:
+        self.stacks -= 1
+        if self.stacks <= 0:
+            self.parent.remove_status(self)
 
 
 FULL_ENERGY: Literal["FULL_ENERGY"] = "FULL_ENERGY"
@@ -272,14 +343,14 @@ class Unit(HasStatuses, Modifiable, VisionBound):
 
         self.attacks: list[AttackFacet] = []
         self.activated_abilities: list[ActivatedAbilityFacet] = []
-        self.static_abilities: list[StatickAbilityFacet] = []
+        self.static_abilities: list[StaticAbilityFacet] = []
 
         for facet in blueprint.facets:
             if issubclass(facet, AttackFacet):
                 self.attacks.append(facet(self))
             elif issubclass(facet, ActivatedAbilityFacet):
                 self.activated_abilities.append(facet(self))
-            elif issubclass(facet, StatickAbilityFacet):
+            elif issubclass(facet, StaticAbilityFacet):
                 self.static_abilities.append(facet(self))
 
         for facet in self.attacks + self.activated_abilities + self.static_abilities:
@@ -335,6 +406,17 @@ class Unit(HasStatuses, Modifiable, VisionBound):
         # return True
 
     @modifiable
+    def is_hidden_for(self, player: Player) -> bool:
+        return False
+
+    @modifiable
+    def is_visible_to(self, player: Player) -> bool:
+        return (
+            player == self.controller
+            or GS().vision_map[player][GS().map.position_of(self).position]
+        ) and not self.is_hidden_for(player)
+
+    @modifiable
     def get_legal_options(self, context: ActiveUnitContext) -> list[Option]:
         options = []
         if context.movement_points > 0:
@@ -345,6 +427,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
                 or _hex.can_move_into(self)
             ]:
                 options.append(MoveOption(target_profile=OneOfHexes(moveable_hexes)))
+        if context.movement_points >= 0:
             for facet in self.attacks:
                 if isinstance(
                     facet, (MeleeAttackFacet, RangedAttackFacet)
@@ -355,8 +438,11 @@ class Unit(HasStatuses, Modifiable, VisionBound):
                             target_profile=OneOfUnits(facet.get_legal_targets(None)),
                         )
                     )
-                # if isinstance(facet, RangedAttackFacet) and facet.can_be_activated(GS().active_unit_context):
-                #     options.append()
+            for facet in self.activated_abilities:
+                if facet.can_be_activated(GS().active_unit_context):
+                    options.append(
+                        EffortOption(facet, target_profile=facet.get_target_profile())
+                    )
         if not context.has_acted or options:
             options.append(SkipOption(target_profile=NoTarget()))
         return options
@@ -382,6 +468,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             "size": self.size.g().name[0],
             # "attack_power"
             "exhausted": self.exhausted,
+            "statuses": [status.serialize(context) for status in self.statuses],
         }
 
     # def serialize(self, context: SerializationContext) -> JSON:
@@ -397,6 +484,9 @@ class Unit(HasStatuses, Modifiable, VisionBound):
         return f"{type(self).__name__}({self.blueprint.name}, {self.controller.name}, {id(self)})"
 
 
+class UnitStatus(Status[Unit]): ...
+
+
 @dataclasses.dataclass
 class OneOfUnits(TargetProfile[Unit]):
     units: list[Unit]
@@ -408,6 +498,48 @@ class OneOfUnits(TargetProfile[Unit]):
 
     def parse_response(self, v: Any) -> Unit:
         return self.units[v["index"]]
+
+
+class NoTargetActivatedAbility(ActivatedAbilityFacet[None]):
+    def get_target_profile(self) -> TargetProfile[None] | None:
+        return NoTarget()
+
+
+class SingleTargetActivatedAbility(ActivatedAbilityFacet[Unit]):
+    range: ClassVar[int]
+
+    def can_target_unit(self, unit: Unit) -> bool:
+        return True
+
+    def get_target_profile(self) -> TargetProfile[Unit] | None:
+        return OneOfUnits(
+            [
+                unit
+                for unit in GS().map.get_units_within_range_off(self.owner, self.range)
+                if self.can_target_unit(unit)
+                and unit.is_visible_to(self.owner.controller)
+                and not line_of_sight_obstructed(
+                    GS().map.position_of(self.owner).position,
+                    GS().map.position_of(unit).position,
+                    GS().vision_obstruction_map[self.owner.controller].get,
+                )
+            ]
+        )
+
+
+class SingleAllyActivatedAbility(SingleTargetActivatedAbility):
+    can_target_self: ClassVar[bool] = True
+
+    def can_target_unit(self, unit: Unit) -> bool:
+        return unit.controller == self.owner.controller and (
+            self.can_target_self or unit != self.owner
+        )
+
+
+class SingleEnemyActivatedAbility(SingleTargetActivatedAbility):
+
+    def can_target_unit(self, unit: Unit) -> bool:
+        return unit.controller != self.owner.controller
 
 
 @dataclasses.dataclass
@@ -426,8 +558,7 @@ class Terrain(HasEffects, ABC):
     # TODO
     identifier: ClassVar[str]
 
-    def create_effects(self, space: Hex) -> None:
-        ...
+    def create_effects(self, space: Hex) -> None: ...
 
     def is_water(self) -> bool:
         return False
@@ -462,6 +593,7 @@ class Hex(Modifiable, HasStatuses, Serializable):
 
     @modifiable
     def is_occupied_for(self, unit: Unit) -> bool:
+        # TODO should prob be inverted?
         return not self.map.unit_on(self)
 
     @modifiable
@@ -488,9 +620,6 @@ class Hex(Modifiable, HasStatuses, Serializable):
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
         return self.terrain.get_terrain_protection_for(request)
 
-    # TODO
-    # def serialize_values(self, context: SerializationContext) -> JSON:
-    #     pass
 
     def serialize(self, context: SerializationContext) -> JSON:
         return {
@@ -499,10 +628,11 @@ class Hex(Modifiable, HasStatuses, Serializable):
                 "h": self.position.h,
             },
             "terrain": self.terrain.__class__.identifier,
-            "visible": (visible := GS().vision_map[context.player][self.position]),
+            "visible": GS().vision_map[context.player][self.position],
             "unit": (
-                (unit.serialize(context) if (unit := self.map.unit_on(self)) else None)
-                if visible
+                unit.serialize(context)
+                if (unit := self.map.unit_on(self))
+                and unit.is_visible_to(context.player)
                 else None
             ),
         }
@@ -528,8 +658,7 @@ class OneOfHexes(TargetProfile[Hex]):
         return self.hexes[v["index"]]
 
 
-class MovementException(Exception):
-    ...
+class MovementException(Exception): ...
 
 
 class HexMap:
@@ -556,6 +685,7 @@ class HexMap:
     def remove_unit(self, unit: Unit) -> None:
         del self.unit_positions[unit]
 
+    # TODO really annoying this only takes a hex, should support CC as well
     def unit_on(self, space: Hex) -> Unit | None:
         return self.unit_positions.inverse.get(space)
 
@@ -578,15 +708,25 @@ class HexMap:
                 if controlled_by is None or controlled_by == unit.controller:
                     yield unit
 
-    def get_units_within_range_off(
+    def get_hexes_within_range_off(
         self, off: CC | Unit, distance: int
-    ) -> Iterator[Unit]:
-        for _hex in hex_circle(
+    ) -> Iterator[Hex]:
+        for cc in hex_circle(
             distance,
             center=self.unit_positions[off].position if isinstance(off, Unit) else off,
         ):
-            if _hex in self.hexes and (
-                unit := self.unit_positions.inverse.get(self.hexes[_hex])
+            if cc in self.hexes:
+                yield self.hexes[cc]
+
+    def get_units_within_range_off(
+        self, off: CC | Unit, distance: int
+    ) -> Iterator[Unit]:
+        for cc in hex_circle(
+            distance,
+            center=self.unit_positions[off].position if isinstance(off, Unit) else off,
+        ):
+            if cc in self.hexes and (
+                unit := self.unit_positions.inverse.get(self.hexes[cc])
             ):
                 yield unit
 
@@ -694,7 +834,6 @@ class GameState:
         return v
 
     def make_decision(self, player: Player, decision_point: DecisionPoint[O]) -> O:
-        # self.update_vision()
         for _player in self.turn_order.players:
             if _player != player:
                 self.connections[_player].send(

@@ -324,8 +324,8 @@ class _EventMeta(type):
 @dataclasses.dataclass(kw_only=True, eq=False)
 class Event(Generic[V], metaclass=_EventMeta):
     name: ClassVar[str]
-    parent: Event | None = None
-    children: list[Event] = dataclasses.field(default_factory=list)
+    parent: Event | None = dataclasses.field(repr=False, default=None)
+    children: list[Event] = dataclasses.field(default_factory=list, repr=False)
     result: V | None = None
 
     def __iter__(self) -> Iterator[Event]:

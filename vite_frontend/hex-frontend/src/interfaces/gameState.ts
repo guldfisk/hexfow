@@ -5,6 +5,13 @@ export interface CC {
 
 export type Size = "S" | "M" | "L";
 
+export interface Status {
+  type: string;
+  duration: number | null;
+  originalDuration: number | null;
+  stacks: number | null;
+}
+
 export interface Unit {
   id: string;
   blueprint: string;
@@ -13,10 +20,11 @@ export interface Unit {
   damage: number;
   speed: number;
   sight: number;
-  max_energy: number;
+  maxEnergy: number;
   energy: number;
   size: Size;
   exhausted: boolean;
+  statuses: Status[];
 }
 
 export interface Hex {
@@ -36,7 +44,7 @@ export interface ActiveUnitContext {
 }
 
 export interface GameState {
-  player: string,
+  player: string;
   round: number;
   map: Map;
   eventLog: string[];

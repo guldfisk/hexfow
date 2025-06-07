@@ -1,15 +1,23 @@
 from __future__ import annotations
 
 import dataclasses
+from typing import TypeVar, Generic
 
 from events.eventsystem import Effect, ES
 
 
 @dataclasses.dataclass(kw_only=True)
-class HasEffects:
+class HasEffectChildren:
+    children: list[HasEffects] = dataclasses.field(default_factory=list, repr=False)
+
+
+P = TypeVar("P", bound=HasEffectChildren)
+
+
+@dataclasses.dataclass(kw_only=True)
+class HasEffects(HasEffectChildren, Generic[P]):
     effects: set[Effect] = dataclasses.field(default_factory=set, init=False)
-    parent: HasEffects | None = None
-    children: list[HasEffects] = dataclasses.field(default_factory=list)
+    parent: P | None = dataclasses.field(default=None, repr=False)
 
     # TODO :(
     def __post_init__(self):
@@ -28,5 +36,7 @@ class HasEffects:
     def deregister(self) -> None:
         ES.deregister_effects(*self.effects)
         self.effects = set()
-        for child in self.children:
+        for child in list(self.children):
             child.deregister()
+        if self.parent:
+            self.parent.children.remove(self)

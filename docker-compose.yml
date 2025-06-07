@@ -3,7 +3,7 @@ services:
   game-server:
     build: .
     image: app-image
-    command: "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- python server/server.py"
+    command: "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- python -u server/server.py"
     volumes:
       - .:/code
     ports:

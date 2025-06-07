@@ -18,7 +18,7 @@ from game.game.events import SpawnUnit, Play
 from game.game.interface import Connection
 from game.game.map.coordinates import CC
 from game.game.map.geometry import hex_circle
-from game.game.map.terrain import Plains
+from game.game.map.terrain import Plains, Forest, Magma, Water
 from game.game.player import Player
 from game.game.units.blueprints import *
 
@@ -89,6 +89,7 @@ class Game(Thread):
                     pass
 
                 def get_response(self, values: Mapping[str, Any]) -> Mapping[str, Any]:
+                    # print(values)
                     game.connection.send(json.dumps(values))
                     while game.is_running:
                         try:
@@ -105,46 +106,67 @@ class Game(Thread):
                     {
                         cc: random.choice(
                             [
-                                Plains,
-                                # Forest,
+                                # Plains,
+                                Forest,
                                 # Magma,
                                 # Water,
                             ]
                         )
-                        for cc in hex_circle(2)
+                        for cc in hex_circle(3)
                     }
                 ),
             )
             GameState.instance = gs
 
-            ccs = sorted(gs.map.hexes.keys(), key=lambda cc: (cc.distance_to(CC(0, 0)), cc.r, CC.h))
+            ccs = sorted(
+                gs.map.hexes.keys(),
+                key=lambda cc: (cc.distance_to(CC(0, 0)), cc.r, CC.h),
+            )
 
             for player, values in (
                 (
                     gs.turn_order.players[0],
                     (
-                        GOBLIN_ASSASSIN,
-                        DIRE_WOLF,
-                        DIRE_WOLF,
-                        DIRE_WOLF,
+                        # GOBLIN_ASSASSIN,
+                        # BOMB_TRUCK,
+                        # LOTUS_BUD,
+                        # DIRE_WOLF,
+                        # DIRE_WOLF,
+                        # DIRE_WOLF,
+                        # LOTUS_BUD,
+                        BULLDOZER,
+                        # GNOME_COMMANDO,
+                        # WAR_HOG,
                         # (BOULDER_HURLER_OAF, CC(0, 0)),
                         # RHINO_BEAST,
                         # LIGHT_ARCHER,
                         # CHICKEN,
                         # MARSHMALLOW_TITAN,
+                        # MEDIC,
+                        # ZONE_SKIRMISHER,
+                        # CYCLOPS,
+                        # BLITZ_TROOPER,
                     ),
                 ),
                 (
                     gs.turn_order.players[1],
                     (
-                        BUGLING,
-                        CYCLOPS,
-                        CYCLOPS,
+                        # BUGLING,
+                        # CYCLOPS,
+                        # CYCLOPS,
+                        # BULLDOZER,
+                        # LIGHT_ARCHER,
+                        # LOTUS_BUD,
+                        # GNOME_COMMANDO,
+                        # WAR_HOG,
                         # (LIGHT_ARCHER, CC(0, 1)),
                         # CYCLOPS,
                         # LUMBERING_PILLAR,
                         # AP_GUNNER,
                         # CACTUS,
+                        # CHAINSAW_SADIST,
+                        # SCARAB,
+                        PESTILENCE_PRIEST,
                     ),
                 ),
             ):

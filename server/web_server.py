@@ -3,10 +3,10 @@ from typing import Any
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from game.game.core import UnitBlueprint, Terrain
+from game.game.core import UnitBlueprint, Terrain, Status, UnitStatus
 from game.game.map import terrain
 from game.game.units import blueprints
-
+from game.game import statuses
 
 unit_blueprint = [
     v for v in blueprints.__dict__.values() if isinstance(v, UnitBlueprint)
@@ -15,6 +15,11 @@ terrains = [
     v
     for v in terrain.__dict__.values()
     if isinstance(v, type) and issubclass(v, Terrain) and v != Terrain
+]
+unit_statuses = [
+    v
+    for v in statuses.__dict__.values()
+    if isinstance(v, type) and issubclass(v, UnitStatus) and v != UnitStatus
 ]
 
 
@@ -58,5 +63,13 @@ async def get_game_object_details() -> dict[str, Any]:
                 "image": f"/src/images/terrain_{_terrain.identifier}_square.png",
             }
             for _terrain in terrains
+        },
+        "statuses": {
+            status.identifier: {
+                "identifier": status.identifier,
+                "name": status.__name__,
+                "image": f"/src/images/statuses/{status.identifier}.png",
+            }
+            for status in unit_statuses
         },
     }
