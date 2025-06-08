@@ -1,30 +1,13 @@
 import { Assets, Texture } from "pixi.js";
 import { recursiveCamelCase } from "./utils/case.ts";
 
-// TODO yikes this shit's back.
-// TODO also, get some structure on image folders / formats in general.
-// import hexSelectionUrl from "./images/ui/hex_selection.png";
-// import hexSelectionRangedAttackUrl from "./images/ui/hex_selection_ranged_attack.png";
-// import hexSelectionMeleeAttackUrl from "./images/ui/hex_selection_melee.png";
-// import hexSelectionAbilityUrl from "./images/ui/hex_selection_ability.png";
-
 import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
 import { applicationState } from "./applicationState.ts";
 
 // TODO don't export?
 export const textureMap: { [key: string]: Texture } = {};
 
-// export const getTexture = (identifier: string): Texture =>
-//   textureMap[identifier];
-
 export const loadGameTextures = async () => {
-  // textureMap["selection"] = await Assets.load(hexSelectionUrl);
-  // textureMap["selection_ranged"] = await Assets.load(
-  //   hexSelectionRangedAttackUrl,
-  // );
-  // textureMap["selection_melee"] = await Assets.load(hexSelectionMeleeAttackUrl);
-  // textureMap["selection_ability"] = await Assets.load(hexSelectionAbilityUrl);
-
   for (const uiIdentifier of [
     "hex_selection",
     "hex_selection_melee",
@@ -34,6 +17,11 @@ export const loadGameTextures = async () => {
   ]) {
     textureMap[uiIdentifier] = await Assets.load(
       `/src/images/ui/${uiIdentifier}.png`,
+    );
+  }
+  for (const iconIdentifier of ["shield_icon", "shield_broken_icon"]) {
+    textureMap[iconIdentifier] = await Assets.load(
+      `/src/images/icons/${iconIdentifier}.png`,
     );
   }
 

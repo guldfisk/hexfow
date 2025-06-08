@@ -476,6 +476,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             # TODO
             "size": self.size.g().name[0],
             # "attack_power"
+            "armor": self.armor.g(),
             "exhausted": self.exhausted,
             "statuses": [status.serialize(context) for status in self.statuses],
         }

@@ -1,16 +1,29 @@
-import {Application, Container, Graphics, GraphicsContext, Sprite, Text, TextStyle,} from "pixi.js";
-import {GameState, Hex} from "./interfaces/gameState.ts";
-import type {FillInput} from "pixi.js/lib/scene/graphics/shared/FillTypes";
+import {
+  Application,
+  Container,
+  Graphics,
+  GraphicsContext,
+  Sprite,
+  Text,
+  TextStyle,
+} from "pixi.js";
+import { GameState, Hex } from "./interfaces/gameState.ts";
+import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
 
-
-import {GameObjectDetails} from "./interfaces/gameObjectDetails.ts";
-import {addRCs, CCToRC, hexDistance, hexHeight, hexVerticeOffsets, hexWidth,} from "./geometry.ts";
-import {CC} from "./interfaces/geometry.ts";
-import {textureMap} from "./textures.ts";
+import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
+import {
+  addRCs,
+  CCToRC,
+  hexDistance,
+  hexHeight,
+  hexVerticeOffsets,
+  hexWidth,
+} from "./geometry.ts";
+import { CC } from "./interfaces/geometry.ts";
+import { textureMap } from "./textures.ts";
 
 // TODO where?
 const sizeMap: { S: number; M: number; L: number } = { S: 0.8, M: 1, L: 1.2 };
-
 
 export const renderMap = (
   app: Application,
@@ -104,9 +117,9 @@ export const renderMap = (
   });
   const primaryHealthIndicatorTextStyle = new TextStyle({
     fontFamily: "Arial",
-    fontSize: 28,
-    fill: "black",
-    stroke: "red",
+    fontSize: 26,
+    fill: "white",
+    stroke: "black",
     strokeThickness: 2,
     // miterLimit: 2,
     // lineJoin: 'round',
@@ -116,9 +129,9 @@ export const renderMap = (
   });
   const secondaryHealthIndicatorTextStyle = new TextStyle({
     fontFamily: "Arial",
-    fontSize: 13,
-    fill: "black",
-    stroke: "red",
+    fontSize: 22,
+    fill: "white",
+    stroke: "black",
     strokeThickness: 2,
     // miterLimit: 2,
     // lineJoin: 'round',
@@ -291,30 +304,6 @@ export const renderMap = (
 
       unitContainer.addChild(unitSprite);
 
-      const healthText = new Text({
-        text: `${hexData.unit.maxHealth - hexData.unit.damage}/${hexData.unit.maxHealth}`,
-        style: healthTextStyle,
-      });
-      healthText.anchor = { x: 1, y: 0 };
-      healthText.position = {
-        x: unitSprite.width / 2 - 3,
-        y: -unitSprite.height / 2 + 3,
-      };
-      unitContainer.addChild(healthText);
-
-      if (hexData.unit.energy || hexData.unit.maxEnergy) {
-        const energyText = new Text({
-          text: `${hexData.unit.energy}/${hexData.unit.maxEnergy}`,
-          style: energyTextStyle,
-        });
-        energyText.anchor = { x: 0, y: 1 };
-        energyText.position = {
-          x: -unitSprite.width / 2 + 3,
-          y: unitSprite.height / 2 - 3,
-        };
-        unitContainer.addChild(energyText);
-      }
-
       if (
         gameState.activeUnitContext &&
         gameState.activeUnitContext.unit.id == hexData.unit.id
@@ -378,46 +367,92 @@ export const renderMap = (
         unitContainer.addChild(statusContainer);
       }
 
-      // TODO don't know how to make health indicators not trash
-      const healthIndicatorContainer = new Container();
+      const makeIndicatorDisplay = (
+        currentValue: number,
+        maxValue: number,
+        fromColor: [number, number, number],
+        toColor: [number, number, number],
+      ): Container => {
+        const container = new Container();
+        const width = currentValue > 9 || maxValue > 9 ? 70 : 50;
+        const height = 30;
 
-      healthIndicatorContainer.position = {
-        x: unitSprite.width / 2 - 10,
-        y: unitSprite.height / 2 - 10,
+        const ratio = currentValue / maxValue;
+
+        const bg = new Graphics()
+          .roundRect(-width / 2, -height / 2, width, height, 6)
+          .fill(
+            fromColor.map(
+              (fv, i) => (fv * ratio + toColor[i] * (1 - ratio)) / 255,
+            ),
+          )
+          .stroke({ color: "black", pixelLine: true });
+
+        container.addChild(bg);
+
+        const primaryText = new Text({
+          text: `${currentValue}/${maxValue}`,
+          style: primaryHealthIndicatorTextStyle,
+        });
+        primaryText.anchor = 0.5;
+        container.addChild(primaryText);
+
+        container.position = {
+          x: unitSprite.width / 2 - 20,
+          y: unitSprite.height / 2 - 10,
+        };
+        return container;
       };
 
-      const healthBg = new Graphics(healthBgGraphics);
-      healthIndicatorContainer.addChild(healthBg);
+      const healthIndicatorContainer = makeIndicatorDisplay(
+        hexData.unit.maxHealth - hexData.unit.damage,
+        hexData.unit.maxHealth,
+        [237, 10, 10],
+        [22, 3, 1],
+      );
 
-      const healthBar = new Graphics(healthBarGraphics);
-      healthBar.y =
-        (1 -
-          (hexData.unit.maxHealth - hexData.unit.damage) /
-            hexData.unit.maxHealth) *
-        48;
-      healthIndicatorContainer.addChild(healthBar);
+      if (hexData.unit.armor != 0) {
+        const shieldContainer = new Container();
+        const shieldSprite = new Sprite(
+          textureMap[
+            hexData.unit.armor > 0 ? "shield_icon" : "shield_broken_icon"
+          ],
+        );
+        shieldSprite.anchor = 0.5;
+        const shieldText = new Text({
+          text: `${hexData.unit.armor}`,
+          style: secondaryHealthIndicatorTextStyle,
+        });
+        shieldText.y = -2;
+        shieldText.anchor = 0.5;
+        shieldContainer.position = {
+          x: -healthIndicatorContainer.width / 2 - 5,
+          y: -healthIndicatorContainer.height / 2 + 9,
+        };
+        shieldContainer.addChild(shieldSprite);
+        shieldContainer.addChild(shieldText);
+        healthIndicatorContainer.addChild(shieldContainer);
+      }
 
-      const healthMask = new Graphics(healthFrame);
-      healthIndicatorContainer.addChild(healthMask);
-      healthBar.mask = healthMask;
-
-      const primaryText = new Text({
-        text: `${hexData.unit.maxHealth - hexData.unit.damage}`,
-        style: primaryHealthIndicatorTextStyle,
-      });
-      primaryText.anchor = { x: 0.5, y: 0 };
-      primaryText.position = { x: 0, y: -22 };
-      healthIndicatorContainer.addChild(primaryText);
-
-      const secondaryText = new Text({
-        text: `${hexData.unit.maxHealth}`,
-        style: secondaryHealthIndicatorTextStyle,
-      });
-      secondaryText.anchor = { x: 0.5, y: 0 };
-      secondaryText.position = { x: 0, y: 5 };
-      healthIndicatorContainer.addChild(secondaryText);
-
+      healthIndicatorContainer.position = {
+        x: unitSprite.width / 2 - healthIndicatorContainer.width / 2 + 20,
+        y: unitSprite.height / 2 - 10,
+      };
       unitContainer.addChild(healthIndicatorContainer);
+
+      if (hexData.unit.energy > 0 || hexData.unit.maxEnergy > 0) {
+        const energyIndicatorContainer = makeIndicatorDisplay(
+          hexData.unit.energy,
+          hexData.unit.maxEnergy,
+          [47, 103, 248],
+          [5, 17, 74],
+        );
+        energyIndicatorContainer.position = {
+          x: unitSprite.width / 2 - energyIndicatorContainer.width / 2 + 20,
+          y: unitSprite.height / 2 - 45,
+        };
+        unitContainer.addChild(energyIndicatorContainer);
+      }
 
       // TODO scaling entire container is dumb
       unitContainer.scale = sizeMap[hexData.unit.size];
@@ -425,8 +460,6 @@ export const renderMap = (
       hexContainer.addChild(unitContainer);
     }
 
-    // terrainSprite.eventMode = "static";
-    // terrainSprite.on("pointerdown", (event) => {
     hexContainer.eventMode = "static";
     hexContainer.on("pointerdown", (event) => {
       console.log(

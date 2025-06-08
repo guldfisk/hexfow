@@ -19,6 +19,7 @@ export interface Unit {
   sight: number;
   maxEnergy: number;
   energy: number;
+  armor: number;
   size: Size;
   exhausted: boolean;
   statuses: Status[];
