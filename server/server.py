@@ -106,9 +106,9 @@ class Game(Thread):
                     {
                         cc: random.choice(
                             [
-                                # Plains,
-                                Forest,
-                                Magma,
+                                Plains,
+                                # Forest,
+                                # Magma,
                                 # Water,
                             ]
                         )
@@ -128,6 +128,8 @@ class Game(Thread):
                     gs.turn_order.players[0],
                     (
                         EFFORTLESS_ATHLETE,
+                        LIGHT_ARCHER,
+                        LIGHT_ARCHER,
                         # GOBLIN_ASSASSIN,
                         # PESTILENCE_PRIEST,
                         # DIRE_WOLF,
@@ -154,7 +156,7 @@ class Game(Thread):
                         # AP_GUNNER,
                         # CACTUS,
                         # CHICKEN,
-                        # CHAINSAW_SADIST,
+                        CHAINSAW_SADIST,
                         # PESTILENCE_PRIEST,
                     ),
                 ),

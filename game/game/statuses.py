@@ -1,8 +1,8 @@
 import dataclasses
 from typing import Self, ClassVar
 
-from events.eventsystem import TriggerEffect, ES
-from game.game.core import UnitStatus, GS, RefreshableDurationUnitStatus
+from events.eventsystem import TriggerEffect, ES, StateModifierEffect
+from game.game.core import UnitStatus, GS, RefreshableDurationUnitStatus, Unit
 from game.game.damage import DamageSignature
 from game.game.events import (
     Damage,
@@ -80,9 +80,25 @@ class Ephemeral(UnitStatus):
         ES.resolve(Kill(self.parent))
 
 
-# TODO should reduce attack power
+@dataclasses.dataclass(eq=False)
+class TerrifiedModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.attack_power
+
+    unit: Unit
+
+    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+        return obj == self.unit
+
+    def modify(self, obj: Unit, request: None, value: int) -> int:
+        return value - 1
+
+
 class Terrified(RefreshableDurationUnitStatus):
     identifier = "terrified"
+
+    def create_effects(self) -> None:
+        self.register_effects(TerrifiedModifier(self.parent))
 
 
 @dataclasses.dataclass(eq=False)

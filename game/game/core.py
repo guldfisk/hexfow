@@ -134,19 +134,27 @@ class EffortFacet(Facet, Modifiable):
 class AttackFacet(EffortFacet): ...
 
 
+# TODO maybe this is all attacks, and "aoe attacks" are all abilities?
 class SingleTargetAttackFacet(AttackFacet):
     damage_type: ClassVar[DamageType]
     damage: ClassVar[int]
     ap: ClassVar[int] = 0
 
-    @modifiable
-    def get_damage_against(self, unit: Unit) -> int:
-        return self.damage
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        # TODO blah internal hook
+        ...
 
     @modifiable
     def get_damage_signature_against(self, unit: Unit) -> DamageSignature:
         return DamageSignature(
-            self.get_damage_against(unit), type=self.damage_type, ap=self.ap
+            max(
+                self.damage
+                + (self.get_damage_modifier_against(unit) or 0)
+                + self.owner.attack_power.g(),
+                0,
+            ),
+            type=self.damage_type,
+            ap=self.ap,
         )
 
 

@@ -38,8 +38,9 @@ class Gore(MeleeAttackFacet):
     def create_effects(self) -> None:
         self.register_effects(self.adjacency_hook)
 
-    def get_damage_against(self, unit: Unit) -> int:
-        return 4 if unit in self.adjacency_hook.adjacent_units else 6
+    def get_damage_modifier_against(self, unit: Unit) -> int:
+        if not unit in self.adjacency_hook.adjacent_units:
+            return 2
 
 
 class MarshmallowFist(MeleeAttackFacet):
@@ -89,8 +90,9 @@ class Chainsaw(MeleeAttackFacet):
     movement_cost = 1
     damage = 3
 
-    def get_damage_against(self, unit: Unit) -> int:
-        return 3 if unit.armor.g() > 0 else 5
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        if unit.armor.g() <= 0:
+            return 2
 
 
 class LightBow(RangedAttackFacet):
@@ -106,8 +108,9 @@ class APGun(RangedAttackFacet):
     range = 3
     ap = 1
 
-    def get_damage_against(self, unit: Unit) -> int:
-        return 4 if unit.size.g() > Size.MEDIUM else 3
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        if unit.size.g() > Size.MEDIUM:
+            return 1
 
 
 class HurlBoulder(RangedAttackFacet):
@@ -122,8 +125,9 @@ class HiddenBlade(MeleeAttackFacet):
     movement_cost = 0
     damage = 1
 
-    def get_damage_against(self, unit: Unit) -> int:
-        return 2 if unit.exhausted else 1
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        if unit.exhausted:
+            return 1
 
 
 class Bite(MeleeAttackFacet):
@@ -180,7 +184,6 @@ class Inject(MeleeAttackFacet):
 class RoundhouseKick(MeleeAttackFacet):
     damage = 3
 
-    def get_damage_against(self, unit: Unit) -> int:
-        return (
-            4 if any(isinstance(status, Staggered) for status in unit.statuses) else 3
-        )
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        if any(isinstance(status, Staggered) for status in unit.statuses):
+            return 1
