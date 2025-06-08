@@ -1,16 +1,11 @@
 import dataclasses
 from typing import ClassVar
 
-from events.eventsystem import HookEffect, Event, TriggerEffect, ES
-from game.game.core import MeleeAttackFacet, RangedAttackFacet, Unit, GS
-from game.game.events import (
-    TurnUpkeep,
-    MeleeAttackAction,
-    SimpleAttack,
-    Damage,
-    ApplyStatus,
-)
-from game.game.statuses import Parasite
+from events.eventsystem import TriggerEffect, ES
+from game.game.core import MeleeAttackFacet, RangedAttackFacet, Unit
+from game.game.events import MeleeAttackAction, SimpleAttack, Damage, ApplyStatus
+from game.game.statuses import Parasite, Staggered
+from game.game.units.facets.hooks import AdjacencyHook
 from game.game.values import Size
 
 
@@ -28,15 +23,6 @@ class BuglingClaw(MeleeAttackFacet):
 class GiantClub(MeleeAttackFacet):
     movement_cost = 0
     damage = 5
-
-
-@dataclasses.dataclass(eq=False)
-class AdjacencyHook(HookEffect[TurnUpkeep]):
-    unit: Unit
-    adjacent_units: list[Unit] = dataclasses.field(default_factory=list)
-
-    def resolve_hook_call(self, event: Event):
-        self.adjacent_units = list(GS().map.get_neighboring_units_off(self.unit))
 
 
 class Gore(MeleeAttackFacet):
@@ -189,3 +175,12 @@ class Inject(MeleeAttackFacet):
 
     def create_effects(self) -> None:
         self.register_effects(InjectTrigger(self.owner))
+
+
+class RoundhouseKick(MeleeAttackFacet):
+    damage = 3
+
+    def get_damage_against(self, unit: Unit) -> int:
+        return (
+            4 if any(isinstance(status, Staggered) for status in unit.statuses) else 3
+        )

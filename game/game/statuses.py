@@ -4,7 +4,16 @@ from typing import Self, ClassVar
 from events.eventsystem import TriggerEffect, ES
 from game.game.core import UnitStatus, GS, RefreshableDurationUnitStatus
 from game.game.damage import DamageSignature
-from game.game.events import Damage, Upkeep, Kill, TurnUpkeep, MeleeAttackAction, MoveUnit, SpawnUnit
+from game.game.events import (
+    Damage,
+    Upkeep,
+    Kill,
+    TurnUpkeep,
+    MeleeAttackAction,
+    MoveUnit,
+    SpawnUnit,
+    Turn,
+)
 from game.game.values import DamageType
 
 
@@ -95,7 +104,11 @@ class ParasiteTrigger(TriggerEffect[Kill]):
                     break
                 if isinstance(e, MeleeAttackAction) and e.defender == event.unit:
                     for move in e.iter_type(MoveUnit):
-                        if move.unit == event.unit and move.result and not GS().map.unit_on(move.result):
+                        if (
+                            move.unit == event.unit
+                            and move.result
+                            and not GS().map.unit_on(move.result)
+                        ):
                             target_position = move.result
                             break
                 if target_position:
@@ -105,10 +118,57 @@ class ParasiteTrigger(TriggerEffect[Kill]):
         if target_position:
             ES.resolve(SpawnUnit)
 
+
 class Parasite(UnitStatus):
 
+    # TODO ABC for this
     def merge(self, incoming: Self) -> bool:
         return True
 
     def create_effects(self) -> None:
         super().create_effects()
+
+
+@dataclasses.dataclass(eq=False)
+class BurstOfSpeedTrigger(TriggerEffect[TurnUpkeep]):
+    priority: ClassVar[int] = 0
+
+    status: UnitStatus
+
+    def should_trigger(self, event: TurnUpkeep) -> bool:
+        return event.unit == self.status.parent
+
+    def resolve(self, event: TurnUpkeep) -> None:
+        # TODO should be an event
+        GS().active_unit_context.movement_points += 1
+        self.status.remove()
+
+
+class BurstOfSpeed(UnitStatus):
+    identifier = "burst_of_speed"
+
+    def merge(self, incoming: Self) -> bool:
+        return True
+
+    def create_effects(self) -> None:
+        self.register_effects(BurstOfSpeedTrigger(self))
+
+
+@dataclasses.dataclass(eq=False)
+class StaggeredTrigger(TriggerEffect[Turn]):
+    priority: ClassVar[int] = 0
+
+    status: UnitStatus
+
+    def resolve(self, event: Turn) -> None:
+        self.status.remove()
+
+
+class Staggered(UnitStatus):
+    identifier = "staggered"
+
+    def merge(self, incoming: Self) -> bool:
+        return True
+
+    def create_effects(self) -> None:
+        self.register_effects(StaggeredTrigger(self))

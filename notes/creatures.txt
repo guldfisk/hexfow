@@ -1333,6 +1333,25 @@ bash
     +1 damage against S
 - adjacent enemy units have -1 attack power
 
+effortless athlete {8wwp} x1
+health 6, movement 3, sight 2, energy 4, M
+leap-frog
+    multi unlimited activations combinable ability 1 energy
+    -1 movement, target adjacent unit
+    move this unit to the opposite side of the targeted unit
+    if successful and the target unit is an enemy, apply staggered to it.
+        removed at the end of the turn
+roundhouse kick
+    melee attack
+    3 damage
+    +1 damage against staggered units
+baton pass
+    ability 1 energy
+    target other allied unit this unit wasn't adjacent to at the beginning of its turn
+    applies burst of speed
+        +1 movement point next activation
+- ignores first movement penalty each turn
+
 porcupine beast {10g} x1
 health 7, movement 3, sight 2, M
 claws

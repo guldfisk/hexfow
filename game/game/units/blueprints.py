@@ -10,6 +10,8 @@ from game.game.units.facets.activated_abilities import (
     HealBeam,
     Suicide,
     InducePanic,
+    LeapFrog,
+    BatonPass,
 )
 from game.game.units.facets.attacks import (
     Peck,
@@ -32,6 +34,7 @@ from game.game.units.facets.attacks import (
     LightBlaster,
     SerratedBeak,
     Inject,
+    RoundhouseKick,
 )
 from game.game.units.facets.static_abilities import (
     Prickly,
@@ -355,4 +358,14 @@ SCARAB = UnitBlueprint(
 
 BLITZ_TROOPER = UnitBlueprint(
     "Blitz Trooper", health=6, speed=3, sight=2, facets=[LightBlaster, Strafe]
+)
+
+
+EFFORTLESS_ATHLETE = UnitBlueprint(
+    "Effortless Athlete",
+    health=6,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[RoundhouseKick, LeapFrog, BatonPass, TerrainSavvy],
 )

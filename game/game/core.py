@@ -105,6 +105,7 @@ class Facet(HasStatuses, Serializable):
     def __init__(self, owner: Unit):
         super().__init__(parent=owner)
 
+        # TODO should be able to unify this with parent from has_statuses or whatever
         self.owner = owner
 
     # TODO common interface?
@@ -116,7 +117,9 @@ class Facet(HasStatuses, Serializable):
 
 class EffortFacet(Facet, Modifiable):
     movement_cost: ClassVar[int | None] = 0
+    # TODO these should be some signature together
     combinable: ClassVar[bool] = False
+    max_activations: int | None = 1
 
     @modifiable
     def has_sufficient_movement_points(self, context: ActiveUnitContext) -> bool:
@@ -172,7 +175,12 @@ class MeleeAttackFacet(SingleTargetAttackFacet):
     @modifiable
     def can_be_activated(self, context: ActiveUnitContext) -> bool:
         return (
-            not context.activated_facets[self.__class__.__name__]
+            # TODO common logic
+            (
+                self.max_activations is None
+                or context.activated_facets[self.__class__.__name__]
+                < self.max_activations
+            )
             and self.has_sufficient_movement_points(context)
             and self.get_legal_targets(None)
         )
@@ -202,7 +210,11 @@ class RangedAttackFacet(SingleTargetAttackFacet):
     @modifiable
     def can_be_activated(self, context: ActiveUnitContext) -> bool:
         return (
-            not context.activated_facets[self.__class__.__name__]
+            (
+                self.max_activations is None
+                or context.activated_facets[self.__class__.__name__]
+                < self.max_activations
+            )
             and self.has_sufficient_movement_points(context)
             and self.get_legal_targets(None)
         )
@@ -227,7 +239,11 @@ class ActivatedAbilityFacet(EffortFacet, Generic[O]):
     @modifiable
     def can_be_activated(self, context: ActiveUnitContext) -> bool:
         return (
-            not context.activated_facets[self.__class__.__name__]
+            (
+                self.max_activations is None
+                or context.activated_facets[self.__class__.__name__]
+                < self.max_activations
+            )
             and self.has_sufficient_movement_points(context)
             and self.has_sufficient_energy(context)
             and self.get_target_profile() is not None
@@ -273,18 +289,22 @@ class Status(HasEffects[H], Serializable):
         # TODO blah
         pass
 
+    def remove(self) -> None:
+        # TODO is this all?
+        self.parent.remove_status(self)
+
     def decrement_duration(self) -> None:
         if self.duration is None:
             return
         self.duration -= 1
         if self.duration <= 0:
             self.on_expires()
-            self.parent.remove_status(self)
+            self.remove()
 
     def decrement_stacks(self) -> None:
         self.stacks -= 1
         if self.stacks <= 0:
-            self.parent.remove_status(self)
+            self.remove()
 
 
 FULL_ENERGY: Literal["FULL_ENERGY"] = "FULL_ENERGY"
@@ -533,19 +553,18 @@ class SingleTargetActivatedAbility(ActivatedAbilityFacet[Unit]):
         return True
 
     def get_target_profile(self) -> TargetProfile[Unit] | None:
-        return OneOfUnits(
-            [
-                unit
-                for unit in GS().map.get_units_within_range_off(self.owner, self.range)
-                if self.can_target_unit(unit)
-                and unit.is_visible_to(self.owner.controller)
-                and not line_of_sight_obstructed(
-                    GS().map.position_of(self.owner).position,
-                    GS().map.position_of(unit).position,
-                    GS().vision_obstruction_map[self.owner.controller].get,
-                )
-            ]
-        )
+        if units := [
+            unit
+            for unit in GS().map.get_units_within_range_off(self.owner, self.range)
+            if self.can_target_unit(unit)
+            and unit.is_visible_to(self.owner.controller)
+            and not line_of_sight_obstructed(
+                GS().map.position_of(self.owner).position,
+                GS().map.position_of(unit).position,
+                GS().vision_obstruction_map[self.owner.controller].get,
+            )
+        ]:
+            return OneOfUnits(units)
 
 
 class SingleAllyActivatedAbility(SingleTargetActivatedAbility):
