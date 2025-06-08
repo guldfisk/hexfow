@@ -83,7 +83,10 @@ class HasStatuses(HasEffects):
         status.create_effects()
 
     def remove_status(self, status: Status) -> None:
-        self.statuses.remove(status)
+        try:
+            self.statuses.remove(status)
+        except ValueError:
+            pass
         status.deregister()
 
 
@@ -247,6 +250,7 @@ class Status(HasEffects[H], Serializable):
     # controller: Player = None
     type_: StatusType
     duration: int | None = None
+    # TODO don't think this is needed
     original_duration: int | None = None
     stacks: int | None = None
     # TODO
@@ -265,11 +269,16 @@ class Status(HasEffects[H], Serializable):
             "stacks": self.stacks,
         }
 
+    def on_expires(self) -> None:
+        # TODO blah
+        pass
+
     def decrement_duration(self) -> None:
         if self.duration is None:
             return
         self.duration -= 1
         if self.duration <= 0:
+            self.on_expires()
             self.parent.remove_status(self)
 
     def decrement_stacks(self) -> None:
@@ -500,6 +509,17 @@ class OneOfUnits(TargetProfile[Unit]):
         return self.units[v["index"]]
 
 
+# TODO ABC, where should this be?
+class RefreshableDurationUnitStatus(UnitStatus):
+
+    def merge(self, incoming: Self) -> bool:
+        if incoming.duration > self.duration:
+            self.duration = incoming.duration
+            self.original_duration = incoming.original_duration
+            return True
+        return False
+
+
 class NoTargetActivatedAbility(ActivatedAbilityFacet[None]):
     def get_target_profile(self) -> TargetProfile[None] | None:
         return NoTarget()
@@ -620,7 +640,6 @@ class Hex(Modifiable, HasStatuses, Serializable):
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
         return self.terrain.get_terrain_protection_for(request)
 
-
     def serialize(self, context: SerializationContext) -> JSON:
         return {
             "cc": {
@@ -661,6 +680,7 @@ class OneOfHexes(TargetProfile[Hex]):
 class MovementException(Exception): ...
 
 
+# TODO reasonable and consistent utils interface for this disaster
 class HexMap:
     def __init__(self, landscape: Landscape):
         # TODO register terrain effects
@@ -671,6 +691,8 @@ class HexMap:
         for _hex in self.hexes.values():
             _hex.terrain.create_effects(_hex)
         self.unit_positions: bidict[Unit, Hex] = bidict()
+        # TODO better plan for handling this
+        self.last_known_positions: dict[Unit, Hex] = {}
 
     def units_controlled_by(self, player: Player) -> Iterator[Unit]:
         for unit in self.unit_positions.keys():
@@ -683,6 +705,7 @@ class HexMap:
         self.unit_positions[unit] = space
 
     def remove_unit(self, unit: Unit) -> None:
+        self.last_known_positions[unit] = self.unit_positions[unit]
         del self.unit_positions[unit]
 
     # TODO really annoying this only takes a hex, should support CC as well
@@ -691,11 +714,11 @@ class HexMap:
 
     # TODO maybe called hex off?
     def position_of(self, unit: Unit) -> Hex:
-        return self.unit_positions[unit]
+        return self.unit_positions.get(unit) or self.last_known_positions[unit]
 
     def get_neighbors_off(self, off: CC | Unit) -> Iterator[Hex]:
         for neighbor_coordinate in (
-            self.unit_positions[off].position if isinstance(off, Unit) else off
+            self.position_of(off).position if isinstance(off, Unit) else off
         ).neighbors():
             if _hex := self.hexes.get(neighbor_coordinate):
                 yield _hex
@@ -713,7 +736,7 @@ class HexMap:
     ) -> Iterator[Hex]:
         for cc in hex_circle(
             distance,
-            center=self.unit_positions[off].position if isinstance(off, Unit) else off,
+            center=self.position_of(off).position if isinstance(off, Unit) else off,
         ):
             if cc in self.hexes:
                 yield self.hexes[cc]
@@ -723,7 +746,7 @@ class HexMap:
     ) -> Iterator[Unit]:
         for cc in hex_circle(
             distance,
-            center=self.unit_positions[off].position if isinstance(off, Unit) else off,
+            center=self.position_of(off).position if isinstance(off, Unit) else off,
         ):
             if cc in self.hexes and (
                 unit := self.unit_positions.inverse.get(self.hexes[cc])

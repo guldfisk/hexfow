@@ -38,8 +38,11 @@ from game.game.events import (
     MovePenalty,
     Turn,
     KillUpkeep,
+    GainEnergy,
+    ApplyStatus,
 )
 from game.game.player import Player
+from game.game.statuses import Terrified
 from game.game.values import DamageType
 
 
@@ -393,20 +396,105 @@ class ExplosiveTrigger(TriggerEffect[KillUpkeep]):
 
     unit: Unit
     damage: int
-    last_known_position: Hex | None = dataclasses.field(init=False, default=None)
 
     def should_trigger(self, event: KillUpkeep) -> bool:
-        # TODO yikes. should be done with a hook, but really we prob want to have
-        self.last_known_position = GS().map.position_of(self.unit)
         return event.unit == self.unit
 
     def resolve(self, event: KillUpkeep) -> None:
-        for unit in GS().map.get_units_within_range_off(
-            self.last_known_position.position, 1
-        ):
+        for unit in GS().map.get_units_within_range_off(self.unit, 1):
             ES.resolve(Damage(unit, DamageSignature(self.damage, type=DamageType.AOE)))
 
 
 class Explosive(StaticAbilityFacet):
     def create_effects(self) -> None:
         self.register_effects(ExplosiveTrigger(self.owner, 5))
+
+
+# - whenever an adjacent unit is damaged or debuffed, this unit regens 1 energy
+
+# TODO same trigger etc
+@dataclasses.dataclass(eq=False)
+class SchadenfreudeDamageTrigger(TriggerEffect[Damage]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def should_trigger(self, event: Damage) -> bool:
+        return (
+            event.unit != self.unit
+            and GS()
+            .map.position_of(event.unit)
+            .position.distance_to(GS().map.position_of(self.unit).position)
+            <= 1
+        )
+
+    def resolve(self, event: Damage) -> None:
+        ES.resolve(GainEnergy(self.unit, 1))
+
+
+# TODO should only trigger on debuffs
+@dataclasses.dataclass(eq=False)
+class SchadenfreudeDebuffTrigger(TriggerEffect[ApplyStatus]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def should_trigger(self, event: ApplyStatus) -> bool:
+        return (
+            event.unit != self.unit
+            and GS()
+            .map.position_of(event.unit)
+            .position.distance_to(GS().map.position_of(self.unit).position)
+            <= 1
+        )
+
+    def resolve(self, event: ApplyStatus) -> None:
+        ES.resolve(GainEnergy(self.unit, 1))
+
+
+class Schadenfreude(StaticAbilityFacet):
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            SchadenfreudeDamageTrigger(self.owner),
+            SchadenfreudeDebuffTrigger(self.owner),
+        )
+
+
+# TODO originally this was for all simple attacks, but then the kill event isn't
+#  a child. Cut of course hack it in some way, or just have multiple triggers,
+#  but it only has a melee attack, and maybe it is more evocative anyways...
+# TODO the vision based trigger is cool, but it has some pretty unintuitive interactions,
+#  since the attacking unit with this ability will still block vision from where it
+#  attacked, not the space it follows up into. This is kinda intentional, but weird,
+#  so yeah.
+@dataclasses.dataclass(eq=False)
+class GrizzlyMurdererTrigger(TriggerEffect[MeleeAttackAction]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def should_trigger(self, event: MeleeAttackAction) -> bool:
+        return event.attacker == self.unit and any(
+            kill.unit == event.defender for kill in event.iter_type(Kill)
+        )
+
+    def resolve(self, event: MeleeAttackAction) -> None:
+        # TODO formalize iterating copy
+        for unit in list(GS().map.unit_positions.keys()):
+            if unit.controller != self.unit.controller and unit.can_see(
+                GS().map.position_of(event.defender)
+            ):
+                ES.resolve(
+                    ApplyStatus(
+                        unit=unit,
+                        status_type=Terrified,
+                        by=self.unit.controller,
+                        duration=2,
+                    )
+                )
+
+
+class GrizzlyMurderer(StaticAbilityFacet):
+    def create_effects(self) -> None:
+        self.register_effects(GrizzlyMurdererTrigger(self.owner))

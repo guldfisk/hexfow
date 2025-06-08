@@ -2,9 +2,9 @@ import dataclasses
 from typing import Self, ClassVar
 
 from events.eventsystem import TriggerEffect, ES
-from game.game.core import UnitStatus, GS
+from game.game.core import UnitStatus, GS, RefreshableDurationUnitStatus
 from game.game.damage import DamageSignature
-from game.game.events import Damage, Upkeep
+from game.game.events import Damage, Upkeep, Kill, TurnUpkeep, MeleeAttackAction, MoveUnit, SpawnUnit
 from game.game.values import DamageType
 
 
@@ -50,15 +50,65 @@ class PanickedTrigger(TriggerEffect[Upkeep]):
         )
 
 
-class Panicked(UnitStatus):
+class Panicked(RefreshableDurationUnitStatus):
     identifier = "panicked"
 
+    def create_effects(self) -> None:
+        self.register_effects(PanickedTrigger(self))
+
+
+class Ephemeral(UnitStatus):
+    identifier = "ephemeral"
+
     def merge(self, incoming: Self) -> bool:
-        if incoming.duration > self.duration:
+        if incoming.duration < self.duration:
             self.duration = incoming.duration
             self.original_duration = incoming.original_duration
             return True
         return False
 
+    def on_expires(self) -> None:
+        ES.resolve(Kill(self.parent))
+
+
+# TODO should reduce attack power
+class Terrified(RefreshableDurationUnitStatus):
+    identifier = "terrified"
+
+
+@dataclasses.dataclass(eq=False)
+class ParasiteTrigger(TriggerEffect[Kill]):
+    priority: ClassVar[int] = 0
+
+    status: UnitStatus
+
+    def should_trigger(self, event: Kill) -> bool:
+        return event.unit == self.status.parent
+
+    def resolve(self, event: Kill) -> None:
+        target_position = GS().map.position_of(event.unit)
+        if GS().map.unit_on(target_position):
+            target_position = None
+
+            for e in reversed(ES.history):
+                if isinstance(e, TurnUpkeep):
+                    break
+                if isinstance(e, MeleeAttackAction) and e.defender == event.unit:
+                    for move in e.iter_type(MoveUnit):
+                        if move.unit == event.unit and move.result and not GS().map.unit_on(move.result):
+                            target_position = move.result
+                            break
+                if target_position:
+                    break
+
+        # TODO need to have way to get unit by identifier at runtime here.
+        if target_position:
+            ES.resolve(SpawnUnit)
+
+class Parasite(UnitStatus):
+
+    def merge(self, incoming: Self) -> bool:
+        return True
+
     def create_effects(self) -> None:
-        self.register_effects(PanickedTrigger(self))
+        super().create_effects()

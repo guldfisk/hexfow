@@ -39,4 +39,7 @@ class HasEffects(HasEffectChildren, Generic[P]):
         for child in list(self.children):
             child.deregister()
         if self.parent:
-            self.parent.children.remove(self)
+            try:
+                self.parent.children.remove(self)
+            except ValueError:
+                pass

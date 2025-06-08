@@ -1,7 +1,4 @@
-export interface CC {
-  r: number;
-  h: number;
-}
+import {CC} from "./geometry.ts";
 
 export type Size = "S" | "M" | "L";
 

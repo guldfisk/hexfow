@@ -11,7 +11,7 @@ import {
   TextStyle,
   Texture,
 } from "pixi.js";
-import { CC, GameState, Hex, Size } from "./interfaces/gameState.ts";
+import { GameState, Hex, Size } from "./interfaces/gameState.ts";
 import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
 import { ApplicationState } from "./interfaces/applicationState.ts";
 import { recursiveCamelCase } from "./utils/case.ts";
@@ -24,41 +24,15 @@ import hexSelectionMeleeAttackUrl from "./images/hex_selection_melee.png";
 import hexSelectionAbilityUrl from "./images/selection_ability.png";
 
 import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
-
-const hexSize = 160;
-
-interface RC {
-  x: number;
-  y: number;
-}
-
-const hexWidth = Math.sqrt(3) * hexSize;
-const hexHeight = hexSize * 2;
-
-const hexVerticeOffsets: [number, number][] = [
-  [hexWidth / 2, -hexSize / 2],
-  [0, -hexSize],
-  [-hexWidth / 2, -hexSize / 2],
-  [-hexWidth / 2, hexSize / 2],
-  [0, hexHeight / 2],
-  [hexWidth / 2, hexSize / 2],
-];
-
-const CCToRC = (hexCoord: CC): RC => ({
-  x: hexSize * ((Math.sqrt(3) / 2) * hexCoord.r + Math.sqrt(3) * hexCoord.h),
-  y: hexSize * ((3 / 2) * hexCoord.r),
-});
-
-const addRCs = (a: RC, b: RC): RC => ({
-  x: a.x + b.x,
-  y: a.y + b.y,
-});
-
-const hexDistance = (fromCC: CC, toCC: CC): number => {
-  const r = fromCC.r - toCC.r;
-  const h = fromCC.h - toCC.h;
-  return (Math.abs(r) + Math.abs(r + h) + Math.abs(h)) / 2;
-};
+import {
+  addRCs,
+  CCToRC,
+  hexDistance,
+  hexHeight,
+  hexVerticeOffsets,
+  hexWidth,
+} from "./geometry.ts";
+import { CC } from "./interfaces/geometry.ts";
 
 const sizeMap: { S: number; M: number; L: number } = { S: 0.8, M: 1, L: 1.2 };
 
@@ -75,6 +49,7 @@ const renderMap = (
   let maxY = window.innerHeight;
   let center = { x: maxX / 2, y: maxY / 2 };
 
+  // TODO make this shit react or something
   const eventLog = document.getElementById("event-log");
 
   if (eventLog) {
@@ -131,10 +106,16 @@ const renderMap = (
   const invisibleHexShape = getHexShape({ color: "black", alpha: 100 });
   const fullHexShape = getHexShape("red");
 
-  const selectableFrame = getHexFrame("blue");
+  // const selectableFrame = getHexFrame("blue");
 
   // const dividerFrame = getDividerFrame();
   const dividerFrames = [0, 1].map(getDividerFrame);
+
+  const healthFrame = new GraphicsContext().circle(0, 0, 24).fill();
+  const healthBgGraphics = new GraphicsContext().circle(0, 0, 24).fill("black");
+  const healthBarGraphics = new GraphicsContext()
+    .rect(-24, -24, 48, 48)
+    .fill("red");
 
   const statusFrame = new GraphicsContext().circle(0, 0, 20).fill();
   const statusBorder = new GraphicsContext()
@@ -152,6 +133,30 @@ const renderMap = (
     fontFamily: "Arial",
     fontSize: 20,
     fill: 0xff1010,
+    align: "center",
+  });
+  const primaryHealthIndicatorTextStyle = new TextStyle({
+    fontFamily: "Arial",
+    fontSize: 28,
+    fill: "black",
+    stroke: "red",
+    strokeThickness: 2,
+    // miterLimit: 2,
+    // lineJoin: 'round',
+    // strokeMiterLimit: 2,
+    // strokeLineJoin: 'round',
+    align: "center",
+  });
+  const secondaryHealthIndicatorTextStyle = new TextStyle({
+    fontFamily: "Arial",
+    fontSize: 13,
+    fill: "black",
+    stroke: "red",
+    strokeThickness: 2,
+    // miterLimit: 2,
+    // lineJoin: 'round',
+    // strokeMiterLimit: 2,
+    // strokeLineJoin: 'round',
     align: "center",
   });
   const energyTextStyle = new TextStyle({
@@ -382,10 +387,6 @@ const renderMap = (
         statusSprite.anchor = 0.5;
         statusContainer.addChild(statusSprite);
 
-        // if (status.duration) {
-        //   const countdown = new Graphics().lineTo(50)
-        // }
-
         const mask = new Graphics(statusFrame);
         statusContainer.addChild(mask);
         // mask.position = {x: -25 , y: -25 }
@@ -416,6 +417,48 @@ const renderMap = (
         unitContainer.addChild(statusContainer);
       }
 
+      // TODO don't know how to make health indicators not trash
+      const healthIndicatorContainer = new Container();
+
+      healthIndicatorContainer.position = {
+        x: unitSprite.width / 2 - 10,
+        y: unitSprite.height / 2 - 10,
+      };
+
+      const healthBg = new Graphics(healthBgGraphics);
+      healthIndicatorContainer.addChild(healthBg);
+
+      const healthBar = new Graphics(healthBarGraphics);
+      healthBar.y =
+        (1 -
+          (hexData.unit.maxHealth - hexData.unit.damage) /
+            hexData.unit.maxHealth) *
+        48;
+      healthIndicatorContainer.addChild(healthBar);
+
+      const healthMask = new Graphics(healthFrame);
+      healthIndicatorContainer.addChild(healthMask);
+      healthBar.mask = healthMask;
+
+      const primaryText = new Text({
+        text: `${hexData.unit.maxHealth - hexData.unit.damage}`,
+        style: primaryHealthIndicatorTextStyle,
+      });
+      primaryText.anchor = { x: 0.5, y: 0 };
+      primaryText.position = { x: 0, y: -22 };
+      healthIndicatorContainer.addChild(primaryText);
+
+      const secondaryText = new Text({
+        text: `${hexData.unit.maxHealth}`,
+        style: secondaryHealthIndicatorTextStyle,
+      });
+      secondaryText.anchor = { x: 0.5, y: 0 };
+      secondaryText.position = { x: 0, y: 5 };
+      healthIndicatorContainer.addChild(secondaryText);
+
+      unitContainer.addChild(healthIndicatorContainer);
+
+      // TODO scaling entire container is dumb
       unitContainer.scale = sizeMap[hexData.unit.size];
 
       hexContainer.addChild(unitContainer);
@@ -423,8 +466,8 @@ const renderMap = (
 
     // terrainSprite.eventMode = "static";
     // terrainSprite.on("pointerdown", (event) => {
-      hexContainer.eventMode = "static";
-      hexContainer.on("pointerdown", (event) => {
+    hexContainer.eventMode = "static";
+    hexContainer.on("pointerdown", (event) => {
       console.log(
         "click",
         event.button,

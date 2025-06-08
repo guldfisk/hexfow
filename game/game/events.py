@@ -102,34 +102,21 @@ class Damage(Event[int]):
             self.signature.amount
             if self.signature.type == DamageType.TRUE
             else max(
-                self.signature.amount
+                max(
+                    self.signature.amount
+                    - GS()
+                    .map.position_of(self.unit)
+                    .get_terrain_protection_for(
+                        TerrainProtectionRequest(self.unit, self.signature.type)
+                    ),
+                    min(self.signature.amount, 1),
+                )
                 - min(defender_armor, max(defender_armor - self.signature.ap, 0)),
                 0,
             )
         )
         self.unit.damage += damage
         return damage
-
-
-# TODO idk where
-def get_terrain_modified_damage(
-    # amount: int, defender: Unit, damage_type: DamageType
-    damage_signature: DamageSignature,
-    defender: Unit,
-) -> DamageSignature:
-    return DamageSignature(
-        max(
-            damage_signature.amount
-            - GS()
-            .map.position_of(defender)
-            .get_terrain_protection_for(
-                TerrainProtectionRequest(defender, damage_signature.type)
-            ),
-            min(damage_signature.amount, 1),
-        ),
-        type=damage_signature.type,
-        ap=damage_signature.ap,
-    )
 
 
 @dataclasses.dataclass
@@ -144,11 +131,7 @@ class SimpleAttack(Event[None]):
             return
         ES.resolve(
             Damage(
-                self.defender,
-                get_terrain_modified_damage(
-                    self.attack.get_damage_signature_against(self.defender),
-                    self.defender,
-                ),
+                self.defender, self.attack.get_damage_signature_against(self.defender)
             )
         )
 
@@ -205,6 +188,9 @@ class ApplyStatus(Event[None]):
     by: Player | None
     stacks: int | None = None
     duration: int | None = None
+
+    def is_valid(self) -> bool:
+        return self.unit.on_map()
 
     def resolve(self) -> None:
         self.unit.add_status(
@@ -328,6 +314,14 @@ class TurnUpkeep(Event[None]):
     def resolve(self) -> None: ...
 
 
+# TODO IDK
+@dataclasses.dataclass()
+class ActionUpkeep(Event[None]):
+    unit: Unit
+
+    def resolve(self) -> None: ...
+
+
 @dataclasses.dataclass
 class Turn(Event[bool]):
     unit: Unit
@@ -347,6 +341,8 @@ class Turn(Event[bool]):
 
             if not (legal_options := self.unit.get_legal_options(context)):
                 break
+
+            ES.resolve(ActionUpkeep(unit=self.unit))
 
             decision = GS().make_decision(
                 self.unit.controller,
@@ -404,7 +400,7 @@ class Turn(Event[bool]):
 
 class Upkeep(Event[None]):
     def resolve(self) -> None:
-        for unit in GS().map.unit_positions.keys():
+        for unit in list(GS().map.unit_positions.keys()):
             if unit.energy < unit.max_energy.g():
                 ES.resolve(GainEnergy(unit, 1))
             for status in list(unit.statuses):

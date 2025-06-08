@@ -1,8 +1,16 @@
 import dataclasses
+from typing import ClassVar
 
-from events.eventsystem import HookEffect, Event
+from events.eventsystem import HookEffect, Event, TriggerEffect, ES
 from game.game.core import MeleeAttackFacet, RangedAttackFacet, Unit, GS
-from game.game.events import TurnUpkeep
+from game.game.events import (
+    TurnUpkeep,
+    MeleeAttackAction,
+    SimpleAttack,
+    Damage,
+    ApplyStatus,
+)
+from game.game.statuses import Parasite
 from game.game.values import Size
 
 
@@ -53,6 +61,10 @@ class MarshmallowFist(MeleeAttackFacet):
 
 
 class GnomeSpear(MeleeAttackFacet):
+    damage = 2
+
+
+class SerratedBeak(MeleeAttackFacet):
     damage = 2
 
 
@@ -131,3 +143,49 @@ class HiddenBlade(MeleeAttackFacet):
 class Bite(MeleeAttackFacet):
     movement_cost = 0
     damage = 3
+
+
+# horror {12wp} x1
+# health 7, movement 4, sight 2, energy 4, M
+# inject
+#     melee attack
+#     4 damage, -1 movement
+#     applies horror parasite to damaged target
+#         unstackable
+#         when this unit dies, summon exhausted horror spawn under debuff controllers control on this hex. if hex is occupied by just followed up attacker, instead spawns on hex attacker attacked from.
+# venomous spine
+#     ability 3 energy
+#     target enemy unit 2 range LoS, -1 movement
+#     applies horror parasite and (debilitating venom for 2 rounds) to target.
+#         unstackable, refreshable
+#         +1 move penalty
+#         -1 attack power
+
+
+@dataclasses.dataclass(eq=False)
+class InjectTrigger(TriggerEffect[SimpleAttack]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def should_trigger(self, event: SimpleAttack) -> bool:
+        return event.attacker == self.unit and any(
+            e.unit == event.defender for e in event.iter_type(Damage)
+        )
+
+    def resolve(self, event: MeleeAttackAction) -> None:
+        ES.resolve(
+            ApplyStatus(
+                unit=event.defender,
+                status_type=Parasite,
+                by=self.unit.controller,
+            )
+        )
+
+
+class Inject(MeleeAttackFacet):
+    movement_cost = 1
+    damage = 4
+
+    def create_effects(self) -> None:
+        self.register_effects(InjectTrigger(self.owner))

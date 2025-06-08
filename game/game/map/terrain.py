@@ -20,12 +20,12 @@ class Forest(Terrain):
 
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
         if request.unit.size.g() < Size.LARGE:
-            if request.damage_type == DamageType.RANGED:
+            if request.damage_type in (DamageType.RANGED, DamageType.AOE):
                 return 2
             if request.damage_type == DamageType.MELEE:
                 return 1
 
-        if request.damage_type == DamageType.RANGED:
+        if request.damage_type in (DamageType.RANGED, DamageType.AOE):
             return 1
         return 0
 
@@ -44,8 +44,11 @@ class Water(Terrain):
         return True
 
 
+# TODO should be able to have triggers listening on multiple events, it should even
+#  work with making the generic type a union.
+
 @dataclasses.dataclass(eq=False)
-class DamageOnWalkIn(TriggerEffect[MoveUnit]):
+class BurnOnWalkIn(TriggerEffect[MoveUnit]):
     priority: ClassVar[int] = 0
 
     hex: Hex
@@ -59,7 +62,7 @@ class DamageOnWalkIn(TriggerEffect[MoveUnit]):
 
 
 @dataclasses.dataclass(eq=False)
-class DamageOnUpkeep(TriggerEffect[Upkeep]):
+class BurnOnUpkeep(TriggerEffect[Upkeep]):
     priority: ClassVar[int] = 0
 
     hex: Hex
@@ -77,4 +80,6 @@ class Magma(Terrain):
     identifier = "magma"
 
     def create_effects(self, space: Hex) -> None:
-        self.register_effects(DamageOnWalkIn(space, 1), DamageOnUpkeep(space, 1))
+        # TODO should this also happen when units on this space are melee attacked? how should that be handled in general
+        #  for these types of effects?
+        self.register_effects(BurnOnWalkIn(space, 1), BurnOnUpkeep(space, 1))

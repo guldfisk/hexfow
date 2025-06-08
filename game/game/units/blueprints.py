@@ -1,8 +1,9 @@
 from events.eventsystem import ES
 from game.game.core import UnitBlueprint, ActivatedAbilityFacet, Hex, OneOfHexes, GS
 from game.game.decisions import TargetProfile
-from game.game.events import SpawnUnit
+from game.game.events import SpawnUnit, ApplyStatus
 from game.game.map.coordinates import line_of_sight_obstructed
+from game.game.statuses import Ephemeral
 from game.game.units.facets.activated_abilities import (
     Bloom,
     Grow,
@@ -29,6 +30,8 @@ from game.game.units.facets.attacks import (
     Pinch,
     Strafe,
     LightBlaster,
+    SerratedBeak,
+    Inject,
 )
 from game.game.units.facets.static_abilities import (
     Prickly,
@@ -42,6 +45,8 @@ from game.game.units.facets.static_abilities import (
     Stealth,
     FightFlightFreeze,
     Explosive,
+    Schadenfreude,
+    GrizzlyMurderer,
 )
 from game.game.values import Size
 
@@ -247,6 +252,17 @@ BULLDOZER = UnitBlueprint(
 #         +1 move penalty
 #         -1 attack power
 
+# horror spawn {-}
+# health 3, movement 2, sight 1, S
+# bite
+#     melee attack
+#     2 damage
+
+HORROR_SPAWN = UnitBlueprint(
+    "Horror Spawn", health=3, speed=2, sight=1, size=Size.SMALL, facets=[SerratedBeak]
+)
+
+HORROR = UnitBlueprint("Horror", health=7, speed=4, sight=2, energy=4, facets=[Inject])
 
 WAR_HOG = UnitBlueprint(
     "War Hog", health=9, speed=3, sight=2, facets=[RazorTusk, Furious]
@@ -267,37 +283,14 @@ BOMB_TRUCK = UnitBlueprint(
     "Bomb Truck", health=5, speed=3, sight=1, facets=[Explosive, Suicide]
 )
 
-# chainsaw sadist {10p} x1
-# health 7, movement 3, sight 2, M
-# chainsaw
-#     melee attack
-#     3 damage, -1 movement
-#     +2 damage against unarmored
-# - when this unit kills a unit with an attack, each enemy unit that could see it suffers terrified for 2 rounds.
-#     stackable, refreshable
-#     -1 attack power
-# - adjacent enemy units can't take actions that aren't skip, attack this unit, or move away from this unit
 
 CHAINSAW_SADIST = UnitBlueprint(
-    "Chainsaw Sadist", health=7, speed=3, sight=2, facets=[Chainsaw, FightFlightFreeze]
+    "Chainsaw Sadist",
+    health=7,
+    speed=3,
+    sight=2,
+    facets=[Chainsaw, FightFlightFreeze, GrizzlyMurderer],
 )
-
-
-# pestilence priest {10pp} x1
-# health 5, movement 3, sight 2, energy 6, M
-# summon scarab
-#     ability 3 energy
-#     target unoccupied hex range 3 LoS
-#     -2 movement
-#     summons exhausted scarab with ephemeral 3
-# induce panic
-#     ability 3 energy
-#     target enemy unit range 3 LoS
-#     -1 movement
-#     applies panicked for 3 rounds
-#         unstackable, refreshable
-#         at the end of each round, this unit suffers pure damage equal to the number of adjacent units.
-# - whenever an adjacent unit is damaged or debuffed, this unit regens 1 energy
 
 
 # TODO this should not be here, but need to figure out how to work with dependency on blueprints
@@ -324,14 +317,27 @@ class SummonScarab(ActivatedAbilityFacet[Hex]):
         )
 
     def perform(self, target: Hex) -> None:
-        ES.resolve(
+        for spawn_event in ES.resolve(
             SpawnUnit(
                 blueprint=SCARAB,
                 controller=self.owner.controller,
                 space=target,
                 exhausted=True,
             )
-        )
+        ).iter_type(SpawnUnit):
+            # TODO right now this triggers schadenfreude, which makes fine sense,
+            #  but is not necessarily immediately obvious, and was not what I
+            #  intended to begin with. Could circumvent it, but would be pretty
+            #  ugly. Mechanically seems cool, maybe just make sure it is clear
+            #  from description, and maybe bump energy cost / reduce max energy.
+            ES.resolve(
+                ApplyStatus(
+                    unit=spawn_event.result,
+                    status_type=Ephemeral,
+                    by=self.owner.controller,
+                    duration=3,
+                )
+            )
 
 
 PESTILENCE_PRIEST = UnitBlueprint(
@@ -340,7 +346,7 @@ PESTILENCE_PRIEST = UnitBlueprint(
     speed=3,
     sight=2,
     energy=6,
-    facets=[SummonScarab, InducePanic],
+    facets=[SummonScarab, InducePanic, Schadenfreude],
 )
 
 SCARAB = UnitBlueprint(

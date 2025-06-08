@@ -8,6 +8,7 @@ from game.game.map import terrain
 from game.game.units import blueprints
 from game.game import statuses
 
+# TODO ultra yikes
 unit_blueprint = [
     v for v in blueprints.__dict__.values() if isinstance(v, UnitBlueprint)
 ]
@@ -19,7 +20,11 @@ terrains = [
 unit_statuses = [
     v
     for v in statuses.__dict__.values()
-    if isinstance(v, type) and issubclass(v, UnitStatus) and v != UnitStatus
+    if isinstance(v, type)
+    and issubclass(v, UnitStatus)
+    and v != UnitStatus
+    # TODO extra lmao
+    and getattr(v, "identifier") != 'MISSING'
 ]
 
 
