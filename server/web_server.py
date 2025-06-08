@@ -57,7 +57,7 @@ async def get_game_object_details() -> dict[str, Any]:
             unit.identifier: {
                 "identifier": unit.identifier,
                 "name": unit.name,
-                "small_image": f"/src/images/{unit.identifier}_small.png",
+                "small_image": f"/src/images/units/{unit.identifier}_small.png",
             }
             for unit in unit_blueprint
         },
@@ -65,7 +65,7 @@ async def get_game_object_details() -> dict[str, Any]:
             _terrain.identifier: {
                 "identifier": _terrain.identifier,
                 "name": _terrain.__name__,
-                "image": f"/src/images/terrain_{_terrain.identifier}_square.png",
+                "image": f"/src/images/terrain/terrain_{_terrain.identifier}_square.png",
             }
             for _terrain in terrains
         },
