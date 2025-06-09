@@ -15,7 +15,15 @@ from game.game.core import (
 )
 from game.game.damage import DamageSignature
 from game.game.decisions import TargetProfile, O
-from game.game.events import Kill, Heal, ApplyStatus, MoveUnit, SpawnUnit, Damage
+from game.game.events import (
+    Kill,
+    Heal,
+    ApplyStatus,
+    MoveUnit,
+    SpawnUnit,
+    Damage,
+    QueueUnitForActivation,
+)
 from game.game.map.coordinates import line_of_sight_obstructed
 from game.game.statuses import Panicked, BurstOfSpeed, Staggered, Ephemeral
 from game.game.units.facets.hooks import AdjacencyHook
@@ -217,3 +225,40 @@ class Jaunt(ActivatedAbilityFacet[Hex]):
 
     def perform(self, target: Hex) -> None:
         ES.resolve(MoveUnit(self.owner, target))
+
+
+# telepath {7pp} x1
+# health 5, movement 3, sight 0, energy 5, M
+# rouse
+#     ability 3 energy
+#     target other unit 3 range NLoS
+#     -1 movement
+#     activates target
+# pacify
+#     ability 3 energy
+#     target other unit 3 range NLoS
+#     -2 movement
+#     applies pacified for 1 round
+#         disarmed
+#         +1 energy regen
+# turn outwards
+#     ability 3 energy
+#     target other unit 2 range NLoS
+#     -1 movement
+#     applies far gazing for 2 rounds
+#         +1 sight
+#         cannot see adjacent hexes
+# - adjacent enemy units also provide vision for this units controller
+
+
+class Rouse(SingleTargetActivatedAbility):
+    energy_cost = 3
+    movement_cost = 1
+    range = 3
+    requires_los = False
+
+    def can_target_unit(self, unit: Unit) -> bool:
+        return unit != self.owner
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(QueueUnitForActivation(target))

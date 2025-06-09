@@ -129,7 +129,7 @@ class Game(Thread):
                     (
                         TELEPATH,
                         # EFFORTLESS_ATHLETE,
-                        # LIGHT_ARCHER,
+                        LIGHT_ARCHER,
                         # VOID_SPRITE,
                         # LIGHT_ARCHER,
                         # GOBLIN_ASSASSIN,

@@ -294,7 +294,7 @@ class SkipAction(Event[None]):
 
 
 # TODO where should this be?
-# TODO currently only checed in turn, should prob be checked in round as well.
+# TODO currently only checked in turn, should prob be checked in round as well.
 def do_state_based_check() -> None:
     has_changed = True
     while has_changed:
@@ -304,6 +304,14 @@ def do_state_based_check() -> None:
             if unit.health <= 0 or not GS().map.position_of(unit).is_passable_to(unit):
                 has_changed = True
                 ES.resolve(Kill(unit))
+
+
+@dataclasses.dataclass
+class QueueUnitForActivation(Event[None]):
+    unit: Unit
+
+    def resolve(self) -> None:
+        GS().activation_queued_units.add(self.unit)
 
 
 # TODO IDK
@@ -412,6 +420,7 @@ class Round(Event[None]):
         gs = GS()
         gs.round_counter += 1
         skipped_players: set[Player] = set()
+        # TODO asker's shit
         round_skipped_players: set[Player] = set()
         all_players = set(gs.turn_order.players)
         last_action_timestamps: dict[Player, int] = {
@@ -435,11 +444,29 @@ class Round(Event[None]):
 
             GS().update_vision()
 
-            activateable_units = [
-                unit
-                for unit in gs.map.units_controlled_by(player)
-                if unit.can_be_activated(None)
-            ]
+            # TODO blah and tests
+            activateable_units = None
+            if gs.activation_queued_units:
+                if activateable_queued_units := [
+                    unit for unit in gs.activation_queued_units if unit.can_be_activated
+                ]:
+                    while not (
+                        activateable_units := [
+                            unit
+                            for unit in activateable_queued_units
+                            if unit.controller == player
+                        ]
+                    ):
+                        player = gs.turn_order.advance()
+
+                else:
+                    gs.activation_queued_units.clear()
+            if activateable_units is None:
+                activateable_units = [
+                    unit
+                    for unit in gs.map.units_controlled_by(player)
+                    if unit.can_be_activated(None)
+                ]
             if not activateable_units:
                 skipped_players.add(player)
                 continue
@@ -452,12 +479,18 @@ class Round(Event[None]):
                         ActivateUnitOption(
                             target_profile=OneOfUnits(activateable_units)
                         ),
-                        SkipOption(target_profile=NoTarget()),
+                        *(
+                            ()
+                            if gs.activation_queued_units
+                            else (SkipOption(target_profile=NoTarget()),)
+                        ),
                     ],
                     explanation="activate unit?",
                 ),
             )
             if isinstance(decision.option, ActivateUnitOption):
+                if gs.activation_queued_units:
+                    gs.activation_queued_units.discard(decision.target)
                 if any(
                     turn.result
                     for turn in ES.resolve(Turn(decision.target)).iter_type(Turn)

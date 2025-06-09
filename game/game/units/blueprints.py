@@ -1,9 +1,4 @@
-from events.eventsystem import ES
-from game.game.core import UnitBlueprint, ActivatedAbilityFacet, Hex, OneOfHexes, GS
-from game.game.decisions import TargetProfile
-from game.game.events import SpawnUnit, ApplyStatus
-from game.game.map.coordinates import line_of_sight_obstructed
-from game.game.statuses import Ephemeral
+from game.game.core import UnitBlueprint
 from game.game.units.facets.activated_abilities import (
     Bloom,
     Grow,
@@ -16,6 +11,7 @@ from game.game.units.facets.activated_abilities import (
     Sweep,
     Stare,
     Jaunt,
+    Rouse,
 )
 from game.game.units.facets.attacks import (
     Peck,
@@ -436,5 +432,5 @@ VOID_SPRITE = UnitBlueprint(
 # - adjacent enemy units also provide vision for this units controller
 
 TELEPATH = UnitBlueprint(
-    "Telepath", health=5, speed=3, sight=0, energy=5, facets=[TelepathicSpy]
+    "Telepath", health=5, speed=3, sight=0, energy=5, facets=[TelepathicSpy, Rouse]
 )

@@ -551,6 +551,7 @@ class NoTargetActivatedAbility(ActivatedAbilityFacet[None]):
 
 class SingleTargetActivatedAbility(ActivatedAbilityFacet[Unit]):
     range: ClassVar[int]
+    requires_los: ClassVar[bool] = True
 
     def can_target_unit(self, unit: Unit) -> bool:
         return True
@@ -561,10 +562,13 @@ class SingleTargetActivatedAbility(ActivatedAbilityFacet[Unit]):
             for unit in GS().map.get_units_within_range_off(self.owner, self.range)
             if self.can_target_unit(unit)
             and unit.is_visible_to(self.owner.controller)
-            and not line_of_sight_obstructed(
-                GS().map.position_of(self.owner).position,
-                GS().map.position_of(unit).position,
-                GS().vision_obstruction_map[self.owner.controller].get,
+            and (
+                not self.requires_los
+                or not line_of_sight_obstructed(
+                    GS().map.position_of(self.owner).position,
+                    GS().map.position_of(unit).position,
+                    GS().vision_obstruction_map[self.owner.controller].get,
+                )
             )
         ]:
             return OneOfUnits(units)
@@ -871,6 +875,7 @@ class GameState:
         # self.map = HexMap(settings.map_spec.generate_landscape())
         self.map = HexMap(landscape)
         self.active_unit_context: ActiveUnitContext | None = None
+        self.activation_queued_units: set[Unit] = set()
         # self.points: dict[Player]
         self.target_points = 10
         self.round_counter = 0
