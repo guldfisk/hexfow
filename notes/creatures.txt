@@ -824,6 +824,29 @@ scan
     aoe type triangle size 1 range 8 NLoS, no movement
     applies revealed status to terrain for 1 round
 
+telepath {7pp} x1
+health 5, movement 3, sight 0, energy 5, M
+rouse
+    ability 3 energy
+    target other unit 3 range NLoS
+    -1 movement
+    activates target
+pacify
+    ability 3 energy
+    target other unit 3 range NLoS
+    -2 movement
+    applies pacified for 1 round
+        disarmed
+        +1 energy regen
+turn outwards
+    ability 3 energy
+    target other unit 2 range NLoS
+    -1 movement
+    applies far gazing for 2 rounds
+        +1 sight
+        cannot see adjacent hexes
+- adjacent enemy units also provide vision for this units controller
+
 void sprite {7ww} x1
 health 5, movement 1, sight 2, energy 7, S
 sting

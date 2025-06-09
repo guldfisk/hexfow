@@ -56,6 +56,7 @@ from game.game.units.facets.static_abilities import (
     Schadenfreude,
     GrizzlyMurderer,
     EggBearer,
+    TelepathicSpy,
 )
 from game.game.values import Size
 
@@ -391,6 +392,15 @@ VOID_SPRITE = UnitBlueprint(
     facets=[Sting, Jaunt],
 )
 
+# bee swarm {-}
+# health 2, movement 3, sight 1, S
+# sting
+#     melee attack
+#     2 damage
+#     ignores terrain protection
+# - flying
+# - greater melee/ranged resistant
+
 # bee shaman {7wrp} x2
 # health 4, movement 3, sight 2, energy 3, S
 # summon bees
@@ -401,3 +411,30 @@ VOID_SPRITE = UnitBlueprint(
 #     ability 2 energy
 #     target different allied unit 2 range LoS, -1 movement
 #     heals 2 and restores 1 energy
+
+# telepath {7pp} x1
+# health 5, movement 3, sight 0, energy 5, M
+# rouse
+#     ability 3 energy
+#     target other unit 3 range NLoS
+#     -1 movement
+#     activates target
+# pacify
+#     ability 3 energy
+#     target other unit 3 range NLoS
+#     -2 movement
+#     applies pacified for 1 round
+#         disarmed
+#         +1 energy regen
+# turn outwards
+#     ability 3 energy
+#     target other unit 2 range NLoS
+#     -1 movement
+#     applies far gazing for 2 rounds
+#         +1 sight
+#         cannot see adjacent hexes
+# - adjacent enemy units also provide vision for this units controller
+
+TELEPATH = UnitBlueprint(
+    "Telepath", health=5, speed=3, sight=0, energy=5, facets=[TelepathicSpy]
+)

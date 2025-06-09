@@ -421,6 +421,10 @@ class Unit(HasStatuses, Modifiable, VisionBound):
         return player != self.controller
 
     @modifiable
+    def provides_vision_for(self, _: None) -> set[Player]:
+        return {self.controller}
+
+    @modifiable
     def can_see(self, space: Hex) -> bool:
         if (
             space.map.position_of(self).position.distance_to(space.position)
@@ -721,6 +725,7 @@ class SelectConsecutiveAdjacentHexes(TargetProfile[list[Hex]]):
         #  general.
         raise ValueError("invalid response")
 
+
 @dataclasses.dataclass
 class SelectRadiatingLine(TargetProfile[list[Hex]]):
     from_hex: Hex
@@ -884,16 +889,20 @@ class GameState:
         ES.register_event_callback(EventLogger(self._event_log.append))
 
     def update_vision(self) -> None:
+        unit_vision_map: dict[player, list[Unit]] = defaultdict(list)
+        for unit in self.map.unit_positions.keys():
+            for player in unit.provides_vision_for(None):
+                unit_vision_map[player].append(unit)
+
         for player in self.turn_order.players:
             self.vision_obstruction_map[player] = {
                 position: _hex.blocks_vision_for(player)
                 for position, _hex in self.map.hexes.items()
             }
+        for player in self.turn_order.players:
 
             self.vision_map[player] = {
-                position: any(
-                    unit.can_see(_hex) for unit in self.map.units_controlled_by(player)
-                )
+                position: any(unit.can_see(_hex) for unit in unit_vision_map[player])
                 for position, _hex in self.map.hexes.items()
             }
 

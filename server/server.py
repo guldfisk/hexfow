@@ -127,9 +127,10 @@ class Game(Thread):
                 (
                     gs.turn_order.players[0],
                     (
-                        EFFORTLESS_ATHLETE,
-                        LIGHT_ARCHER,
-                        VOID_SPRITE,
+                        TELEPATH,
+                        # EFFORTLESS_ATHLETE,
+                        # LIGHT_ARCHER,
+                        # VOID_SPRITE,
                         # LIGHT_ARCHER,
                         # GOBLIN_ASSASSIN,
                         # PESTILENCE_PRIEST,
@@ -150,7 +151,7 @@ class Game(Thread):
                         # WAR_HOG,
                         LIGHT_ARCHER,
                         LIGHT_ARCHER,
-                        CYCLOPS,
+                        # CYCLOPS,
                         # HORROR,
                         # RHINO_BEAST,
                         # LOTUS_BUD,

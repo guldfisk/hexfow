@@ -526,3 +526,52 @@ class EggBearer(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(InjectTrigger(self.owner))
+
+
+# telepath {7pp} x1
+# health 5, movement 3, sight 0, energy 5, M
+# rouse
+#     ability 3 energy
+#     target other unit 3 range NLoS
+#     -1 movement
+#     activates target
+# pacify
+#     ability 3 energy
+#     target other unit 3 range NLoS
+#     -2 movement
+#     applies pacified for 1 round
+#         disarmed
+#         +1 energy regen
+# turn outwards
+#     ability 3 energy
+#     target other unit 2 range NLoS
+#     -1 movement
+#     applies far gazing for 2 rounds
+#         +1 sight
+#         cannot see adjacent hexes
+# - adjacent enemy units also provide vision for this units controller
+
+
+@dataclasses.dataclass(eq=False)
+class TelepathicSpyModifier(StateModifierEffect[Unit, None, set[Player]]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.provides_vision_for
+
+    unit: Unit
+
+    def should_modify(self, obj: Unit, request: None, value: set[Player]) -> bool:
+        return (
+            obj.controller != self.unit.controller
+            and GS()
+            .map.position_of(obj)
+            .position.distance_to(GS().map.position_of(self.unit).position)
+            <= 1
+        )
+
+    def modify(self, obj: Unit, request: None, value: set[Player]) -> set[Player]:
+        return value | {self.unit.controller}
+
+
+class TelepathicSpy(StaticAbilityFacet):
+    def create_effects(self) -> None:
+        self.register_effects(TelepathicSpyModifier(self.owner))
