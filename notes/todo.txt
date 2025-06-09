@@ -1,0 +1,26 @@
+
+infrastructure
+    way for web server to communicate with game server
+    game server game management
+    either account system or other way to keep track of users for reconnects
+    multiple connections to same game
+    lobby system
+
+game functionality
+    hover detail view
+    game log
+    multi action selection menu ui
+    aoe selection ui
+    elevation
+    buff/debuff differentiation
+    nice to have
+        dispells
+        terrain statuses
+        hidden statuses
+        well defined effects order
+        well defined order of iterating units on map
+
+map + army for playtesting
+production configuration
+deployment
+

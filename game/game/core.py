@@ -80,7 +80,7 @@ class HasStatuses(HasEffects):
             if type(existing_status) == type(status) and existing_status.merge(status):
                 return
         self.statuses.append(status)
-        status.create_effects()
+        status.create_effects(by=by)
 
     def remove_status(self, status: Status) -> None:
         try:
@@ -283,7 +283,7 @@ class Status(HasEffects[H], Serializable):
     def merge(self, incoming: Self) -> bool:
         return False
 
-    def create_effects(self) -> None: ...
+    def create_effects(self, by: Player) -> None: ...
 
     def serialize(self, context: SerializationContext) -> JSON:
         return {
@@ -318,25 +318,35 @@ class Status(HasEffects[H], Serializable):
 FULL_ENERGY: Literal["FULL_ENERGY"] = "FULL_ENERGY"
 
 
-@dataclasses.dataclass
 class UnitBlueprint:
-    name: str
-    health: int
-    speed: int
-    sight: int
-    armor: int = 0
-    energy: int = 0
-    starting_energy: int | FULL_ENERGY = FULL_ENERGY
-    size: Size = Size.MEDIUM
-    aquatic: bool = False
-    facets: list[type[Facet]] = dataclasses.field(default_factory=list)
-    identifier: str = dataclasses.field(default=None)
+    registry: ClassVar[dict[str, UnitBlueprint]] = {}
 
-    def __post_init__(self):
-        if self.identifier is None:
-            self.identifier = re.sub(
-                "_+", "_", re.sub("[^a-z]", "_", self.name.lower())
-            )
+    def __init__(
+        self,
+        name: str,
+        health: int,
+        speed: int,
+        sight: int,
+        armor: int = 0,
+        energy: int = 0,
+        starting_energy: int | FULL_ENERGY = FULL_ENERGY,
+        size: Size = Size.MEDIUM,
+        # TODO should this be a stat?
+        aquatic: bool = False,
+        facets: list[type[Facet]] | None = None,
+    ):
+        self.name = name
+        self.health = health
+        self.speed = speed
+        self.sight = sight
+        self.armor = armor
+        self.energy = energy
+        self.starting_energy = starting_energy
+        self.size = size
+        self.aquatic = aquatic
+        self.facets = facets or []
+        self.identifier = re.sub("_+", "_", re.sub("[^a-z]", "_", self.name.lower()))
+        self.registry[self.identifier] = self
 
     def __repr__(self):
         return f"{type(self).__name__}({self.name})"
@@ -399,7 +409,6 @@ class Unit(HasStatuses, Modifiable, VisionBound):
 
     @modifiable
     def can_be_attacked_by(self, attack: AttackFacet) -> bool:
-        # if isinstance(attack, MeleeAttack):
         return True
 
     @modifiable
@@ -423,24 +432,6 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             space.position,
             GS().vision_obstruction_map[self.controller].get,
         )
-        # obstruction_map = GS().vision_obstruction_map[self.controller]
-        #
-        # collided_sides = [False, False]
-        #
-        # for coordinates in find_collisions(
-        #     space.map.position_of(self).position, space.position
-        # ):
-        #     if len(coordinates) == 1:
-        #         if obstruction_map[coordinates[0]]:
-        #             return False
-        #     else:
-        #         for idx, c in enumerate(coordinates):
-        #             if obstruction_map[c]:
-        #                 collided_sides[idx] = True
-        #         if all(collided_sides):
-        #             return False
-        #
-        # return True
 
     @modifiable
     def is_hidden_for(self, player: Player) -> bool:
@@ -703,6 +694,54 @@ class OneOfHexes(TargetProfile[Hex]):
 
     def parse_response(self, v: Any) -> Hex:
         return self.hexes[v["index"]]
+
+
+# TODO where, maybe in "aoe_target_profiles.py"?
+@dataclasses.dataclass
+class SelectConsecutiveAdjacentHexes(TargetProfile[list[Hex]]):
+    adjacent_to: Hex
+    arm_length: int
+
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        return {
+            "adjacent_to": self.adjacent_to.position.serialize(),
+            "arm_length": self.arm_length,
+        }
+
+    def parse_response(self, v: Any) -> list[Hex]:
+        selected_cc = CC(**v["cc"])
+        hexes = list(GS().map.get_neighbors_off(self.adjacent_to.position))
+        for idx, _hex in enumerate(hexes):
+            if _hex.position == selected_cc:
+                return [
+                    hexes[offset % len(hexes)]
+                    for offset in range(-self.arm_length, self.arm_length + 1)
+                ]
+        # TODO some sorta standardized error for this. just need actual validation
+        #  general.
+        raise ValueError("invalid response")
+
+@dataclasses.dataclass
+class SelectRadiatingLine(TargetProfile[list[Hex]]):
+    from_hex: Hex
+    length: int
+
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        return {"from_hex": self.from_hex.position.serialize(), "length": self.length}
+
+    def parse_response(self, v: Any) -> O:
+        selected_cc = CC(**v["cc"])
+        for _hex in GS().map.get_neighbors_off(self.from_hex.position):
+            if _hex.position == selected_cc:
+                difference = selected_cc - _hex.position
+                return [
+                    projected
+                    for i in range(self.length)
+                    if (projected := GS().map.hexes.get(selected_cc + difference * i))
+                ]
+        # TODO some sorta standardized error for this. just need actual validation
+        #  general.
+        raise ValueError("invalid response")
 
 
 class MovementException(Exception): ...

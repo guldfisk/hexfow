@@ -42,7 +42,7 @@ from game.game.events import (
     ApplyStatus,
 )
 from game.game.player import Player
-from game.game.statuses import Terrified
+from game.game.statuses import Terrified, Parasite
 from game.game.values import DamageType
 
 
@@ -412,6 +412,7 @@ class Explosive(StaticAbilityFacet):
 
 # - whenever an adjacent unit is damaged or debuffed, this unit regens 1 energy
 
+
 # TODO same trigger etc
 @dataclasses.dataclass(eq=False)
 class SchadenfreudeDamageTrigger(TriggerEffect[Damage]):
@@ -498,3 +499,30 @@ class GrizzlyMurdererTrigger(TriggerEffect[MeleeAttackAction]):
 class GrizzlyMurderer(StaticAbilityFacet):
     def create_effects(self) -> None:
         self.register_effects(GrizzlyMurdererTrigger(self.owner))
+
+
+@dataclasses.dataclass(eq=False)
+class InjectTrigger(TriggerEffect[SimpleAttack]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def should_trigger(self, event: SimpleAttack) -> bool:
+        return event.attacker == self.unit and any(
+            e.unit == event.defender for e in event.iter_type(Damage)
+        )
+
+    def resolve(self, event: MeleeAttackAction) -> None:
+        ES.resolve(
+            ApplyStatus(
+                unit=event.defender,
+                status_type=Parasite,
+                by=self.unit.controller,
+            )
+        )
+
+
+class EggBearer(StaticAbilityFacet):
+
+    def create_effects(self) -> None:
+        self.register_effects(InjectTrigger(self.owner))

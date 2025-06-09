@@ -91,12 +91,6 @@ export const renderMap = (
 
   const dividerFrames = [0, 1].map(getDividerFrame);
 
-  const healthFrame = new GraphicsContext().circle(0, 0, 24).fill();
-  const healthBgGraphics = new GraphicsContext().circle(0, 0, 24).fill("black");
-  const healthBarGraphics = new GraphicsContext()
-    .rect(-24, -24, 48, 48)
-    .fill("red");
-
   const statusFrame = new GraphicsContext().circle(0, 0, 20).fill();
   const statusBorder = new GraphicsContext()
     .circle(0, 0, 20)
@@ -224,6 +218,10 @@ export const renderMap = (
             },
           });
         }
+      } else if (
+        option["targetProfile"]["type"] == "ConsecutiveAdjacentHexes"
+      ) {
+
       } else if (
         option["type"] == "EffortOption" &&
         option["targetProfile"]["type"] == "NoTarget" &&

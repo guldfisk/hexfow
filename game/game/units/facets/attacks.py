@@ -152,33 +152,13 @@ class Bite(MeleeAttackFacet):
 #         -1 attack power
 
 
-@dataclasses.dataclass(eq=False)
-class InjectTrigger(TriggerEffect[SimpleAttack]):
-    priority: ClassVar[int] = 0
-
-    unit: Unit
-
-    def should_trigger(self, event: SimpleAttack) -> bool:
-        return event.attacker == self.unit and any(
-            e.unit == event.defender for e in event.iter_type(Damage)
-        )
-
-    def resolve(self, event: MeleeAttackAction) -> None:
-        ES.resolve(
-            ApplyStatus(
-                unit=event.defender,
-                status_type=Parasite,
-                by=self.unit.controller,
-            )
-        )
-
-
 class Inject(MeleeAttackFacet):
     movement_cost = 1
     damage = 4
 
-    def create_effects(self) -> None:
-        self.register_effects(InjectTrigger(self.owner))
+
+class Sting(MeleeAttackFacet):
+    damage = 2
 
 
 class RoundhouseKick(MeleeAttackFacet):

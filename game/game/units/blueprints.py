@@ -12,6 +12,10 @@ from game.game.units.facets.activated_abilities import (
     InducePanic,
     LeapFrog,
     BatonPass,
+    SummonScarab,
+    Sweep,
+    Stare,
+    Jaunt,
 )
 from game.game.units.facets.attacks import (
     Peck,
@@ -35,6 +39,7 @@ from game.game.units.facets.attacks import (
     SerratedBeak,
     Inject,
     RoundhouseKick,
+    Sting,
 )
 from game.game.units.facets.static_abilities import (
     Prickly,
@@ -50,16 +55,10 @@ from game.game.units.facets.static_abilities import (
     Explosive,
     Schadenfreude,
     GrizzlyMurderer,
+    EggBearer,
 )
 from game.game.values import Size
 
-# cactus {1} x1
-# health 3, movement 0, sight 0, energy 0/2, M
-# grow
-#     ability 2 energy
-#     heals 1
-# - units melee attacking this unit suffers 2 damage
-# - immobile
 
 CACTUS = UnitBlueprint(
     name="Cactus",
@@ -71,14 +70,6 @@ CACTUS = UnitBlueprint(
     facets=[Prickly, Immobile, Grow],
 )
 
-# lotus bud {1p} x1
-# health 3, movement 0, sight 0, energy 0/2, S
-# bloom
-#     ability 2 energy
-#     this units dies
-#     heals each adjacent unit 1
-#  - immobile
-#  - allied units can move unto this unit. when they do, this unit dies, and the allied unit is healed 1.
 
 LOTUS_BUD = UnitBlueprint(
     name="Lotus Bud",
@@ -131,30 +122,16 @@ BUGLING = UnitBlueprint(
     "Bugling", health=4, speed=4, sight=2, size=Size.SMALL, facets=[BuglingClaw]
 )
 
-# cyclops {15gg} x1
-# health 11, movement 3, sight 1, L
-# club
-#     melee attack
-#     5 damage
-# sweep
-#     aoe attack
-#     aoe type 3 consecutive adjacent hexes
-#     4 melee damage, -1 movement
-# stare
-#     combinable aoe ability
-#         aoe type radiating line length 4 FoV propagation
-#         reveals hexes this action
 
 CYCLOPS = UnitBlueprint(
-    "Cyclops", health=11, speed=3, size=Size.LARGE, sight=1, facets=[GiantClub]
+    "Cyclops",
+    health=11,
+    speed=3,
+    size=Size.LARGE,
+    sight=1,
+    facets=[GiantClub, Sweep, Stare],
 )
 
-# rhino beast {15wwg} x1
-# health 10, movement 4, sight 2, L
-# gore
-#     melee attack
-#     4 damage
-#     +2 damage if this unit was not adjacent to target at the beginning of turn
 
 RHINO_BEAST = UnitBlueprint(
     "Rhino", health=10, speed=4, sight=2, size=Size.LARGE, facets=[Gore]
@@ -172,13 +149,6 @@ BOULDER_HURLER_OAF = UnitBlueprint(
     ],
 )
 
-# gnome commando {3w} x2
-# health 4, movement 3, sight 1, S
-# spear
-#     melee attack
-#     2 damage
-# - ignores first move penalty each turn
-
 
 GNOME_COMMANDO = UnitBlueprint(
     "Gnome Commando",
@@ -189,27 +159,9 @@ GNOME_COMMANDO = UnitBlueprint(
     facets=[GnomeSpear, TerrainSavvy],
 )
 
-# zone skirmisher {5} x2
-# health 6, movement 3, sight 2, M
-# salvo
-#     ranged attack
-#     3 damage, 2 range, -1 movement
-#     -1 damage against air
-# engage
-#     melee attack
-#     3 damage
-
 ZONE_SKIRMISHER = UnitBlueprint(
     "ZONE Skirmisher", health=6, speed=3, sight=2, facets=[Blaster, Bayonet]
 )
-
-# goblin assassin {4} x2
-# health 3, movement 3, sight 2, S
-# hidden blade
-#     melee attack
-#     1 damage
-#     +1 damage against exhausted units
-# - stealth
 
 
 GOBLIN_ASSASSIN = UnitBlueprint(
@@ -221,14 +173,6 @@ GOBLIN_ASSASSIN = UnitBlueprint(
     facets=[HiddenBlade, Stealth],
 )
 
-
-# dire wolf {9w} x2
-# health 7, movement 4, sight 2, M
-# bite
-#     melee attack
-#     3 damage
-# - pack hunter
-#     when adjacent enemy unit is melee attacked by different allied unit, dire wolf also hits it.
 
 DIRE_WOLF = UnitBlueprint(
     "Dire Wolf", health=7, speed=4, sight=2, facets=[Bite, PackHunter]
@@ -255,17 +199,19 @@ BULLDOZER = UnitBlueprint(
 #         +1 move penalty
 #         -1 attack power
 
-# horror spawn {-}
-# health 3, movement 2, sight 1, S
-# bite
-#     melee attack
-#     2 damage
 
 HORROR_SPAWN = UnitBlueprint(
-    "Horror Spawn", health=3, speed=2, sight=1, size=Size.SMALL, facets=[SerratedBeak]
+    "Horror Spawn",
+    health=3,
+    speed=2,
+    sight=1,
+    size=Size.SMALL,
+    facets=[SerratedBeak, EggBearer],
 )
 
-HORROR = UnitBlueprint("Horror", health=7, speed=4, sight=2, energy=4, facets=[Inject])
+HORROR = UnitBlueprint(
+    "Horror", health=7, speed=4, sight=2, energy=4, facets=[Inject, EggBearer]
+)
 
 WAR_HOG = UnitBlueprint(
     "War Hog", health=9, speed=3, sight=2, facets=[RazorTusk, Furious]
@@ -296,53 +242,6 @@ CHAINSAW_SADIST = UnitBlueprint(
 )
 
 
-# TODO this should not be here, but need to figure out how to work with dependency on blueprints
-class SummonScarab(ActivatedAbilityFacet[Hex]):
-    movement_cost = 2
-    energy_cost = 3
-
-    def get_target_profile(self) -> TargetProfile[Hex] | None:
-        return OneOfHexes(
-            [
-                _hex
-                for _hex in GS().map.get_hexes_within_range_off(self.owner, 3)
-                if GS().vision_map[self.owner.controller][_hex.position]
-                and not line_of_sight_obstructed(
-                    GS().map.position_of(self.owner).position,
-                    _hex.position,
-                    GS().vision_obstruction_map[self.owner.controller].get,
-                )
-                and (
-                    (unit := GS().map.unit_on(_hex)) is None
-                    or unit.is_hidden_for(self.owner.controller)
-                )
-            ]
-        )
-
-    def perform(self, target: Hex) -> None:
-        for spawn_event in ES.resolve(
-            SpawnUnit(
-                blueprint=SCARAB,
-                controller=self.owner.controller,
-                space=target,
-                exhausted=True,
-            )
-        ).iter_type(SpawnUnit):
-            # TODO right now this triggers schadenfreude, which makes fine sense,
-            #  but is not necessarily immediately obvious, and was not what I
-            #  intended to begin with. Could circumvent it, but would be pretty
-            #  ugly. Mechanically seems cool, maybe just make sure it is clear
-            #  from description, and maybe bump energy cost / reduce max energy.
-            ES.resolve(
-                ApplyStatus(
-                    unit=spawn_event.result,
-                    status_type=Ephemeral,
-                    by=self.owner.controller,
-                    duration=3,
-                )
-            )
-
-
 PESTILENCE_PRIEST = UnitBlueprint(
     "Pestilence Priest",
     health=5,
@@ -369,3 +268,136 @@ EFFORTLESS_ATHLETE = UnitBlueprint(
     energy=4,
     facets=[RoundhouseKick, LeapFrog, BatonPass, TerrainSavvy],
 )
+
+# anti-tank mine {1p} x2
+# health 1, movement 1, sight 0, S
+# deploy
+#     ability
+#     this unit dies leaving no corpse. apply status anti-tank mined to terrain
+#         hidden
+#         when L ground unit moves in, it suffers 3 damage with 2 ap, and remove this status.
+
+# blind oracle {2p} x1
+# health 2, movement 2, sight 0, energy 2/3, M
+# vision
+#     aoe ability 2 energy
+#     aot type hex, 6 range, NLoS, no movement
+#     applies revealed to hex for 1 round
+
+# psy-synced null {4p} x2
+# health 4, movement 3, sight 2, energy 3, M
+# psionic synchronization
+#     ability 2 energy
+#     target allied unit 2 range NLoS
+#     activates target
+
+# blood conduit {4pp} x1
+# health 3, movement 3, sight 2, energy 3, M
+# vitality transfer
+#     ability 2 energy
+#     target two allied units 3 range LoS, -1 movement
+#     transfers up to 3 health from one to the other
+
+# stim drone {4pp} x1
+# health 3, movement 2, sight 1, energy 3, S
+# inject
+#     ability 3 energy
+#     target unit 1 range
+#     ready target, it suffers 1 pure damage
+#     this unit dies
+
+# TODO how do resistance with current damage thingy, split into 2 events?
+# glass golem {5} x2
+# health 1, movement 3, armor 2, sight 2, M
+# punch
+#     melee attack
+#     3 damage
+# - greater resistance to damage from statuses
+
+# diamond golem {7} x2
+# health 1, movement 3, armor 3, sight 2, M
+# diamond fist
+#     melee attack
+#     4 damage
+# - immune to damage from statuses
+
+# TODO look at this as well for damage changes
+# inferno trooper {5} x2
+# health 6, movement 3, sight 2, M
+# flamethrower
+#     ranged attack
+#     3 damage, 1 range, -1 movement
+#     armor piercing
+#     ground only
+#     deals damage in the form of burning
+
+# TODO terrain statuses
+# desolation trooper {6} x2
+# health 6, movement 3, sight 2, energy 4, M
+# beam
+#     ranged attack
+#     3 damage, 2 range, -1 movement
+#     armor piercing
+#     deals damage in the form of radiated
+# desecrate ground
+#     aoe ability 3 energy, -2 movement
+#     aoe type hex size 1 centered on this unit
+#     applies 2 radiated and radiation 1 to terrain
+# - greater resistance to damage from radiated
+
+# TODO dispells
+# witch doctor {6pp} x1
+# health 3, movement 3, sight 2, energy 5, M
+# restore
+#      ability 3 energy
+#      target allied unit 3 range LoS
+#      -1 movement
+#      heals 3 health and dispel latest debuff
+# evil eye
+#     ability 2 energy
+#     target enemy unit 3 range LoS
+#     -2 movement
+#     apply 1 poison
+
+# giant slayer mouse {7} x1
+# health 5, movement 3, sight 2, S
+# slay
+#     melee attack
+#     3 damage
+#     +2 damage against L
+# - if health would be reduced below 1, instead reduce it to 1, dispel all debuffs and apply mortally wounded for 1 round
+#     unstackable, unrefreshable
+#     undispellable
+#     dies when expires
+
+# TODO how works in multiples/different controllers?
+# cult brute {7wp} x1
+# health 7, movement 3, sight 2, M
+# ritual dagger
+#     melee attack
+#     3 damage
+#     before damage, apply entangled doom to target
+#         whenever this unit suffers damage not from entangled doom, each other allied unit with the entangled doom debuff suffers 1 pure damage
+# - whenever an enemy unit with entangled doom dies, heals this unit 1 health
+
+
+VOID_SPRITE = UnitBlueprint(
+    "Void Sprite",
+    health=5,
+    speed=1,
+    sight=2,
+    energy=7,
+    size=Size.SMALL,
+    facets=[Sting, Jaunt],
+)
+
+# bee shaman {7wrp} x2
+# health 4, movement 3, sight 2, energy 3, S
+# summon bees
+#     ability 2 energy
+#     target hex 2 range LoS, -2 movement
+#     summons bee swarm with ephemeral duration 1 round
+# royal jelly
+#     ability 2 energy
+#     target different allied unit 2 range LoS, -1 movement
+#     heals 2 and restores 1 energy

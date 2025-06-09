@@ -2,7 +2,14 @@ import dataclasses
 from typing import Self, ClassVar
 
 from events.eventsystem import TriggerEffect, ES, StateModifierEffect
-from game.game.core import UnitStatus, GS, RefreshableDurationUnitStatus, Unit
+from events.tests.game_objects.advanced_units import Player
+from game.game.core import (
+    UnitStatus,
+    GS,
+    RefreshableDurationUnitStatus,
+    Unit,
+    UnitBlueprint,
+)
 from game.game.damage import DamageSignature
 from game.game.events import (
     Damage,
@@ -13,6 +20,7 @@ from game.game.events import (
     MoveUnit,
     SpawnUnit,
     Turn,
+    KillUpkeep,
 )
 from game.game.values import DamageType
 
@@ -36,7 +44,7 @@ class Burn(UnitStatus):
         self.stacks += incoming.stacks
         return True
 
-    def create_effects(self) -> None:
+    def create_effects(self, by: Player) -> None:
         self.register_effects(BurnTrigger(self))
 
 
@@ -62,7 +70,7 @@ class PanickedTrigger(TriggerEffect[Upkeep]):
 class Panicked(RefreshableDurationUnitStatus):
     identifier = "panicked"
 
-    def create_effects(self) -> None:
+    def create_effects(self, by: Player) -> None:
         self.register_effects(PanickedTrigger(self))
 
 
@@ -97,31 +105,35 @@ class TerrifiedModifier(StateModifierEffect[Unit, None, int]):
 class Terrified(RefreshableDurationUnitStatus):
     identifier = "terrified"
 
-    def create_effects(self) -> None:
+    def create_effects(self, by: Player) -> None:
         self.register_effects(TerrifiedModifier(self.parent))
 
 
 @dataclasses.dataclass(eq=False)
-class ParasiteTrigger(TriggerEffect[Kill]):
+class ParasiteTrigger(TriggerEffect[KillUpkeep]):
     priority: ClassVar[int] = 0
 
     status: UnitStatus
+    created_by: Player
 
-    def should_trigger(self, event: Kill) -> bool:
+    def should_trigger(self, event: KillUpkeep) -> bool:
         return event.unit == self.status.parent
 
-    def resolve(self, event: Kill) -> None:
+    def resolve(self, event: KillUpkeep) -> None:
         target_position = GS().map.position_of(event.unit)
         if GS().map.unit_on(target_position):
             target_position = None
 
-            for e in reversed(ES.history):
-                if isinstance(e, TurnUpkeep):
+            for historic_event in reversed(ES.history):
+                if isinstance(historic_event, TurnUpkeep):
                     break
-                if isinstance(e, MeleeAttackAction) and e.defender == event.unit:
-                    for move in e.iter_type(MoveUnit):
+                if (
+                    isinstance(historic_event, MeleeAttackAction)
+                    and historic_event.defender == event.unit
+                ):
+                    for move in historic_event.iter_type(MoveUnit):
                         if (
-                            move.unit == event.unit
+                            move.unit == historic_event.attacker
                             and move.result
                             and not GS().map.unit_on(move.result)
                         ):
@@ -130,19 +142,26 @@ class ParasiteTrigger(TriggerEffect[Kill]):
                 if target_position:
                     break
 
-        # TODO need to have way to get unit by identifier at runtime here.
         if target_position:
-            ES.resolve(SpawnUnit)
+            ES.resolve(
+                SpawnUnit(
+                    blueprint=UnitBlueprint.registry["horror_spawn"],
+                    controller=self.created_by,
+                    space=target_position,
+                    exhausted=True,
+                )
+            )
 
 
 class Parasite(UnitStatus):
+    identifier = "parasite"
 
     # TODO ABC for this
     def merge(self, incoming: Self) -> bool:
         return True
 
-    def create_effects(self) -> None:
-        super().create_effects()
+    def create_effects(self, by: Player) -> None:
+        self.register_effects(ParasiteTrigger(self, by))
 
 
 @dataclasses.dataclass(eq=False)
@@ -166,7 +185,7 @@ class BurstOfSpeed(UnitStatus):
     def merge(self, incoming: Self) -> bool:
         return True
 
-    def create_effects(self) -> None:
+    def create_effects(self, by: Player) -> None:
         self.register_effects(BurstOfSpeedTrigger(self))
 
 
@@ -186,5 +205,5 @@ class Staggered(UnitStatus):
     def merge(self, incoming: Self) -> bool:
         return True
 
-    def create_effects(self) -> None:
+    def create_effects(self, by: Player) -> None:
         self.register_effects(StaggeredTrigger(self))

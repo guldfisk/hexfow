@@ -47,6 +47,7 @@ health 1, movement 1, sight 0, S
 deploy
     ability
     this unit dies leaving no corpse. apply status anti-tank mined to terrain
+        hidden
         when L ground unit moves in, it suffers 3 damage with 2 ap, and remove this status.
 
 balloon {1u} x1
@@ -981,6 +982,25 @@ purifying nova
     no movement
     each adjacent enemy unit suffers 2 pure damage. heal each adjacent allied unit 2.
 
+effortless athlete {8wwp} x1
+health 6, movement 3, sight 2, energy 4, M
+leap-frog
+    multi unlimited activations combinable ability 1 energy
+    -1 movement, target adjacent unit
+    move this unit to the opposite side of the targeted unit
+    if successful and the target unit is an enemy, apply staggered to it.
+        removed at the end of the turn
+roundhouse kick
+    melee attack
+    3 damage
+    +1 damage against staggered units
+baton pass
+    ability 1 energy
+    target other allied unit this unit wasn't adjacent to at the beginning of its turn
+    applies burst of speed
+        +1 movement point next activation
+- ignores first movement penalty each turn
+
 gigantomancer {8gpp}
 health 5, movement 3, sight 2, energy 4, S
 claw
@@ -1332,25 +1352,6 @@ bash
     5 damage, -1 movement
     +1 damage against S
 - adjacent enemy units have -1 attack power
-
-effortless athlete {8wwp} x1
-health 6, movement 3, sight 2, energy 4, M
-leap-frog
-    multi unlimited activations combinable ability 1 energy
-    -1 movement, target adjacent unit
-    move this unit to the opposite side of the targeted unit
-    if successful and the target unit is an enemy, apply staggered to it.
-        removed at the end of the turn
-roundhouse kick
-    melee attack
-    3 damage
-    +1 damage against staggered units
-baton pass
-    ability 1 energy
-    target other allied unit this unit wasn't adjacent to at the beginning of its turn
-    applies burst of speed
-        +1 movement point next activation
-- ignores first movement penalty each turn
 
 porcupine beast {10g} x1
 health 7, movement 3, sight 2, M
@@ -1719,6 +1720,32 @@ blink
     no movement
     teleport to that hex 
 - stealth
+
+sanguiformer savant {12ppp} x1
+health 7, movement 3, sight 1, M
+hemokinesis
+    ranged attack
+    3 damage, 2 range, -2 movement
+    deals 1 true damage to this unit
+transfusion
+    combinable ability 2 sanguine energy
+    target allied unit 2 range LoS
+    -1 movement
+    heals 2
+rain of gore
+    aoe ability 3 sanguine energy
+    aoe type hex size 2, 3 range NLoS
+    deals 1 true damage to each unit
+forbidden awakening
+    ability 13 sanguine energy
+    target unit 3 range LoS
+    deals true damage equal to half the units current health, rounded up.
+    sets energy of target to 13.
+    applies accelerate 1 and awakened for 1 round
+        +2 attack power
+        +2 movement
+        +1 sight
+- whenever an allied unit within 4 range is damaged, this unit gains a stack of sanguine energy.
 
 sphinx {12upp} x1
 health 7, movement 3, sight 2, energy 5, M
