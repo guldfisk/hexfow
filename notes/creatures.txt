@@ -1630,6 +1630,29 @@ spin web
             loses flying
 - stealth while on web
 
+legendary wrestler {11pg} x1
+health 7, movement 3, sight 2, energy 4, M
+tackle
+    melee attack
+    2 damage
+    applies stumble
+        -1 movement point next activation
+from the top rope
+    melee attack
+    4 damage, -1 movement
+    +1 damage against exhausted units
+    deals 2 non-lethal physical damage to this unit
+supplex
+    ability 3 energy, -2 movement
+    target M- adjacent unit
+    deals 3 melee damage and moves the target to the other side of this unit, if able.
+- caught in the match
+    enemies disengageging this units suffers -1 movement point
+- heel turn
+    when this unit receives 4 or more damage in a single instance, it gets, "they've got a still chari"
+        unstackable
+        +1 attack power
+
 magebane desecrator {11pp}
 health 9, movement 3, sight 2, L
 ruinous blow
