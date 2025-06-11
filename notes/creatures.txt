@@ -1640,7 +1640,7 @@ tackle
 from the top rope
     melee attack
     4 damage, -1 movement
-    +1 damage against exhausted units
+    +1 damage against units with stumble debuff
     deals 2 non-lethal physical damage to this unit
 supplex
     ability 3 energy, -2 movement
