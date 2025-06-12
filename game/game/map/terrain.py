@@ -36,6 +36,9 @@ class Forest(Terrain):
 class Hills(Terrain):
     identifier = "hills"
 
+    def is_highground(self) -> bool:
+        return True
+
 
 class Water(Terrain):
     identifier = "water"
@@ -46,6 +49,7 @@ class Water(Terrain):
 
 # TODO should be able to have triggers listening on multiple events, it should even
 #  work with making the generic type a union.
+
 
 @dataclasses.dataclass(eq=False)
 class BurnOnWalkIn(TriggerEffect[MoveUnit]):

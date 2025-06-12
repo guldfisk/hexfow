@@ -16,6 +16,7 @@ import {
   CCToRC,
   hexDistance,
   hexHeight,
+  hexSize,
   hexVerticeOffsets,
   hexWidth,
 } from "./geometry.ts";
@@ -221,7 +222,6 @@ export const renderMap = (
       } else if (
         option["targetProfile"]["type"] == "ConsecutiveAdjacentHexes"
       ) {
-
       } else if (
         option["type"] == "EffortOption" &&
         option["targetProfile"]["type"] == "NoTarget" &&
@@ -456,6 +456,15 @@ export const renderMap = (
       unitContainer.scale = sizeMap[hexData.unit.size];
 
       hexContainer.addChild(unitContainer);
+    }
+
+    if (hexData.isObjective) {
+      const flagSprite = new Sprite(textureMap["flag_icon"]);
+      // flagSprite.anchor = {x: 0, y: .5}
+      // flagSprite.y = - hexHeight / 2 + 50
+      flagSprite.x = -hexWidth / 2 + 10;
+      flagSprite.y = -hexSize / 2;
+      hexContainer.addChild(flagSprite);
     }
 
     hexContainer.eventMode = "static";

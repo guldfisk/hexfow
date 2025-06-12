@@ -1,4 +1,4 @@
-import {CC} from "./geometry.ts";
+import { CC } from "./geometry.ts";
 
 export type Size = "S" | "M" | "L";
 
@@ -28,6 +28,7 @@ export interface Unit {
 export interface Hex {
   cc: CC;
   terrain: string;
+  isObjective: boolean;
   visible: boolean;
   unit: Unit | null;
 }

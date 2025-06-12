@@ -12,6 +12,11 @@ from game.game.units.facets.activated_abilities import (
     Stare,
     Jaunt,
     Rouse,
+    SummonBees,
+    StimulatingInjection,
+    Suplex,
+    Lasso,
+    Showdown,
 )
 from game.game.units.facets.attacks import (
     Peck,
@@ -36,6 +41,13 @@ from game.game.units.facets.attacks import (
     Inject,
     RoundhouseKick,
     Sting,
+    Stinger,
+    GlassFist,
+    DiamondFist,
+    Slay,
+    Tackle,
+    FromTheTopRope,
+    TwinRevolvers,
 )
 from game.game.units.facets.static_abilities import (
     Prickly,
@@ -53,6 +65,9 @@ from game.game.units.facets.static_abilities import (
     GrizzlyMurderer,
     EggBearer,
     TelepathicSpy,
+    CaughtInTheMatch,
+    HeelTurn,
+    Quick,
 )
 from game.game.values import Size
 
@@ -65,6 +80,7 @@ CACTUS = UnitBlueprint(
     energy=2,
     starting_energy=0,
     facets=[Prickly, Immobile, Grow],
+    price=1,
 )
 
 
@@ -77,19 +93,32 @@ LOTUS_BUD = UnitBlueprint(
     starting_energy=0,
     size=Size.SMALL,
     facets=[Immobile, Nourishing, Bloom],
+    price=1,
 )
 
 CHICKEN = UnitBlueprint(
-    name="Chicken", health=2, speed=1, sight=1, size=Size.SMALL, facets=[Peck]
+    name="Chicken", health=2, speed=1, sight=1, size=Size.SMALL, facets=[Peck], price=1
 )
 
 LUMBERING_PILLAR = UnitBlueprint(
-    name="Lumbering Pillar", health=7, speed=1, sight=0, armor=2, size=Size.LARGE
+    name="Lumbering Pillar",
+    health=7,
+    speed=1,
+    sight=0,
+    armor=2,
+    size=Size.LARGE,
+    price=2,
 )
 
 
 LIGHT_ARCHER = UnitBlueprint(
-    name="Light Archer", health=4, speed=3, sight=2, facets=[LightBow]
+    name="Light Archer",
+    health=4,
+    speed=3,
+    sight=2,
+    facets=[LightBow],
+    price=3,
+    max_count=3,
 )
 
 MARSHMALLOW_TITAN = UnitBlueprint(
@@ -100,6 +129,8 @@ MARSHMALLOW_TITAN = UnitBlueprint(
     armor=-1,
     size=Size.LARGE,
     facets=[MarshmallowFist],
+    price=3,
+    max_count=2,
 )
 
 # ap rifle squad {6r} x2
@@ -112,11 +143,20 @@ MARSHMALLOW_TITAN = UnitBlueprint(
 #     -1 damage against air
 #     no movement
 
-AP_GUNNER = UnitBlueprint("AP Gunner", health=5, speed=2, sight=2, facets=[APGun])
+AP_GUNNER = UnitBlueprint(
+    "AP Gunner", health=5, speed=2, sight=2, facets=[APGun], price=6, max_count=2
+)
 
 
 BUGLING = UnitBlueprint(
-    "Bugling", health=4, speed=4, sight=2, size=Size.SMALL, facets=[BuglingClaw]
+    "Bugling",
+    health=4,
+    speed=4,
+    sight=2,
+    size=Size.SMALL,
+    facets=[BuglingClaw],
+    price=5,
+    max_count=3,
 )
 
 
@@ -127,11 +167,12 @@ CYCLOPS = UnitBlueprint(
     size=Size.LARGE,
     sight=1,
     facets=[GiantClub, Sweep, Stare],
+    price=15,
 )
 
 
 RHINO_BEAST = UnitBlueprint(
-    "Rhino", health=10, speed=4, sight=2, size=Size.LARGE, facets=[Gore]
+    "Rhino", health=10, speed=4, sight=2, size=Size.LARGE, facets=[Gore], price=15
 )
 
 BOULDER_HURLER_OAF = UnitBlueprint(
@@ -144,6 +185,7 @@ BOULDER_HURLER_OAF = UnitBlueprint(
         HurlBoulder,
         Farsighted,
     ],
+    price=8,
 )
 
 
@@ -154,10 +196,18 @@ GNOME_COMMANDO = UnitBlueprint(
     sight=1,
     size=Size.SMALL,
     facets=[GnomeSpear, TerrainSavvy],
+    price=3,
+    max_count=2,
 )
 
 ZONE_SKIRMISHER = UnitBlueprint(
-    "ZONE Skirmisher", health=6, speed=3, sight=2, facets=[Blaster, Bayonet]
+    "ZONE Skirmisher",
+    health=6,
+    speed=3,
+    sight=2,
+    facets=[Blaster, Bayonet],
+    price=2,
+    max_count=2,
 )
 
 
@@ -168,16 +218,25 @@ GOBLIN_ASSASSIN = UnitBlueprint(
     sight=2,
     size=Size.SMALL,
     facets=[HiddenBlade, Stealth],
+    price=4,
+    max_count=2,
 )
 
 
 DIRE_WOLF = UnitBlueprint(
-    "Dire Wolf", health=7, speed=4, sight=2, facets=[Bite, PackHunter]
+    "Dire Wolf", health=7, speed=4, sight=2, facets=[Bite, PackHunter], price=9
 )
 
 
 BULLDOZER = UnitBlueprint(
-    "Bulldozer", health=11, speed=2, sight=1, size=Size.LARGE, armor=1, facets=[Pusher]
+    "Bulldozer",
+    health=11,
+    speed=2,
+    sight=1,
+    size=Size.LARGE,
+    armor=1,
+    facets=[Pusher],
+    price=9,
 )
 
 # horror {12wp} x1
@@ -204,18 +263,21 @@ HORROR_SPAWN = UnitBlueprint(
     sight=1,
     size=Size.SMALL,
     facets=[SerratedBeak, EggBearer],
+    price=None,
 )
 
 HORROR = UnitBlueprint(
-    "Horror", health=7, speed=4, sight=2, energy=4, facets=[Inject, EggBearer]
+    "Horror", health=7, speed=4, sight=2, energy=4, facets=[Inject, EggBearer], price=12
 )
 
 WAR_HOG = UnitBlueprint(
-    "War Hog", health=9, speed=3, sight=2, facets=[RazorTusk, Furious]
+    "War Hog", health=9, speed=3, sight=2, facets=[RazorTusk, Furious], price=9
 )
 
 
-MEDIC = UnitBlueprint("Medic", health=5, speed=3, sight=2, energy=4, facets=[HealBeam])
+MEDIC = UnitBlueprint(
+    "Medic", health=4, speed=3, sight=2, energy=4, facets=[HealBeam], price=6
+)
 
 # bombard canon {6rr} x2
 # health 4, movement 1, sight 1, M
@@ -226,7 +288,7 @@ MEDIC = UnitBlueprint("Medic", health=5, speed=3, sight=2, energy=4, facets=[Hea
 
 
 BOMB_TRUCK = UnitBlueprint(
-    "Bomb Truck", health=5, speed=3, sight=1, facets=[Explosive, Suicide]
+    "Bomb Truck", health=5, speed=3, sight=1, facets=[Explosive, Suicide], price=6
 )
 
 
@@ -236,6 +298,7 @@ CHAINSAW_SADIST = UnitBlueprint(
     speed=3,
     sight=2,
     facets=[Chainsaw, FightFlightFreeze, GrizzlyMurderer],
+    price=10,
 )
 
 
@@ -246,14 +309,22 @@ PESTILENCE_PRIEST = UnitBlueprint(
     sight=2,
     energy=6,
     facets=[SummonScarab, InducePanic, Schadenfreude],
+    price=10,
 )
 
 SCARAB = UnitBlueprint(
-    "Scarab", health=2, speed=2, armor=1, sight=1, size=Size.SMALL, facets=[Pinch]
+    "Scarab",
+    health=2,
+    speed=2,
+    armor=1,
+    sight=1,
+    size=Size.SMALL,
+    facets=[Pinch],
+    price=None,
 )
 
 BLITZ_TROOPER = UnitBlueprint(
-    "Blitz Trooper", health=6, speed=3, sight=2, facets=[LightBlaster, Strafe]
+    "Blitz Trooper", health=6, speed=3, sight=2, facets=[LightBlaster, Strafe], price=10
 )
 
 
@@ -264,6 +335,7 @@ EFFORTLESS_ATHLETE = UnitBlueprint(
     sight=2,
     energy=4,
     facets=[RoundhouseKick, LeapFrog, BatonPass, TerrainSavvy],
+    price=8,
 )
 
 # anti-tank mine {1p} x2
@@ -295,13 +367,18 @@ EFFORTLESS_ATHLETE = UnitBlueprint(
 #     target two allied units 3 range LoS, -1 movement
 #     transfers up to 3 health from one to the other
 
-# stim drone {4pp} x1
-# health 3, movement 2, sight 1, energy 3, S
-# inject
-#     ability 3 energy
-#     target unit 1 range
-#     ready target, it suffers 1 pure damage
-#     this unit dies
+
+STIM_DRONE = UnitBlueprint(
+    "Stim Drone",
+    health=3,
+    speed=2,
+    sight=1,
+    energy=3,
+    size=Size.SMALL,
+    facets=[StimulatingInjection],
+    price=4,
+)
+
 
 # TODO how do resistance with current damage thingy, split into 2 events?
 # glass golem {5} x2
@@ -311,12 +388,20 @@ EFFORTLESS_ATHLETE = UnitBlueprint(
 #     3 damage
 # - greater resistance to damage from statuses
 
+GLASS_GOLEM = UnitBlueprint(
+    "Glass Golem", health=1, speed=3, armor=2, sight=2, facets=[GlassFist], price=5
+)
+
 # diamond golem {7} x2
 # health 1, movement 3, armor 3, sight 2, M
 # diamond fist
 #     melee attack
 #     4 damage
 # - immune to damage from statuses
+
+DIAMOND_GOLEM = UnitBlueprint(
+    "Diamond Golem", health=1, speed=3, armor=3, sight=2, facets=[DiamondFist], price=7
+)
 
 # TODO look at this as well for damage changes
 # inferno trooper {5} x2
@@ -367,6 +452,16 @@ EFFORTLESS_ATHLETE = UnitBlueprint(
 #     undispellable
 #     dies when expires
 
+GIANT_SLAYER_MOUSE = UnitBlueprint(
+    "Giant Slayer Mouse",
+    health=5,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    facets=[Slay],
+    price=7,
+)
+
 # TODO how works in multiples/different controllers?
 # cult brute {7wp} x1
 # health 7, movement 3, sight 2, M
@@ -386,6 +481,7 @@ VOID_SPRITE = UnitBlueprint(
     energy=7,
     size=Size.SMALL,
     facets=[Sting, Jaunt],
+    price=7,
 )
 
 # bee swarm {-}
@@ -407,6 +503,20 @@ VOID_SPRITE = UnitBlueprint(
 #     ability 2 energy
 #     target different allied unit 2 range LoS, -1 movement
 #     heals 2 and restores 1 energy
+
+BEE_SWARM = UnitBlueprint(
+    "Bee Swarm",
+    health=2,
+    speed=3,
+    sight=1,
+    size=Size.SMALL,
+    facets=[Stinger],
+    price=None,
+)
+
+BEE_SHAMAN = UnitBlueprint(
+    "Bee Shaman", health=4, speed=3, sight=2, energy=3, facets=[SummonBees], price=None
+)
 
 # telepath {7pp} x1
 # health 5, movement 3, sight 0, energy 5, M
@@ -432,5 +542,91 @@ VOID_SPRITE = UnitBlueprint(
 # - adjacent enemy units also provide vision for this units controller
 
 TELEPATH = UnitBlueprint(
-    "Telepath", health=5, speed=3, sight=0, energy=5, facets=[TelepathicSpy, Rouse]
+    "Telepath",
+    health=5,
+    speed=3,
+    sight=0,
+    energy=5,
+    facets=[TelepathicSpy, Rouse],
+    price=None,
+)
+
+# legendary wrestler {11pg} x1
+# health 7, movement 3, sight 2, energy 4, M
+# tackle
+#     melee attack
+#     2 damage
+#     applies stumble
+#         -1 movement point next activation
+# from the top rope
+#     melee attack
+#     4 damage, -1 movement
+#     +1 damage against units with stumble debuff
+#     deals 2 non-lethal physical damage to this unit
+# supplex
+#     ability 3 energy, -2 movement
+#     target M- adjacent unit
+#     deals 3 melee damage and moves the target to the other side of this unit, if able.
+# - caught in the match
+#     enemies disengageging this units suffers -1 movement point
+# - heel turn
+#     when this unit receives 4 or more damage in a single instance, it gets, "they've got a still chari"
+#         unstackable
+#         +1 attack power
+
+
+LEGENDARY_WRESTLER = UnitBlueprint(
+    "Legendary Wrestler",
+    health=7,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[
+        Tackle,
+        FromTheTopRope,
+        Suplex,
+        CaughtInTheMatch,
+        HeelTurn,
+    ],
+    # TODO Can't handle that many targets on same hex
+    # price=11,
+    price=None,
+)
+
+# notorious outlaw
+# health 5, movement 3, sight 2, energy 3, M
+# twin revolvers
+#     2x repeatable ranged attack
+#     2 damage, 3 range, -1 movement
+# lasso
+#     combineable ability 3 energy
+#     target enemy unit 2 range LoS
+#     -2 movement
+#     applies rooted for 1 round
+# showdown
+#     ability 3 energy
+#     target enemy unit 3 range LoS
+#     no movement
+#     hits the targeted unit with primary ranged attack twice
+#     if it is still alive, it will first try to hit with it's primary ranged attack if it has one, if it doesn't or can't,
+#     it will try to hit with it's primary melee attack.
+#     if it hits this way, exhaust it
+# - dash
+#     when this unit ends it's turn, it may move one space (irregardless of movement points)
+
+NOTORIOUS_OUTLAW = UnitBlueprint(
+    "Notorious Outlaw",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=3,
+    facets=[
+        TwinRevolvers,
+        # Lasso,
+        Showdown,
+        Quick,
+    ],
+    # TODO too many target etc
+    # price=12,
+    price=None,
 )

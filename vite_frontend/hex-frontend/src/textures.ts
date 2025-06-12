@@ -19,7 +19,11 @@ export const loadGameTextures = async () => {
       `/src/images/ui/${uiIdentifier}.png`,
     );
   }
-  for (const iconIdentifier of ["shield_icon", "shield_broken_icon"]) {
+  for (const iconIdentifier of [
+    "shield_icon",
+    "shield_broken_icon",
+    "flag_icon",
+  ]) {
     textureMap[iconIdentifier] = await Assets.load(
       `/src/images/icons/${iconIdentifier}.png`,
     );

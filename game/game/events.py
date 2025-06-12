@@ -21,7 +21,7 @@ from game.game.core import (
     StatusType,
 )
 from game.game.damage import DamageSignature
-from game.game.decisions import SelectOptionDecisionPoint, NoTarget, O
+from game.game.decisions import SelectOptionDecisionPoint, NoTarget, O, OptionDecision
 from game.game.player import Player
 from game.game.values import DamageType
 
@@ -115,6 +115,8 @@ class Damage(Event[int]):
                 0,
             )
         )
+        if not self.signature.lethal:
+            damage = min(damage, self.unit.health - 1)
         self.unit.damage += damage
         return damage
 
@@ -134,6 +136,8 @@ class SimpleAttack(Event[None]):
                 self.defender, self.attack.get_damage_signature_against(self.defender)
             )
         )
+        # TODO do we actually want this here, or should it be triggers?
+        self.attack.resolve_post_damage_effects(self.defender)
 
 
 @dataclasses.dataclass
@@ -324,6 +328,14 @@ class TurnUpkeep(Event[None]):
 
 # TODO IDK
 @dataclasses.dataclass()
+class TurnCleanup(Event[None]):
+    unit: Unit
+
+    def resolve(self) -> None: ...
+
+
+# TODO IDK
+@dataclasses.dataclass()
 class ActionUpkeep(Event[None]):
     unit: Unit
 
@@ -347,15 +359,31 @@ class Turn(Event[bool]):
             #  vision map when unit tests run just a turn.
             GS().update_vision()
 
-            if not (legal_options := self.unit.get_legal_options(context)):
+            if not (
+                legal_options := [
+                    option
+                    for option in self.unit.get_legal_options(context)
+                    if context.locked_into is None
+                    or isinstance(option, SkipOption)
+                    or (
+                        isinstance(option, EffortOption)
+                        and option.facet == context.locked_into
+                    )
+                ]
+            ):
                 break
 
             ES.resolve(ActionUpkeep(unit=self.unit))
 
-            decision = GS().make_decision(
-                self.unit.controller,
-                SelectOptionDecisionPoint(legal_options, explanation="do shit"),
-            )
+            # TODO maybe have some is_auto_resolvable thing instead?
+            if all(isinstance(option, SkipOption) for option in legal_options):
+                decision = OptionDecision(legal_options[0], None)
+            else:
+                decision = GS().make_decision(
+                    self.unit.controller,
+                    SelectOptionDecisionPoint(legal_options, explanation="do shit"),
+                )
+
             if isinstance(decision.option, SkipOption):
                 ES.resolve(SkipAction(self.unit))
                 do_state_based_check()
@@ -393,12 +421,18 @@ class Turn(Event[bool]):
                     raise ValueError("blah")
                 # TODO unclear which of this logic should be on the action event, and which should be here...
                 if not decision.option.facet.combinable:
-                    context.should_stop = True
+                    if decision.option.facet.max_activations != 1:
+                        context.locked_into = decision.option.facet
+                    else:
+                        context.should_stop = True
             else:
                 raise ValueError("blah")
 
             do_state_based_check()
             context.has_acted = True
+
+        ES.resolve(TurnCleanup(unit=self.unit))
+        do_state_based_check()
 
         self.unit.exhausted = True
         GS().active_unit_context = None
@@ -448,7 +482,9 @@ class Round(Event[None]):
             activateable_units = None
             if gs.activation_queued_units:
                 if activateable_queued_units := [
-                    unit for unit in gs.activation_queued_units if unit.can_be_activated
+                    unit
+                    for unit in gs.activation_queued_units
+                    if unit.can_be_activated(None)
                 ]:
                     while not (
                         activateable_units := [

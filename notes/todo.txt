@@ -13,12 +13,14 @@ game functionality
     aoe selection ui
     elevation
     buff/debuff differentiation
+    chess clock
+    victory points/checking
     nice to have
         dispells
         terrain statuses
         hidden statuses
-        well defined effects order
-        well defined order of iterating units on map
+        well-defined effects order
+        well-defined order of iterating units on map
 
 map + army for playtesting
 production configuration

@@ -15,3 +15,9 @@ class DamageType(StrEnum):
     AOE = auto()
     PHYSICAL = auto()
     TRUE = auto()
+
+
+class VisionObstruction(IntEnum):
+    NONE = auto()
+    HIGH_GROUND = auto()
+    FULL = auto()

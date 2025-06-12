@@ -29,7 +29,7 @@ from game.game.map.coordinates import CC, line_of_sight_obstructed
 from game.game.map.geometry import hex_circle
 from game.game.player import Player
 from game.game.turn_order import TurnOrder
-from game.game.values import Size, DamageType
+from game.game.values import Size, DamageType, VisionObstruction
 from game.tests.conftest import EventLogger
 
 
@@ -134,6 +134,10 @@ class EffortFacet(Facet, Modifiable):
 class AttackFacet(EffortFacet): ...
 
 
+# TODO cleanup typevar definitions and names
+C = TypeVar("C", bound=AttackFacet)
+
+
 # TODO maybe this is all attacks, and "aoe attacks" are all abilities?
 class SingleTargetAttackFacet(AttackFacet):
     damage_type: ClassVar[DamageType]
@@ -156,6 +160,8 @@ class SingleTargetAttackFacet(AttackFacet):
             type=self.damage_type,
             ap=self.ap,
         )
+
+    def resolve_post_damage_effects(self, defender: Unit) -> None: ...
 
 
 class MeleeAttackFacet(SingleTargetAttackFacet):
@@ -194,6 +200,23 @@ class MeleeAttackFacet(SingleTargetAttackFacet):
         )
 
 
+# TODO where should logic for these be?
+def is_vision_obstructed_for_unit_at(unit: Unit, cc: CC) -> bool:
+    match GS().vision_obstruction_map[unit.controller][cc]:
+        case VisionObstruction.FULL:
+            return True
+        case VisionObstruction.HIGH_GROUND:
+            return not GS().map.position_of(unit).terrain.is_highground()
+        case _:
+            return False
+
+
+def line_of_sight_obstructed_for_unit(unit: Unit, line_from: CC, line_to: CC) -> bool:
+    return line_of_sight_obstructed(
+        line_from, line_to, lambda cc: is_vision_obstructed_for_unit_at(unit, cc)
+    )
+
+
 class RangedAttackFacet(SingleTargetAttackFacet):
     display_type = "RangedAttack"
     damage_type = DamageType.RANGED
@@ -207,10 +230,10 @@ class RangedAttackFacet(SingleTargetAttackFacet):
             if unit.controller != self.owner.controller
             # TODO test on this
             and unit.is_visible_to(self.owner.controller)
-            and not line_of_sight_obstructed(
+            and not line_of_sight_obstructed_for_unit(
+                self.owner,
                 GS().map.position_of(self.owner).position,
                 GS().map.position_of(unit).position,
-                GS().vision_obstruction_map[self.owner.controller].get,
             )
             and unit.can_be_attacked_by(self)
         ]
@@ -324,6 +347,7 @@ class UnitBlueprint:
     def __init__(
         self,
         name: str,
+        *,
         health: int,
         speed: int,
         sight: int,
@@ -334,6 +358,8 @@ class UnitBlueprint:
         # TODO should this be a stat?
         aquatic: bool = False,
         facets: list[type[Facet]] | None = None,
+        price: int | None,
+        max_count: int = 1,
     ):
         self.name = name
         self.health = health
@@ -347,6 +373,9 @@ class UnitBlueprint:
         self.facets = facets or []
         self.identifier = re.sub("_+", "_", re.sub("[^a-z]", "_", self.name.lower()))
         self.registry[self.identifier] = self
+
+        self.price = price
+        self.max_count = max_count
 
     def __repr__(self):
         return f"{type(self).__name__}({self.name})"
@@ -403,6 +432,12 @@ class Unit(HasStatuses, Modifiable, VisionBound):
         for facet in self.attacks + self.activated_abilities + self.static_abilities:
             facet.create_effects()
 
+    def get_primary_attack(self, of_type: type[C] | None = None) -> C | None:
+        for attack in self.attacks:
+            if of_type is None or isinstance(attack, of_type):
+                return attack
+        return None
+
     @modifiable
     def can_be_activated(self, _: None = None) -> bool:
         return not self.exhausted
@@ -431,10 +466,8 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             > self.sight.g()
         ):
             return False
-        return not line_of_sight_obstructed(
-            space.map.position_of(self).position,
-            space.position,
-            GS().vision_obstruction_map[self.controller].get,
+        return not line_of_sight_obstructed_for_unit(
+            self, space.map.position_of(self).position, space.position
         )
 
     @modifiable
@@ -448,16 +481,21 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             or GS().vision_map[player][GS().map.position_of(self).position]
         ) and not self.is_hidden_for(player)
 
+    # TODO should effects modifying get_legal_options on movement modify this instead?
+    @modifiable
+    def get_potential_move_destinations(self, _: None) -> list[Hex]:
+        return [
+            _hex
+            for _hex in GS().map.get_neighbors_off(self)
+            if not GS().vision_map[self.controller][_hex.position]
+            or _hex.can_move_into(self)
+        ]
+
     @modifiable
     def get_legal_options(self, context: ActiveUnitContext) -> list[Option]:
         options = []
         if context.movement_points > 0:
-            if moveable_hexes := [
-                _hex
-                for _hex in GS().map.get_neighbors_off(self)
-                if not GS().vision_map[self.controller][_hex.position]
-                or _hex.can_move_into(self)
-            ]:
+            if moveable_hexes := self.get_potential_move_destinations(None):
                 options.append(MoveOption(target_profile=OneOfHexes(moveable_hexes)))
         if context.movement_points >= 0:
             for facet in self.attacks:
@@ -564,10 +602,10 @@ class SingleTargetActivatedAbility(ActivatedAbilityFacet[Unit]):
             and unit.is_visible_to(self.owner.controller)
             and (
                 not self.requires_los
-                or not line_of_sight_obstructed(
+                or not line_of_sight_obstructed_for_unit(
+                    self.owner,
                     GS().map.position_of(self.owner).position,
                     GS().map.position_of(unit).position,
-                    GS().vision_obstruction_map[self.owner.controller].get,
                 )
             )
         ]:
@@ -590,8 +628,14 @@ class SingleEnemyActivatedAbility(SingleTargetActivatedAbility):
 
 
 @dataclasses.dataclass
+class HexSpec:
+    terrain_type: type[Terrain]
+    is_objective: bool
+
+
+@dataclasses.dataclass
 class Landscape:
-    terrain_map: Mapping[CC, type[Terrain]]
+    terrain_map: Mapping[CC, HexSpec]
     # deployment_zones: Collection[AbstractSet[CubeCoordinate]]
 
 
@@ -622,6 +666,7 @@ class Terrain(HasEffects, ABC):
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
         return 0
 
+    # TODO modifyable or whatever
     def is_highground(self) -> bool:
         return False
 
@@ -630,6 +675,7 @@ class Terrain(HasEffects, ABC):
 class Hex(Modifiable, HasStatuses, Serializable):
     position: CC
     terrain: Terrain
+    is_objective: bool
     map: HexMap
 
     @modifiable
@@ -656,12 +702,14 @@ class Hex(Modifiable, HasStatuses, Serializable):
         return self.terrain.get_move_out_penalty_for(unit)
 
     @modifiable
-    def blocks_vision_for(self, player: Player) -> bool:
+    def blocks_vision_for(self, player: Player) -> VisionObstruction:
         if self.terrain.blocks_vision():
-            return True
-        if unit := self.map.unit_on(self):
-            return unit.blocks_vision_for(player)
-        return False
+            return VisionObstruction.FULL
+        if (unit := self.map.unit_on(self)) and unit.blocks_vision_for(player):
+            return VisionObstruction.FULL
+        if self.terrain.is_highground():
+            return VisionObstruction.HIGH_GROUND
+        return VisionObstruction.NONE
 
     @modifiable
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
@@ -674,6 +722,7 @@ class Hex(Modifiable, HasStatuses, Serializable):
                 "h": self.position.h,
             },
             "terrain": self.terrain.__class__.identifier,
+            "is_objective": self.is_objective,
             "visible": GS().vision_map[context.player][self.position],
             "unit": (
                 unit.serialize(context)
@@ -761,8 +810,13 @@ class HexMap:
     def __init__(self, landscape: Landscape):
         # TODO register terrain effects
         self.hexes = {
-            position: Hex(position=position, terrain=terrain_type(), map=self)
-            for position, terrain_type in landscape.terrain_map.items()
+            position: Hex(
+                position=position,
+                terrain=hex_spec.terrain_type(),
+                is_objective=hex_spec.is_objective,
+                map=self,
+            )
+            for position, hex_spec in landscape.terrain_map.items()
         }
         for _hex in self.hexes.values():
             _hex.terrain.create_effects(_hex)
@@ -842,6 +896,7 @@ class ActiveUnitContext(Serializable):
     activated_facets: defaultdict[str, int] = dataclasses.field(
         default_factory=lambda: defaultdict(int)
     )
+    locked_into: EffortFacet | None = None
 
     def serialize(self, context: SerializationContext) -> JSON:
         return {
@@ -886,7 +941,7 @@ class GameState:
             player: IDMap() for player in self.turn_order.players
         }
 
-        self.vision_obstruction_map: dict[Player, dict[CC, bool]] = {}
+        self.vision_obstruction_map: dict[Player, dict[CC, VisionObstruction]] = {}
         self.vision_map: dict[Player, dict[CC, bool]] = {}
 
         # TODO for debugging
@@ -904,8 +959,8 @@ class GameState:
                 position: _hex.blocks_vision_for(player)
                 for position, _hex in self.map.hexes.items()
             }
-        for player in self.turn_order.players:
 
+        for player in self.turn_order.players:
             self.vision_map[player] = {
                 position: any(unit.can_see(_hex) for unit in unit_vision_map[player])
                 for position, _hex in self.map.hexes.items()
@@ -915,11 +970,6 @@ class GameState:
         self, context: SerializationContext, decision_point: DecisionPoint | None
     ) -> Mapping[str, Any]:
         v = {
-            # "game_state": {
-            #     "players": {},
-            #     "round": self.round_counter,
-            #     "map": self.map.serialize(context),
-            # },
             "player": context.player.name,
             "players": {},
             "round": self.round_counter,

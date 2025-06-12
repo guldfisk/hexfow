@@ -25,7 +25,7 @@ from game.game.core import (
     SkipOption,
 )
 from game.game.damage import DamageSignature
-from game.game.decisions import Option
+from game.game.decisions import Option, NoTarget, SelectOptionDecisionPoint
 from game.game.events import (
     SimpleAttack,
     Damage,
@@ -40,9 +40,10 @@ from game.game.events import (
     KillUpkeep,
     GainEnergy,
     ApplyStatus,
+    TurnCleanup,
 )
 from game.game.player import Player
-from game.game.statuses import Terrified, Parasite
+from game.game.statuses import Terrified, Parasite, TheyVeGotASteelChair
 from game.game.values import DamageType
 
 
@@ -315,10 +316,9 @@ class StealthModifier(StateModifierEffect[Unit, Player, bool]):
             obj == self.unit
             and request != self.unit.controller
             and not any(
-                unit.can_see(GS().map.position_of(self.unit))
-                for unit in GS().map.get_neighboring_units_off(
-                    self.unit, controlled_by=request
-                )
+                request in unit.provides_vision_for(None)
+                and unit.can_see(GS().map.position_of(self.unit))
+                for unit in GS().map.get_neighboring_units_off(self.unit)
             )
         )
 
@@ -575,3 +575,140 @@ class TelepathicSpyModifier(StateModifierEffect[Unit, None, set[Player]]):
 class TelepathicSpy(StaticAbilityFacet):
     def create_effects(self) -> None:
         self.register_effects(TelepathicSpyModifier(self.owner))
+
+
+@dataclasses.dataclass(eq=False)
+class CaughtInTheMatchTrigger(TriggerEffect[MoveAction]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def should_trigger(self, event: MoveAction) -> bool:
+        return (
+            event.unit.controller != self.unit.controller
+            and GS().active_unit_context
+            and GS().active_unit_context.unit == event.unit
+            and any(
+                move_event.unit == event.unit
+                and move_event.result
+                and move_event.result.position.distance_to(
+                    GS().map.position_of(self.unit).position
+                )
+                <= 1
+                and move_event.to_.position.distance_to(
+                    GS().map.position_of(self.unit).position
+                )
+                > 1
+                for move_event in event.iter_type(MoveUnit)
+            )
+        )
+
+    def resolve(self, event: MoveAction) -> None:
+        # TODO should be event. prob in reality this effect should be a replacement on
+        #  movement penalties...
+        GS().active_unit_context.movement_points -= 1
+
+
+class CaughtInTheMatch(StaticAbilityFacet):
+
+    def create_effects(self) -> None:
+        self.register_effects(CaughtInTheMatchTrigger(self.owner))
+
+
+# legendary wrestler {11pg} x1
+# health 7, movement 3, sight 2, energy 4, M
+# tackle
+#     melee attack
+#     2 damage
+#     applies stumble
+#         -1 movement point next activation
+# from the top rope
+#     melee attack
+#     4 damage, -1 movement
+#     +1 damage against units with stumble debuff
+#     deals 2 non-lethal physical damage to this unit
+# supplex
+#     ability 3 energy, -2 movement
+#     target M- adjacent unit
+#     deals 3 melee damage and moves the target to the other side of this unit, if able.
+# - caught in the match
+#     enemies disengageging this units suffers -1 movement point
+# - heel turn
+#     when this unit receives 4 or more damage in a single instance, it gets, "they've got a still chari"
+#         unstackable
+#         +1 attack power
+
+
+@dataclasses.dataclass(eq=False)
+class HeelTurnTrigger(TriggerEffect[Damage]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def should_trigger(self, event: Damage) -> bool:
+        return event.unit == self.unit and event.result >= 4
+
+    def resolve(self, event: Damage) -> None:
+        ES.resolve(
+            ApplyStatus(
+                unit=self.unit,
+                status_type=TheyVeGotASteelChair,
+                by=self.unit.controller,
+            )
+        )
+
+
+class HeelTurn(StaticAbilityFacet):
+
+    def create_effects(self) -> None:
+        self.register_effects(HeelTurnTrigger(self.owner))
+
+
+# notorious outlaw
+# health 5, movement 3, sight 2, energy 3, M
+# twin revolvers
+#     2x repeatable ranged attack
+#     2 damage, 3 range, -1 movement
+# lasso
+#     combineable ability 3 energy
+#     target enemy unit 2 range LoS
+#     -2 movement
+#     applies rooted for 1 round
+# showdown
+#     ability 3 energy
+#     target enemy unit 3 range LoS
+#     no movement
+#     hits the targeted unit with primary ranged attack twice
+#     if it is still alive, it will first try to hit with it's primary ranged attack if it has one, if it doesn't or can't,
+#     it will try to hit with it's primary melee attack.
+#     if it hits this way, exhaust it
+# - dash
+#     when this unit ends it's turn, it may move one space (irregardless of movement points)
+
+
+@dataclasses.dataclass(eq=False)
+class QuickTrigger(TriggerEffect[TurnCleanup]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def should_trigger(self, event: TurnCleanup) -> bool:
+        return event.unit == self.unit
+
+    def resolve(self, event: TurnCleanup) -> None:
+        options = [SkipOption(target_profile=NoTarget())]
+        if moveable_hexes := self.unit.get_potential_move_destinations(None):
+            options.append(MoveOption(target_profile=OneOfHexes(moveable_hexes)))
+
+        decision = GS().make_decision(
+            self.unit.controller,
+            SelectOptionDecisionPoint(options, explanation="quick"),
+        )
+        if isinstance(decision.option, MoveOption):
+            ES.resolve(MoveAction(self.unit, to_=decision.target))
+
+
+class Quick(StaticAbilityFacet):
+
+    def create_effects(self) -> None:
+        self.register_effects(QuickTrigger(self.owner))

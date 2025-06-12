@@ -8,3 +8,4 @@ class DamageSignature:
     amount: int
     type: DamageType = DamageType.PHYSICAL
     ap: int = 0
+    lethal: bool = True

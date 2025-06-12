@@ -13,12 +13,12 @@ from websockets.sync.server import serve, ServerConnection
 
 from events.eventsystem import ES, EventSystem
 from events.exceptions import GameException
-from game.game.core import GameState, Landscape
+from game.game.core import GameState, Landscape, HexSpec
 from game.game.events import SpawnUnit, Play
 from game.game.interface import Connection
-from game.game.map.coordinates import CC
+from game.game.map.coordinates import CC, cc_to_rc
 from game.game.map.geometry import hex_circle
-from game.game.map.terrain import Plains, Forest, Magma, Water
+from game.game.map.terrain import Plains
 from game.game.player import Player
 from game.game.units.blueprints import *
 
@@ -99,20 +99,26 @@ class Game(Thread):
                             pass
                     raise GameClosed()
 
+            # random.seed(23947)
+
             gs = GameState(
                 2,
                 WebsocketConnection,
                 Landscape(
                     {
-                        cc: random.choice(
-                            [
-                                Plains,
-                                # Forest,
-                                # Magma,
-                                # Water,
-                            ]
+                        cc: HexSpec(
+                            random.choice(
+                                [
+                                    Plains,
+                                    # Forest,
+                                    # Magma,
+                                    # Hills,
+                                    # Water,
+                                ]
+                            ),
+                            cc.distance_to(CC(0, 0)) <= 1,
                         )
-                        for cc in hex_circle(7)
+                        for cc in hex_circle(4)
                     }
                 ),
             )
@@ -123,126 +129,170 @@ class Game(Thread):
                 key=lambda cc: (cc.distance_to(CC(0, 0)), cc.r, CC.h),
             )
 
-            for player, values in (
-                (
-                    gs.turn_order.players[0],
-                    (
-                        TELEPATH,
-                        # EFFORTLESS_ATHLETE,
-                        LIGHT_ARCHER,
-                        # VOID_SPRITE,
-                        # LIGHT_ARCHER,
-                        # GOBLIN_ASSASSIN,
-                        # PESTILENCE_PRIEST,
-                        # DIRE_WOLF,
-                        # LOTUS_BUD,
-                        # BULLDOZER,
-                        # CHAINSAW_SADIST,
-                        # CHICKEN,
-                        # MARSHMALLOW_TITAN,
-                        # MEDIC,
-                        # ZONE_SKIRMISHER,
-                        # BLITZ_TROOPER,
-                    ),
-                ),
-                (
-                    gs.turn_order.players[1],
-                    (
-                        # WAR_HOG,
-                        LIGHT_ARCHER,
-                        LIGHT_ARCHER,
-                        # CYCLOPS,
-                        # HORROR,
-                        # RHINO_BEAST,
-                        # LOTUS_BUD,
-                        # GNOME_COMMANDO,
-                        # LUMBERING_PILLAR,
-                        # AP_GUNNER,
-                        # CACTUS,
-                        # CHICKEN,
-                        # CHAINSAW_SADIST,
-                        # PESTILENCE_PRIEST,
-                    ),
-                ),
-            ):
-                for v in values:
-                    if isinstance(v, tuple):
-                        blueprint, cc = v
-                        print(cc, ccs)
-                        ccs.remove(cc)
-                        ES.resolve(
-                            SpawnUnit(
-                                blueprint=blueprint,
-                                controller=player,
-                                space=gs.map.hexes[cc],
-                            )
+            use_random_units = False
+            # use_random_units = True
+
+            print(len(UnitBlueprint.registry))
+
+            if use_random_units:
+                min_random_unit_quantity = 7
+                random_unt_quantity_threshold = 12
+                point_threshold = random_unt_quantity_threshold * 5
+
+                unit_pool = [
+                    blueprint
+                    for blueprint in UnitBlueprint.registry.values()
+                    for _ in range(blueprint.max_count)
+                    if blueprint.price is not None
+                ]
+                random.shuffle(unit_pool)
+
+                player_units = [[], []]
+
+                while (
+                    any(len(us) < min_random_unit_quantity for us in player_units)
+                    or any(
+                        sum(u.price for u in us) < point_threshold
+                        for us in player_units
+                    )
+                ) and not any(
+                    len(us) > random_unt_quantity_threshold for us in player_units
+                ):
+                    min(player_units, key=lambda v: sum(u.price for u in v)).append(
+                        unit_pool.pop()
+                    )
+
+                player_points = [sum(u.price for u in v) for v in player_units]
+                if not len(set(player_points)) == 1 and unit_pool:
+                    eligible_price = (
+                        max(below_threshold)
+                        if (
+                            below_threshold := [
+                                unit.price
+                                for unit in unit_pool
+                                if unit.price
+                                <= abs(player_points[0] - player_points[1])
+                            ]
                         )
-                    else:
+                        else min(unit.price for unit in unit_pool)
+                    )
+                    player_units[
+                        min(enumerate(player_points), key=lambda v: v[1])[0]
+                    ].append(
+                        random.choice(
+                            [unit for unit in unit_pool if unit.price == eligible_price]
+                        )
+                    )
+
+                random.shuffle(ccs)
+                player_ccs = [
+                    [
+                        cc
+                        for cc in ccs
+                        if ((x := cc_to_rc(cc).x) < 1 or x > 1) and (x > 0 if i else x < 0)
+                    ]
+                    for i in range(2)
+                ]
+
+                for player, units, pccs in zip(
+                    gs.turn_order.players, player_units, player_ccs
+                ):
+                    for unit in units:
                         ES.resolve(
                             SpawnUnit(
-                                blueprint=v,
+                                blueprint=unit,
                                 controller=player,
-                                space=gs.map.hexes[ccs.pop(0)],
+                                space=gs.map.hexes[pccs.pop()],
                             )
                         )
 
-            # ES.resolve(
-            #     SpawnUnit(
-            #         blueprint=BOULDER_HURLER_OAF,
-            #         controller=gs.turn_order.players[0],
-            #         space=gs.map.hexes[CC(0, 0)],
-            #     )
-            # )
-            # ES.resolve(
-            #     SpawnUnit(
-            #         blueprint=LUMBERING_PILLAR,
-            #         controller=gs.turn_order.players[0],
-            #         space=gs.map.hexes[CC(1, -1)],
-            #     )
-            # )
-            # ES.resolve(
-            #     SpawnUnit(
-            #         blueprint=LIGHT_ARCHER,
-            #         controller=gs.turn_order.players[0],
-            #         space=gs.map.hexes[CC(1, 0)],
-            #     )
-            # )
-            # ES.resolve(
-            #     SpawnUnit(
-            #         blueprint=BUGLING,
-            #         controller=gs.turn_order.players[0],
-            #         space=gs.map.hexes[CC(0, 0)],
-            #     )
-            # )
-            # ES.resolve(
-            #     SpawnUnit(
-            #         blueprint=CYCLOPS,
-            #         controller=gs.turn_order.players[0],
-            #         space=gs.map.hexes[CC(-1, 0)],
-            #     )
-            # )
+                # for idx, player in enumerate(gs.turn_order.players):
+                #     for cc in ccs[
+                #         idx * random_unit_quantity : (idx + 1) * random_unit_quantity
+                #         + 1
+                #     ]:
+                #         ES.resolve(
+                #             SpawnUnit(
+                #                 blueprint=random.choice(
+                #                     list(UnitBlueprint.registry.values())
+                #                 ),
+                #                 controller=player,
+                #                 space=gs.map.hexes[cc],
+                #             )
+                #         )
 
-            # ES.resolve(
-            #     SpawnUnit(
-            #         blueprint=LIGHT_ARCHER,
-            #         controller=gs.turn_order.players[1],
-            #         space=gs.map.hexes[CC(0, -1)],
-            #     )
-            # )
-            # ES.resolve(
-            #     SpawnUnit(
-            #         blueprint=AP_GUNNER,
-            #         controller=gs.turn_order.players[1],
-            #         space=gs.map.hexes[CC(0, -2)],
-            #     )
-            # )
-            # ES.resolve(
-            #     SpawnUnit(
-            #         blueprint=CACTUS,
-            #         controller=gs.turn_order.players[1],
-            #         space=gs.map.hexes[CC(-1, 1)],
-            #     )
-            # )
+            else:
+                for player, values in (
+                    (
+                        gs.turn_order.players[0],
+                        (
+                            # TELEPATH,
+                            # GLASS_GOLEM,
+                            # DIAMOND_GOLEM,
+                            # GIANT_SLAYER_MOUSE,
+                            # EFFORTLESS_ATHLETE,
+                            # STIM_DRONE,
+                            # LEGENDARY_WRESTLER,
+                            # LIGHT_ARCHER,
+                            # PESTILENCE_PRIEST,
+                            # EFFORTLESS_ATHLETE,
+                            NOTORIOUS_OUTLAW,
+                            # VOID_SPRITE,
+                            # LIGHT_ARCHER,
+                            # GOBLIN_ASSASSIN,
+                            # PESTILENCE_PRIEST,
+                            # DIRE_WOLF,
+                            # LOTUS_BUD,
+                            # BULLDOZER,
+                            # CHAINSAW_SADIST,
+                            # CHICKEN,
+                            # MARSHMALLOW_TITAN,
+                            # MEDIC,
+                            # ZONE_SKIRMISHER,
+                            # BLITZ_TROOPER,
+                        ),
+                    ),
+                    (
+                        gs.turn_order.players[1],
+                        (
+                            # WAR_HOG,
+                            # GOBLIN_ASSASSIN,
+                            LIGHT_ARCHER,
+                            CYCLOPS,
+                            BLITZ_TROOPER,
+                            # HORROR,
+                            # RHINO_BEAST,
+                            # LOTUS_BUD,
+                            # GNOME_COMMANDO,
+                            # LUMBERING_PILLAR,
+                            # AP_GUNNER,
+                            # CACTUS,
+                            # CHICKEN,
+                            # CHAINSAW_SADIST,
+                            # PESTILENCE_PRIEST,
+                        ),
+                    ),
+                ):
+                    for v in values:
+                        if isinstance(v, tuple):
+                            blueprint, cc = v
+                            print(cc, ccs)
+                            ccs.remove(cc)
+                            ES.resolve(
+                                SpawnUnit(
+                                    blueprint=blueprint,
+                                    controller=player,
+                                    space=gs.map.hexes[cc],
+                                )
+                            )
+                        else:
+                            ES.resolve(
+                                SpawnUnit(
+                                    blueprint=v,
+                                    controller=player,
+                                    space=gs.map.hexes[ccs.pop(0)],
+                                )
+                            )
 
             ES.resolve(Play())
         except GameClosed:

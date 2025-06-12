@@ -33,6 +33,7 @@ from game.game.core import (
     RangedAttackFacet,
     ActivateUnitOption,
     Hex,
+    HexSpec,
 )
 from game.game.events import SpawnUnit, SimpleAttack, Turn, Round
 from game.game.interface import Connection
@@ -189,8 +190,9 @@ class SelectionError(Exception):
 
 class TargetSelector:
     @abstractmethod
-    def select(self, values: Mapping[str, Any], player: Player) -> Mapping[str, Any]:
-        ...
+    def select(
+        self, values: Mapping[str, Any], player: Player
+    ) -> Mapping[str, Any]: ...
 
 
 @dataclasses.dataclass
@@ -256,8 +258,9 @@ class OneOfUnitsSelector(TargetSelector):
 
 class DecisionSelector(ABC):
     @abstractmethod
-    def __call__(self, values: Mapping[str, Any], player: Player) -> Mapping[str, Any]:
-        ...
+    def __call__(
+        self, values: Mapping[str, Any], player: Player
+    ) -> Mapping[str, Any]: ...
 
 
 @dataclasses.dataclass
@@ -265,8 +268,7 @@ class OptionSelector(DecisionSelector):
     target_selector: TargetSelector | None = None
 
     @abstractmethod
-    def should_select(self, option: Mapping[str, Any]) -> bool:
-        ...
+    def should_select(self, option: Mapping[str, Any]) -> bool: ...
 
     def __call__(self, values: Mapping[str, Any], player: Player) -> Mapping[str, Any]:
         for idx, option in enumerate(values["decision"]["payload"]["options"]):
@@ -335,7 +337,7 @@ def select_hex(coordinate: CC, values: Mapping[str, Any]) -> Mapping[str, Any]:
 def generate_hex_landscape(
     radius: int = 2, terrain_type: type[Terrain] = Plains
 ) -> Landscape:
-    return Landscape({cc: terrain_type for cc in hex_circle(radius)})
+    return Landscape({cc: HexSpec(terrain_type, False) for cc in hex_circle(radius)})
 
 
 @pytest.fixture
@@ -424,7 +426,9 @@ def test_attack(unit_spawner: UnitSpawner) -> None:
     cactus = unit_spawner.spawn(CACTUS)
 
     ES.resolve(
-        SimpleAttack(attacker=chicken, defender=cactus, attack=get_attack(chicken, Peck))
+        SimpleAttack(
+            attacker=chicken, defender=cactus, attack=get_attack(chicken, Peck)
+        )
     )
     ES.resolve_pending_triggers()
 

@@ -1642,7 +1642,7 @@ from the top rope
     4 damage, -1 movement
     +1 damage against units with stumble debuff
     deals 2 non-lethal physical damage to this unit
-supplex
+suplex
     ability 3 energy, -2 movement
     target M- adjacent unit
     deals 3 melee damage and moves the target to the other side of this unit, if able.
@@ -1662,56 +1662,6 @@ ruinous blow
 - whenever an enemy unit within 2 range loses energy (spending causes loss), it suffers 1 pure damage
 - resistant to damage not from attacks
 - if a debuff with a duration would be applied to this unit, it is applied with half, rounded up, duration instead
-
-notorious outlaw
-health 5, movement 3, sight 2, energy 3, M
-twin revolvers
-    2x repeatable ranged attack
-    2 damage, 3 range, -1 movement
-lasso
-    combineable ability 3 energy
-    target enemy unit 2 range LoS
-    -2 movement
-    applies rooted for 1 round
-showdown
-    ability 3 energy
-    target enemy unit 3 range LoS
-    no movement
-    hits the targeted unit with primary ranged attack twice
-    if it is still alive, it will first try to hit with it's primary ranged attack if it has one, if it doesn't or can't,
-    it will try to hit with it's primary melee attack.
-    if it hits this way, exhaust it
-- dash
-    when this unit ends it's turn, it may move one space (irregardless of movement points)
-
-witch engine
-health 7, movement 2, sight 2, energy, M
-choking soot
-    aoe ability 4 energy
-    aoe type hex size 1 range 3 NLoS
-    -1 movement
-    applies status soot to terrain for 2 rounds
-        unstackable, refreshable
-        blocks LoS
-        units on this space has -1 sight, to a minimum of 1
-        when a unit moves in, and at the end of each round, units on this hex receives 1 true damage
-terrify
-    ability 5 energy
-    4 range LoS
-    no movement
-    applies terrified for 2 rounds
-        unstackable, refreshable
-        if this unit is adjacent to an enemy unit, it's owner cannot round skip, and the only legal actions
-        of this units are to move away from any adjacent enemy units
-into the gears
-    ability
-    target adjacent allied unit
-    this unit heals equal to the the units heals and gains energy equal to its energy
-    kill the unit
-- withering presence
-    at the end of this units turn, it applies 1 poison to each adjacent unit
-- auro of paranoia
-    whenever an enemy unit within 4 range becomes the target of an allied ability, it suffers 1 true damage
 
 zeus disciple {11pr} x1
 health 5, movement 3, sight 2, energy 5, M
@@ -1816,6 +1766,27 @@ blink
     no movement
     teleport to that hex 
 - stealth
+
+notorious outlaw {12pwr} x1
+health 5, movement 3, sight 2, energy 3, M
+twin revolvers
+    2x repeatable ranged attack
+    2 damage, 3 range, -1 movement
+lasso
+    combineable ability 3 energy
+    target enemy unit 2 range LoS
+    -2 movement
+    applies rooted for 1 round
+showdown
+    ability 3 energy
+    target enemy unit 3 range LoS
+    no movement
+    hits the targeted unit with primary ranged attack twice
+    if it is still alive, it will first try to hit with it's primary ranged attack if it has one, if it doesn't or can't,
+    it will try to hit with it's primary melee attack.
+    if it hits this way, exhaust it
+- quick
+    when this unit ends it's turn, it may move one space (irregardless of movement points)
 
 sanguiformer savant {12ppp} x1
 health 7, movement 3, sight 1, M
@@ -1992,6 +1963,35 @@ pinch
     aoe type two hexes adjacent to this unit and seperated by a single hex
     5 melee damage, -1 movement
  - aquatic
+
+witch engine {13pp} x1
+health 7, movement 2, sight 2, energy, M
+choking soot
+    aoe ability 4 energy
+    aoe type hex size 1 range 3 NLoS
+    -1 movement
+    applies status soot to terrain for 2 rounds
+        unstackable, refreshable
+        blocks LoS
+        units on this space has -1 sight, to a minimum of 1
+        when a unit moves in, and at the end of each round, units on this hex receives 1 true damage
+terrify
+    ability 5 energy
+    4 range LoS
+    no movement
+    applies terrified for 2 rounds
+        unstackable, refreshable
+        if this unit is adjacent to an enemy unit, it's owner cannot round skip, and the only legal actions
+        of this units are to move away from any adjacent enemy units
+into the gears
+    ability
+    target adjacent allied unit
+    this unit heals equal to the the units heals and gains energy equal to its energy
+    kill the unit
+- withering presence
+    at the end of this units turn, it applies 1 poison to each adjacent unit
+- auro of paranoia
+    whenever an enemy unit within 4 range becomes the target of an allied ability, it suffers 1 true damage
 
 inferno tank {13rgg} x1
 health 9, movement 2, armor 1, sight 1, 5 energy L
