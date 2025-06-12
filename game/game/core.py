@@ -613,7 +613,6 @@ class RefreshableDurationUnitStatus(UnitStatus, ABC):
     def merge(self, incoming: Self) -> bool:
         if incoming.duration > self.duration:
             self.duration = incoming.duration
-            self.original_duration = incoming.original_duration
             return True
         return False
 
