@@ -353,3 +353,12 @@ must attack / can't skip ability / status
 same but for spells
 
 shrink ray
+
+witch engine
+	choking soot
+	toxic presence
+	terrify
+	into the gears
+	aura of paranoia
+
+unit that moves up to 2 spaces with normal moves
