@@ -21,3 +21,9 @@ class VisionObstruction(IntEnum):
     NONE = auto()
     HIGH_GROUND = auto()
     FULL = auto()
+
+
+class StatusIntention(StrEnum):
+    BUFF = auto()
+    DEBUFF = auto()
+    NEUTRAL = auto()

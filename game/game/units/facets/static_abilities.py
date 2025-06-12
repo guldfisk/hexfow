@@ -23,6 +23,7 @@ from game.game.core import (
     MoveOption,
     OneOfHexes,
     SkipOption,
+    StatusSignature,
 )
 from game.game.damage import DamageSignature
 from game.game.decisions import Option, NoTarget, SelectOptionDecisionPoint
@@ -489,9 +490,8 @@ class GrizzlyMurdererTrigger(TriggerEffect[MeleeAttackAction]):
                 ES.resolve(
                     ApplyStatus(
                         unit=unit,
-                        status_type=Terrified,
                         by=self.unit.controller,
-                        duration=2,
+                        signature=StatusSignature(Terrified, duration=2),
                     )
                 )
 
@@ -499,33 +499,6 @@ class GrizzlyMurdererTrigger(TriggerEffect[MeleeAttackAction]):
 class GrizzlyMurderer(StaticAbilityFacet):
     def create_effects(self) -> None:
         self.register_effects(GrizzlyMurdererTrigger(self.owner))
-
-
-@dataclasses.dataclass(eq=False)
-class InjectTrigger(TriggerEffect[SimpleAttack]):
-    priority: ClassVar[int] = 0
-
-    unit: Unit
-
-    def should_trigger(self, event: SimpleAttack) -> bool:
-        return event.attacker == self.unit and any(
-            e.unit == event.defender for e in event.iter_type(Damage)
-        )
-
-    def resolve(self, event: MeleeAttackAction) -> None:
-        ES.resolve(
-            ApplyStatus(
-                unit=event.defender,
-                status_type=Parasite,
-                by=self.unit.controller,
-            )
-        )
-
-
-class EggBearer(StaticAbilityFacet):
-
-    def create_effects(self) -> None:
-        self.register_effects(InjectTrigger(self.owner))
 
 
 # telepath {7pp} x1
@@ -652,8 +625,8 @@ class HeelTurnTrigger(TriggerEffect[Damage]):
         ES.resolve(
             ApplyStatus(
                 unit=self.unit,
-                status_type=TheyVeGotASteelChair,
                 by=self.unit.controller,
+                signature=StatusSignature(TheyVeGotASteelChair),
             )
         )
 

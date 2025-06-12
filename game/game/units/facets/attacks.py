@@ -1,8 +1,8 @@
 from events.eventsystem import ES
-from game.game.core import MeleeAttackFacet, RangedAttackFacet, Unit
+from game.game.core import MeleeAttackFacet, RangedAttackFacet, Unit, StatusSignature
 from game.game.damage import DamageSignature
 from game.game.events import Damage, ApplyStatus
-from game.game.statuses import Staggered, Stumbling
+from game.game.statuses import Staggered, Stumbling, Parasite
 from game.game.units.facets.hooks import AdjacencyHook
 from game.game.values import Size
 
@@ -155,6 +155,15 @@ class Inject(MeleeAttackFacet):
     movement_cost = 1
     damage = 4
 
+    def resolve_pre_damage_effects(self, defender: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                unit=defender,
+                by=self.owner.controller,
+                signature=StatusSignature(Parasite),
+            )
+        )
+
 
 class Sting(MeleeAttackFacet):
     damage = 2
@@ -227,7 +236,11 @@ class Tackle(MeleeAttackFacet):
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
         ES.resolve(
-            ApplyStatus(unit=defender, status_type=Stumbling, by=self.owner.controller)
+            ApplyStatus(
+                unit=defender,
+                by=self.owner.controller,
+                signature=StatusSignature(Stumbling),
+            )
         )
 
 

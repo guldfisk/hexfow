@@ -45,6 +45,7 @@ class SerializationContext:
     id_map: IDMap
 
 
+# TODO this should just be a protocol?
 class Serializable(ABC):
 
     @abstractmethod

@@ -2,7 +2,7 @@ import dataclasses
 from typing import ClassVar
 
 from events.eventsystem import TriggerEffect, ES
-from game.game.core import Terrain, Hex, GS, Unit, TerrainProtectionRequest
+from game.game.core import Terrain, Hex, GS, Unit, TerrainProtectionRequest, StatusSignature
 from game.game.events import MoveUnit, Upkeep, ApplyStatus
 from game.game.statuses import Burn
 from game.game.values import Size, DamageType
@@ -62,7 +62,7 @@ class BurnOnWalkIn(TriggerEffect[MoveUnit]):
         return event.to_ == self.hex
 
     def resolve(self, event: MoveUnit) -> None:
-        ES.resolve(ApplyStatus(unit=event.unit, status_type=Burn, by=None, stacks=1))
+        ES.resolve(ApplyStatus(unit=event.unit, by=None, signature=StatusSignature(Burn, stacks=1)))
 
 
 @dataclasses.dataclass(eq=False)
@@ -77,7 +77,7 @@ class BurnOnUpkeep(TriggerEffect[Upkeep]):
 
     def resolve(self, event: Upkeep) -> None:
         if unit := GS().map.unit_on(self.hex):
-            ES.resolve(ApplyStatus(unit=unit, status_type=Burn, by=None, stacks=1))
+            ES.resolve(ApplyStatus(unit=unit, by=None, signature=StatusSignature(Burn, stacks=1)))
 
 
 class Magma(Terrain):

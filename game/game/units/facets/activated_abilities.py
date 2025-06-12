@@ -15,6 +15,7 @@ from game.game.core import (
     line_of_sight_obstructed_for_unit,
     RangedAttackFacet,
     MeleeAttackFacet,
+    StatusSignature,
 )
 from game.game.damage import DamageSignature
 from game.game.decisions import TargetProfile, O
@@ -72,7 +73,9 @@ class InducePanic(SingleEnemyActivatedAbility):
     def perform(self, target: Unit) -> None:
         ES.resolve(
             ApplyStatus(
-                unit=target, status_type=Panicked, by=self.owner.controller, duration=3
+                unit=target,
+                by=self.owner.controller,
+                signature=StatusSignature(Panicked, duration=3),
             )
         )
 
@@ -104,7 +107,9 @@ class LeapFrog(SingleTargetActivatedAbility):
 
                 ES.resolve(
                     ApplyStatus(
-                        unit=target, status_type=Staggered, by=self.parent.controller
+                        unit=target,
+                        by=self.parent.controller,
+                        signature=StatusSignature(Staggered),
                     )
                 )
 
@@ -131,7 +136,11 @@ class BatonPass(SingleTargetActivatedAbility):
 
     def perform(self, target: Unit) -> None:
         ES.resolve(
-            ApplyStatus(unit=target, status_type=BurstOfSpeed, by=self.owner.controller)
+            ApplyStatus(
+                unit=target,
+                by=self.owner.controller,
+                signature=StatusSignature(BurstOfSpeed, stacks=1),
+            )
         )
 
 
@@ -174,9 +183,8 @@ class SummonScarab(ActivatedAbilityFacet[Hex]):
                 ES.resolve(
                     ApplyStatus(
                         unit=spawn_event.result,
-                        status_type=Ephemeral,
                         by=self.owner.controller,
-                        duration=3,
+                        signature=StatusSignature(Ephemeral, duration=3),
                     )
                 )
 
@@ -314,9 +322,8 @@ class SummonBees(ActivatedAbilityFacet):
             ES.resolve(
                 ApplyStatus(
                     unit=spawn_event.result,
-                    status_type=Ephemeral,
                     by=self.owner.controller,
-                    duration=1,
+                    signature=StatusSignature(Ephemeral, stacks=1),
                 )
             )
 
@@ -408,7 +415,9 @@ class Lasso(SingleEnemyActivatedAbility):
     def perform(self, target: Unit) -> None:
         ES.resolve(
             ApplyStatus(
-                unit=target, status_type=Rooted, by=self.owner.controller, duration=1
+                unit=target,
+                by=self.owner.controller,
+                signature=StatusSignature(Rooted, duration=1),
             )
         )
 

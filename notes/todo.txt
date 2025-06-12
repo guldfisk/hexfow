@@ -12,15 +12,22 @@ game functionality
     multi action selection menu ui
     aoe selection ui
     elevation
-    buff/debuff differentiation
+    no movement
+    spawn with status
+    terrain statuses
+    damage pipeline fixes
+    vision ghosts
     chess clock
     victory points/checking
     nice to have
         dispells
-        terrain statuses
         hidden statuses
         well-defined effects order
         well-defined order of iterating units on map
+
+pre-commit
+project files clean up
+game module structure
 
 map + army for playtesting
 production configuration

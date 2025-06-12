@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import dataclasses
 import re
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 from collections import defaultdict
-from enum import StrEnum, auto
 from typing import ClassVar, Literal, Any, TypeVar, Iterator, Generic, Self
 from typing import Mapping
 
@@ -29,7 +28,7 @@ from game.game.map.coordinates import CC, line_of_sight_obstructed
 from game.game.map.geometry import hex_circle
 from game.game.player import Player
 from game.game.turn_order import TurnOrder
-from game.game.values import Size, DamageType, VisionObstruction
+from game.game.values import Size, DamageType, VisionObstruction, StatusIntention
 from game.tests.conftest import EventLogger
 
 
@@ -161,6 +160,7 @@ class SingleTargetAttackFacet(AttackFacet):
             ap=self.ap,
         )
 
+    def resolve_pre_damage_effects(self, defender: Unit) -> None: ...
     def resolve_post_damage_effects(self, defender: Unit) -> None: ...
 
 
@@ -284,24 +284,41 @@ class ActivatedAbilityFacet(EffortFacet, Generic[O]):
 class StaticAbilityFacet(Facet): ...
 
 
-# TODO where
-class StatusType(StrEnum):
-    BUFF = auto()
-    DEBUFF = auto()
-    NEUTRAL = auto()
+class _StatusMeta(ABCMeta):
+    registry: ClassVar[dict[str, Status]] = {}
+
+    def __new__(
+        metacls,
+        name: str,
+        bases: tuple[type, ...],
+        attributes: dict[str, Any],
+        **kwargs: Any,
+    ) -> type:
+        if ABC not in bases:
+            if "identifier" not in attributes:
+                attributes["identifier"] = "_".join(
+                    s.lower() for s in re.findall("[A-Z][^A-Z]+|[A-Z]+(?![^A-Z])", name)
+                )
+        cls = super().__new__(metacls, name, bases, attributes, **kwargs)
+        if ABC not in bases:
+            metacls.registry[cls.identifier] = cls
+        return cls
 
 
-@dataclasses.dataclass(eq=False)
-class Status(HasEffects[H], Serializable):
-    # TODO?
-    # controller: Player = None
-    type_: StatusType
-    duration: int | None = None
-    # TODO don't think this is needed
-    original_duration: int | None = None
-    stacks: int | None = None
-    # TODO
-    identifier: ClassVar[str] = "MISSING"
+class Status(HasEffects[H], Serializable, ABC, metaclass=_StatusMeta):
+    registry: ClassVar[dict[str, Status]]
+    identifier: ClassVar[str]
+
+    def __init__(
+        self,
+        *,
+        duration: int | None = None,
+        stacks: int | None = None,
+        parent: H | None,
+    ):
+        super().__init__(parent=parent)
+        self.duration = duration
+        self.stacks = stacks
 
     def merge(self, incoming: Self) -> bool:
         return False
@@ -312,7 +329,6 @@ class Status(HasEffects[H], Serializable):
         return {
             "type": self.__class__.identifier,
             "duration": self.duration,
-            "original_duration": self.original_duration,
             "stacks": self.stacks,
         }
 
@@ -555,7 +571,27 @@ class Unit(HasStatuses, Modifiable, VisionBound):
         return f"{type(self).__name__}({self.blueprint.name}, {self.controller.name}, {id(self)})"
 
 
-class UnitStatus(Status[Unit]): ...
+class UnitStatus(Status[Unit], ABC):
+    default_intention: ClassVar[StatusIntention | None] = None
+
+    def __init__(
+        self,
+        *,
+        duration: int | None = None,
+        stacks: int | None = None,
+        parent: H | None,
+        intention: StatusIntention,
+    ):
+        super().__init__(duration=duration, stacks=stacks, parent=parent)
+        self.intention = intention
+
+
+@dataclasses.dataclass
+class StatusSignature:
+    status_type: type[UnitStatus]
+    stacks: int | None = None
+    duration: int | None = None
+    intention: StatusIntention | None = None
 
 
 @dataclasses.dataclass
@@ -572,7 +608,7 @@ class OneOfUnits(TargetProfile[Unit]):
 
 
 # TODO ABC, where should this be?
-class RefreshableDurationUnitStatus(UnitStatus):
+class RefreshableDurationUnitStatus(UnitStatus, ABC):
 
     def merge(self, incoming: Self) -> bool:
         if incoming.duration > self.duration:

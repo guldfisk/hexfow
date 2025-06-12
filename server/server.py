@@ -18,7 +18,7 @@ from game.game.events import SpawnUnit, Play
 from game.game.interface import Connection
 from game.game.map.coordinates import CC, cc_to_rc
 from game.game.map.geometry import hex_circle
-from game.game.map.terrain import Plains
+from game.game.map.terrain import Plains, Forest
 from game.game.player import Player
 from game.game.units.blueprints import *
 
@@ -110,7 +110,7 @@ class Game(Thread):
                             random.choice(
                                 [
                                     Plains,
-                                    # Forest,
+                                    Forest,
                                     # Magma,
                                     # Hills,
                                     # Water,
@@ -124,26 +124,32 @@ class Game(Thread):
             )
             GameState.instance = gs
 
-            ccs = sorted(
-                gs.map.hexes.keys(),
-                key=lambda cc: (cc.distance_to(CC(0, 0)), cc.r, CC.h),
+            player_units = (
+                (
+                    HORROR,
+                    PESTILENCE_PRIEST,
+                ),
+                (
+                    LIGHT_ARCHER,
+                    CYCLOPS,
+                    BLITZ_TROOPER,
+                ),
             )
 
             use_random_units = False
             # use_random_units = True
 
-            print(len(UnitBlueprint.registry))
-
             if use_random_units:
                 min_random_unit_quantity = 7
                 random_unt_quantity_threshold = 12
                 point_threshold = random_unt_quantity_threshold * 5
+                banned_units = {LOTUS_BUD, CACTUS}
 
                 unit_pool = [
                     blueprint
                     for blueprint in UnitBlueprint.registry.values()
                     for _ in range(blueprint.max_count)
-                    if blueprint.price is not None
+                    if blueprint.price is not None and not blueprint in banned_units
                 ]
                 random.shuffle(unit_pool)
 
@@ -184,12 +190,17 @@ class Game(Thread):
                         )
                     )
 
+                print("points", [sum(u.price for u in v) for v in player_units])
+                print("units", [len(v) for v in player_units])
+
+                ccs = list(hex_circle(3))
                 random.shuffle(ccs)
                 player_ccs = [
                     [
                         cc
                         for cc in ccs
-                        if ((x := cc_to_rc(cc).x) < 1 or x > 1) and (x > 0 if i else x < 0)
+                        if ((x := cc_to_rc(cc).x) < 1 or x > 1)
+                        and (x > 0 if i else x < 0)
                     ]
                     for i in range(2)
                 ]
@@ -222,57 +233,11 @@ class Game(Thread):
                 #         )
 
             else:
-                for player, values in (
-                    (
-                        gs.turn_order.players[0],
-                        (
-                            # TELEPATH,
-                            # GLASS_GOLEM,
-                            # DIAMOND_GOLEM,
-                            # GIANT_SLAYER_MOUSE,
-                            # EFFORTLESS_ATHLETE,
-                            # STIM_DRONE,
-                            # LEGENDARY_WRESTLER,
-                            # LIGHT_ARCHER,
-                            # PESTILENCE_PRIEST,
-                            # EFFORTLESS_ATHLETE,
-                            NOTORIOUS_OUTLAW,
-                            # VOID_SPRITE,
-                            # LIGHT_ARCHER,
-                            # GOBLIN_ASSASSIN,
-                            # PESTILENCE_PRIEST,
-                            # DIRE_WOLF,
-                            # LOTUS_BUD,
-                            # BULLDOZER,
-                            # CHAINSAW_SADIST,
-                            # CHICKEN,
-                            # MARSHMALLOW_TITAN,
-                            # MEDIC,
-                            # ZONE_SKIRMISHER,
-                            # BLITZ_TROOPER,
-                        ),
-                    ),
-                    (
-                        gs.turn_order.players[1],
-                        (
-                            # WAR_HOG,
-                            # GOBLIN_ASSASSIN,
-                            LIGHT_ARCHER,
-                            CYCLOPS,
-                            BLITZ_TROOPER,
-                            # HORROR,
-                            # RHINO_BEAST,
-                            # LOTUS_BUD,
-                            # GNOME_COMMANDO,
-                            # LUMBERING_PILLAR,
-                            # AP_GUNNER,
-                            # CACTUS,
-                            # CHICKEN,
-                            # CHAINSAW_SADIST,
-                            # PESTILENCE_PRIEST,
-                        ),
-                    ),
-                ):
+                ccs = sorted(
+                    gs.map.hexes.keys(),
+                    key=lambda cc: (cc.distance_to(CC(0, 0)), cc.r, CC.h),
+                )
+                for player, values in zip(gs.turn_order.players, player_units):
                     for v in values:
                         if isinstance(v, tuple):
                             blueprint, cc = v

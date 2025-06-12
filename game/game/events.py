@@ -17,13 +17,12 @@ from game.game.core import (
     MeleeAttackFacet,
     SingleTargetAttackFacet,
     ActivatedAbilityFacet,
-    UnitStatus,
-    StatusType,
+    StatusSignature,
 )
 from game.game.damage import DamageSignature
 from game.game.decisions import SelectOptionDecisionPoint, NoTarget, O, OptionDecision
 from game.game.player import Player
-from game.game.values import DamageType
+from game.game.values import DamageType, StatusIntention
 
 
 # TODO yikes (have this rn so we can do stuff on kill before unit has it's effect
@@ -131,6 +130,7 @@ class SimpleAttack(Event[None]):
         # TODO some way to formalize this?
         if not self.attacker.on_map() or not self.defender.on_map():
             return
+        self.attack.resolve_pre_damage_effects(self.defender)
         ES.resolve(
             Damage(
                 self.defender, self.attack.get_damage_signature_against(self.defender)
@@ -188,30 +188,28 @@ class RangedAttackAction(Event[None]):
 @dataclasses.dataclass
 class ApplyStatus(Event[None]):
     unit: Unit
-    status_type: type[UnitStatus]
     by: Player | None
-    stacks: int | None = None
-    duration: int | None = None
+    signature: StatusSignature
 
     def is_valid(self) -> bool:
         return self.unit.on_map()
 
     def resolve(self) -> None:
         self.unit.add_status(
-            # TODO clean up status inheritance, make that shit not dataclasses i think
-            self.status_type(
-                type_=(
+            self.signature.status_type(
+                intention=self.signature.intention
+                or self.signature.status_type.default_intention
+                or (
                     (
-                        StatusType.BUFF
+                        StatusIntention.BUFF
                         if self.unit.controller == self.by
-                        else StatusType.DEBUFF
+                        else StatusIntention.DEBUFF
                     )
                     if self.by
-                    else StatusType.NEUTRAL
+                    else StatusIntention.NEUTRAL
                 ),
-                duration=self.duration,
-                original_duration=self.duration,
-                stacks=self.stacks,
+                duration=self.signature.duration,
+                stacks=self.signature.stacks,
                 parent=self.unit,
             ),
             self.by,

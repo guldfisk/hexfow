@@ -63,7 +63,6 @@ from game.game.units.facets.static_abilities import (
     Explosive,
     Schadenfreude,
     GrizzlyMurderer,
-    EggBearer,
     TelepathicSpy,
     CaughtInTheMatch,
     HeelTurn,
@@ -262,16 +261,16 @@ HORROR_SPAWN = UnitBlueprint(
     speed=2,
     sight=1,
     size=Size.SMALL,
-    facets=[SerratedBeak, EggBearer],
+    facets=[SerratedBeak],
     price=None,
 )
 
 HORROR = UnitBlueprint(
-    "Horror", health=7, speed=4, sight=2, energy=4, facets=[Inject, EggBearer], price=12
+    "Horror", health=7, speed=4, sight=2, energy=4, facets=[Inject], price=12
 )
 
 WAR_HOG = UnitBlueprint(
-    "War Hog", health=9, speed=3, sight=2, facets=[RazorTusk, Furious], price=9
+    "War Hog", health=8, speed=3, sight=2, facets=[RazorTusk, Furious], price=11
 )
 
 
@@ -400,7 +399,7 @@ GLASS_GOLEM = UnitBlueprint(
 # - immune to damage from statuses
 
 DIAMOND_GOLEM = UnitBlueprint(
-    "Diamond Golem", health=1, speed=3, armor=3, sight=2, facets=[DiamondFist], price=7
+    "Diamond Golem", health=1, speed=3, armor=3, sight=2, facets=[DiamondFist], price=9
 )
 
 # TODO look at this as well for damage changes
@@ -622,8 +621,8 @@ NOTORIOUS_OUTLAW = UnitBlueprint(
     energy=3,
     facets=[
         TwinRevolvers,
-        # Lasso,
-        Showdown,
+        Lasso,
+        # Showdown,
         Quick,
     ],
     # TODO too many target etc

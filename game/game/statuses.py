@@ -25,7 +25,7 @@ from game.game.events import (
     Turn,
     KillUpkeep,
 )
-from game.game.values import DamageType
+from game.game.values import DamageType, StatusIntention
 
 
 @dataclasses.dataclass(eq=False)
@@ -41,7 +41,7 @@ class BurnTrigger(TriggerEffect[Upkeep]):
 
 # TODO what should the order off trigger be for burn vs decrement and such?
 class Burn(UnitStatus):
-    identifier = "burn"
+    default_intention = StatusIntention.DEBUFF
 
     def merge(self, incoming: Self) -> bool:
         self.stacks += incoming.stacks
@@ -71,14 +71,14 @@ class PanickedTrigger(TriggerEffect[Upkeep]):
 
 
 class Panicked(RefreshableDurationUnitStatus):
-    identifier = "panicked"
+    default_intention = StatusIntention.DEBUFF
 
     def create_effects(self, by: Player) -> None:
         self.register_effects(PanickedTrigger(self))
 
 
 class Ephemeral(UnitStatus):
-    identifier = "ephemeral"
+    default_intention = StatusIntention.DEBUFF
 
     def merge(self, incoming: Self) -> bool:
         if incoming.duration < self.duration:
@@ -106,7 +106,7 @@ class TerrifiedModifier(StateModifierEffect[Unit, None, int]):
 
 
 class Terrified(RefreshableDurationUnitStatus):
-    identifier = "terrified"
+    default_intention = StatusIntention.DEBUFF
 
     def create_effects(self, by: Player) -> None:
         self.register_effects(TerrifiedModifier(self.parent))
@@ -157,7 +157,7 @@ class ParasiteTrigger(TriggerEffect[KillUpkeep]):
 
 
 class Parasite(UnitStatus):
-    identifier = "parasite"
+    default_intention = StatusIntention.DEBUFF
 
     # TODO ABC for this
     def merge(self, incoming: Self) -> bool:
@@ -183,7 +183,7 @@ class BurstOfSpeedTrigger(TriggerEffect[TurnUpkeep]):
 
 
 class BurstOfSpeed(UnitStatus):
-    identifier = "burst_of_speed"
+    default_intention = StatusIntention.BUFF
 
     def merge(self, incoming: Self) -> bool:
         return True
@@ -210,7 +210,7 @@ class StumblingTrigger(TriggerEffect[TurnUpkeep]):
 
 
 class Stumbling(UnitStatus):
-    identifier = "stumbling"
+    default_intention = StatusIntention.DEBUFF
 
     def merge(self, incoming: Self) -> bool:
         return True
@@ -235,7 +235,7 @@ class TheyVeGotASteelChairModifier(StateModifierEffect[Unit, None, int]):
 
 
 class TheyVeGotASteelChair(UnitStatus):
-    identifier = "they_ve_got_a_steel_chair"
+    default_intention = StatusIntention.BUFF
 
     def merge(self, incoming: Self) -> bool:
         return True
@@ -255,7 +255,7 @@ class StaggeredTrigger(TriggerEffect[Turn]):
 
 
 class Staggered(UnitStatus):
-    identifier = "staggered"
+    default_intention = StatusIntention.DEBUFF
 
     def merge(self, incoming: Self) -> bool:
         return True
@@ -283,7 +283,7 @@ class RootedModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]])
 
 
 class Rooted(RefreshableDurationUnitStatus):
-    identifier = "rooted"
+    default_intention = StatusIntention.DEBUFF
 
     def create_effects(self, by: Player) -> None:
         self.register_effects(RootedModifier(self.parent))

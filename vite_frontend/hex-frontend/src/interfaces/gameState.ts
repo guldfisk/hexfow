@@ -5,7 +5,6 @@ export type Size = "S" | "M" | "L";
 export interface Status {
   type: string;
   duration: number | null;
-  originalDuration: number | null;
   stacks: number | null;
 }
 
