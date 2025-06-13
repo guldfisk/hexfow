@@ -29,6 +29,7 @@ export interface Hex {
   terrain: string;
   isObjective: boolean;
   visible: boolean;
+  lastVisibleRound: number | null;
   unit: Unit | null;
   statuses: Status[];
 }

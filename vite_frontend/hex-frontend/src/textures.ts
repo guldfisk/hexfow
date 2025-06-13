@@ -23,6 +23,7 @@ export const loadGameTextures = async () => {
     "shield_icon",
     "shield_broken_icon",
     "flag_icon",
+    "closed_eye_icon",
   ]) {
     textureMap[iconIdentifier] = await Assets.load(
       `/src/images/icons/${iconIdentifier}.png`,

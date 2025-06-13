@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from bidict import bidict
 
+from game.game.map.coordinates import CC
 from game.game.player import Player
 
 
@@ -21,6 +22,9 @@ class IDMap:
         self._ids: bidict[int, str] = bidict()
         self._objects: dict[int, object] = {}
         self._accessed: set[int] = set()
+
+    def has_id(self, id_: str) -> bool:
+        return id_ in self._ids.inverse
 
     def get_id_for(self, obj: Any) -> str:
         _id = id(obj)
@@ -43,6 +47,7 @@ class IDMap:
 class SerializationContext:
     player: Player
     id_map: IDMap
+    last_hex_states: dict[CC : dict[str, Any]] | None
 
 
 # TODO this should just be a protocol?

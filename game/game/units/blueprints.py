@@ -71,6 +71,7 @@ from game.game.units.facets.static_abilities import (
     Quick,
     GlassSkin,
     DiamondSkin,
+    LastStand,
 )
 from game.game.values import Size
 
@@ -473,7 +474,7 @@ GIANT_SLAYER_MOUSE = UnitBlueprint(
     speed=3,
     sight=2,
     size=Size.SMALL,
-    facets=[Slay],
+    facets=[Slay, LastStand],
     price=7,
 )
 

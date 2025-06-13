@@ -858,23 +858,45 @@ class Hex(Modifiable, HasStatuses, Serializable):
 
     def serialize(self, context: SerializationContext) -> JSON:
         return {
-            "cc": {
-                "r": self.position.r,
-                "h": self.position.h,
-            },
+            "cc": self.position.serialize(),
             "terrain": self.terrain.__class__.identifier,
             "is_objective": self.is_objective,
-            "visible": (visible := GS().vision_map[context.player][self.position]),
-            "unit": (
-                unit.serialize(context)
-                if (unit := self.map.unit_on(self))
-                and unit.is_visible_to(context.player)
-                else None
-            ),
-            "statuses": (
-                [status.serialize(context) for status in self.statuses]
-                if visible
-                else []
+            **(
+                {
+                    "visible": True,
+                    "last_visible_round": GS().round_counter,
+                    "unit": (
+                        unit.serialize(context)
+                        if (unit := self.map.unit_on(self))
+                        and unit.is_visible_to(context.player)
+                        else None
+                    ),
+                    "statuses": [status.serialize(context) for status in self.statuses],
+                }
+                if GS().vision_map[context.player][self.position]
+                else (
+                    {
+                        "visible": False,
+                        "last_visible_round": old_hex["last_visible_round"],
+                        # TODO big hmm
+                        # "unit": (
+                        #     old_hex["unit"]
+                        #     if old_hex["unit"]
+                        #     and not context.id_map.has_id(old_hex["unit"]["id"])
+                        #     else None
+                        # ),
+                        "unit": old_hex["unit"],
+                        "statuses": old_hex["statuses"],
+                    }
+                    if context.last_hex_states
+                    and (old_hex := context.last_hex_states.get(self.position))
+                    else {
+                        "visible": False,
+                        "last_visible_round": None,
+                        "unit": None,
+                        "statuses": [],
+                    }
+                )
             ),
         }
 
@@ -1142,11 +1164,6 @@ class GameState:
         self.turn_order = TurnOrder(
             [Player(f"player {i+1}") for i in range(player_count)]
         )
-        # TODO this is really dumb, do this in a better way (want p1 to start).
-        # self.turn_order.advance()
-        # self.interfaces = {
-        #     player: interface_class() for player in self.turn_order.players
-        # }
         self.connections = {
             player: connection_class(player) for player in self.turn_order.players
         }
@@ -1162,6 +1179,9 @@ class GameState:
         # self._id_map = IDMap()
         self.id_maps: dict[Player, IDMap] = {
             player: IDMap() for player in self.turn_order.players
+        }
+        self.previous_hex_states: dict[Player, dict[CC, dict[str, Any]] | None] = {
+            player: None for player in self.turn_order.players
         }
 
         self.vision_obstruction_map: dict[Player, dict[CC, VisionObstruction]] = {}
@@ -1192,7 +1212,7 @@ class GameState:
     def serialize_for(
         self, context: SerializationContext, decision_point: DecisionPoint | None
     ) -> Mapping[str, Any]:
-        v = {
+        serialized_game_state = {
             "player": context.player.name,
             "players": {},
             "round": self.round_counter,
@@ -1206,21 +1226,34 @@ class GameState:
             # TODO for debugging
             "event_log": self._event_log,
         }
+        # TODO yikes
+        self.previous_hex_states[context.player] = {
+            CC(**hex_values["cc"]): hex_values
+            for hex_values in serialized_game_state["map"]["hexes"]
+        }
         # TODO lmao
         context.id_map.prune()
-        return v
+        return serialized_game_state
 
     def make_decision(self, player: Player, decision_point: DecisionPoint[O]) -> O:
         for _player in self.turn_order.players:
             if _player != player:
                 self.connections[_player].send(
                     self.serialize_for(
-                        SerializationContext(_player, self.id_maps[_player]), None
+                        SerializationContext(
+                            _player,
+                            self.id_maps[_player],
+                            self.previous_hex_states[_player],
+                        ),
+                        None,
                     )
                 )
         response = self.connections[player].get_response(
             self.serialize_for(
-                SerializationContext(player, self.id_maps[player]), decision_point
+                SerializationContext(
+                    player, self.id_maps[player], self.previous_hex_states[player]
+                ),
+                decision_point,
             )
         )
         # TODO

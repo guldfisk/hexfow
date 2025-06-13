@@ -18,7 +18,7 @@ from game.game.events import SpawnUnit, Play
 from game.game.interface import Connection
 from game.game.map.coordinates import CC, cc_to_rc
 from game.game.map.geometry import hex_circle
-from game.game.map.terrain import Plains, Forest, Magma
+from game.game.map.terrain import Plains, Forest, Magma, Hills
 from game.game.player import Player
 from game.game.units.blueprints import *
 
@@ -110,8 +110,8 @@ class Game(Thread):
                             random.choice(
                                 [
                                     Plains,
-                                    Forest,
-                                    Magma,
+                                    # Forest,
+                                    # Magma,
                                     # Hills,
                                     # Water,
                                 ]
@@ -134,11 +134,14 @@ class Game(Thread):
                     # SHRINE_KEEPER,
                     # BULLDOZER,
                     PESTILENCE_PRIEST,
+                    GIANT_SLAYER_MOUSE,
                     # AP_GUNNER,
                 ),
                 (
                     # SCARAB,
                     # LIGHT_ARCHER,
+                    GLASS_GOLEM,
+                    DIAMOND_GOLEM,
                     GLASS_GOLEM,
                     DIAMOND_GOLEM,
                     # SCARAB,
@@ -152,14 +155,14 @@ class Game(Thread):
                 ),
             )
 
-            # use_random_units = False
-            use_random_units = True
+            use_random_units = False
+            # use_random_units = True
 
             if use_random_units:
                 min_random_unit_quantity = 7
                 random_unt_quantity_threshold = 12
                 point_threshold = random_unt_quantity_threshold * 5
-                banned_units = {LOTUS_BUD, CACTUS}
+                banned_units = {LOTUS_BUD, CACTUS, DIAMOND_GOLEM}
 
                 unit_pool = [
                     blueprint
@@ -257,7 +260,6 @@ class Game(Thread):
                     for v in values:
                         if isinstance(v, tuple):
                             blueprint, cc = v
-                            print(cc, ccs)
                             ccs.remove(cc)
                             ES.resolve(
                                 SpawnUnit(

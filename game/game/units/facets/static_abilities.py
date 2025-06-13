@@ -46,7 +46,7 @@ from game.game.events import (
     TurnCleanup,
 )
 from game.game.player import Player
-from game.game.statuses import Terrified, TheyVeGotASteelChair
+from game.game.statuses import Terrified, TheyVeGotASteelChair, MortallyWounded
 from game.game.values import DamageType, Resistance
 
 
@@ -697,3 +697,31 @@ class GlassSkin(StaticAbilityFacet):
 class DiamondSkin(StaticAbilityFacet):
     def create_effects(self) -> None:
         self.register_effects(StatusDamageResistance(self.owner, Resistance.IMMUNE))
+
+
+@dataclasses.dataclass(eq=False)
+class LastStandReplacement(ReplacementEffect[Kill]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def can_replace(self, event: Kill) -> bool:
+        return event.unit == self.unit and not any(
+            isinstance(status, MortallyWounded) for status in event.unit.statuses
+        )
+
+    def resolve(self, event: Kill) -> None:
+        event.unit.damage = event.unit.max_health.g() - 1
+        # TODO dispell debuffs
+        ES.resolve(
+            ApplyStatus(
+                event.unit,
+                event.unit.controller,
+                StatusSignature(MortallyWounded, duration=1),
+            )
+        )
+
+
+class LastStand(StaticAbilityFacet):
+    def create_effects(self) -> None:
+        self.register_effects(LastStandReplacement(self.owner))

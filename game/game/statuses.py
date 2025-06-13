@@ -37,7 +37,9 @@ class BurnTrigger(TriggerEffect[Upkeep]):
     status: UnitStatus
 
     def resolve(self, event: Upkeep) -> None:
-        ES.resolve(Damage(self.status.parent, DamageSignature(self.status.stacks, self)))
+        ES.resolve(
+            Damage(self.status.parent, DamageSignature(self.status.stacks, self))
+        )
         self.status.decrement_stacks()
 
 
@@ -351,3 +353,13 @@ class BellStruck(RefreshableDurationUnitStatus):
 
     def create_effects(self, by: Player) -> None:
         self.register_effects(BellStruckTrigger(self.parent))
+
+
+class MortallyWounded(UnitStatus):
+    default_intention = StatusIntention.DEBUFF
+
+    def merge(self, incoming: Self) -> bool:
+        return True
+
+    def on_expires(self) -> None:
+        ES.resolve(Kill(self.parent))

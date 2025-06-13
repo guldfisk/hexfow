@@ -159,6 +159,12 @@ export const renderMap = (
     stroke: "black",
     strokeThickness: 3,
   });
+  const ghostStyle = new TextStyle({
+    fontFamily: "Arial",
+    fontSize: 20,
+    fill: "0x444444",
+    align: "center",
+  });
 
   const map = new Container();
 
@@ -167,7 +173,7 @@ export const renderMap = (
   const ccToKey = (cc: CC): string => `${cc.r},${cc.h}`;
 
   const unitHexes: { [key: string]: Hex } = Object.fromEntries(
-    gameState.map.hexes.filter((h) => h.unit).map((h) => [h.unit.id, h]),
+    gameState.map.hexes.filter((h) => h.unit && h.visible).map((h) => [h.unit.id, h]),
   );
 
   type Action = { type: string; content: { [key: string]: any } };
@@ -521,6 +527,31 @@ export const renderMap = (
       statusContainer.addChild(durationText);
 
       hexContainer.addChild(statusContainer);
+    }
+
+    if (!hexData.visible) {
+      const eyeContainer = new Container();
+      const eyeIcon = new Sprite(textureMap["closed_eye_icon"]);
+      eyeIcon.anchor = 0.5;
+
+      if (
+        hexData.lastVisibleRound !== null &&
+        gameState.round - hexData.lastVisibleRound > 0
+      ) {
+        const eyeText = new Text({
+          text: `${gameState.round - hexData.lastVisibleRound}`,
+          style: ghostStyle,
+        });
+        eyeText.anchor = 0.5;
+        eyeText.x = 40;
+        eyeContainer.addChild(eyeText);
+        eyeContainer.x = -10;
+      }
+
+      eyeContainer.addChild(eyeIcon);
+      eyeContainer.y = hexHeight / 2 - 40;
+      eyeContainer.x = -10;
+      hexContainer.addChild(eyeContainer);
     }
 
     hexContainer.eventMode = "static";
