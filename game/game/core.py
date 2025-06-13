@@ -4,7 +4,17 @@ import dataclasses
 import re
 from abc import ABC, abstractmethod, ABCMeta
 from collections import defaultdict
-from typing import ClassVar, Literal, Any, TypeVar, Iterator, Generic, Self, Iterable
+from typing import (
+    ClassVar,
+    Literal,
+    Any,
+    TypeVar,
+    Iterator,
+    Generic,
+    Self,
+    Iterable,
+    TypeAlias,
+)
 from typing import Mapping
 
 from bidict import bidict
@@ -75,6 +85,7 @@ class HasStatuses(HasEffects):
 
     # TODO by player, we need controller?
     def add_status(self, status: Status, by: Player) -> None:
+        # TODO should prob set parent
         for existing_status in self.statuses:
             if type(existing_status) == type(status) and existing_status.merge(status):
                 return
@@ -292,7 +303,7 @@ class MeleeAttackFacet(SingleTargetAttackFacet):
             and unit.is_visible_to(self.owner.controller)
             and unit.can_be_attacked_by(self)
             # TODO test
-            and GS().map.position_of(unit).is_passable_to(self.owner)
+            and GS().map.hex_off(unit).is_passable_to(self.owner)
         ]
 
     def get_cost(self) -> EffortCostSet:
@@ -305,7 +316,7 @@ def is_vision_obstructed_for_unit_at(unit: Unit, cc: CC) -> bool:
         case VisionObstruction.FULL:
             return True
         case VisionObstruction.HIGH_GROUND:
-            return not GS().map.position_of(unit).terrain.is_highground()
+            return not GS().map.hex_off(unit).terrain.is_highground()
         case _:
             return False
 
@@ -331,8 +342,8 @@ class RangedAttackFacet(SingleTargetAttackFacet):
             and unit.is_visible_to(self.owner.controller)
             and not line_of_sight_obstructed_for_unit(
                 self.owner,
-                GS().map.position_of(self.owner).position,
-                GS().map.position_of(unit).position,
+                GS().map.position_off(self.owner),
+                GS().map.position_off(unit),
             )
             and unit.can_be_attacked_by(self)
         ]
@@ -482,6 +493,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
     max_health: ModifiableAttribute[None, int]
     armor: ModifiableAttribute[None, int]
     max_energy: ModifiableAttribute[None, int]
+    energy_regen: ModifiableAttribute[None, int]
     size: ModifiableAttribute[None, Size]
     attack_power: ModifiableAttribute[None, int]
     aquatic: ModifiableAttribute[None, bool]
@@ -501,6 +513,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
         self.sight.set(blueprint.sight)
         self.armor.set(blueprint.armor)
         self.max_energy.set(blueprint.energy)
+        self.energy_regen.set(1)
         self.energy: int = (
             blueprint.starting_energy
             if isinstance(blueprint.starting_energy, int)
@@ -556,13 +569,10 @@ class Unit(HasStatuses, Modifiable, VisionBound):
 
     @modifiable
     def can_see(self, space: Hex) -> bool:
-        if (
-            space.map.position_of(self).position.distance_to(space.position)
-            > self.sight.g()
-        ):
+        if space.map.distance_between(self, space) > self.sight.g():
             return False
         return not line_of_sight_obstructed_for_unit(
-            self, space.map.position_of(self).position, space.position
+            self, space.map.position_off(self), space.position
         )
 
     @modifiable
@@ -573,7 +583,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
     def is_visible_to(self, player: Player) -> bool:
         return (
             player == self.controller
-            or GS().vision_map[player][GS().map.position_of(self).position]
+            or GS().vision_map[player][GS().map.position_off(self)]
         ) and not self.is_hidden_for(player)
 
     # TODO should effects modifying get_legal_options on movement modify this instead?
@@ -718,8 +728,8 @@ class SingleTargetActivatedAbility(ActivatedAbilityFacet[Unit]):
                 not self.requires_los
                 or not line_of_sight_obstructed_for_unit(
                     self.owner,
-                    GS().map.position_of(self.owner).position,
-                    GS().map.position_of(unit).position,
+                    GS().map.position_off(self.owner),
+                    GS().map.position_off(unit),
                 )
             )
         ]:
@@ -837,12 +847,17 @@ class Hex(Modifiable, HasStatuses, Serializable):
             },
             "terrain": self.terrain.__class__.identifier,
             "is_objective": self.is_objective,
-            "visible": GS().vision_map[context.player][self.position],
+            "visible": (visible := GS().vision_map[context.player][self.position]),
             "unit": (
                 unit.serialize(context)
                 if (unit := self.map.unit_on(self))
                 and unit.is_visible_to(context.player)
                 else None
+            ),
+            "statuses": (
+                [status.serialize(context) for status in self.statuses]
+                if visible
+                else []
             ),
         }
 
@@ -854,6 +869,47 @@ class Hex(Modifiable, HasStatuses, Serializable):
 
     def __repr__(self):
         return f"{type(self).__name__}({self.position.r}, {self.position.h})"
+
+
+class HexStatus(Status[Hex], ABC): ...
+
+
+# TODO inherit from status signature base?
+@dataclasses.dataclass
+class HexStatusSignature:
+    status_type: type[HexStatus]
+    stacks: int | None = None
+    duration: int | None = None
+
+
+class SingleHexTargetActivatedAbility(ActivatedAbilityFacet[Hex]):
+    range: ClassVar[int] = 1
+    requires_los: ClassVar[bool] = True
+    requires_vision: ClassVar[bool] = True
+
+    def can_target_hex(self, hex_: Hex) -> bool:
+        return True
+
+    def get_target_profile(self) -> TargetProfile[Hex] | None:
+        if hexes := [
+            _hex
+            for _hex in GS().map.get_hexes_within_range_off(self.owner, self.range)
+            if (
+                not self.requires_vision
+                # TODO function on hex
+                or GS().vision_map[self.owner.controller][_hex.position]
+            )
+            and (
+                not self.requires_los
+                or not line_of_sight_obstructed_for_unit(
+                    self.owner,
+                    GS().map.position_off(self.owner),
+                    _hex.position,
+                )
+            )
+            and self.can_target_hex(_hex)
+        ]:
+            return OneOfHexes(hexes)
 
 
 @dataclasses.dataclass
@@ -919,10 +975,13 @@ class SelectRadiatingLine(TargetProfile[list[Hex]]):
 class MovementException(Exception): ...
 
 
+CCArg: TypeAlias = CC | Hex | Unit
+
+
 # TODO reasonable and consistent utils interface for this disaster
 class HexMap:
     def __init__(self, landscape: Landscape):
-        # TODO register terrain effects
+        # TODO all these should be private
         self.hexes = {
             position: Hex(
                 position=position,
@@ -938,63 +997,72 @@ class HexMap:
         # TODO better plan for handling this
         self.last_known_positions: dict[Unit, Hex] = {}
 
+    @property
+    def units(self) -> list[Unit]:
+        return list(self.unit_positions.keys())
+
     def units_controlled_by(self, player: Player) -> Iterator[Unit]:
-        for unit in self.unit_positions.keys():
+        for unit in self.units:
             if unit.controller == player:
                 yield unit
 
-    def move_unit_to(self, unit: Unit, space: Hex) -> None:
-        if self.unit_positions.inverse.get(space) is not None:
+    def hex_off(self, unit: Unit) -> Hex:
+        return self.unit_positions.get(unit) or self.last_known_positions[unit]
+
+    def position_off(self, unit: Unit) -> CC:
+        return self.hex_off(unit).position
+
+    def _to_cc(self, value: CCArg) -> CC:
+        if isinstance(value, Hex):
+            return value.position
+        if isinstance(value, Unit):
+            return self.hex_off(value).position
+        return value
+
+    def _to_hex(self, value: CCArg) -> Hex:
+        if isinstance(value, CC):
+            return self.hexes[value]
+        if isinstance(value, Unit):
+            return self.hex_off(value)
+        return value
+
+    def move_unit_to(self, unit: Unit, to: CCArg) -> None:
+        _hex = self._to_hex(to)
+        if self.unit_positions.inverse.get(_hex) is not None:
             raise MovementException()
-        self.unit_positions[unit] = space
+        self.unit_positions[unit] = _hex
 
     def remove_unit(self, unit: Unit) -> None:
         self.last_known_positions[unit] = self.unit_positions[unit]
         del self.unit_positions[unit]
 
-    # TODO really annoying this only takes a hex, should support CC as well
-    def unit_on(self, space: Hex) -> Unit | None:
-        return self.unit_positions.inverse.get(space)
+    def unit_on(self, on: CCArg) -> Unit | None:
+        return self.unit_positions.inverse.get(self._to_hex(on))
 
-    # TODO maybe called hex off?
-    def position_of(self, unit: Unit) -> Hex:
-        return self.unit_positions.get(unit) or self.last_known_positions[unit]
+    def distance_between(self, from_: CCArg, to_: CCArg) -> int:
+        return self._to_cc(from_).distance_to(self._to_cc(to_))
 
-    def get_neighbors_off(self, off: CC | Unit) -> Iterator[Hex]:
-        for neighbor_coordinate in (
-            self.position_of(off).position if isinstance(off, Unit) else off
-        ).neighbors():
+    def get_neighbors_off(self, off: CCArg) -> Iterator[Hex]:
+        for neighbor_coordinate in self._to_cc(off).neighbors():
             if _hex := self.hexes.get(neighbor_coordinate):
                 yield _hex
 
     def get_neighboring_units_off(
-        self, off: CC | Unit, controlled_by: Player | None = None
+        self, off: CCArg, controlled_by: Player | None = None
     ) -> Iterator[Unit]:
         for _hex in self.get_neighbors_off(off):
             if unit := self.unit_positions.inverse.get(_hex):
                 if controlled_by is None or controlled_by == unit.controller:
                     yield unit
 
-    def get_hexes_within_range_off(
-        self, off: CC | Unit, distance: int
-    ) -> Iterator[Hex]:
-        for cc in hex_circle(
-            distance,
-            center=self.position_of(off).position if isinstance(off, Unit) else off,
-        ):
+    def get_hexes_within_range_off(self, off: CCArg, distance: int) -> Iterator[Hex]:
+        for cc in hex_circle(distance, center=self._to_cc(off)):
             if cc in self.hexes:
                 yield self.hexes[cc]
 
-    def get_units_within_range_off(
-        self, off: CC | Unit, distance: int
-    ) -> Iterator[Unit]:
-        for cc in hex_circle(
-            distance,
-            center=self.position_of(off).position if isinstance(off, Unit) else off,
-        ):
-            if cc in self.hexes and (
-                unit := self.unit_positions.inverse.get(self.hexes[cc])
-            ):
+    def get_units_within_range_off(self, off: CCArg, distance: int) -> Iterator[Unit]:
+        for _hex in self.get_hexes_within_range_off(off, distance):
+            if unit := self.unit_positions.inverse.get(_hex):
                 yield unit
 
     def serialize(self, context: SerializationContext) -> JSON:

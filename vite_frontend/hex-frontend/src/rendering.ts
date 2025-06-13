@@ -13,12 +13,16 @@ import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
 import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
 import {
   addRCs,
+  assUnitVector,
   CCToRC,
+  constMultRC,
+  getHexDimensions,
   hexDistance,
   hexHeight,
   hexSize,
   hexVerticeOffsets,
   hexWidth,
+  subRCs,
 } from "./geometry.ts";
 import { CC } from "./interfaces/geometry.ts";
 import { textureMap } from "./textures.ts";
@@ -60,16 +64,16 @@ export const renderMap = (
   // TODO not here
   const getHexShape = (color: FillInput): GraphicsContext => {
     let hexShape = new GraphicsContext()
-      .setStrokeStyle({ color: "red", pixelLine: true })
+      .setStrokeStyle({ color: "grey", pixelLine: true })
       .moveTo(...hexVerticeOffsets[0]);
     hexVerticeOffsets.slice(1).forEach((vert) => hexShape.lineTo(...vert));
-    hexShape.closePath().fill(color);
+    hexShape.closePath().fill(color).stroke();
     return hexShape;
   };
   const getHexFrame = (color: FillInput): GraphicsContext => {
     let hexShape = new GraphicsContext()
       .setStrokeStyle({ color, width: 3, alignment: 1 })
-      // .setStrokeStyle({ color, pixelLine: true })
+      .setStrokeStyle({ color, pixelLine: true })
       .moveTo(...hexVerticeOffsets[0]);
     hexVerticeOffsets.slice(1).forEach((vert) => hexShape.lineTo(...vert));
     hexShape.closePath();
@@ -95,7 +99,7 @@ export const renderMap = (
   const statusFrame = new GraphicsContext().circle(0, 0, 20).fill();
   const statusBorder = new GraphicsContext()
     .circle(0, 0, 20)
-    .stroke({ color: "red", pixelLine: true });
+    .stroke({ color: "grey", pixelLine: true });
 
   // TODO not here
   const smallTextStyle = new TextStyle({
@@ -465,6 +469,58 @@ export const renderMap = (
       flagSprite.x = -hexWidth / 2 + 10;
       flagSprite.y = -hexSize / 2;
       hexContainer.addChild(flagSprite);
+    }
+
+    for (const [idx, status] of hexData.statuses.entries()) {
+      // TODO common status drawing logic
+      const statusContainer = new Container();
+      const statusSprite = new Sprite(textureMap[status.type]);
+
+      statusSprite.anchor = 0.5;
+      statusContainer.addChild(statusSprite);
+
+      const mask = new Graphics(statusFrame);
+      statusContainer.addChild(mask);
+      statusSprite.mask = mask;
+
+      const smallerSize = hexSize - 30;
+      const [smallerWidth, smallerHeight] = getHexDimensions(smallerSize);
+
+      const firstPoint = { x: 0, y: -smallerHeight / 2 };
+      const lastPoint = { x: smallerWidth / 2, y: -smallerSize / 2 };
+
+      statusContainer.position = addRCs(
+        firstPoint,
+        constMultRC(
+          assUnitVector(subRCs(lastPoint, firstPoint)),
+          hexData.statuses.length <= 4
+            ? idx * 43
+            : (hexSize / hexData.statuses.length) * idx,
+        ),
+      );
+      // statusContainer.position = {
+      //   x: 0,
+      //   y: -hexHeight / 2 + 30
+      //     // -unitSprite.height / 2 +
+      //     (hexData.unit.statuses.length <= 4
+      //       ? idx * 43
+      //       : (150 / hexData.unit.statuses.length) * idx),
+      // };
+
+      const border = new Graphics(statusBorder);
+      statusContainer.addChild(border);
+
+      const durationText = new Text({
+        // text: `${status.duration}/${status.originalDuration}`,
+        text: status.duration || status.stacks,
+        style: statusCountStyle,
+      });
+      durationText.x = 17;
+      durationText.y = -7;
+      durationText.anchor = 0.5;
+      statusContainer.addChild(durationText);
+
+      hexContainer.addChild(statusContainer);
     }
 
     hexContainer.eventMode = "static";

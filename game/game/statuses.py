@@ -122,9 +122,9 @@ class ParasiteTrigger(TriggerEffect[KillUpkeep]):
         return event.unit == self.status.parent
 
     def resolve(self, event: KillUpkeep) -> None:
-        target_position = GS().map.position_of(event.unit)
-        if GS().map.unit_on(target_position):
-            target_position = None
+        target_hex = GS().map.hex_off(event.unit)
+        if GS().map.unit_on(target_hex):
+            target_hex = None
 
             for historic_event in reversed(ES.history):
                 if isinstance(historic_event, TurnUpkeep):
@@ -139,17 +139,17 @@ class ParasiteTrigger(TriggerEffect[KillUpkeep]):
                             and move.result
                             and not GS().map.unit_on(move.result)
                         ):
-                            target_position = move.result
+                            target_hex = move.result
                             break
-                if target_position:
+                if target_hex:
                     break
 
-        if target_position:
+        if target_hex:
             ES.resolve(
                 SpawnUnit(
                     blueprint=UnitBlueprint.registry["horror_spawn"],
                     controller=self.created_by,
-                    space=target_position,
+                    space=target_hex,
                     exhausted=True,
                 )
             )
@@ -286,3 +286,25 @@ class Rooted(RefreshableDurationUnitStatus):
 
     def create_effects(self, by: Player) -> None:
         self.register_effects(RootedModifier(self.parent))
+
+
+@dataclasses.dataclass(eq=False)
+class IncreaseUnitMaxHealthModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.max_health
+
+    unit: Unit
+    amount: int
+
+    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+        return obj == self.unit
+
+    def modify(self, obj: Unit, request: None, value: int) -> int:
+        return value + self.amount
+
+
+class Fortified(RefreshableDurationUnitStatus):
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self, by: Player) -> None:
+        self.register_effects(IncreaseUnitMaxHealthModifier(self.parent, 1))

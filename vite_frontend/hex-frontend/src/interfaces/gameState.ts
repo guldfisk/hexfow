@@ -30,6 +30,7 @@ export interface Hex {
   isObjective: boolean;
   visible: boolean;
   unit: Unit | null;
+  statuses: Status[];
 }
 
 export interface Map {

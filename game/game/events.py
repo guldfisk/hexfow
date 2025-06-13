@@ -19,6 +19,7 @@ from game.game.core import (
     SingleTargetAttackFacet,
     ActivatedAbilityFacet,
     StatusSignature,
+    HexStatusSignature,
 )
 from game.game.damage import DamageSignature
 from game.game.decisions import SelectOptionDecisionPoint, NoTarget, O, OptionDecision
@@ -52,7 +53,7 @@ class CheckAlive(Event[bool]):
 
     def resolve(self) -> bool:
         # TODO common logic
-        if self.unit.health <= 0 or not GS().map.position_of(self.unit).is_passable_to(
+        if self.unit.health <= 0 or not GS().map.hex_off(self.unit).is_passable_to(
             self.unit
         ):
             ES.resolve(Kill(self.unit))
@@ -80,7 +81,7 @@ class GainEnergy(Event[int]):
     amount: int
 
     def is_valid(self) -> bool:
-        return self.amount > 0
+        return self.amount > 0 and self.unit.energy < self.unit.max_energy.g()
 
     def resolve(self) -> int:
         amount = max(min(self.amount, self.unit.max_energy.g() - self.unit.energy), 0)
@@ -105,7 +106,7 @@ class Damage(Event[int]):
                 max(
                     self.signature.amount
                     - GS()
-                    .map.position_of(self.unit)
+                    .map.hex_off(self.unit)
                     .get_terrain_protection_for(
                         TerrainProtectionRequest(self.unit, self.signature.type)
                     ),
@@ -148,8 +149,8 @@ class MeleeAttackAction(Event[None]):
     attack: MeleeAttackFacet
 
     def resolve(self) -> None:
-        defender_position = GS().map.position_of(self.defender)
-        attacker_position = GS().map.position_of(self.attacker)
+        defender_position = GS().map.hex_off(self.defender)
+        attacker_position = GS().map.hex_off(self.attacker)
         move_out_penalty = MovePenalty(
             self.attacker,
             attacker_position,
@@ -223,6 +224,23 @@ class ApplyStatus(Event[None]):
 
 
 @dataclasses.dataclass
+class ApplyHexStatus(Event[None]):
+    space: Hex
+    by: Player | None
+    signature: HexStatusSignature
+
+    def resolve(self) -> None:
+        self.space.add_status(
+            self.signature.status_type(
+                duration=self.signature.duration,
+                stacks=self.signature.duration,
+                parent=self.space,
+            ),
+            self.by,
+        )
+
+
+@dataclasses.dataclass
 class ActivatedAbilityAction(Event[None]):
     unit: Unit
     ability: ActivatedAbilityFacet[O]
@@ -242,7 +260,7 @@ class MoveUnit(Event[Hex | None]):
         return self.to_.can_move_into(self.unit)
 
     def resolve(self) -> Hex | None:
-        from_ = self.to_.map.position_of(self.unit)
+        from_ = self.to_.map.hex_off(self.unit)
         self.to_.map.move_unit_to(self.unit, self.to_)
         return from_
 
@@ -255,9 +273,10 @@ class SpawnUnit(Event[Unit | None]):
     exhausted: bool = False
     with_statuses: Iterable[StatusSignature] = ()
 
+    def is_valid(self) -> bool:
+        return not self.space.map.unit_on(self.space)
+
     def resolve(self) -> Unit | None:
-        if self.space.map.unit_on(self.space):
-            return None
         unit = Unit(self.controller, self.blueprint, exhausted=self.exhausted)
         self.space.map.move_unit_to(unit, self.space)
         for signature in self.with_statuses:
@@ -282,7 +301,7 @@ class MoveAction(Event[None]):
     to_: Hex
 
     def resolve(self) -> None:
-        _from = GS().map.position_of(self.unit)
+        _from = GS().map.hex_off(self.unit)
         move_out_penalty = MovePenalty(
             self.unit, _from, _from.get_move_out_penalty_for(self.unit), False
         )
@@ -290,13 +309,14 @@ class MoveAction(Event[None]):
             self.unit, self.to_, self.to_.get_move_in_penalty_for(self.unit), True
         )
         ES.resolve(self.branch(MoveUnit))
+        # TODO event only valid if context is not null?
         GS().active_unit_context.movement_points -= 1
         ES.resolve(move_out_penalty)
         ES.resolve(move_in_penalty)
 
 
 @dataclasses.dataclass
-class SkipAction(Event[None]):
+class SkipTurn(Event[None]):
     unit: Unit
 
     def resolve(self) -> None:
@@ -311,7 +331,7 @@ def do_state_based_check() -> None:
         has_changed = ES.resolve_pending_triggers()
         # TODO order?
         for unit in list(GS().map.unit_positions.keys()):
-            if unit.health <= 0 or not GS().map.position_of(unit).is_passable_to(unit):
+            if unit.health <= 0 or not GS().map.hex_off(unit).is_passable_to(unit):
                 has_changed = True
                 ES.resolve(Kill(unit))
 
@@ -391,7 +411,11 @@ class Turn(Event[bool]):
                 )
 
             if isinstance(decision.option, SkipOption):
-                ES.resolve(SkipAction(self.unit))
+                # TODO difference here is whether or not it is a "TurnSkip" or an "end actions skip"
+                if context.has_acted:
+                    GS().active_unit_context.should_stop = True
+                else:
+                    ES.resolve(SkipTurn(self.unit))
                 do_state_based_check()
                 break
             elif isinstance(decision.option, MoveOption):
@@ -449,8 +473,7 @@ class Turn(Event[bool]):
 class Upkeep(Event[None]):
     def resolve(self) -> None:
         for unit in list(GS().map.unit_positions.keys()):
-            if unit.energy < unit.max_energy.g():
-                ES.resolve(GainEnergy(unit, 1))
+            ES.resolve(GainEnergy(unit, unit.energy_regen.g()))
             for status in list(unit.statuses):
                 status.decrement_duration()
 
@@ -543,6 +566,8 @@ class Round(Event[None]):
                 round_skipped_players.add(player)
             else:
                 raise ValueError("AHLO")
+
+        # TODO should we trigger turn skip for remaining units or something?
 
         gs.turn_order.set_player_order(
             sorted(gs.turn_order.players, key=lambda p: last_action_timestamps[p])

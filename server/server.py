@@ -18,7 +18,7 @@ from game.game.events import SpawnUnit, Play
 from game.game.interface import Connection
 from game.game.map.coordinates import CC, cc_to_rc
 from game.game.map.geometry import hex_circle
-from game.game.map.terrain import Plains, Forest
+from game.game.map.terrain import Plains, Forest, Magma
 from game.game.player import Player
 from game.game.units.blueprints import *
 
@@ -127,14 +127,19 @@ class Game(Thread):
             player_units = (
                 (
                     # HORROR,
-                    BUGLING,
-                    PESTILENCE_PRIEST,
-                    AP_GUNNER,
+                    # BUGLING,
+                    SHRINE_KEEPER,
+                    BULLDOZER,
+                    # PESTILENCE_PRIEST,
+                    # AP_GUNNER,
                 ),
                 (
-                    SCARAB,
+                    # SCARAB,
                     LIGHT_ARCHER,
-                    BEE_SHAMAN,
+                    CHAINSAW_SADIST,
+                    # BEE_SHAMAN,
+                    # GOBLIN_ASSASSIN,
+                    # BEE_SHAMAN,
                     # CYCLOPS,
                     # BLITZ_TROOPER,
                 ),

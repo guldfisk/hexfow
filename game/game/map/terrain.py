@@ -59,7 +59,7 @@ class BurnOnWalkIn(TriggerEffect[MoveUnit]):
     amount: int
 
     def should_trigger(self, event: MoveUnit) -> bool:
-        return event.to_ == self.hex
+        return event.to_ == self.hex and event.result
 
     def resolve(self, event: MoveUnit) -> None:
         ES.resolve(ApplyStatus(unit=event.unit, by=None, signature=StatusSignature(Burn, stacks=1)))

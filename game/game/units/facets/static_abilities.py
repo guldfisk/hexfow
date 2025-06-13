@@ -98,10 +98,7 @@ class FarsightedModifier(StateModifierEffect[Unit, Hex, bool]):
     def should_modify(self, obj: Unit, request: Hex, value: int) -> bool:
         return (
             obj == self.unit
-            and request.map.position_of(self.unit).position.distance_to(
-                request.position
-            )
-            == 1
+            and request.map.distance_between(self.unit, request.position) == 1
         )
 
     def modify(self, obj: Unit, request: Hex, value: bool) -> bool:
@@ -126,10 +123,7 @@ class PackHunterTrigger(TriggerEffect[MeleeAttackAction]):
             # TODO really awkward having to be defencive about this here, maybe
             #  good argument for triggers being queued before event execution?
             and event.defender.on_map()
-            and GS()
-            .map.position_of(self.unit)
-            .position.distance_to(GS().map.position_of(event.defender).position)
-            <= 1
+            and GS().map.distance_between(self.unit, event.defender) <= 1
         )
 
     def resolve(self, event: MeleeAttackAction) -> None:
@@ -163,7 +157,7 @@ class CrushableReplacement(ReplacementEffect[MoveUnit]):
     def can_replace(self, event: MoveUnit) -> bool:
         return (
             self.unit.controller == event.unit.controller
-            and event.to_ == GS().map.position_of(self.unit)
+            and event.to_ == GS().map.hex_off(self.unit)
         )
 
     def resolve(self, event: MoveUnit) -> None:
@@ -180,9 +174,8 @@ class CrushableModifier(StateModifierEffect[Hex, Unit, bool]):
     unit: Unit
 
     def should_modify(self, obj: Hex, request: Unit, value: bool) -> bool:
-        return (
-            request.controller == self.unit.controller
-            and obj == GS().map.position_of(self.unit)
+        return request.controller == self.unit.controller and obj == GS().map.hex_off(
+            self.unit
         )
 
     def modify(self, obj: Hex, request: Unit, value: bool) -> bool:
@@ -221,10 +214,10 @@ class PusherReplacement(ReplacementEffect[MoveUnit]):
 
     def resolve(self, event: MoveUnit) -> None:
         _map = GS().map
-        direction = event.to_.position - _map.position_of(event.unit).position
+        direction = event.to_.position - _map.position_off(event.unit)
 
         unit_positions: list[tuple[Unit, Hex | None]] = []
-        current_position = _map.position_of(event.unit).position
+        current_position = _map.position_off(event.unit)
         while True:
             current_position += direction
             current_unit = _map.unit_on(_map.hexes[current_position])
@@ -308,6 +301,7 @@ class Furious(StaticAbilityFacet):
 @dataclasses.dataclass(eq=False)
 class StealthModifier(StateModifierEffect[Unit, Player, bool]):
     priority: ClassVar[int] = 1
+    # TODO is_hidden_for should prob be is_hidden_for(unit) instead of for (player)
     target: ClassVar[object] = Unit.is_hidden_for
 
     unit: Unit
@@ -318,7 +312,7 @@ class StealthModifier(StateModifierEffect[Unit, Player, bool]):
             and request != self.unit.controller
             and not any(
                 request in unit.provides_vision_for(None)
-                and unit.can_see(GS().map.position_of(self.unit))
+                and unit.can_see(GS().map.hex_off(self.unit))
                 for unit in GS().map.get_neighboring_units_off(self.unit)
             )
         )
@@ -346,10 +340,7 @@ class FightFlightFreezeModifier(
     ) -> bool:
         return (
             obj.controller != self.unit.controller
-            and GS()
-            .map.position_of(self.unit)
-            .position.distance_to(GS().map.position_of(obj).position)
-            <= 1
+            and GS().map.distance_between(self.unit, obj) <= 1
         )
 
     def modify(
@@ -373,10 +364,7 @@ class FightFlightFreezeModifier(
                     valid_hexes := [
                         _hex
                         for _hex in option.target_profile.hexes
-                        if _hex.position.distance_to(
-                            GS().map.position_of(self.unit).position
-                        )
-                        > 1
+                        if GS().map.distance_between(self.unit, _hex) > 1
                     ]
                 )
             ):
@@ -411,9 +399,6 @@ class Explosive(StaticAbilityFacet):
         self.register_effects(ExplosiveTrigger(self.owner, 5))
 
 
-# - whenever an adjacent unit is damaged or debuffed, this unit regens 1 energy
-
-
 # TODO same trigger etc
 @dataclasses.dataclass(eq=False)
 class SchadenfreudeDamageTrigger(TriggerEffect[Damage]):
@@ -424,10 +409,7 @@ class SchadenfreudeDamageTrigger(TriggerEffect[Damage]):
     def should_trigger(self, event: Damage) -> bool:
         return (
             event.unit != self.unit
-            and GS()
-            .map.position_of(event.unit)
-            .position.distance_to(GS().map.position_of(self.unit).position)
-            <= 1
+            and GS().map.distance_between(self.unit, event.unit) <= 1
         )
 
     def resolve(self, event: Damage) -> None:
@@ -444,10 +426,7 @@ class SchadenfreudeDebuffTrigger(TriggerEffect[ApplyStatus]):
     def should_trigger(self, event: ApplyStatus) -> bool:
         return (
             event.unit != self.unit
-            and GS()
-            .map.position_of(event.unit)
-            .position.distance_to(GS().map.position_of(self.unit).position)
-            <= 1
+            and GS().map.distance_between(self.unit, event.unit) <= 1
         )
 
     def resolve(self, event: ApplyStatus) -> None:
@@ -483,9 +462,9 @@ class GrizzlyMurdererTrigger(TriggerEffect[MeleeAttackAction]):
 
     def resolve(self, event: MeleeAttackAction) -> None:
         # TODO formalize iterating copy
-        for unit in list(GS().map.unit_positions.keys()):
+        for unit in GS().map.units:
             if unit.controller != self.unit.controller and unit.can_see(
-                GS().map.position_of(event.defender)
+                GS().map.hex_off(event.defender)
             ):
                 ES.resolve(
                     ApplyStatus(
@@ -535,10 +514,7 @@ class TelepathicSpyModifier(StateModifierEffect[Unit, None, set[Player]]):
     def should_modify(self, obj: Unit, request: None, value: set[Player]) -> bool:
         return (
             obj.controller != self.unit.controller
-            and GS()
-            .map.position_of(obj)
-            .position.distance_to(GS().map.position_of(self.unit).position)
-            <= 1
+            and GS().map.distance_between(self.unit, obj) <= 1
         )
 
     def modify(self, obj: Unit, request: None, value: set[Player]) -> set[Player]:
@@ -564,14 +540,8 @@ class CaughtInTheMatchTrigger(TriggerEffect[MoveAction]):
             and any(
                 move_event.unit == event.unit
                 and move_event.result
-                and move_event.result.position.distance_to(
-                    GS().map.position_of(self.unit).position
-                )
-                <= 1
-                and move_event.to_.position.distance_to(
-                    GS().map.position_of(self.unit).position
-                )
-                > 1
+                and GS().map.distance_between(self.unit, move_event.result) <= 1
+                and GS().map.distance_between(self.unit, move_event.to_) > 1
                 for move_event in event.iter_type(MoveUnit)
             )
         )

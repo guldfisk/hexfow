@@ -12,13 +12,14 @@ from game.game.core import (
     UnitBlueprint,
     SelectConsecutiveAdjacentHexes,
     SelectRadiatingLine,
-    line_of_sight_obstructed_for_unit,
     RangedAttackFacet,
     MeleeAttackFacet,
     StatusSignature,
     MovementCost,
     EnergyCost,
     ExclusiveCost,
+    SingleHexTargetActivatedAbility,
+    HexStatusSignature,
 )
 from game.game.damage import DamageSignature
 from game.game.decisions import TargetProfile, O
@@ -31,7 +32,9 @@ from game.game.events import (
     Damage,
     QueueUnitForActivation,
     SimpleAttack,
+    ApplyHexStatus,
 )
+from game.game.hex_statuses import Shrine
 from game.game.statuses import Panicked, BurstOfSpeed, Staggered, Ephemeral, Rooted
 from game.game.units.facets.hooks import AdjacencyHook
 from game.game.values import DamageType, Size
@@ -91,8 +94,8 @@ class LeapFrog(SingleTargetActivatedAbility):
         return unit != self.owner
 
     def perform(self, target: Unit) -> None:
-        target_position = GS().map.position_of(target).position
-        difference = target_position - GS().map.position_of(self.owner).position
+        target_position = GS().map.position_off(target)
+        difference = target_position - GS().map.position_off(self.owner)
         target_hex = GS().map.hexes.get(target_position + difference)
         if target_hex and target_hex.can_move_into(self.owner):
             if (
@@ -144,25 +147,15 @@ class BatonPass(SingleTargetActivatedAbility):
         )
 
 
-class SummonScarab(ActivatedAbilityFacet[Hex]):
+class SummonScarab(SingleHexTargetActivatedAbility):
     cost = MovementCost(2) | EnergyCost(3)
+    range = 3
 
-    def get_target_profile(self) -> TargetProfile[Hex] | None:
-        if hexes := [
-            _hex
-            for _hex in GS().map.get_hexes_within_range_off(self.owner, 3)
-            if GS().vision_map[self.owner.controller][_hex.position]
-            and not line_of_sight_obstructed_for_unit(
-                self.owner,
-                GS().map.position_of(self.owner).position,
-                _hex.position,
-            )
-            and (
-                (unit := GS().map.unit_on(_hex)) is None
-                or unit.is_hidden_for(self.owner.controller)
-            )
-        ]:
-            return OneOfHexes(hexes)
+    # TODO common logic? or flag on SingleHexTargetActivatedAbility?
+    def can_target_hex(self, hex_: Hex) -> bool:
+        return (unit := GS().map.unit_on(hex_)) is None or unit.is_hidden_for(
+            self.owner.controller
+        )
 
     def perform(self, target: Hex) -> None:
         ES.resolve(
@@ -195,7 +188,7 @@ class Sweep(ActivatedAbilityFacet[list[Hex]]):
     cost = MovementCost(1)
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        return SelectConsecutiveAdjacentHexes(GS().map.position_of(self.owner), 1)
+        return SelectConsecutiveAdjacentHexes(GS().map.hex_off(self.owner), 1)
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
@@ -207,7 +200,7 @@ class Stare(ActivatedAbilityFacet[list[Hex]]):
     combinable = True
 
     def get_target_profile(self) -> TargetProfile[O] | None:
-        return SelectRadiatingLine(GS().map.position_of(self.owner), 4)
+        return SelectRadiatingLine(GS().map.hex_off(self.owner), 4)
 
     def perform(self, target: list[Hex]) -> None:
         # TODO reveal em'
@@ -275,26 +268,14 @@ class Rouse(SingleTargetActivatedAbility):
 #     heals 2 and restores 1 energy
 
 
-class SummonBees(ActivatedAbilityFacet):
+class SummonBees(SingleHexTargetActivatedAbility):
     cost = MovementCost(2) | EnergyCost(2)
+    range = 2
 
-    # TODO common logic
-    def get_target_profile(self) -> TargetProfile[Hex] | None:
-        if hexes := [
-            _hex
-            for _hex in GS().map.get_hexes_within_range_off(self.owner, 2)
-            if GS().vision_map[self.owner.controller][_hex.position]
-            and not line_of_sight_obstructed_for_unit(
-                self.owner,
-                GS().map.position_of(self.owner).position,
-                _hex.position,
-            )
-            and (
-                (unit := GS().map.unit_on(_hex)) is None
-                or unit.is_hidden_for(self.owner.controller)
-            )
-        ]:
-            return OneOfHexes(hexes)
+    def can_target_hex(self, hex_: Hex) -> bool:
+        return (unit := GS().map.unit_on(hex_)) is None or unit.is_hidden_for(
+            self.owner.controller
+        )
 
     def perform(self, target: Hex) -> None:
         ES.resolve(
@@ -354,9 +335,9 @@ class Suplex(SingleTargetActivatedAbility):
 
     def perform(self, target: Unit) -> None:
         ES.resolve(Damage(target, DamageSignature(3)))
-        own_position = GS().map.position_of(self.owner).position
+        own_position = GS().map.position_off(self.owner)
         if target_hex := GS().map.hexes.get(
-            own_position + (own_position - GS().map.position_of(target).position)
+            own_position + (own_position - GS().map.position_off(target))
         ):
             ES.resolve(MoveUnit(target, target_hex))
 
@@ -422,3 +403,35 @@ class Showdown(SingleEnemyActivatedAbility):
                     # TODO
                     target.exhausted = True
                     break
+
+
+# shrine keeper {5pp} x1
+# health 4, movement 3, sight 2, 4 energy, S
+# raise shrine
+#     ability 3 energy, -2 movement
+#     target hex 1 range
+#     applies status shrine to terrain
+#         units on this hex has +1 mana regen
+#         whenever a unit within 1 range skips, heal it 1
+#         whenever a unit enters this hex, apply buff fortified for 4 rounds
+#             unstackable, refreshable
+#             +1 max health
+# lucky charm
+#     ability 1 energy
+#     target different allied unit 1 range
+#     applies buff lucky charm for 3 rounds
+#         unstackable, refreshable
+#         if this unit would suffer exactly one damage, instead remove this buff
+# clean up
+#     combinable ability 2 energy, -2 movement
+#     target hex 1 range
+#     removes all statuses from hex
+
+
+class RaiseShrine(SingleHexTargetActivatedAbility):
+    cost = MovementCost(2) | EnergyCost(3)
+
+    def perform(self, target: Hex) -> None:
+        ES.resolve(
+            ApplyHexStatus(target, self.owner.controller, HexStatusSignature(Shrine))
+        )

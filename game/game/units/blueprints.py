@@ -16,7 +16,7 @@ from game.game.units.facets.activated_abilities import (
     StimulatingInjection,
     Suplex,
     Lasso,
-    Showdown,
+    RaiseShrine,
 )
 from game.game.units.facets.attacks import (
     Peck,
@@ -628,4 +628,37 @@ NOTORIOUS_OUTLAW = UnitBlueprint(
     # TODO too many target etc
     # price=12,
     price=None,
+)
+
+# shrine keeper {5pp} x1
+# health 4, movement 3, sight 2, 4 energy, S
+# raise shrine
+#     ability 3 energy, -2 movement
+#     target hex 1 range
+#     applies status shrine to terrain
+#         units on this hex has +1 mana regen
+#         whenever a unit within 1 range skips, heal it 1
+#         whenever a unit enters this hex, apply buff fortified for 4 rounds
+#             unstackable, refreshable
+#             +1 max health
+# lucky charm
+#     ability 1 energy
+#     target different allied unit 1 range
+#     applies buff lucky charm for 3 rounds
+#         unstackable, refreshable
+#         if this unit would suffer exactly one damage, instead remove this buff
+# clean up
+#     combinable ability 2 energy, -2 movement
+#     target hex 1 range
+#     removes all statuses from hex
+
+SHRINE_KEEPER = UnitBlueprint(
+    "Shrine Keeper",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=4,
+    size=Size.SMALL,
+    facets=[RaiseShrine],
+    price=5,
 )
