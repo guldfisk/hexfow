@@ -4,11 +4,12 @@ from game.game.core import (
     RangedAttackFacet,
     Unit,
     StatusSignature,
-    MovementCost, ExclusiveCost,
+    MovementCost,
+    ExclusiveCost,
+    DamageSignature,
 )
-from game.game.damage import DamageSignature
 from game.game.events import Damage, ApplyStatus
-from game.game.statuses import Staggered, Stumbling, Parasite
+from game.game.statuses import Staggered, Stumbling, Parasite, BellStruck
 from game.game.units.facets.hooks import AdjacencyHook
 from game.game.values import Size
 
@@ -258,3 +259,16 @@ class TwinRevolvers(RangedAttackFacet):
     damage = 2
     range = 3
     max_activations = 2
+
+
+class BellHammer(MeleeAttackFacet):
+    damage = 4
+
+    def resolve_post_damage_effects(self, defender: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                unit=defender,
+                by=self.owner.controller,
+                signature=StatusSignature(BellStruck, duration=2),
+            )
+        )

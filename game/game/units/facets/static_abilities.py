@@ -24,8 +24,8 @@ from game.game.core import (
     OneOfHexes,
     SkipOption,
     StatusSignature,
+    DamageSignature,
 )
-from game.game.damage import DamageSignature
 from game.game.decisions import Option, NoTarget, SelectOptionDecisionPoint
 from game.game.events import (
     SimpleAttack,

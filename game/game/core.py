@@ -20,7 +20,6 @@ from typing import Mapping
 from bidict import bidict
 
 from events.eventsystem import Modifiable, ModifiableAttribute, modifiable, ES
-from game.game.damage import DamageSignature
 from game.game.decisions import (
     DecisionPoint,
     Option,
@@ -487,6 +486,20 @@ class UnitBlueprint:
         return f"{type(self).__name__}({self.name})"
 
 
+@dataclasses.dataclass
+class DamageSignature:
+    amount: int
+    type: DamageType = DamageType.PHYSICAL
+    ap: int = 0
+    lethal: bool = True
+
+    def branch(self, **kwargs: Any) -> DamageSignature:
+        return type(self)(**dataclasses.asdict(self) | kwargs)
+
+    def with_damage(self, amount: int) -> DamageSignature:
+        return self.branch(amount=amount)
+
+
 class Unit(HasStatuses, Modifiable, VisionBound):
     speed: ModifiableAttribute[None, int]
     sight: ModifiableAttribute[None, int]
@@ -545,6 +558,13 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             if of_type is None or isinstance(attack, of_type):
                 return attack
         return None
+
+    def suffer_damage(self, signature: DamageSignature) -> int:
+        damage = min(
+            signature.amount, self.health - 1 if not signature.lethal else self.health
+        )
+        self.damage += damage
+        return damage
 
     @modifiable
     def can_be_activated(self, _: None = None) -> bool:
@@ -712,7 +732,7 @@ class NoTargetActivatedAbility(ActivatedAbilityFacet[None]):
 
 
 class SingleTargetActivatedAbility(ActivatedAbilityFacet[Unit]):
-    range: ClassVar[int]
+    range: ClassVar[int] = 1
     requires_los: ClassVar[bool] = True
 
     def can_target_unit(self, unit: Unit) -> bool:

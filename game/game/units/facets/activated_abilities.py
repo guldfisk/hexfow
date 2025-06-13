@@ -20,8 +20,8 @@ from game.game.core import (
     ExclusiveCost,
     SingleHexTargetActivatedAbility,
     HexStatusSignature,
+    DamageSignature,
 )
-from game.game.damage import DamageSignature
 from game.game.decisions import TargetProfile, O
 from game.game.events import (
     Kill,
@@ -35,7 +35,14 @@ from game.game.events import (
     ApplyHexStatus,
 )
 from game.game.hex_statuses import Shrine
-from game.game.statuses import Panicked, BurstOfSpeed, Staggered, Ephemeral, Rooted
+from game.game.statuses import (
+    Panicked,
+    BurstOfSpeed,
+    Staggered,
+    Ephemeral,
+    Rooted,
+    LuckyCharm,
+)
 from game.game.units.facets.hooks import AdjacencyHook
 from game.game.values import DamageType, Size
 
@@ -334,7 +341,7 @@ class Suplex(SingleTargetActivatedAbility):
         return unit != self.owner and unit.size.g() < Size.LARGE
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(Damage(target, DamageSignature(3)))
+        ES.resolve(Damage(target, DamageSignature(3, DamageType.MELEE)))
         own_position = GS().map.position_off(self.owner)
         if target_hex := GS().map.hexes.get(
             own_position + (own_position - GS().map.position_off(target))
@@ -434,4 +441,16 @@ class RaiseShrine(SingleHexTargetActivatedAbility):
     def perform(self, target: Hex) -> None:
         ES.resolve(
             ApplyHexStatus(target, self.owner.controller, HexStatusSignature(Shrine))
+        )
+
+
+class GrantCharm(SingleAllyActivatedAbility):
+    can_target_self = False
+    cost = EnergyCost(1)
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                target, self.owner.controller, StatusSignature(LuckyCharm, duration=3)
+            )
         )

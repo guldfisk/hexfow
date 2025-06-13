@@ -17,6 +17,7 @@ from game.game.units.facets.activated_abilities import (
     Suplex,
     Lasso,
     RaiseShrine,
+    GrantCharm,
 )
 from game.game.units.facets.attacks import (
     Peck,
@@ -48,6 +49,7 @@ from game.game.units.facets.attacks import (
     Tackle,
     FromTheTopRope,
     TwinRevolvers,
+    BellHammer,
 )
 from game.game.units.facets.static_abilities import (
     Prickly,
@@ -659,6 +661,11 @@ SHRINE_KEEPER = UnitBlueprint(
     sight=2,
     energy=4,
     size=Size.SMALL,
-    facets=[RaiseShrine],
+    facets=[RaiseShrine, GrantCharm],
     price=5,
+)
+
+
+BELL_STRIKER_BRUTE = UnitBlueprint(
+    "Bell-Striker Brute", health=8, speed=3, sight=2, facets=[BellHammer], price=10
 )

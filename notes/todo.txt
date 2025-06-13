@@ -12,10 +12,8 @@ game functionality
     multi action selection menu ui
     aoe selection ui
     elevation
-    no movement
-    spawn with status
-    terrain statuses
-    damage pipeline fixes
+    damage sources + resistance
+    status sources + controller
     vision ghosts
     chess clock
     victory points/checking

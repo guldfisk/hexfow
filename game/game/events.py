@@ -20,8 +20,8 @@ from game.game.core import (
     ActivatedAbilityFacet,
     StatusSignature,
     HexStatusSignature,
+    DamageSignature,
 )
-from game.game.damage import DamageSignature
 from game.game.decisions import SelectOptionDecisionPoint, NoTarget, O, OptionDecision
 from game.game.player import Player
 from game.game.values import DamageType, StatusIntention
@@ -90,7 +90,19 @@ class GainEnergy(Event[int]):
 
 
 @dataclasses.dataclass
-class Damage(Event[int]):
+class SufferDamage(Event[int]):
+    unit: Unit
+    signature: DamageSignature
+
+    def is_valid(self) -> bool:
+        return self.signature.amount > 0
+
+    def resolve(self) -> int:
+        return self.unit.suffer_damage(self.signature)
+
+
+@dataclasses.dataclass
+class ReceiveDamage(Event[int]):
     unit: Unit
     signature: DamageSignature
 
@@ -103,22 +115,38 @@ class Damage(Event[int]):
             self.signature.amount
             if self.signature.type == DamageType.TRUE
             else max(
-                max(
-                    self.signature.amount
-                    - GS()
-                    .map.hex_off(self.unit)
-                    .get_terrain_protection_for(
-                        TerrainProtectionRequest(self.unit, self.signature.type)
-                    ),
-                    min(self.signature.amount, 1),
-                )
+                self.signature.amount
                 - min(defender_armor, max(defender_armor - self.signature.ap, 0)),
                 0,
             )
         )
-        if not self.signature.lethal:
-            damage = min(damage, self.unit.health - 1)
-        self.unit.damage += damage
+        ES.resolve(SufferDamage(self.unit, self.signature.with_damage(damage)))
+        return damage
+
+
+@dataclasses.dataclass
+class Damage(Event[int]):
+    unit: Unit
+    signature: DamageSignature
+
+    def is_valid(self) -> bool:
+        return self.signature.amount > 0
+
+    def resolve(self) -> int:
+        damage = (
+            self.signature.amount
+            if self.signature.type == DamageType.TRUE
+            else max(
+                self.signature.amount
+                - GS()
+                .map.hex_off(self.unit)
+                .get_terrain_protection_for(
+                    TerrainProtectionRequest(self.unit, self.signature.type)
+                ),
+                min(self.signature.amount, 1),
+            )
+        )
+        ES.resolve(ReceiveDamage(self.unit, self.signature.with_damage(damage)))
         return damage
 
 

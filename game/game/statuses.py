@@ -1,7 +1,7 @@
 import dataclasses
 from typing import Self, ClassVar
 
-from events.eventsystem import TriggerEffect, ES, StateModifierEffect
+from events.eventsystem import TriggerEffect, ES, StateModifierEffect, ReplacementEffect
 from events.tests.game_objects.advanced_units import Player
 from game.game.core import (
     UnitStatus,
@@ -11,8 +11,8 @@ from game.game.core import (
     UnitBlueprint,
     ActiveUnitContext,
     MoveOption,
+    DamageSignature,
 )
-from game.game.damage import DamageSignature
 from game.game.decisions import Option
 from game.game.events import (
     Damage,
@@ -24,6 +24,8 @@ from game.game.events import (
     SpawnUnit,
     Turn,
     KillUpkeep,
+    ReceiveDamage,
+    SufferDamage,
 )
 from game.game.values import DamageType, StatusIntention
 
@@ -308,3 +310,43 @@ class Fortified(RefreshableDurationUnitStatus):
 
     def create_effects(self, by: Player) -> None:
         self.register_effects(IncreaseUnitMaxHealthModifier(self.parent, 1))
+
+
+@dataclasses.dataclass(eq=False)
+class LuckyCharmReplacement(ReplacementEffect[SufferDamage]):
+    priority: ClassVar[int] = 0
+
+    status: UnitStatus
+
+    def can_replace(self, event: SufferDamage) -> bool:
+        return event.unit == self.status.parent and event.signature.amount == 1
+
+    def resolve(self, event: SufferDamage) -> None:
+        self.status.remove()
+
+
+class LuckyCharm(RefreshableDurationUnitStatus):
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self, by: Player) -> None:
+        self.register_effects(LuckyCharmReplacement(self))
+
+
+@dataclasses.dataclass(eq=False)
+class BellStruckTrigger(TriggerEffect[ReceiveDamage]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def should_trigger(self, event: ReceiveDamage) -> bool:
+        return event.unit == self.unit and event.signature.amount >= 3
+
+    def resolve(self, event: ReceiveDamage) -> None:
+        self.unit.exhausted = True
+
+
+class BellStruck(RefreshableDurationUnitStatus):
+    default_intention = StatusIntention.DEBUFF
+
+    def create_effects(self, by: Player) -> None:
+        self.register_effects(BellStruckTrigger(self.parent))
