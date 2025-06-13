@@ -200,7 +200,7 @@ class Sweep(ActivatedAbilityFacet[list[Hex]]):
     def perform(self, target: list[Hex]) -> None:
         for h in target:
             if unit := GS().map.unit_on(h):
-                ES.resolve(Damage(unit, DamageSignature(3, DamageType.MELEE)))
+                ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.MELEE)))
 
 
 class Stare(ActivatedAbilityFacet[list[Hex]]):
@@ -303,7 +303,7 @@ class StimulatingInjection(SingleTargetActivatedAbility):
         return unit != self.owner
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(Damage(target, DamageSignature(1, DamageType.TRUE)))
+        ES.resolve(Damage(target, DamageSignature(1, self, DamageType.TRUE)))
         # TODO event
         target.exhausted = False
         ES.resolve(Kill(self.owner))
@@ -341,7 +341,7 @@ class Suplex(SingleTargetActivatedAbility):
         return unit != self.owner and unit.size.g() < Size.LARGE
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(Damage(target, DamageSignature(3, DamageType.MELEE)))
+        ES.resolve(Damage(target, DamageSignature(3, self, DamageType.MELEE)))
         own_position = GS().map.position_off(self.owner)
         if target_hex := GS().map.hexes.get(
             own_position + (own_position - GS().map.position_off(target))

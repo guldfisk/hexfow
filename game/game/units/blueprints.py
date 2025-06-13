@@ -69,6 +69,8 @@ from game.game.units.facets.static_abilities import (
     CaughtInTheMatch,
     HeelTurn,
     Quick,
+    GlassSkin,
+    DiamondSkin,
 )
 from game.game.values import Size
 
@@ -390,7 +392,13 @@ STIM_DRONE = UnitBlueprint(
 # - greater resistance to damage from statuses
 
 GLASS_GOLEM = UnitBlueprint(
-    "Glass Golem", health=1, speed=3, armor=2, sight=2, facets=[GlassFist], price=5
+    "Glass Golem",
+    health=1,
+    speed=3,
+    armor=2,
+    sight=2,
+    facets=[GlassFist, GlassSkin],
+    price=5,
 )
 
 # diamond golem {7} x2
@@ -401,7 +409,13 @@ GLASS_GOLEM = UnitBlueprint(
 # - immune to damage from statuses
 
 DIAMOND_GOLEM = UnitBlueprint(
-    "Diamond Golem", health=1, speed=3, armor=3, sight=2, facets=[DiamondFist], price=9
+    "Diamond Golem",
+    health=1,
+    speed=3,
+    armor=3,
+    sight=2,
+    facets=[DiamondFist, DiamondSkin],
+    price=9,
 )
 
 # TODO look at this as well for damage changes

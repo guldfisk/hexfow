@@ -37,7 +37,7 @@ class BurnTrigger(TriggerEffect[Upkeep]):
     status: UnitStatus
 
     def resolve(self, event: Upkeep) -> None:
-        ES.resolve(Damage(self.status.parent, DamageSignature(self.status.stacks)))
+        ES.resolve(Damage(self.status.parent, DamageSignature(self.status.stacks, self)))
         self.status.decrement_stacks()
 
 
@@ -66,6 +66,7 @@ class PanickedTrigger(TriggerEffect[Upkeep]):
                 self.status.parent,
                 DamageSignature(
                     len(list(GS().map.get_neighboring_units_off(self.status.parent))),
+                    self.status,
                     type=DamageType.TRUE,
                 ),
             )

@@ -110,8 +110,8 @@ class Game(Thread):
                             random.choice(
                                 [
                                     Plains,
-                                    # Forest,
-                                    # Magma,
+                                    Forest,
+                                    Magma,
                                     # Hills,
                                     # Water,
                                 ]
@@ -128,16 +128,20 @@ class Game(Thread):
                 (
                     # HORROR,
                     # BUGLING,
-                    BELL_STRIKER_BRUTE,
-                    SHRINE_KEEPER,
+                    # GLASS_GOLEM,
+                    # DIAMOND_GOLEM,
+                    # BELL_STRIKER_BRUTE,
+                    # SHRINE_KEEPER,
                     # BULLDOZER,
-                    # PESTILENCE_PRIEST,
+                    PESTILENCE_PRIEST,
                     # AP_GUNNER,
                 ),
                 (
                     # SCARAB,
-                    LIGHT_ARCHER,
-                    SCARAB,
+                    # LIGHT_ARCHER,
+                    GLASS_GOLEM,
+                    DIAMOND_GOLEM,
+                    # SCARAB,
                     # BULLDOZER,
                     # CHAINSAW_SADIST,
                     # BEE_SHAMAN,
@@ -148,8 +152,8 @@ class Game(Thread):
                 ),
             )
 
-            use_random_units = False
-            # use_random_units = True
+            # use_random_units = False
+            use_random_units = True
 
             if use_random_units:
                 min_random_unit_quantity = 7

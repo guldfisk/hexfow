@@ -17,7 +17,7 @@ class DamageOnWalkIn(TriggerEffect[MoveUnit]):
         return event.to_ == self.hex
 
     def resolve(self, event: MoveUnit) -> None:
-        ES.resolve(Damage(event.unit, DamageSignature(self.amount)))
+        ES.resolve(Damage(event.unit, DamageSignature(self.amount, None)))
 
 
 @dataclasses.dataclass(eq=False)
@@ -32,7 +32,7 @@ class DamageOnUpkeep(TriggerEffect[Upkeep]):
 
     def resolve(self, event: Upkeep) -> None:
         if unit := GS().map.unit_on(self.hex):
-            ES.resolve(Damage(unit, DamageSignature(self.amount)))
+            ES.resolve(Damage(unit, DamageSignature(self.amount, None)))
 
 
 class InstantDamageMagma(Terrain):

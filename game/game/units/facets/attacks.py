@@ -251,7 +251,7 @@ class FromTheTopRope(MeleeAttackFacet):
             return 1
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(Damage(self.owner, DamageSignature(2, lethal=False)))
+        ES.resolve(Damage(self.owner, DamageSignature(2, self, lethal=False)))
 
 
 class TwinRevolvers(RangedAttackFacet):

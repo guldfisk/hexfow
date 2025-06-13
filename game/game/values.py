@@ -17,6 +17,14 @@ class DamageType(StrEnum):
     TRUE = auto()
 
 
+class Resistance(IntEnum):
+    NONE = auto()
+    MINOR = auto()
+    NORMAL = auto()
+    MAJOR = auto()
+    IMMUNE = auto()
+
+
 class VisionObstruction(IntEnum):
     NONE = auto()
     HIGH_GROUND = auto()

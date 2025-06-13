@@ -1,4 +1,5 @@
 import dataclasses
+import math
 from typing import Iterable
 
 from events.eventsystem import Event, ES, V
@@ -24,7 +25,7 @@ from game.game.core import (
 )
 from game.game.decisions import SelectOptionDecisionPoint, NoTarget, O, OptionDecision
 from game.game.player import Player
-from game.game.values import DamageType, StatusIntention
+from game.game.values import DamageType, StatusIntention, Resistance
 
 
 # TODO yikes (have this rn so we can do stuff on kill before unit has it's effect
@@ -120,6 +121,15 @@ class ReceiveDamage(Event[int]):
                 0,
             )
         )
+        match self.unit.get_resistance_against(self.signature):
+            case Resistance.MINOR:
+                damage = math.ceil(damage / 3 * 2)
+            case Resistance.NORMAL:
+                damage = math.ceil(damage / 2)
+            case Resistance.MAJOR:
+                damage = math.floor(damage / 2)
+            case Resistance.IMMUNE:
+                damage = 0
         ES.resolve(SufferDamage(self.unit, self.signature.with_damage(damage)))
         return damage
 

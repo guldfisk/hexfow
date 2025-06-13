@@ -25,6 +25,8 @@ from game.game.core import (
     SkipOption,
     StatusSignature,
     DamageSignature,
+    Source,
+    Status,
 )
 from game.game.decisions import Option, NoTarget, SelectOptionDecisionPoint
 from game.game.events import (
@@ -44,8 +46,8 @@ from game.game.events import (
     TurnCleanup,
 )
 from game.game.player import Player
-from game.game.statuses import Terrified, Parasite, TheyVeGotASteelChair
-from game.game.values import DamageType
+from game.game.statuses import Terrified, TheyVeGotASteelChair
+from game.game.values import DamageType, Resistance
 
 
 @dataclasses.dataclass(eq=False)
@@ -54,6 +56,7 @@ class PricklyTrigger(TriggerEffect[SimpleAttack]):
     priority: ClassVar[int] = 0
 
     unit: Unit
+    source: Source
     amount: int
 
     def should_trigger(self, event: SimpleAttack) -> bool:
@@ -62,12 +65,12 @@ class PricklyTrigger(TriggerEffect[SimpleAttack]):
         )
 
     def resolve(self, event: SimpleAttack) -> None:
-        ES.resolve(Damage(event.attacker, DamageSignature(self.amount)))
+        ES.resolve(Damage(event.attacker, DamageSignature(self.amount, self.source)))
 
 
 class Prickly(StaticAbilityFacet):
     def create_effects(self) -> None:
-        self.register_effects(PricklyTrigger(self.owner, 2))
+        self.register_effects(PricklyTrigger(self.owner, self, 2))
 
 
 # TODO just an example, should of course prevent the action being available in the first place
@@ -208,6 +211,7 @@ class PusherReplacement(ReplacementEffect[MoveUnit]):
     priority: ClassVar[int] = 0
 
     unit: Unit
+    source: Source
 
     def can_replace(self, event: MoveUnit) -> bool:
         return event.unit == self.unit and GS().map.unit_on(event.to_)
@@ -242,7 +246,7 @@ class PusherReplacement(ReplacementEffect[MoveUnit]):
                 )
             if not moved:
                 # TODO should damage when move fails, even if the target wasn't non to begin with
-                ES.resolve(Damage(unit, DamageSignature(1)))
+                ES.resolve(Damage(unit, DamageSignature(1, self.source)))
                 ES.resolve(CheckAlive(unit))
 
         if not _map.unit_on(event.to_):
@@ -251,7 +255,9 @@ class PusherReplacement(ReplacementEffect[MoveUnit]):
 
 class Pusher(StaticAbilityFacet):
     def create_effects(self) -> None:
-        self.register_effects(PusherModifier(self.owner), PusherReplacement(self.owner))
+        self.register_effects(
+            PusherModifier(self.owner), PusherReplacement(self.owner, self)
+        )
 
 
 @dataclasses.dataclass(eq=False)
@@ -384,6 +390,7 @@ class ExplosiveTrigger(TriggerEffect[KillUpkeep]):
     priority: ClassVar[int] = 0
 
     unit: Unit
+    source: Source
     damage: int
 
     def should_trigger(self, event: KillUpkeep) -> bool:
@@ -391,12 +398,16 @@ class ExplosiveTrigger(TriggerEffect[KillUpkeep]):
 
     def resolve(self, event: KillUpkeep) -> None:
         for unit in GS().map.get_units_within_range_off(self.unit, 1):
-            ES.resolve(Damage(unit, DamageSignature(self.damage, type=DamageType.AOE)))
+            ES.resolve(
+                Damage(
+                    unit, DamageSignature(self.damage, self.source, type=DamageType.AOE)
+                )
+            )
 
 
 class Explosive(StaticAbilityFacet):
     def create_effects(self) -> None:
-        self.register_effects(ExplosiveTrigger(self.owner, 5))
+        self.register_effects(ExplosiveTrigger(self.owner, self, 5))
 
 
 # TODO same trigger etc
@@ -655,3 +666,34 @@ class Quick(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(QuickTrigger(self.owner))
+
+
+@dataclasses.dataclass(eq=False)
+class StatusDamageResistance(StateModifierEffect[Unit, DamageSignature, Resistance]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.get_resistance_against
+
+    unit: Unit
+    resistance: Resistance
+
+    def should_modify(
+        self, obj: Unit, request: DamageSignature, value: Resistance
+    ) -> bool:
+        return (
+            obj == self.unit and request.source and isinstance(request.source, Status)
+        )
+
+    def modify(
+        self, obj: Unit, request: DamageSignature, value: Resistance
+    ) -> Resistance:
+        return max(value, self.resistance)
+
+
+class GlassSkin(StaticAbilityFacet):
+    def create_effects(self) -> None:
+        self.register_effects(StatusDamageResistance(self.owner, Resistance.MAJOR))
+
+
+class DiamondSkin(StaticAbilityFacet):
+    def create_effects(self) -> None:
+        self.register_effects(StatusDamageResistance(self.owner, Resistance.IMMUNE))

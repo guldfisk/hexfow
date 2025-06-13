@@ -37,7 +37,13 @@ from game.game.map.coordinates import CC, line_of_sight_obstructed
 from game.game.map.geometry import hex_circle
 from game.game.player import Player
 from game.game.turn_order import TurnOrder
-from game.game.values import Size, DamageType, VisionObstruction, StatusIntention
+from game.game.values import (
+    Size,
+    DamageType,
+    VisionObstruction,
+    StatusIntention,
+    Resistance,
+)
 from game.tests.conftest import EventLogger
 
 
@@ -280,6 +286,7 @@ class SingleTargetAttackFacet(AttackFacet):
                 + self.owner.attack_power.g(),
                 0,
             ),
+            self,
             type=self.damage_type,
             ap=self.ap,
         )
@@ -486,20 +493,6 @@ class UnitBlueprint:
         return f"{type(self).__name__}({self.name})"
 
 
-@dataclasses.dataclass
-class DamageSignature:
-    amount: int
-    type: DamageType = DamageType.PHYSICAL
-    ap: int = 0
-    lethal: bool = True
-
-    def branch(self, **kwargs: Any) -> DamageSignature:
-        return type(self)(**dataclasses.asdict(self) | kwargs)
-
-    def with_damage(self, amount: int) -> DamageSignature:
-        return self.branch(amount=amount)
-
-
 class Unit(HasStatuses, Modifiable, VisionBound):
     speed: ModifiableAttribute[None, int]
     sight: ModifiableAttribute[None, int]
@@ -558,6 +551,10 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             if of_type is None or isinstance(attack, of_type):
                 return attack
         return None
+
+    @modifiable
+    def get_resistance_against(self, signature: DamageSignature) -> Resistance:
+        return Resistance.NONE
 
     def suffer_damage(self, signature: DamageSignature) -> int:
         damage = min(
@@ -889,6 +886,30 @@ class Hex(Modifiable, HasStatuses, Serializable):
 
     def __repr__(self):
         return f"{type(self).__name__}({self.position.r}, {self.position.h})"
+
+
+Source: TypeAlias = Facet | Status | None
+
+
+@dataclasses.dataclass
+class DamageSignature:
+    amount: int
+    source: Source
+    type: DamageType = DamageType.PHYSICAL
+    ap: int = 0
+    lethal: bool = True
+
+    def branch(self, **kwargs: Any) -> DamageSignature:
+        return type(self)(
+            **{
+                field.name: getattr(self, field.name)
+                for field in dataclasses.fields(self)
+            }
+            | kwargs
+        )
+
+    def with_damage(self, amount: int) -> DamageSignature:
+        return self.branch(amount=amount)
 
 
 class HexStatus(Status[Hex], ABC): ...
