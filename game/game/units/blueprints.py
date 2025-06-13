@@ -18,6 +18,10 @@ from game.game.units.facets.activated_abilities import (
     Lasso,
     RaiseShrine,
     GrantCharm,
+    ChokingSoot,
+    Terrorize,
+    Scorch,
+    FlameWall,
 )
 from game.game.units.facets.attacks import (
     Peck,
@@ -72,6 +76,8 @@ from game.game.units.facets.static_abilities import (
     GlassSkin,
     DiamondSkin,
     LastStand,
+    ToxicPresence,
+    FlameResistant,
 )
 from game.game.values import Size
 
@@ -683,4 +689,62 @@ SHRINE_KEEPER = UnitBlueprint(
 
 BELL_STRIKER_BRUTE = UnitBlueprint(
     "Bell-Striker Brute", health=8, speed=3, sight=2, facets=[BellHammer], price=10
+)
+
+# witch engine {13pp} x1
+# health 7, movement 2, sight 2, energy, M
+# choking soot
+#     aoe ability 4 energy
+#     aoe type hex size 1 range 3 NLoS
+#     -1 movement
+#     applies status soot to terrain for 2 rounds
+#         unstackable, refreshable
+#         blocks LoS
+#         units on this space has -1 sight, to a minimum of 1
+#         when a unit moves in, and at the end of each round, units on this hex receives 1 true damage
+# terrify
+#     ability 5 energy
+#     4 range LoS
+#     no movement
+#     applies terrified for 2 rounds
+#         unstackable, refreshable
+#         if this unit is adjacent to an enemy unit, it's owner cannot round skip, and the only legal actions
+#         of this units are to move away from any adjacent enemy units
+# into the gears
+#     ability
+#     target adjacent allied unit
+#     this unit heals equal to the the units heals and gains energy equal to its energy
+#     kill the unit
+# - withering presence
+#     at the end of this units turn, it applies 1 poison to each adjacent unit
+# - auro of paranoia
+#     whenever an enemy unit within 4 range becomes the target of an allied ability, it suffers 1 true damage
+
+WITCH_ENGINE = UnitBlueprint(
+    "Witch Engine",
+    health=7,
+    speed=2,
+    sight=2,
+    energy=8,
+    facets=[ChokingSoot, Terrorize, ToxicPresence],
+    price=13,
+)
+
+
+INFERNO_TANK = UnitBlueprint(
+    "Inferno Tank",
+    health=8,
+    speed=2,
+    sight=1,
+    armor=1,
+    energy=5,
+    size=Size.LARGE,
+    facets=[
+        # Scorch,
+        FlameWall,
+        FlameResistant,
+    ],
+    # TODO too many target etc
+    # price=12,
+    price=None,
 )

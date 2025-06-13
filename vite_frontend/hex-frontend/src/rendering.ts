@@ -173,7 +173,9 @@ export const renderMap = (
   const ccToKey = (cc: CC): string => `${cc.r},${cc.h}`;
 
   const unitHexes: { [key: string]: Hex } = Object.fromEntries(
-    gameState.map.hexes.filter((h) => h.unit && h.visible).map((h) => [h.unit.id, h]),
+    gameState.map.hexes
+      .filter((h) => h.unit && h.visible)
+      .map((h) => [h.unit.id, h]),
   );
 
   type Action = { type: string; content: { [key: string]: any } };
@@ -516,15 +518,20 @@ export const renderMap = (
       const border = new Graphics(statusBorder);
       statusContainer.addChild(border);
 
-      const durationText = new Text({
-        // text: `${status.duration}/${status.originalDuration}`,
-        text: status.duration || status.stacks,
-        style: statusCountStyle,
-      });
-      durationText.x = 17;
-      durationText.y = -7;
-      durationText.anchor = 0.5;
-      statusContainer.addChild(durationText);
+      if (status.duration || status.stacks) {
+        const durationText = new Text({
+          text:
+            !status.duration != !status.stacks
+              ? `${status.duration || status.stacks}`
+              : //   TODO how show this trash??
+                `${status.stacks}-${status.duration}`,
+          style: statusCountStyle,
+        });
+        durationText.x = 17;
+        durationText.y = -7;
+        durationText.anchor = 0.5;
+        statusContainer.addChild(durationText);
+      }
 
       hexContainer.addChild(statusContainer);
     }

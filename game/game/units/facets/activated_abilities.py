@@ -34,7 +34,7 @@ from game.game.events import (
     SimpleAttack,
     ApplyHexStatus,
 )
-from game.game.hex_statuses import Shrine
+from game.game.hex_statuses import Shrine, Soot, BurningTerrain
 from game.game.statuses import (
     Panicked,
     BurstOfSpeed,
@@ -42,6 +42,8 @@ from game.game.statuses import (
     Ephemeral,
     Rooted,
     LuckyCharm,
+    Terror,
+    Burn,
 )
 from game.game.units.facets.hooks import AdjacencyHook
 from game.game.values import DamageType, Size
@@ -454,3 +456,75 @@ class GrantCharm(SingleAllyActivatedAbility):
                 target, self.owner.controller, StatusSignature(LuckyCharm, duration=3)
             )
         )
+
+
+# TODO should be an aoe target
+class ChokingSoot(SingleHexTargetActivatedAbility):
+    range = 2
+    cost = MovementCost(1) | EnergyCost(4)
+    requires_los = False
+    requires_vision = False
+
+    def perform(self, target: Hex) -> None:
+        for _hex in GS().map.get_hexes_within_range_off(target, 1):
+            ES.resolve(
+                ApplyHexStatus(
+                    _hex, self.owner.controller, HexStatusSignature(Soot, duration=3)
+                )
+            )
+
+
+class Terrorize(SingleEnemyActivatedAbility):
+    range = 4
+    cost = ExclusiveCost()
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                target, self.owner.controller, StatusSignature(Terror, duration=2)
+            )
+        )
+
+
+# TODO should be an aoe target and attack
+class Scorch(SingleHexTargetActivatedAbility):
+    cost = MovementCost(1)
+
+    def can_target_hex(self, hex_: Hex) -> bool:
+        return hex_ != GS().map.hex_off(self.owner)
+
+    def perform(self, target: Hex) -> None:
+        hexes = list(GS().map.get_neighbors_off(self.owner))
+        target_index = hexes.index(target)
+
+        for offset in range(-1, 2):
+            if unit := GS().map.unit_on(hexes[(target_index + offset) % len(hexes)]):
+                ES.resolve(Damage(unit, DamageSignature(3, self, type=DamageType.AOE)))
+                ES.resolve(
+                    ApplyStatus(
+                        unit, self.owner.controller, StatusSignature(Burn, stacks=2)
+                    )
+                )
+
+
+# TODO should be an aoe target
+class FlameWall(SingleHexTargetActivatedAbility):
+    cost = MovementCost(1) | EnergyCost(3)
+
+    def can_target_hex(self, hex_: Hex) -> bool:
+        return hex_ != GS().map.hex_off(self.owner)
+
+    def perform(self, target: Hex) -> None:
+        difference = target.position - GS().map.position_off(self.owner)
+        for i in range(3):
+            if _hex := GS().map.hexes.get(target.position + difference * i):
+                # TODO should it also apply burn to units in aoe initially?
+                #  hard to figure out how to balance numbers, especially with
+                #  order of triggers...
+                ES.resolve(
+                    ApplyHexStatus(
+                        _hex,
+                        self.owner.controller,
+                        HexStatusSignature(BurningTerrain, stacks=2, duration=3),
+                    )
+                )

@@ -271,7 +271,7 @@ class ApplyHexStatus(Event[None]):
         self.space.add_status(
             self.signature.status_type(
                 duration=self.signature.duration,
-                stacks=self.signature.duration,
+                stacks=self.signature.stacks,
                 parent=self.space,
             ),
             self.by,
@@ -508,12 +508,20 @@ class Turn(Event[bool]):
         return context.has_acted
 
 
-class Upkeep(Event[None]):
+class RoundUpkeep(Event[None]):
     def resolve(self) -> None:
         for unit in list(GS().map.unit_positions.keys()):
             ES.resolve(GainEnergy(unit, unit.energy_regen.g()))
             for status in list(unit.statuses):
                 status.decrement_duration()
+        for hex_ in GS().map.hexes.values():
+            for status in list(hex_.statuses):
+                status.decrement_duration()
+
+
+class RoundCleanup(Event[None]):
+    def resolve(self) -> None:
+        return None
 
 
 class Round(Event[None]):
@@ -533,7 +541,7 @@ class Round(Event[None]):
             unit.exhausted = False
 
         # TODO very unclear how this all works
-        ES.resolve(Upkeep())
+        ES.resolve(RoundUpkeep())
         do_state_based_check()
 
         while skipped_players != all_players:
@@ -606,6 +614,9 @@ class Round(Event[None]):
                 raise ValueError("AHLO")
 
         # TODO should we trigger turn skip for remaining units or something?
+
+        ES.resolve(RoundCleanup())
+        do_state_based_check()
 
         gs.turn_order.set_player_order(
             sorted(gs.turn_order.players, key=lambda p: last_action_timestamps[p])

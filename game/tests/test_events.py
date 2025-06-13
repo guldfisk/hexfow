@@ -692,15 +692,16 @@ def test_walk_onto_magma(
     unit_spawner, player1_connection: MockConnection, player2: Player
 ) -> None:
     make_hex_terrain(GS().map.hexes[CC(0, 1)], InstantDamageMagma)
-    chicken = unit_spawner.spawn(CHICKEN, coordinate=CC(0, 0))
+    archer = unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(0, 0))
     player1_connection.queue_responses(
-        ActivateSelector(OneOfUnitsSelector(chicken)),
+        ActivateSelector(OneOfUnitsSelector(archer)),
         MoveOptionSelector(OneOfHexesSelector(CC(0, 1))),
+        SkipOptionSelector(),
     )
     ES.resolve(Round())
-    assert GS().map.unit_positions[chicken].position == CC(0, 1)
+    assert GS().map.unit_positions[archer].position == CC(0, 1)
 
-    assert chicken.damage == 1
+    assert archer.damage == 2
 
 
 def test_unit_dies_mid_turn(

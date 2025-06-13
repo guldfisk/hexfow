@@ -1993,8 +1993,8 @@ into the gears
 - auro of paranoia
     whenever an enemy unit within 4 range becomes the target of an allied ability, it suffers 1 true damage
 
-inferno tank {13rgg} x1
-health 9, movement 2, armor 1, sight 1, 5 energy L
+inferno tank {12rgg} x1
+health 8, movement 2, armor 1, sight 1, 5 energy L
 scorch
     aoe attack
     aoe type tri-connected adjacent
@@ -2004,11 +2004,11 @@ flame wall
     aoe ability 3 energy
     aoe type 3 hex radiating line
     -1 movement
-    all ground units in aof suffer 2 burn
+    all ground units in aof suffer 1 burn
     apply flame wall status to terrain
         3 round duration
         unstackable, refreshable
-        ground units moving into or ending their turn on this hex suffer 2 burn
+        ground units moving into and ending the round on this hex suffer 1 burn
 - greater resistance to damage from burn
 
 brutodon {14gg} x1

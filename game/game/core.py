@@ -713,14 +713,22 @@ class OneOfUnits(TargetProfile[Unit]):
         return self.units[v["index"]]
 
 
-# TODO ABC, where should this be?
-class RefreshableDurationUnitStatus(UnitStatus, ABC):
+class DurationStatusMixin:
+    duration: int | None
 
     def merge(self, incoming: Self) -> bool:
-        if incoming.duration > self.duration:
+        if (
+            incoming.duration is None
+            or self.duration is None
+            or (incoming.duration > self.duration)
+        ):
             self.duration = incoming.duration
-            return True
-        return False
+        return True
+
+
+# TODO ABC, where should this be?
+# TODO just use the mixin instead
+class RefreshableDurationUnitStatus(DurationStatusMixin, UnitStatus, ABC): ...
 
 
 class NoTargetActivatedAbility(ActivatedAbilityFacet[None]):

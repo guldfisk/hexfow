@@ -12,11 +12,12 @@ from game.game.core import (
     ActiveUnitContext,
     MoveOption,
     DamageSignature,
+    OneOfHexes,
+    SkipOption,
 )
 from game.game.decisions import Option
 from game.game.events import (
     Damage,
-    Upkeep,
     Kill,
     TurnUpkeep,
     MeleeAttackAction,
@@ -26,19 +27,20 @@ from game.game.events import (
     KillUpkeep,
     ReceiveDamage,
     SufferDamage,
+    RoundCleanup,
 )
 from game.game.values import DamageType, StatusIntention
 
 
 @dataclasses.dataclass(eq=False)
-class BurnTrigger(TriggerEffect[Upkeep]):
+class BurnTrigger(TriggerEffect[RoundCleanup]):
     priority: ClassVar[int] = 0
 
     status: UnitStatus
 
-    def resolve(self, event: Upkeep) -> None:
+    def resolve(self, event: RoundCleanup) -> None:
         ES.resolve(
-            Damage(self.status.parent, DamageSignature(self.status.stacks, self))
+            Damage(self.status.parent, DamageSignature(self.status.stacks, self.status))
         )
         self.status.decrement_stacks()
 
@@ -55,14 +57,40 @@ class Burn(UnitStatus):
         self.register_effects(BurnTrigger(self))
 
 
-# TODO timings (right now only get to trigger duration -1 times)
 @dataclasses.dataclass(eq=False)
-class PanickedTrigger(TriggerEffect[Upkeep]):
+class PoisonTrigger(TriggerEffect[RoundCleanup]):
     priority: ClassVar[int] = 0
 
     status: UnitStatus
 
-    def resolve(self, event: Upkeep) -> None:
+    def resolve(self, event: RoundCleanup) -> None:
+        ES.resolve(
+            Damage(
+                self.status.parent,
+                DamageSignature(self.status.stacks, self.status, type=DamageType.TRUE),
+            )
+        )
+
+
+class Poison(UnitStatus):
+    default_intention = StatusIntention.DEBUFF
+
+    def merge(self, incoming: Self) -> bool:
+        self.stacks += incoming.stacks
+        return True
+
+    def create_effects(self, by: Player) -> None:
+        self.register_effects(PoisonTrigger(self))
+
+
+# TODO timings (right now only get to trigger duration -1 times)
+@dataclasses.dataclass(eq=False)
+class PanickedTrigger(TriggerEffect[RoundCleanup]):
+    priority: ClassVar[int] = 0
+
+    status: UnitStatus
+
+    def resolve(self, event: RoundCleanup) -> None:
         ES.resolve(
             Damage(
                 self.status.parent,
@@ -363,3 +391,56 @@ class MortallyWounded(UnitStatus):
 
     def on_expires(self) -> None:
         ES.resolve(Kill(self.parent))
+
+
+# TODO how should this work with not having vision?
+@dataclasses.dataclass(eq=False)
+class TerrorModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.get_legal_options
+
+    unit: Unit
+
+    def should_modify(
+        self, obj: Unit, request: ActiveUnitContext, value: list[Option]
+    ) -> bool:
+        return obj == self.unit and any(
+            unit.controller != obj.controller
+            for unit in GS().map.get_neighboring_units_off(obj)
+        )
+
+    def modify(
+        self, obj: Unit, request: ActiveUnitContext, value: list[Option]
+    ) -> list[Option]:
+        adjacent_enemy_units = [
+            unit
+            for unit in GS().map.get_neighboring_units_off(obj)
+            if unit.controller != obj.controller
+        ]
+        options = []
+        for option in value:
+            if (
+                isinstance(option, MoveOption)
+                and isinstance(option.target_profile, OneOfHexes)
+                and (
+                    valid_hexes := [
+                        _hex
+                        for _hex in option.target_profile.hexes
+                        if all(
+                            GS().map.distance_between(adjacent_unit, _hex) > 1
+                            for adjacent_unit in adjacent_enemy_units
+                        )
+                    ]
+                )
+            ):
+                options.append(MoveOption(target_profile=OneOfHexes(valid_hexes)))
+            elif isinstance(option, SkipOption):
+                options.append(option)
+        return options
+
+
+class Terror(RefreshableDurationUnitStatus):
+    default_intention = StatusIntention.DEBUFF
+
+    def create_effects(self, by: Player) -> None:
+        self.register_effects(TerrorModifier(self.parent))

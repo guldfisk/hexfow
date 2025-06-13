@@ -46,7 +46,13 @@ from game.game.events import (
     TurnCleanup,
 )
 from game.game.player import Player
-from game.game.statuses import Terrified, TheyVeGotASteelChair, MortallyWounded
+from game.game.statuses import (
+    Terrified,
+    TheyVeGotASteelChair,
+    MortallyWounded,
+    Poison,
+    Burn,
+)
 from game.game.values import DamageType, Resistance
 
 
@@ -669,18 +675,21 @@ class Quick(StaticAbilityFacet):
 
 
 @dataclasses.dataclass(eq=False)
-class StatusDamageResistance(StateModifierEffect[Unit, DamageSignature, Resistance]):
+class SourceTypeResistance(StateModifierEffect[Unit, DamageSignature, Resistance]):
     priority: ClassVar[int] = 1
     target: ClassVar[object] = Unit.get_resistance_against
 
     unit: Unit
+    source_type: type[Source]
     resistance: Resistance
 
     def should_modify(
         self, obj: Unit, request: DamageSignature, value: Resistance
     ) -> bool:
         return (
-            obj == self.unit and request.source and isinstance(request.source, Status)
+            obj == self.unit
+            and request.source
+            and isinstance(request.source, self.source_type)
         )
 
     def modify(
@@ -691,12 +700,21 @@ class StatusDamageResistance(StateModifierEffect[Unit, DamageSignature, Resistan
 
 class GlassSkin(StaticAbilityFacet):
     def create_effects(self) -> None:
-        self.register_effects(StatusDamageResistance(self.owner, Resistance.MAJOR))
+        self.register_effects(
+            SourceTypeResistance(self.owner, Status, Resistance.MAJOR)
+        )
 
 
 class DiamondSkin(StaticAbilityFacet):
     def create_effects(self) -> None:
-        self.register_effects(StatusDamageResistance(self.owner, Resistance.IMMUNE))
+        self.register_effects(
+            SourceTypeResistance(self.owner, Status, Resistance.IMMUNE)
+        )
+
+
+class FlameResistant(StaticAbilityFacet):
+    def create_effects(self) -> None:
+        self.register_effects(SourceTypeResistance(self.owner, Burn, Resistance.MAJOR))
 
 
 @dataclasses.dataclass(eq=False)
@@ -725,3 +743,30 @@ class LastStandReplacement(ReplacementEffect[Kill]):
 class LastStand(StaticAbilityFacet):
     def create_effects(self) -> None:
         self.register_effects(LastStandReplacement(self.owner))
+
+
+@dataclasses.dataclass(eq=False)
+class ToxicPresenceTrigger(TriggerEffect[TurnCleanup]):
+    # TODO handle priority in shared enum or some shit
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+    amount: int
+
+    def should_trigger(self, event: TurnCleanup) -> bool:
+        return event.unit == self.unit
+
+    def resolve(self, event: TurnCleanup) -> None:
+        for unit in GS().map.get_neighboring_units_off(self.unit):
+            ES.resolve(
+                ApplyStatus(
+                    unit,
+                    self.unit.controller,
+                    StatusSignature(Poison, stacks=self.amount),
+                )
+            )
+
+
+class ToxicPresence(StaticAbilityFacet):
+    def create_effects(self) -> None:
+        self.register_effects(ToxicPresenceTrigger(self.owner, 1))

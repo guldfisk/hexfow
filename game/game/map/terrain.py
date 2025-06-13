@@ -2,8 +2,15 @@ import dataclasses
 from typing import ClassVar
 
 from events.eventsystem import TriggerEffect, ES
-from game.game.core import Terrain, Hex, GS, Unit, TerrainProtectionRequest, StatusSignature
-from game.game.events import MoveUnit, Upkeep, ApplyStatus
+from game.game.core import (
+    Terrain,
+    Hex,
+    GS,
+    Unit,
+    TerrainProtectionRequest,
+    StatusSignature,
+)
+from game.game.events import MoveUnit, ApplyStatus, RoundCleanup
 from game.game.statuses import Burn
 from game.game.values import Size, DamageType
 
@@ -62,22 +69,30 @@ class BurnOnWalkIn(TriggerEffect[MoveUnit]):
         return event.to_ == self.hex and event.result
 
     def resolve(self, event: MoveUnit) -> None:
-        ES.resolve(ApplyStatus(unit=event.unit, by=None, signature=StatusSignature(Burn, stacks=1)))
+        ES.resolve(
+            ApplyStatus(
+                unit=event.unit, by=None, signature=StatusSignature(Burn, stacks=1)
+            )
+        )
 
 
 @dataclasses.dataclass(eq=False)
-class BurnOnUpkeep(TriggerEffect[Upkeep]):
+class BurnOnUpkeep(TriggerEffect[RoundCleanup]):
     priority: ClassVar[int] = 0
 
     hex: Hex
     amount: int
 
-    def should_trigger(self, event: Upkeep) -> bool:
+    def should_trigger(self, event: RoundCleanup) -> bool:
         return GS().map.unit_on(self.hex) is not None
 
-    def resolve(self, event: Upkeep) -> None:
+    def resolve(self, event: RoundCleanup) -> None:
         if unit := GS().map.unit_on(self.hex):
-            ES.resolve(ApplyStatus(unit=unit, by=None, signature=StatusSignature(Burn, stacks=1)))
+            ES.resolve(
+                ApplyStatus(
+                    unit=unit, by=None, signature=StatusSignature(Burn, stacks=1)
+                )
+            )
 
 
 class Magma(Terrain):
