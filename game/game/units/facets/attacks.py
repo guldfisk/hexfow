@@ -1,5 +1,11 @@
 from events.eventsystem import ES
-from game.game.core import MeleeAttackFacet, RangedAttackFacet, Unit, StatusSignature
+from game.game.core import (
+    MeleeAttackFacet,
+    RangedAttackFacet,
+    Unit,
+    StatusSignature,
+    MovementCost, ExclusiveCost,
+)
 from game.game.damage import DamageSignature
 from game.game.events import Damage, ApplyStatus
 from game.game.statuses import Staggered, Stumbling, Parasite
@@ -8,23 +14,19 @@ from game.game.values import Size
 
 
 class Peck(MeleeAttackFacet):
-    movement_cost = 0
     damage = 1
 
 
 class BuglingClaw(MeleeAttackFacet):
     combinable = True
-    movement_cost = 0
     damage = 2
 
 
 class GiantClub(MeleeAttackFacet):
-    movement_cost = 0
     damage = 5
 
 
 class Gore(MeleeAttackFacet):
-    movement_cost = 0
     damage = 4
 
     # TODO really ugly
@@ -60,7 +62,7 @@ class RazorTusk(MeleeAttackFacet):
 class Blaster(RangedAttackFacet):
     damage = 3
     range = 2
-    movement_cost = 1
+    cost = MovementCost(1)
 
 
 class LightBlaster(RangedAttackFacet):
@@ -71,7 +73,7 @@ class LightBlaster(RangedAttackFacet):
 class Strafe(RangedAttackFacet):
     damage = 2
     range = 2
-    movement_cost = 1
+    cost = MovementCost(1)
     combinable = True
 
 
@@ -81,11 +83,11 @@ class Bayonet(MeleeAttackFacet):
 
 class Pinch(MeleeAttackFacet):
     damage = 2
-    movement_cost = 1
+    cost = MovementCost(1)
 
 
 class Chainsaw(MeleeAttackFacet):
-    movement_cost = 1
+    cost = MovementCost(1)
     damage = 3
 
     def get_damage_modifier_against(self, unit: Unit) -> int | None:
@@ -95,14 +97,12 @@ class Chainsaw(MeleeAttackFacet):
 
 class LightBow(RangedAttackFacet):
     # TODO in notes or how should this be done?
-    movement_cost = 0
     range = 3
     damage = 1
 
 
 class APGun(RangedAttackFacet):
-    # TODO should be "no movement"
-    movement_cost = 2
+    cost = ExclusiveCost()
     range = 3
     ap = 1
     damage = 3
@@ -113,15 +113,13 @@ class APGun(RangedAttackFacet):
 
 
 class HurlBoulder(RangedAttackFacet):
-    # TODO should be "no movement"
-    movement_cost = 3
+    cost = ExclusiveCost()
     range = 2
     #     +1 damage on rock terrain
     damage = 5
 
 
 class HiddenBlade(MeleeAttackFacet):
-    movement_cost = 0
     damage = 1
 
     def get_damage_modifier_against(self, unit: Unit) -> int | None:
@@ -130,7 +128,6 @@ class HiddenBlade(MeleeAttackFacet):
 
 
 class Bite(MeleeAttackFacet):
-    movement_cost = 0
     damage = 3
 
 
@@ -152,7 +149,7 @@ class Bite(MeleeAttackFacet):
 
 
 class Inject(MeleeAttackFacet):
-    movement_cost = 1
+    cost = MovementCost(1)
     damage = 4
 
     def resolve_pre_damage_effects(self, defender: Unit) -> None:
@@ -246,19 +243,18 @@ class Tackle(MeleeAttackFacet):
 
 class FromTheTopRope(MeleeAttackFacet):
     damage = 4
-    movement_cost = 1
+    cost = MovementCost(1)
 
     def get_damage_modifier_against(self, unit: Unit) -> int | None:
         if any(isinstance(status, Stumbling) for status in unit.statuses):
             return 1
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        # TODO non-lethal
         ES.resolve(Damage(self.owner, DamageSignature(2, lethal=False)))
 
 
 class TwinRevolvers(RangedAttackFacet):
-    movement_cost = 1
+    cost = MovementCost(1)
     damage = 2
     range = 3
     max_activations = 2

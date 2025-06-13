@@ -341,7 +341,6 @@ force field
         hex is impassable to ground units
         hex blocks LoS for attacks
 
-+1 attack should be "attack power"
 physical propagation is a meme
 
 "paranoia" debuff - unit does not provide vision when activated, and when it is is no other units does.
@@ -362,3 +361,8 @@ witch engine
 	aura of paranoia
 
 unit that moves up to 2 spaces with normal moves
+
+tractor
+
+crawling cactus
+    use energy to move?

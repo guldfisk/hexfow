@@ -110,7 +110,7 @@ class Game(Thread):
                             random.choice(
                                 [
                                     Plains,
-                                    Forest,
+                                    # Forest,
                                     # Magma,
                                     # Hills,
                                     # Water,
@@ -126,18 +126,22 @@ class Game(Thread):
 
             player_units = (
                 (
-                    HORROR,
+                    # HORROR,
+                    BUGLING,
                     PESTILENCE_PRIEST,
+                    AP_GUNNER,
                 ),
                 (
+                    SCARAB,
                     LIGHT_ARCHER,
-                    CYCLOPS,
-                    BLITZ_TROOPER,
+                    BEE_SHAMAN,
+                    # CYCLOPS,
+                    # BLITZ_TROOPER,
                 ),
             )
 
-            # use_random_units = False
-            use_random_units = True
+            use_random_units = False
+            # use_random_units = True
 
             if use_random_units:
                 min_random_unit_quantity = 7

@@ -4,7 +4,7 @@ import dataclasses
 import re
 from abc import ABC, abstractmethod, ABCMeta
 from collections import defaultdict
-from typing import ClassVar, Literal, Any, TypeVar, Iterator, Generic, Self
+from typing import ClassVar, Literal, Any, TypeVar, Iterator, Generic, Self, Iterable
 from typing import Mapping
 
 from bidict import bidict
@@ -114,20 +114,134 @@ class Facet(HasStatuses, Serializable):
         return {"name": self.__class__.__name__, "type": self.display_type}
 
 
+class EffortCost(ABC):
+
+    @abstractmethod
+    def can_be_payed(self, context: ActiveUnitContext) -> bool:
+        pass
+
+    @abstractmethod
+    def pay(self, context: ActiveUnitContext) -> None:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def merge(cls, instances: list[Self]) -> Self: ...
+
+    def __or__(self, other: EffortCost | EffortCostSet) -> EffortCostSet:
+        return EffortCostSet(
+            [self, other]
+            if isinstance(other, EffortCost)
+            else [self, *other.costs.values()]
+        )
+
+
+class EffortCostSet:
+
+    def __init__(self, costs: Iterable[EffortCost] = ()):
+        grouped: dict[type[EffortCost], list[EffortCost]] = defaultdict(list)
+        for cost in costs:
+            grouped[type(cost)].append(cost)
+        self.costs = {
+            cost_type: cost_type.merge(_costs) for cost_type, _costs in grouped.items()
+        }
+
+    @abstractmethod
+    def can_be_payed(self, context: ActiveUnitContext) -> bool:
+        return all(cost.can_be_payed(context) for cost in self.costs.values())
+
+    @abstractmethod
+    def pay(self, context: ActiveUnitContext) -> None:
+        for cost in self.costs.values():
+            cost.pay(context)
+
+    def __or__(self, other: EffortCost | EffortCostSet) -> EffortCostSet:
+        return EffortCostSet(
+            [*self.costs.values(), other]
+            if isinstance(other, EffortCost)
+            else [self.costs.values(), *other.costs.values()]
+        )
+
+    def __repr__(self) -> str:
+        return "{}({})".format(
+            type(self).__name__, ", ".join(str(c) for c in self.costs.values())
+        )
+
+    def __bool__(self) -> bool:
+        return bool(self.costs)
+
+
+@dataclasses.dataclass
+class MovementCost(EffortCost):
+    amount: int
+
+    def can_be_payed(self, context: ActiveUnitContext) -> bool:
+        return not context.has_acted or self.amount <= context.movement_points
+
+    def pay(self, context: ActiveUnitContext) -> None:
+        context.movement_points -= self.amount
+
+    @classmethod
+    def merge(cls, instances: list[Self]) -> Self:
+        return cls(amount=sum(cost.amount for cost in instances))
+
+
+class ExclusiveCost(EffortCost):
+
+    def can_be_payed(self, context: ActiveUnitContext) -> bool:
+        return not context.has_acted
+
+    def pay(self, context: ActiveUnitContext) -> None:
+        context.movement_points = min(context.movement_points, 0)
+        context.should_stop = True
+
+    @classmethod
+    def merge(cls, instances: list[Self]) -> Self:
+        return cls()
+
+
+@dataclasses.dataclass
+class EnergyCost(EffortCost):
+    amount: int
+
+    def can_be_payed(self, context: ActiveUnitContext) -> bool:
+        return self.amount <= context.unit.energy
+
+    def pay(self, context: ActiveUnitContext) -> None:
+        context.unit.energy -= self.amount
+
+    @classmethod
+    def merge(cls, instances: list[Self]) -> Self:
+        return cls(amount=sum(cost.amount for cost in instances))
+
+
 class EffortFacet(Facet, Modifiable):
-    movement_cost: ClassVar[int | None] = 0
+    cost: ClassVar[EffortCostSet | EffortCost | None] = None
     # TODO these should be some signature together
     combinable: ClassVar[bool] = False
     max_activations: int | None = 1
 
+    # TODO how does overriding work with modifiable? also, can it be abstract?
     @modifiable
-    def has_sufficient_movement_points(self, context: ActiveUnitContext) -> bool:
-        return (
-            self.movement_cost is None or self.movement_cost <= context.movement_points
-        )
+    def get_legal_targets(self, _: None = None) -> list[Unit]: ...
 
-    @abstractmethod
-    def can_be_activated(self, context: ActiveUnitContext) -> bool: ...
+    # TODO should prob be modifyable. prob need some way to lock in costs for effort
+    #  options then.
+    def get_cost(self) -> EffortCostSet:
+        return self.cost or EffortCostSet()
+
+    # TODO how does overriding work with modifiable?
+    @modifiable
+    def can_be_activated(self, context: ActiveUnitContext) -> bool:
+        return (
+            (
+                self.max_activations is None
+                or context.activated_facets[self.__class__.__name__]
+                < self.max_activations
+            )
+            and self.get_cost().can_be_payed(context)
+            and self.get_legal_targets(None)
+        )
 
 
 class AttackFacet(EffortFacet): ...
@@ -181,23 +295,8 @@ class MeleeAttackFacet(SingleTargetAttackFacet):
             and GS().map.position_of(unit).is_passable_to(self.owner)
         ]
 
-    # TODO how does overriding work with modifiable?
-    @modifiable
-    def has_sufficient_movement_points(self, context: ActiveUnitContext) -> bool:
-        return (self.movement_cost or 0) + 1 <= context.movement_points
-
-    @modifiable
-    def can_be_activated(self, context: ActiveUnitContext) -> bool:
-        return (
-            # TODO common logic
-            (
-                self.max_activations is None
-                or context.activated_facets[self.__class__.__name__]
-                < self.max_activations
-            )
-            and self.has_sufficient_movement_points(context)
-            and self.get_legal_targets(None)
-        )
+    def get_cost(self) -> EffortCostSet:
+        return (self.cost or EffortCostSet()) | MovementCost(1)
 
 
 # TODO where should logic for these be?
@@ -238,24 +337,9 @@ class RangedAttackFacet(SingleTargetAttackFacet):
             and unit.can_be_attacked_by(self)
         ]
 
-    @modifiable
-    def can_be_activated(self, context: ActiveUnitContext) -> bool:
-        return (
-            (
-                self.max_activations is None
-                or context.activated_facets[self.__class__.__name__]
-                < self.max_activations
-            )
-            and self.has_sufficient_movement_points(context)
-            and self.get_legal_targets(None)
-        )
-
 
 class ActivatedAbilityFacet(EffortFacet, Generic[O]):
     display_type = "ActivatedAbility"
-
-    # TODO should prob just be on effort facet
-    energy_cost: ClassVar[int] = 0
 
     @abstractmethod
     def get_target_profile(self) -> TargetProfile[O] | None: ...
@@ -264,10 +348,6 @@ class ActivatedAbilityFacet(EffortFacet, Generic[O]):
     def perform(self, target: O) -> None: ...
 
     @modifiable
-    def has_sufficient_energy(self, context: ActiveUnitContext) -> bool:
-        return self.energy_cost <= context.unit.energy
-
-    @modifiable
     def can_be_activated(self, context: ActiveUnitContext) -> bool:
         return (
             (
@@ -275,8 +355,7 @@ class ActivatedAbilityFacet(EffortFacet, Generic[O]):
                 or context.activated_facets[self.__class__.__name__]
                 < self.max_activations
             )
-            and self.has_sufficient_movement_points(context)
-            and self.has_sufficient_energy(context)
+            and self.get_cost().can_be_payed(context)
             and self.get_target_profile() is not None
         )
 

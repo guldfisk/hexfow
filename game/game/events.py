@@ -1,4 +1,5 @@
 import dataclasses
+from typing import Iterable
 
 from events.eventsystem import Event, ES, V
 from game.game.core import (
@@ -165,8 +166,7 @@ class MeleeAttackAction(Event[None]):
         ES.resolve(CheckAlive(self.defender))
         if defender_position.can_move_into(self.attacker):
             ES.resolve(MoveUnit(self.attacker, defender_position))
-        # TODO movement cost of attack?
-        GS().active_unit_context.movement_points -= 1 + self.attack.movement_cost
+        self.attack.get_cost().pay(GS().active_unit_context)
         ES.resolve(move_out_penalty)
         ES.resolve(move_in_penalty)
         # GS().active_unit_context.should_stop = True
@@ -181,8 +181,32 @@ class RangedAttackAction(Event[None]):
     def resolve(self) -> None:
         ES.resolve(self.branch(SimpleAttack))
         ES.resolve(CheckAlive(self.defender))
-        GS().active_unit_context.movement_points -= self.attack.movement_cost
-        # GS().active_unit_context.should_stop = True
+        self.attack.get_cost().pay(GS().active_unit_context)
+
+
+# TODO where?
+def apply_status_to_unit(
+    unit: Unit, signature: StatusSignature, by: Player | None
+) -> None:
+    unit.add_status(
+        signature.status_type(
+            intention=signature.intention
+            or signature.status_type.default_intention
+            or (
+                (
+                    StatusIntention.BUFF
+                    if unit.controller == by
+                    else StatusIntention.DEBUFF
+                )
+                if by
+                else StatusIntention.NEUTRAL
+            ),
+            duration=signature.duration,
+            stacks=signature.stacks,
+            parent=unit,
+        ),
+        by,
+    )
 
 
 @dataclasses.dataclass
@@ -195,25 +219,7 @@ class ApplyStatus(Event[None]):
         return self.unit.on_map()
 
     def resolve(self) -> None:
-        self.unit.add_status(
-            self.signature.status_type(
-                intention=self.signature.intention
-                or self.signature.status_type.default_intention
-                or (
-                    (
-                        StatusIntention.BUFF
-                        if self.unit.controller == self.by
-                        else StatusIntention.DEBUFF
-                    )
-                    if self.by
-                    else StatusIntention.NEUTRAL
-                ),
-                duration=self.signature.duration,
-                stacks=self.signature.stacks,
-                parent=self.unit,
-            ),
-            self.by,
-        )
+        apply_status_to_unit(self.unit, self.signature, self.by)
 
 
 @dataclasses.dataclass
@@ -224,8 +230,7 @@ class ActivatedAbilityAction(Event[None]):
 
     def resolve(self) -> None:
         self.ability.perform(self.target)
-        GS().active_unit_context.movement_points -= self.ability.movement_cost
-        self.unit.energy -= self.ability.energy_cost
+        self.ability.get_cost().pay(GS().active_unit_context)
 
 
 @dataclasses.dataclass
@@ -248,12 +253,15 @@ class SpawnUnit(Event[Unit | None]):
     controller: Player
     space: Hex
     exhausted: bool = False
+    with_statuses: Iterable[StatusSignature] = ()
 
     def resolve(self) -> Unit | None:
         if self.space.map.unit_on(self.space):
             return None
         unit = Unit(self.controller, self.blueprint, exhausted=self.exhausted)
         self.space.map.move_unit_to(unit, self.space)
+        for signature in self.with_statuses:
+            apply_status_to_unit(unit, signature, self.controller)
         return unit
 
 

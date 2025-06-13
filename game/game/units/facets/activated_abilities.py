@@ -16,6 +16,9 @@ from game.game.core import (
     RangedAttackFacet,
     MeleeAttackFacet,
     StatusSignature,
+    MovementCost,
+    EnergyCost,
+    ExclusiveCost,
 )
 from game.game.damage import DamageSignature
 from game.game.decisions import TargetProfile, O
@@ -35,7 +38,7 @@ from game.game.values import DamageType, Size
 
 
 class Bloom(NoTargetActivatedAbility):
-    energy_cost = 2
+    cost = EnergyCost(2)
 
     def perform(self, target: None) -> None:
         for unit in GS().map.get_neighboring_units_off(self.owner):
@@ -44,16 +47,15 @@ class Bloom(NoTargetActivatedAbility):
 
 
 class Grow(NoTargetActivatedAbility):
-    energy_cost = 2
+    cost = EnergyCost(2)
 
     def perform(self, target: None) -> None:
         ES.resolve(Heal(self.owner, 1))
 
 
 class HealBeam(SingleAllyActivatedAbility):
-    movement_cost = 1
+    cost = MovementCost(1) | EnergyCost(2)
     range = 2
-    energy_cost = 2
     can_target_self = False
 
     def perform(self, target: Unit) -> None:
@@ -66,9 +68,8 @@ class Suicide(NoTargetActivatedAbility):
 
 
 class InducePanic(SingleEnemyActivatedAbility):
-    movement_cost = 1
     range = 3
-    energy_cost = 3
+    cost = MovementCost(1) | EnergyCost(3)
 
     def perform(self, target: Unit) -> None:
         ES.resolve(
@@ -81,9 +82,8 @@ class InducePanic(SingleEnemyActivatedAbility):
 
 
 class LeapFrog(SingleTargetActivatedAbility):
-    movement_cost = 1
+    cost = MovementCost(1) | EnergyCost(1)
     range = 1
-    energy_cost = 1
     combinable = True
     max_activations = None
 
@@ -116,7 +116,7 @@ class LeapFrog(SingleTargetActivatedAbility):
 
 class BatonPass(SingleTargetActivatedAbility):
     range = 1
-    energy_cost = 1
+    cost = EnergyCost(1)
 
     # TODO really ugly
     def __init__(self, owner: Unit):
@@ -145,8 +145,7 @@ class BatonPass(SingleTargetActivatedAbility):
 
 
 class SummonScarab(ActivatedAbilityFacet[Hex]):
-    movement_cost = 2
-    energy_cost = 3
+    cost = MovementCost(2) | EnergyCost(3)
 
     def get_target_profile(self) -> TargetProfile[Hex] | None:
         if hexes := [
@@ -166,27 +165,15 @@ class SummonScarab(ActivatedAbilityFacet[Hex]):
             return OneOfHexes(hexes)
 
     def perform(self, target: Hex) -> None:
-        for spawn_event in ES.resolve(
+        ES.resolve(
             SpawnUnit(
                 blueprint=UnitBlueprint.registry["scarab"],
                 controller=self.owner.controller,
                 space=target,
                 exhausted=True,
+                with_statuses=[StatusSignature(Ephemeral, duration=3)],
             )
-        ).iter_type(SpawnUnit):
-            # TODO right now this triggers schadenfreude, which makes fine sense,
-            #  but is not necessarily immediately obvious, and was not what I
-            #  intended to begin with. Could circumvent it, but would be pretty
-            #  ugly. Mechanically seems cool, maybe just make sure it is clear
-            #  from description, and maybe bump energy cost / reduce max energy.
-            if spawn_event.result:
-                ES.resolve(
-                    ApplyStatus(
-                        unit=spawn_event.result,
-                        by=self.owner.controller,
-                        signature=StatusSignature(Ephemeral, duration=3),
-                    )
-                )
+        )
 
 
 # cyclops {15gg} x1
@@ -205,7 +192,7 @@ class SummonScarab(ActivatedAbilityFacet[Hex]):
 
 
 class Sweep(ActivatedAbilityFacet[list[Hex]]):
-    movement_cost = 1
+    cost = MovementCost(1)
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
         return SelectConsecutiveAdjacentHexes(GS().map.position_of(self.owner), 1)
@@ -228,7 +215,7 @@ class Stare(ActivatedAbilityFacet[list[Hex]]):
 
 
 class Jaunt(ActivatedAbilityFacet[Hex]):
-    energy_cost = 3
+    cost = EnergyCost(3)
     combinable = True
 
     def get_target_profile(self) -> TargetProfile[Hex] | None:
@@ -264,8 +251,7 @@ class Jaunt(ActivatedAbilityFacet[Hex]):
 
 
 class Rouse(SingleTargetActivatedAbility):
-    energy_cost = 3
-    movement_cost = 1
+    cost = MovementCost(1) | EnergyCost(3)
     range = 3
     requires_los = False
 
@@ -290,8 +276,7 @@ class Rouse(SingleTargetActivatedAbility):
 
 
 class SummonBees(ActivatedAbilityFacet):
-    movement_cost = 2
-    energy_cost = 2
+    cost = MovementCost(2) | EnergyCost(2)
 
     # TODO common logic
     def get_target_profile(self) -> TargetProfile[Hex] | None:
@@ -312,26 +297,19 @@ class SummonBees(ActivatedAbilityFacet):
             return OneOfHexes(hexes)
 
     def perform(self, target: Hex) -> None:
-        for spawn_event in ES.resolve(
+        ES.resolve(
             SpawnUnit(
                 blueprint=UnitBlueprint.registry["bee_swarm"],
                 controller=self.owner.controller,
                 space=target,
+                with_statuses=[StatusSignature(Ephemeral, duration=1)],
             )
-        ).iter_type(SpawnUnit):
-            ES.resolve(
-                ApplyStatus(
-                    unit=spawn_event.result,
-                    by=self.owner.controller,
-                    signature=StatusSignature(Ephemeral, stacks=1),
-                )
-            )
+        )
 
 
 class StimulatingInjection(SingleTargetActivatedAbility):
     range = 1
-    energy_cost = 3
-    can_target_self = False
+    cost = EnergyCost(3)
 
     def can_target_unit(self, unit: Unit) -> bool:
         return unit != self.owner
@@ -369,8 +347,7 @@ class StimulatingInjection(SingleTargetActivatedAbility):
 
 class Suplex(SingleTargetActivatedAbility):
     range = 1
-    energy_cost = 3
-    movement_cost = 2
+    cost = MovementCost(2) | EnergyCost(3)
 
     def can_target_unit(self, unit: Unit) -> bool:
         return unit != self.owner and unit.size.g() < Size.LARGE
@@ -408,8 +385,7 @@ class Suplex(SingleTargetActivatedAbility):
 
 class Lasso(SingleEnemyActivatedAbility):
     range = 2
-    energy_cost = 3
-    movement_cost = 2
+    cost = MovementCost(2) | EnergyCost(3)
     combinable = True
 
     def perform(self, target: Unit) -> None:
@@ -424,9 +400,7 @@ class Lasso(SingleEnemyActivatedAbility):
 
 class Showdown(SingleEnemyActivatedAbility):
     range = 3
-    energy_cost = 3
-    # TODO
-    movement_cost = 3
+    cost = ExclusiveCost() | EnergyCost(3)
 
     def perform(self, target: Unit) -> None:
         if attack := self.owner.get_primary_attack(RangedAttackFacet):
