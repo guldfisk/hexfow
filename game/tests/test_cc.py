@@ -1,4 +1,4 @@
-from game.game.map.coordinates import CC
+from game.map.coordinates import CC
 
 
 def test_distance():

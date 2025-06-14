@@ -1,0 +1,104 @@
+import dataclasses
+from typing import ClassVar
+
+from events.eventsystem import TriggerEffect, ES
+from game.core import (
+    Terrain,
+    Hex,
+    GS,
+    Unit,
+    TerrainProtectionRequest,
+    StatusSignature,
+)
+from game.events import MoveUnit, ApplyStatus, RoundCleanup
+from game.statuses import Burn
+from game.values import Size, DamageType
+
+
+class Plains(Terrain):
+    identifier = "plains"
+
+
+class Forest(Terrain):
+    identifier = "forest"
+
+    def get_move_in_penalty_for(self, unit: Unit) -> int:
+        return 1
+
+    def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
+        if request.unit.size.g() < Size.LARGE:
+            if request.damage_type in (DamageType.RANGED, DamageType.AOE):
+                return 2
+            if request.damage_type == DamageType.MELEE:
+                return 1
+
+        if request.damage_type in (DamageType.RANGED, DamageType.AOE):
+            return 1
+        return 0
+
+    def blocks_vision(self) -> bool:
+        return True
+
+
+class Hills(Terrain):
+    identifier = "hills"
+
+    def is_highground(self) -> bool:
+        return True
+
+
+class Water(Terrain):
+    identifier = "water"
+
+    def is_water(self) -> bool:
+        return True
+
+
+# TODO should be able to have triggers listening on multiple events, it should even
+#  work with making the generic type a union.
+
+
+@dataclasses.dataclass(eq=False)
+class BurnOnWalkIn(TriggerEffect[MoveUnit]):
+    priority: ClassVar[int] = 0
+
+    hex: Hex
+    amount: int
+
+    def should_trigger(self, event: MoveUnit) -> bool:
+        return event.to_ == self.hex and event.result
+
+    def resolve(self, event: MoveUnit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                unit=event.unit, by=None, signature=StatusSignature(Burn, stacks=1)
+            )
+        )
+
+
+@dataclasses.dataclass(eq=False)
+class BurnOnUpkeep(TriggerEffect[RoundCleanup]):
+    priority: ClassVar[int] = 0
+
+    hex: Hex
+    amount: int
+
+    def should_trigger(self, event: RoundCleanup) -> bool:
+        return GS().map.unit_on(self.hex) is not None
+
+    def resolve(self, event: RoundCleanup) -> None:
+        if unit := GS().map.unit_on(self.hex):
+            ES.resolve(
+                ApplyStatus(
+                    unit=unit, by=None, signature=StatusSignature(Burn, stacks=1)
+                )
+            )
+
+
+class Magma(Terrain):
+    identifier = "magma"
+
+    def create_effects(self, space: Hex) -> None:
+        # TODO should this also happen when units on this space are melee attacked? how should that be handled in general
+        #  for these types of effects?
+        self.register_effects(BurnOnWalkIn(space, 1), BurnOnUpkeep(space, 1))

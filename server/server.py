@@ -13,14 +13,14 @@ from websockets.sync.server import serve, ServerConnection
 
 from events.eventsystem import ES, EventSystem
 from events.exceptions import GameException
-from game.game.core import GameState, Landscape, HexSpec
-from game.game.events import SpawnUnit, Play
-from game.game.interface import Connection
-from game.game.map.coordinates import CC, cc_to_rc
-from game.game.map.geometry import hex_circle
-from game.game.map.terrain import Plains, Forest, Magma, Hills, Water
-from game.game.player import Player
-from game.game.units.blueprints import *
+from game.core import GameState, Landscape, HexSpec
+from game.events import SpawnUnit, Play
+from game.interface import Connection
+from game.map.coordinates import CC, cc_to_rc
+from game.map.geometry import hex_circle
+from game.map.terrain import Plains, Forest, Magma, Hills, Water
+from game.player import Player
+from game.units.blueprints import *
 
 
 class GameClosed(GameException):

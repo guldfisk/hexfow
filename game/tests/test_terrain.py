@@ -2,8 +2,8 @@ import dataclasses
 from typing import ClassVar
 
 from events.eventsystem import TriggerEffect, ES
-from game.game.core import Terrain, Hex, GS, DamageSignature
-from game.game.events import MoveUnit, Damage, RoundCleanup
+from game.core import Terrain, Hex, GS, DamageSignature
+from game.events import MoveUnit, Damage, RoundCleanup
 
 
 @dataclasses.dataclass(eq=False)

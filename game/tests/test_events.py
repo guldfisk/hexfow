@@ -18,7 +18,7 @@ from frozendict import frozendict
 
 from debug_utils import dp
 from events.eventsystem import ES, StateModifierEffect
-from game.game.core import (
+from game.core import (
     Terrain,
     HexMap,
     Landscape,
@@ -35,21 +35,21 @@ from game.game.core import (
     Hex,
     HexSpec,
 )
-from game.game.events import SpawnUnit, SimpleAttack, Turn, Round
-from game.game.interface import Connection
-from game.game.map.coordinates import CC
-from game.game.map.geometry import hex_circle
-from game.game.map.terrain import Water, Plains
-from game.game.player import Player
-from game.game.units.blueprints import (
+from game.events import SpawnUnit, SimpleAttack, Turn, Round
+from game.interface import Connection
+from game.map.coordinates import CC
+from game.map.geometry import hex_circle
+from game.map.terrain import Water, Plains
+from game.player import Player
+from game.units.blueprints import (
     CHICKEN,
     CACTUS,
     LIGHT_ARCHER,
     LUMBERING_PILLAR,
     MARSHMALLOW_TITAN,
 )
-from game.game.units.facets.attacks import Peck
-from game.game.values import Size
+from game.units.facets.attacks import Peck
+from game.values import Size
 from game.tests.conftest import TestScope
 from game.tests.test_terrain import InstantDamageMagma
 

@@ -3,9 +3,9 @@ from typing import Any
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from game.game.core import UnitBlueprint, Terrain, Status
-from game.game.map import terrain
-from game.game.units import blueprints
+from game.core import UnitBlueprint, Terrain, Status
+from game.map import terrain
+from game.units import blueprints
 
 
 # TODO ultra yikes
