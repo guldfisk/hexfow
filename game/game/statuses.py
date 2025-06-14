@@ -14,6 +14,8 @@ from game.game.core import (
     DamageSignature,
     OneOfHexes,
     SkipOption,
+    EffortOption,
+    MeleeAttackFacet,
 )
 from game.game.decisions import Option
 from game.game.events import (
@@ -311,7 +313,17 @@ class RootedModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]])
     def modify(
         self, obj: Unit, request: ActiveUnitContext, value: list[Option]
     ) -> list[Option]:
-        return [option for option in value if not isinstance(option, MoveOption)]
+        return [
+            option
+            for option in value
+            if not (
+                isinstance(option, MoveOption)
+                or (
+                    isinstance(option, EffortOption)
+                    and isinstance(option.facet, MeleeAttackFacet)
+                )
+            )
+        ]
 
 
 class Rooted(RefreshableDurationUnitStatus):

@@ -18,7 +18,7 @@ from game.game.events import SpawnUnit, Play
 from game.game.interface import Connection
 from game.game.map.coordinates import CC, cc_to_rc
 from game.game.map.geometry import hex_circle
-from game.game.map.terrain import Plains, Forest, Magma, Hills
+from game.game.map.terrain import Plains, Forest, Magma, Hills, Water
 from game.game.player import Player
 from game.game.units.blueprints import *
 
@@ -108,12 +108,21 @@ class Game(Thread):
                     {
                         cc: HexSpec(
                             random.choice(
+                                # [
+                                #     Plains,
+                                # ]
                                 [
                                     Plains,
-                                    # Forest,
+                                    Plains,
+                                    Plains,
+                                    Plains,
+                                    Forest,
+                                    Forest,
+                                    Forest,
+                                    Forest,
                                     # Magma,
                                     # Hills,
-                                    # Water,
+                                    Water,
                                 ]
                             ),
                             cc.distance_to(CC(0, 0)) <= 1,
@@ -126,41 +135,21 @@ class Game(Thread):
 
             player_units = (
                 (
-                    # HORROR,
-                    # BUGLING,
-                    # GLASS_GOLEM,
-                    # DIAMOND_GOLEM,
-                    # BELL_STRIKER_BRUTE,
-                    # SHRINE_KEEPER,
-                    # BULLDOZER,
-                    # LIGHT_ARCHER,
-                    # WITCH_ENGINE,
-                    INFERNO_TANK,
-                    SHRINE_KEEPER,
-                    # PESTILENCE_PRIEST,
-                    # GIANT_SLAYER_MOUSE,
-                    # AP_GUNNER,
+                    NOTORIOUS_OUTLAW,
+                    # INFERNO_TANK,
+                    # ZONE_MECH,
+                    # BLITZ_TROOPER,
                 ),
                 (
-                    # SCARAB,
+                    # OTTER_SCOUT,
+                    # LEGENDARY_WRESTLER,
+                    RHINO_BEAST,
                     LIGHT_ARCHER,
-                    GLASS_GOLEM,
-                    DIAMOND_GOLEM,
-                    # GLASS_GOLEM,
-                    # DIAMOND_GOLEM,
-                    # SCARAB,
-                    # BULLDOZER,
-                    # CHAINSAW_SADIST,
-                    # BEE_SHAMAN,
-                    # GOBLIN_ASSASSIN,
-                    # BEE_SHAMAN,
-                    CYCLOPS,
-                    # BLITZ_TROOPER,
                 ),
             )
 
-            use_random_units = False
-            # use_random_units = True
+            # use_random_units = False
+            use_random_units = True
 
             if use_random_units:
                 min_random_unit_quantity = 7
@@ -216,14 +205,18 @@ class Game(Thread):
                 print("points", [sum(u.price for u in v) for v in player_units])
                 print("units", [len(v) for v in player_units])
 
-                ccs = list(hex_circle(3))
+                ccs = [
+                    cc
+                    for cc in hex_circle(3)
+                    if (_hex := gs.map.hexes.get(cc)) and not _hex.terrain.is_water()
+                ]
                 random.shuffle(ccs)
                 player_ccs = [
                     [
                         cc
                         for cc in ccs
                         if ((x := cc_to_rc(cc).x) < 1 or x > 1)
-                        and (x > 0 if i else x < 0)
+                        and (x < 0 if i else x > 0)
                     ]
                     for i in range(2)
                 ]
@@ -232,13 +225,16 @@ class Game(Thread):
                     gs.turn_order.players, player_units, player_ccs
                 ):
                     for unit in units:
-                        ES.resolve(
-                            SpawnUnit(
-                                blueprint=unit,
-                                controller=player,
-                                space=gs.map.hexes[pccs.pop()],
+                        if pccs:
+                            ES.resolve(
+                                SpawnUnit(
+                                    blueprint=unit,
+                                    controller=player,
+                                    space=gs.map.hexes[pccs.pop()],
+                                )
                             )
-                        )
+                        else:
+                            print("RAN OUT OF SPACE FOR", unit, ":(")
 
                 # for idx, player in enumerate(gs.turn_order.players):
                 #     for cc in ccs[

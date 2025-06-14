@@ -93,7 +93,7 @@ jaws
     3 damage, no movement
 
 snapping turtle {2} x1
-health 1, movement 2, sight 1, armor 1, S
+health 2, movement 2, sight 1, armor 1, S
 bite
     melee attack
     2 damage, -1 movement

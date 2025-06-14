@@ -213,6 +213,14 @@ class Soot(DurationStatusMixin, HexStatus):
         )
 
 
+class Smoke(DurationStatusMixin, HexStatus):
+
+    def create_effects(self, by: Player) -> None:
+        self.register_effects(
+            SootSightModifier(self.parent), SootVisionBlockingModifier(self.parent)
+        )
+
+
 @dataclasses.dataclass(eq=False)
 class BurningTerrainWalkInTrigger(TriggerEffect[MoveUnit]):
     priority: ClassVar[int] = 0

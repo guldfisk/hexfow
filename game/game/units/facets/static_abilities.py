@@ -27,6 +27,7 @@ from game.game.core import (
     DamageSignature,
     Source,
     Status,
+    TerrainProtectionRequest,
 )
 from game.game.decisions import Option, NoTarget, SelectOptionDecisionPoint
 from game.game.events import (
@@ -44,7 +45,9 @@ from game.game.events import (
     GainEnergy,
     ApplyStatus,
     TurnCleanup,
+    SufferDamage,
 )
+from game.game.map.terrain import Water
 from game.game.player import Player
 from game.game.statuses import (
     Terrified,
@@ -575,40 +578,16 @@ class CaughtInTheMatch(StaticAbilityFacet):
         self.register_effects(CaughtInTheMatchTrigger(self.owner))
 
 
-# legendary wrestler {11pg} x1
-# health 7, movement 3, sight 2, energy 4, M
-# tackle
-#     melee attack
-#     2 damage
-#     applies stumble
-#         -1 movement point next activation
-# from the top rope
-#     melee attack
-#     4 damage, -1 movement
-#     +1 damage against units with stumble debuff
-#     deals 2 non-lethal physical damage to this unit
-# supplex
-#     ability 3 energy, -2 movement
-#     target M- adjacent unit
-#     deals 3 melee damage and moves the target to the other side of this unit, if able.
-# - caught in the match
-#     enemies disengageging this units suffers -1 movement point
-# - heel turn
-#     when this unit receives 4 or more damage in a single instance, it gets, "they've got a still chari"
-#         unstackable
-#         +1 attack power
-
-
 @dataclasses.dataclass(eq=False)
-class HeelTurnTrigger(TriggerEffect[Damage]):
+class HeelTurnTrigger(TriggerEffect[SufferDamage]):
     priority: ClassVar[int] = 0
 
     unit: Unit
 
-    def should_trigger(self, event: Damage) -> bool:
+    def should_trigger(self, event: SufferDamage) -> bool:
         return event.unit == self.unit and event.result >= 4
 
-    def resolve(self, event: Damage) -> None:
+    def resolve(self, event: SufferDamage) -> None:
         ES.resolve(
             ApplyStatus(
                 unit=self.unit,
@@ -622,28 +601,6 @@ class HeelTurn(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(HeelTurnTrigger(self.owner))
-
-
-# notorious outlaw
-# health 5, movement 3, sight 2, energy 3, M
-# twin revolvers
-#     2x repeatable ranged attack
-#     2 damage, 3 range, -1 movement
-# lasso
-#     combineable ability 3 energy
-#     target enemy unit 2 range LoS
-#     -2 movement
-#     applies rooted for 1 round
-# showdown
-#     ability 3 energy
-#     target enemy unit 3 range LoS
-#     no movement
-#     hits the targeted unit with primary ranged attack twice
-#     if it is still alive, it will first try to hit with it's primary ranged attack if it has one, if it doesn't or can't,
-#     it will try to hit with it's primary melee attack.
-#     if it hits this way, exhaust it
-# - dash
-#     when this unit ends it's turn, it may move one space (irregardless of movement points)
 
 
 @dataclasses.dataclass(eq=False)
@@ -770,3 +727,39 @@ class ToxicPresenceTrigger(TriggerEffect[TurnCleanup]):
 class ToxicPresence(StaticAbilityFacet):
     def create_effects(self) -> None:
         self.register_effects(ToxicPresenceTrigger(self.owner, 1))
+
+
+# otter scout {4w} x2
+# health 5, movement 3, sight 2, S
+# bite
+#     melee attack
+#     2 damage
+# - aquatic
+# - ignores move penalties on wet terrain
+# - +1 terrain protection on wet terrain
+
+
+@dataclasses.dataclass(eq=False)
+class WaterTerrainProtectionModifier(
+    StateModifierEffect[Unit, TerrainProtectionRequest, int]
+):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.get_terrain_protection_for
+
+    unit: Unit
+    amount: int
+
+    def should_modify(
+        self, obj: Unit, request: TerrainProtectionRequest, value: int
+    ) -> bool:
+        return obj == self.unit and isinstance(
+            GS().map.hex_off(self.unit).terrain, Water
+        )
+
+    def modify(self, obj: Unit, request: TerrainProtectionRequest, value: int) -> int:
+        return value + self.amount
+
+
+class Diver(StaticAbilityFacet):
+    def create_effects(self) -> None:
+        self.register_effects(WaterTerrainProtectionModifier(self.owner, 1))

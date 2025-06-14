@@ -556,6 +556,10 @@ class Unit(HasStatuses, Modifiable, VisionBound):
     def get_resistance_against(self, signature: DamageSignature) -> Resistance:
         return Resistance.NONE
 
+    @modifiable
+    def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
+        return GS().map.hex_off(self).get_terrain_protection_for(request)
+
     def suffer_damage(self, signature: DamageSignature) -> int:
         damage = min(
             signature.amount, self.health - 1 if not signature.lethal else self.health

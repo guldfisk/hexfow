@@ -87,6 +87,11 @@ class Pinch(MeleeAttackFacet):
     cost = MovementCost(1)
 
 
+class SnappingBeak(MeleeAttackFacet):
+    damage = 2
+    cost = MovementCost(1)
+
+
 class Chainsaw(MeleeAttackFacet):
     cost = MovementCost(1)
     damage = 3
@@ -130,6 +135,16 @@ class HiddenBlade(MeleeAttackFacet):
 
 class Bite(MeleeAttackFacet):
     damage = 3
+
+
+# TODO xd, simple facet factory please
+class OtterBite(MeleeAttackFacet):
+    damage = 2
+
+
+class HammerCannon(RangedAttackFacet):
+    range = 2
+    damage = 5
 
 
 # horror {12wp} x1

@@ -34,7 +34,7 @@ from game.game.events import (
     SimpleAttack,
     ApplyHexStatus,
 )
-from game.game.hex_statuses import Shrine, Soot, BurningTerrain
+from game.game.hex_statuses import Shrine, Soot, BurningTerrain, Smoke
 from game.game.statuses import (
     Panicked,
     BurstOfSpeed,
@@ -474,9 +474,26 @@ class ChokingSoot(SingleHexTargetActivatedAbility):
             )
 
 
+# TODO should be an aoe target
+class SmokeCanister(SingleHexTargetActivatedAbility):
+    range = 2
+    cost = EnergyCost(3)
+    requires_los = False
+    requires_vision = False
+    combinable = True
+
+    def perform(self, target: Hex) -> None:
+        for _hex in GS().map.get_hexes_within_range_off(target, 1):
+            ES.resolve(
+                ApplyHexStatus(
+                    _hex, self.owner.controller, HexStatusSignature(Smoke, duration=2)
+                )
+            )
+
+
 class Terrorize(SingleEnemyActivatedAbility):
     range = 4
-    cost = ExclusiveCost()
+    cost = ExclusiveCost() | EnergyCost(5)
 
     def perform(self, target: Unit) -> None:
         ES.resolve(

@@ -22,6 +22,8 @@ from game.game.units.facets.activated_abilities import (
     Terrorize,
     Scorch,
     FlameWall,
+    Showdown,
+    SmokeCanister,
 )
 from game.game.units.facets.attacks import (
     Peck,
@@ -54,6 +56,9 @@ from game.game.units.facets.attacks import (
     FromTheTopRope,
     TwinRevolvers,
     BellHammer,
+    SnappingBeak,
+    OtterBite,
+    HammerCannon,
 )
 from game.game.units.facets.static_abilities import (
     Prickly,
@@ -78,6 +83,7 @@ from game.game.units.facets.static_abilities import (
     LastStand,
     ToxicPresence,
     FlameResistant,
+    Diver,
 )
 from game.game.values import Size
 
@@ -332,6 +338,39 @@ SCARAB = UnitBlueprint(
     facets=[Pinch],
     price=None,
 )
+
+SNAPPING_TURTLE = UnitBlueprint(
+    "Snapping Turtle",
+    health=2,
+    speed=2,
+    armor=1,
+    sight=1,
+    size=Size.SMALL,
+    aquatic=True,
+    facets=[SnappingBeak],
+    price=2,
+)
+
+# otter scout {4w} x2
+# health 5, movement 3, sight 2, S
+# bite
+#     melee attack
+#     2 damage
+# - aquatic
+# - ignores move penalties on wet terrain
+# - +1 terrain protection on wet terrain
+
+OTTER_SCOUT = UnitBlueprint(
+    "Otter Scout",
+    health=5,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    aquatic=True,
+    facets=[OtterBite, Diver],
+    price=4,
+)
+
 
 BLITZ_TROOPER = UnitBlueprint(
     "Blitz Trooper", health=6, speed=3, sight=2, facets=[LightBlaster, Strafe], price=10
@@ -610,9 +649,7 @@ LEGENDARY_WRESTLER = UnitBlueprint(
         CaughtInTheMatch,
         HeelTurn,
     ],
-    # TODO Can't handle that many targets on same hex
-    # price=11,
-    price=None,
+    price=11,
 )
 
 # notorious outlaw
@@ -645,12 +682,10 @@ NOTORIOUS_OUTLAW = UnitBlueprint(
     facets=[
         TwinRevolvers,
         Lasso,
-        # Showdown,
+        Showdown,
         Quick,
     ],
-    # TODO too many target etc
-    # price=12,
-    price=None,
+    price=12,
 )
 
 # shrine keeper {5pp} x1
@@ -733,18 +768,29 @@ WITCH_ENGINE = UnitBlueprint(
 
 INFERNO_TANK = UnitBlueprint(
     "Inferno Tank",
-    health=8,
+    health=7,
     speed=2,
     sight=1,
     armor=1,
     energy=5,
     size=Size.LARGE,
     facets=[
-        # Scorch,
+        Scorch,
         FlameWall,
         FlameResistant,
     ],
-    # TODO too many target etc
-    # price=12,
-    price=None,
+    price=12,
+)
+
+
+ZONE_MECH = UnitBlueprint(
+    "Zone Mech",
+    health=8,
+    speed=2,
+    armor=1,
+    sight=2,
+    energy=4,
+    size=Size.LARGE,
+    facets=[HammerCannon, SmokeCanister],
+    price=15,
 )

@@ -26,6 +26,7 @@ import {
 } from "./geometry.ts";
 import { CC } from "./interfaces/geometry.ts";
 import { textureMap } from "./textures.ts";
+import { range } from "./utils/range.ts";
 
 // TODO where?
 const sizeMap: { S: number; M: number; L: number } = { S: 0.8, M: 1, L: 1.2 };
@@ -70,14 +71,11 @@ export const renderMap = (
     hexShape.closePath().fill(color).stroke();
     return hexShape;
   };
-  const getHexFrame = (color: FillInput): GraphicsContext => {
-    let hexShape = new GraphicsContext()
-      .setStrokeStyle({ color, width: 3, alignment: 1 })
-      .setStrokeStyle({ color, pixelLine: true })
-      .moveTo(...hexVerticeOffsets[0]);
+  const getHexMask = (): GraphicsContext => {
+    let hexShape = new GraphicsContext().moveTo(...hexVerticeOffsets[0]);
     hexVerticeOffsets.slice(1).forEach((vert) => hexShape.lineTo(...vert));
     hexShape.closePath();
-    hexShape.stroke();
+    hexShape.fill({ alpha: 0 });
     return hexShape;
   };
   const getDividerFrame = (num: number): GraphicsContext => {
@@ -88,13 +86,27 @@ export const renderMap = (
         hexWidth / 2,
         hexHeight,
       )
-      .fill("red");
+      .fill({ alpha: 0 });
   };
+
+  const getThreePartDividerFrame = (num: number) => {
+    let hexShape = new GraphicsContext();
+    range(3).map((i) =>
+      hexShape.lineTo(...hexVerticeOffsets[(i + num * 2) % 6]),
+    );
+    hexShape.closePath().fill({ alpha: 0 });
+    return hexShape;
+  };
+
   const visibleHexShape = getHexShape({ color: "447744", alpha: 0 });
   const invisibleHexShape = getHexShape({ color: "black", alpha: 100 });
-  const fullHexShape = getHexShape("red");
+  const hexMaskShape = getHexMask();
 
-  const dividerFrames = [0, 1].map(getDividerFrame);
+  const dividerFrames = [
+    [hexMaskShape],
+    [0, 1].map(getDividerFrame),
+    [1, 0, 2].map(getThreePartDividerFrame),
+  ];
 
   const statusFrame = new GraphicsContext().circle(0, 0, 20).fill();
   const statusBorder = new GraphicsContext()
@@ -263,7 +275,7 @@ export const renderMap = (
     );
     hexContainer.position = realHexPosition;
 
-    let hexMask = new Graphics(fullHexShape);
+    let hexMask = new Graphics(hexMaskShape);
 
     hexContainer.addChild(hexMask);
 
@@ -280,34 +292,37 @@ export const renderMap = (
     label.anchor = 0.5;
     hexContainer.addChild(label);
 
-    if (hexActionMap[ccToKey(hexData.cc)].length) {
-      if (hexActionMap[ccToKey(hexData.cc)].length == 1) {
-        const selectionSprite = new Sprite(
-          textureMap[hexActionMap[ccToKey(hexData.cc)][0].type],
-        );
-        selectionSprite.anchor = 0.5;
-        selectionSprite.alpha = 0.75;
-        hexContainer.addChild(selectionSprite);
-      } else if (hexActionMap[ccToKey(hexData.cc)].length == 2) {
-        for (const i of [0, 1]) {
-          const selectionSprite = new Sprite(
-            textureMap[hexActionMap[ccToKey(hexData.cc)][i].type],
-          );
-          selectionSprite.anchor = 0.5;
-          selectionSprite.alpha = 0.75;
-          hexContainer.addChild(selectionSprite);
-          let mask = new Graphics(dividerFrames[i]);
-          hexContainer.addChild(mask);
-          selectionSprite.mask = mask;
+    const actionTriggerZones = [];
+
+    for (const [idx, action] of hexActionMap[ccToKey(hexData.cc)].entries()) {
+      const selectionSprite = new Sprite(textureMap[action.type]);
+      selectionSprite.anchor = 0.5;
+      selectionSprite.alpha = 0.75;
+      hexContainer.addChild(selectionSprite);
+      let mask = new Graphics(
+        dividerFrames[hexActionMap[ccToKey(hexData.cc)].length - 1][idx],
+      );
+      hexContainer.addChild(mask);
+      selectionSprite.mask = mask;
+
+      let triggerZone = new Graphics(
+        dividerFrames[hexActionMap[ccToKey(hexData.cc)].length - 1][idx],
+      );
+
+      triggerZone.eventMode = "static";
+      triggerZone.on("pointerdown", (event) => {
+        console.log("click", event.button, hexData.cc);
+        if (event.button == 0) {
+          gameConnection.send(JSON.stringify(action.content));
         }
-      }
+      });
+      actionTriggerZones.push(triggerZone);
     }
 
     if (hexData.unit) {
       const unitContainer = new Container();
       const unitSprite = new Sprite(textureMap[hexData.unit.blueprint]);
       unitSprite.anchor = 0.5;
-      // unitSprite.scale = sizeMap[hexData.unit.size];
       if (hexData.unit.controller != gameState.player) {
         unitSprite.scale.x = -unitSprite.scale.x;
       }
@@ -333,7 +348,6 @@ export const renderMap = (
         })
         .rect(-60, -74, 120, 148)
         .stroke();
-      // graphics.scale = sizeMap[hexData.unit.size];
       unitContainer.addChild(graphics);
 
       if (hexData.unit.exhausted) {
@@ -506,14 +520,6 @@ export const renderMap = (
             : (hexSize / hexData.statuses.length) * idx,
         ),
       );
-      // statusContainer.position = {
-      //   x: 0,
-      //   y: -hexHeight / 2 + 30
-      //     // -unitSprite.height / 2 +
-      //     (hexData.unit.statuses.length <= 4
-      //       ? idx * 43
-      //       : (150 / hexData.unit.statuses.length) * idx),
-      // };
 
       const border = new Graphics(statusBorder);
       statusContainer.addChild(border);
@@ -561,32 +567,9 @@ export const renderMap = (
       hexContainer.addChild(eyeContainer);
     }
 
-    hexContainer.eventMode = "static";
-    hexContainer.on("pointerdown", (event) => {
-      console.log(
-        "click",
-        event.button,
-        hexData.cc,
-        // event.x,
-        // event.y,
-        // event.getLocalPosition(hexContainer),
-      );
-      if (event.button == 0 && hexActionMap[ccToKey(hexData.cc)].length) {
-        if (hexActionMap[ccToKey(hexData.cc)].length == 1) {
-          gameConnection.send(
-            JSON.stringify(hexActionMap[ccToKey(hexData.cc)][0].content),
-          );
-        } else {
-          gameConnection.send(
-            JSON.stringify(
-              hexActionMap[ccToKey(hexData.cc)][
-                event.getLocalPosition(hexContainer).x < 0 ? 0 : 1
-              ].content,
-            ),
-          );
-        }
-      }
-    });
+    for (const zone of actionTriggerZones) {
+      hexContainer.addChild(zone);
+    }
   });
 
   return map;
