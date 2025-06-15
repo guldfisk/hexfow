@@ -19,7 +19,7 @@ services:
 
   client:
     image: app-image
-    working_dir: /code/vite_frontend/hex-frontend
+    working_dir: /code/client
     command: "npm run dev -- --host 0.0.0.0"
     volumes:
       - .:/code
