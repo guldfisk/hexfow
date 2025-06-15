@@ -24,6 +24,7 @@ from game.units.facets.activated_abilities import (
     FlameWall,
     Showdown,
     SmokeCanister,
+    GreaseTheGears,
 )
 from game.units.facets.attacks import (
     Peck,
@@ -761,7 +762,7 @@ WITCH_ENGINE = UnitBlueprint(
     speed=2,
     sight=2,
     energy=8,
-    facets=[ChokingSoot, Terrorize, ToxicPresence],
+    facets=[ChokingSoot, Terrorize, GreaseTheGears, ToxicPresence],
     price=13,
 )
 

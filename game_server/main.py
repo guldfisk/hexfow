@@ -16,7 +16,7 @@ from events.exceptions import GameException
 from game.core import GameState, Landscape, HexSpec
 from game.events import SpawnUnit, Play
 from game.interface import Connection
-from game.map.coordinates import CC, cc_to_rc
+from game.map.coordinates import CC, cc_to_rc, NEIGHBOR_OFFSETS
 from game.map.geometry import hex_circle
 from game.map.terrain import Plains, Forest, Magma, Hills, Water
 from game.player import Player
@@ -108,22 +108,22 @@ class Game(Thread):
                     {
                         cc: HexSpec(
                             random.choice(
-                                # [
-                                #     Plains,
-                                # ]
                                 [
                                     Plains,
-                                    Plains,
-                                    Plains,
-                                    Plains,
-                                    Forest,
-                                    Forest,
-                                    Forest,
-                                    Forest,
-                                    # Magma,
-                                    # Hills,
-                                    Water,
                                 ]
+                                # [
+                                #     Plains,
+                                #     Plains,
+                                #     Plains,
+                                #     Plains,
+                                #     Forest,
+                                #     Forest,
+                                #     Forest,
+                                #     Forest,
+                                #     # Magma,
+                                #     # Hills,
+                                #     Water,
+                                # ]
                             ),
                             cc.distance_to(CC(0, 0)) <= 1,
                         )
@@ -134,22 +134,33 @@ class Game(Thread):
             GameState.instance = gs
 
             player_units = (
-                (
-                    NOTORIOUS_OUTLAW,
-                    # INFERNO_TANK,
-                    # ZONE_MECH,
-                    # BLITZ_TROOPER,
-                ),
+                [
+                    (creature, point * 2)
+                    for creature, point in zip([WITCH_ENGINE] * 6, NEIGHBOR_OFFSETS)
+                ],
+                # (
+                #     # NOTORIOUS_OUTLAW,
+                #     # INFERNO_TANK,
+                #     # ZONE_MECH,
+                #     # WITCH_ENGINE,
+                #     # LIGHT_ARCHER,
+                #     # LIGHT_ARCHER,
+                #     # GIANT_SLAYER_MOUSE,
+                #     # GNOME_COMMANDO,
+                # ),
                 (
                     # OTTER_SCOUT,
                     # LEGENDARY_WRESTLER,
-                    RHINO_BEAST,
+                    (RHINO_BEAST, CC(0, 0)),
                     LIGHT_ARCHER,
+                    # LIGHT_ARCHER,
+                    # LIGHT_ARCHER,
+                    # PESTILENCE_PRIEST,
                 ),
             )
 
-            # use_random_units = False
-            use_random_units = True
+            use_random_units = False
+            # use_random_units = True
 
             if use_random_units:
                 min_random_unit_quantity = 7

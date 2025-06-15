@@ -592,6 +592,16 @@ class Round(Event[None]):
                         *(
                             ()
                             if gs.activation_queued_units
+                            or not all(
+                                any(
+                                    isinstance(option, SkipOption)
+                                    for option in unit.get_legal_options(
+                                        # TODO, this is pretty ugly, but it sorta makes sense.
+                                        ActiveUnitContext(unit, -1)
+                                    )
+                                )
+                                for unit in activateable_units
+                            )
                             else (SkipOption(target_profile=NoTarget()),)
                         ),
                     ],

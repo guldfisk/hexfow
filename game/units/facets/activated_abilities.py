@@ -33,6 +33,7 @@ from game.events import (
     QueueUnitForActivation,
     SimpleAttack,
     ApplyHexStatus,
+    GainEnergy,
 )
 from game.hex_statuses import Shrine, Soot, BurningTerrain, Smoke
 from game.statuses import (
@@ -72,6 +73,23 @@ class HealBeam(SingleAllyActivatedAbility):
 
     def perform(self, target: Unit) -> None:
         ES.resolve(Heal(target, 3))
+
+
+class GreaseTheGears(SingleAllyActivatedAbility):
+    range = 1
+    can_target_self = False
+    combinable = True
+    max_activations = None
+
+    def perform(self, target: Unit) -> None:
+        movement_bonus = 1 if not target.exhausted and GS().active_unit_context else 0
+        if any(
+            kill_event.unit == target
+            for kill_event in ES.resolve(Kill(target)).iter_type(Kill)
+        ):
+            ES.resolve(Heal(self.owner, 2))
+            ES.resolve(GainEnergy(self.owner, 2))
+            GS().active_unit_context.movement_points += movement_bonus
 
 
 class Suicide(NoTargetActivatedAbility):
@@ -469,7 +487,7 @@ class ChokingSoot(SingleHexTargetActivatedAbility):
         for _hex in GS().map.get_hexes_within_range_off(target, 1):
             ES.resolve(
                 ApplyHexStatus(
-                    _hex, self.owner.controller, HexStatusSignature(Soot, duration=3)
+                    _hex, self.owner.controller, HexStatusSignature(Soot, duration=2)
                 )
             )
 
@@ -493,7 +511,7 @@ class SmokeCanister(SingleHexTargetActivatedAbility):
 
 class Terrorize(SingleEnemyActivatedAbility):
     range = 4
-    cost = ExclusiveCost() | EnergyCost(5)
+    cost = MovementCost(2) | EnergyCost(5)
 
     def perform(self, target: Unit) -> None:
         ES.resolve(

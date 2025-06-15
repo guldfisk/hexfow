@@ -405,7 +405,6 @@ class MortallyWounded(UnitStatus):
         ES.resolve(Kill(self.parent))
 
 
-# TODO how should this work with not having vision?
 @dataclasses.dataclass(eq=False)
 class TerrorModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]]):
     priority: ClassVar[int] = 1
@@ -416,19 +415,16 @@ class TerrorModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]])
     def should_modify(
         self, obj: Unit, request: ActiveUnitContext, value: list[Option]
     ) -> bool:
-        return obj == self.unit and any(
-            unit.controller != obj.controller
-            for unit in GS().map.get_neighboring_units_off(obj)
-        )
+        return obj == self.unit
 
     def modify(
         self, obj: Unit, request: ActiveUnitContext, value: list[Option]
     ) -> list[Option]:
-        adjacent_enemy_units = [
+        has_adjacent_enemies = any(
             unit
             for unit in GS().map.get_neighboring_units_off(obj)
-            if unit.controller != obj.controller
-        ]
+            if unit.controller != obj.controller and unit.is_visible_to(obj.controller)
+        )
         options = []
         for option in value:
             if (
@@ -438,16 +434,19 @@ class TerrorModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]])
                     valid_hexes := [
                         _hex
                         for _hex in option.target_profile.hexes
-                        if all(
-                            GS().map.distance_between(adjacent_unit, _hex) > 1
-                            for adjacent_unit in adjacent_enemy_units
+                        if not any(
+                            unit
+                            for unit in GS().map.get_neighboring_units_off(_hex)
+                            if unit.controller != obj.controller
+                            and unit.is_visible_to(obj.controller)
                         )
                     ]
                 )
             ):
                 options.append(MoveOption(target_profile=OneOfHexes(valid_hexes)))
-            elif isinstance(option, SkipOption):
-                options.append(option)
+            else:
+                if not has_adjacent_enemies:
+                    options.append(option)
         return options
 
 
