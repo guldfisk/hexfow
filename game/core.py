@@ -1184,7 +1184,7 @@ class GameState:
         self.active_unit_context: ActiveUnitContext | None = None
         self.activation_queued_units: set[Unit] = set()
         # self.points: dict[Player]
-        self.target_points = 10
+        self.target_points = 21
         self.round_counter = 0
 
         # TODO move to player
@@ -1226,7 +1226,7 @@ class GameState:
     ) -> Mapping[str, Any]:
         serialized_game_state = {
             "player": context.player.name,
-            "players": {},
+            "players": [player.serialize() for player in self.turn_order.players],
             "round": self.round_counter,
             "map": self.map.serialize(context),
             "decision": decision_point.serialize(context) if decision_point else None,

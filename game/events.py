@@ -353,7 +353,7 @@ class MoveAction(Event[None]):
 
 
 @dataclasses.dataclass
-class SkipTurn(Event[None]):
+class Rest(Event[None]):
     unit: Unit
 
     def resolve(self) -> None:
@@ -452,7 +452,7 @@ class Turn(Event[bool]):
                 if context.has_acted:
                     GS().active_unit_context.should_stop = True
                 else:
-                    ES.resolve(SkipTurn(self.unit))
+                    ES.resolve(Rest(self.unit))
                 do_state_based_check()
                 break
             elif isinstance(decision.option, MoveOption):
@@ -636,10 +636,25 @@ class Round(Event[None]):
 class Play(Event[None]):
     def resolve(self) -> None:
         gs = GS()
+        first_player = gs.turn_order.players[0]
         while (
-            not any(p.points >= gs.target_points for p in gs.turn_order.players)
+            not (
+                any(p.points >= gs.target_points for p in gs.turn_order.players)
+                and len({p.points for p in gs.turn_order.players}) != 1
+            )
             # TODO do want something like this prob, annoying when testing
             # and gs.round_counter < 20
         ):
+            print(
+                any(p.points >= gs.target_points for p in gs.turn_order.players),
+                len({p.points for p in gs.turn_order.players}) == 1,
+            )
             ES.resolve(Round())
+            # for unit, _hex in gs.map.unit_positions.items():
+            #     if _hex.is_objective:
+            #         unit.controller.points += 1
+
+        winner = max(gs.turn_order.players, key=lambda p: (p.points, p == first_player))
+        print("WINNER: ", winner)
+
         # TODO push last game state and result to clients

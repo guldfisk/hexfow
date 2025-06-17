@@ -795,3 +795,16 @@ ZONE_MECH = UnitBlueprint(
     facets=[HammerCannon, SmokeCanister],
     price=15,
 )
+
+# gate fiend {15wwwgpp} x1
+# health 8, movement 2, sight 2, energy 4, M
+# infernal blade
+#     melee attack
+#     4 damage
+#     applies 2 burning
+# open gate
+#     ability 4 energy
+#     two target hexes 4 range NLoS
+#     no movement
+#     applies linked status gate to both hexes for 3 rounds
+#         units on this hex can move to linked hex as normal move action

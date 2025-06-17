@@ -30,3 +30,13 @@ map + army for playtesting
 production configuration
 deployment
 
+short term
+    rining-bell should trigger after furious
+    burning ground ordering
+    show status types in client
+    shrubs
+    common effects
+    look into pixi viewport
+    maybe horror spawns should be ephemeral
+    terror/terrified/panic debuff names
+    kill source

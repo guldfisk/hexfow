@@ -152,7 +152,8 @@ class Game(Thread):
                     # OTTER_SCOUT,
                     # LEGENDARY_WRESTLER,
                     (RHINO_BEAST, CC(0, 0)),
-                    LIGHT_ARCHER,
+                    # LIGHT_ARCHER,
+                    INFERNO_TANK
                     # LIGHT_ARCHER,
                     # LIGHT_ARCHER,
                     # PESTILENCE_PRIEST,

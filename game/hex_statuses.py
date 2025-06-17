@@ -13,7 +13,7 @@ from game.core import (
     DamageSignature,
     Source,
 )
-from game.events import MoveUnit, ApplyStatus, SkipTurn, Heal, Damage, RoundCleanup
+from game.events import MoveUnit, ApplyStatus, Rest, Heal, Damage, RoundCleanup
 from game.statuses import Fortified, Burn
 from game.values import DamageType, VisionObstruction
 
@@ -76,15 +76,15 @@ class ShrineWalkInTrigger(TriggerEffect[MoveUnit]):
 
 
 @dataclasses.dataclass(eq=False)
-class ShrineSkipTrigger(TriggerEffect[SkipTurn]):
+class ShrineSkipTrigger(TriggerEffect[Rest]):
     priority: ClassVar[int] = 0
 
     hex: Hex
 
-    def should_trigger(self, event: SkipTurn) -> bool:
+    def should_trigger(self, event: Rest) -> bool:
         return GS().map.distance_between(event.unit, self.hex) <= 1
 
-    def resolve(self, event: SkipTurn) -> None:
+    def resolve(self, event: Rest) -> None:
         ES.resolve(Heal(event.unit, 1))
 
 

@@ -27,6 +27,7 @@ import {
 import { CC } from "./interfaces/geometry.ts";
 import { textureMap } from "./textures.ts";
 import { range } from "./utils/range.ts";
+import { hoverUnit, store } from "./state/store.ts";
 
 // TODO where?
 const sizeMap: { S: number; M: number; L: number } = { S: 0.8, M: 1, L: 1.2 };
@@ -41,26 +42,6 @@ export const renderMap = (
   let maxX = window.innerWidth;
   let maxY = window.innerHeight;
   let center = { x: maxX / 2, y: maxY / 2 };
-
-  // TODO make this shit react or something
-  const eventLog = document.getElementById("event-log");
-
-  if (eventLog) {
-    eventLog.replaceChildren(
-      ...gameState.eventLog.map((log) => {
-        const element = document.createElement("p");
-        element.textContent = log;
-        return element;
-      }),
-    );
-    eventLog.scrollTop = eventLog.scrollHeight;
-  }
-
-  document.getElementById("decision-description").textContent = JSON.stringify(
-    gameState.decision,
-    null,
-    4,
-  );
 
   // TODO not here
   const getHexShape = (color: FillInput): GraphicsContext => {
@@ -570,6 +551,13 @@ export const renderMap = (
     for (const zone of actionTriggerZones) {
       hexContainer.addChild(zone);
     }
+    hexContainer.eventMode = "static";
+    hexContainer.on("mouseenter", (event) => {
+      console.log(event);
+      if (hexData.unit) {
+        store.dispatch(hoverUnit(hexData.unit));
+      }
+    });
   });
 
   return map;

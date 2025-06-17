@@ -2,7 +2,7 @@ import { Assets, Texture } from "pixi.js";
 import { recursiveCamelCase } from "./utils/case.ts";
 
 import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
-import { applicationState } from "./applicationState.ts";
+import { receivedGameObjectDetails, store } from "./state/store.ts";
 
 // TODO don't export?
 export const textureMap: { [key: string]: Texture } = {};
@@ -53,6 +53,6 @@ export const loadGameTextures = async () => {
       );
     }
 
-    applicationState.gameObjectDetails = jsonResponse;
+    store.dispatch(receivedGameObjectDetails(jsonResponse));
   });
 };

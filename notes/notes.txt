@@ -366,3 +366,17 @@ tractor
 
 crawling cactus
     use energy to move?
+
+unicorn
+    non attack damage resistance aura
+    heroic quest
+    great shame
+    non lethal horn applies path of peace
+
+mad scientist
+    shrink ray
+    assemble the doombot 3000
+    combineable displacer
+    inspiration
+
+babushka

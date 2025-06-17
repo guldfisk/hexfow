@@ -1767,6 +1767,24 @@ blink
     teleport to that hex 
 - stealth
 
+inferno tank {12rgg} x1
+health 8, movement 2, armor 1, sight 1, 5 energy L
+scorch
+    aoe attack
+    aoe type tri-connected adjacent
+    3 damage, -1 movement
+    applies 2 burn
+flame wall
+    aoe ability 3 energy
+    aoe type 3 hex radiating line
+    -1 movement
+    all ground units in aof suffer 1 burn
+    apply flame wall status to terrain
+        3 round duration
+        unstackable, refreshable
+        ground units moving into and ending the round on this hex suffer 1 burn
+- greater resistance to damage from burn
+
 notorious outlaw {12pwr} x1
 health 5, movement 3, sight 2, energy 3, M
 twin revolvers
@@ -1993,26 +2011,33 @@ into the gears
 - auro of paranoia
     whenever an enemy unit within 4 range becomes the target of an allied ability, it suffers 1 true damage
 
-inferno tank {12rgg} x1
-health 8, movement 2, armor 1, sight 1, 5 energy L
-scorch
-    aoe attack
-    aoe type tri-connected adjacent
-    3 damage, -1 movement
-    applies 2 burn
-flame wall
-    aoe ability 3 energy
-    aoe type 3 hex radiating line
-    -1 movement
-    all ground units in aof suffer 1 burn
-    apply flame wall status to terrain
-        3 round duration
-        unstackable, refreshable
-        ground units moving into and ending the round on this hex suffer 1 burn
-- greater resistance to damage from burn
+mad scientist {13ppp} x1
+health 6, movement 3, sight 2, energy 8, M
+shrink ray
+     ability 3 energy, -1 movement
+     target unit 2 range LoS
+     deals 1 ranged damage and applies shrunk for 2 rounds
+        stackable, refreshable
+        -1 size
+        -1 attack power
+        -2 maximum health
+translocator
+    combinable ability 2 energy
+    target unit 1 range LoS and a hex within 1 range of that unit NLoS
+    moves the target to the hex
+assemble the doombot 3000
+    ability 4 energy, no movement
+    target adjacent hex
+    applies doombot scaffold to hex
+        unstackable
+        when unit moves in, remove this status
+    if it already had the status, instead summon an exhausted doombot 3000 with ephemeral 4 there
+- inspiration
+    whenever this unit sees another spend 3 or more energy on an ability,
+    this units gains 1 energy. it gains 2 instead if it was 4 or more.
 
 brutodon {14gg} x1
-health 12, movement 2, armor 1, sight 2, L
+health 10, movement 2, armor 1, sight 2, L
 crush
     melee attack
     7 damage, no movement
@@ -2375,6 +2400,21 @@ punch
     melee attack
     3 damage
 - melee/ranged resistant
+
+doombot 3000 {-}
+health 7, movement 1, sight 2, energy 4, armor 1, L
+death laser
+    ranged attack
+    4 damage, 4 range, no movement
+flame thrower
+    ability 3 energy
+    aoe type cone size 1
+    applies 1 burning, and 1 burning ground to terrain for 2 rounds
+self destruct
+    ability, no movement
+    this unit dies
+- explode
+    when this unit dies, every unit within 1 range suffers 5 aoe damage.
 
 fire elemental {-}
 health 5, movement 3, sight 2, M

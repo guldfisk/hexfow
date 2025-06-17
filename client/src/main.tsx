@@ -1,19 +1,23 @@
 import "./style.css";
 
-import {Application, Container,} from "pixi.js";
-import {recursiveCamelCase} from "./utils/case.ts";
+import { Application, Container } from "pixi.js";
+import { recursiveCamelCase } from "./utils/case.ts";
 
-import {applicationState} from "./applicationState.ts";
-import {loadGameTextures} from "./textures.ts";
-import {renderMap} from "./rendering.ts";
+import { loadGameTextures } from "./textures.ts";
+import { renderMap } from "./rendering.ts";
+import { createRoot } from "react-dom/client";
+import { StrictMode } from "react";
+import { HUD } from "./hud/hud.tsx";
+import { Provider } from "react-redux";
+import { receiveGameState, renderedGameState, store } from "./state/store.ts";
 
 async function main() {
   const app = new Application();
   await app.init({ resizeTo: window, antialias: false });
+  // TODO
   document.body.appendChild(app.canvas);
 
   let map = new Container();
-
   app.stage.addChild(map);
 
   await loadGameTextures();
@@ -21,8 +25,9 @@ async function main() {
   const gameConnection = new WebSocket("ws://localhost:8765/ws");
   gameConnection.onmessage = (event) => {
     console.log(recursiveCamelCase(JSON.parse(event.data)));
-    applicationState.gameState = recursiveCamelCase(JSON.parse(event.data));
-    applicationState.shouldRerender = true;
+    store.dispatch(
+      receiveGameState(recursiveCamelCase(JSON.parse(event.data))),
+    );
   };
 
   let isDragging = false;
@@ -78,16 +83,17 @@ async function main() {
 
   // TODO lmao
   const keyHandler = (event: KeyboardEvent) => {
+    const state = store.getState();
     if (
       event.key == "s" &&
-      applicationState.gameState &&
-      applicationState.gameState.decision &&
-      applicationState.gameState.decision["type"] == "SelectOptionDecisionPoint"
+      state.gameState &&
+      state.gameState.decision &&
+      state.gameState.decision["type"] == "SelectOptionDecisionPoint"
     ) {
       {
-        for (const [idx, option] of applicationState.gameState.decision[
-          "payload"
-        ]["options"].entries()) {
+        for (const [idx, option] of state.gameState.decision["payload"][
+          "options"
+        ].entries()) {
           if (option["type"] == "SkipOption") {
             gameConnection.send(JSON.stringify({ index: idx, target: null }));
           }
@@ -99,20 +105,18 @@ async function main() {
   document.addEventListener("keydown", keyHandler);
 
   app.ticker.add(() => {
-    if (
-      applicationState.shouldRerender &&
-      applicationState.gameState &&
-      applicationState.gameObjectDetails
-    ) {
+    const state = store.getState();
+
+    if (state.shouldRerender && state.gameState && state.gameObjectDetails) {
       app.stage.removeChild(map);
       map = renderMap(
         app,
-        applicationState.gameState,
-        applicationState.gameObjectDetails,
+        state.gameState,
+        state.gameObjectDetails,
         gameConnection,
       );
       app.stage.addChild(map);
-      applicationState.shouldRerender = false;
+      store.dispatch(renderedGameState());
     }
     map.position = worldTranslation;
     map.scale = worldScale;
@@ -120,3 +124,11 @@ async function main() {
 }
 
 await main();
+
+createRoot(document.getElementById("hud")!).render(
+  <StrictMode>
+    <Provider store={store}>
+      <HUD />
+    </Provider>
+  </StrictMode>,
+);

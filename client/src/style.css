@@ -1,35 +1,32 @@
 body {
   margin: 0;
   display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  /*place-items: center;*/
+  /*min-width: 320px;*/
+  /*min-height: 100vh;*/
 }
 
-/*#app {*/
-/*  max-width: 1280px;*/
-/*  margin: 0 auto;*/
-/*  padding: 2rem;*/
-/*  text-align: center;*/
-/*}*/
-
-.sidenav {
-  height: 100%; /* Full-height: remove this if you want "auto" height */
-  width: 500px; /* Set the width of the sidebar */
-  position: fixed; /* Fixed Sidebar (stay in place on scroll) */
-  z-index: 1; /* Stay on top */
-  top: 0; /* Stay at the top */
+.sidebar {
+  height: 100%;
+  width: 400px;
+  position: fixed;
+  /*z-index: 1;*/
+  /*top: 0;*/
+  background-color: #111;
+  overflow-x: hidden;
+  color: white;
+}
+.sidebar-left {
   left: 0;
-  background-color: #111; /* Black */
-  overflow-x: hidden; /* Disable horizontal scroll */
-  padding-top: 20px;
+}
+.sidebar-right {
+  right: 0;
 }
 
 .info-window {
   height: 50%;
   width: 100%;
   /*border: 1px solid #ccc;*/
-  color: white;
   overflow: auto;
   white-space: pre-wrap;
 }
