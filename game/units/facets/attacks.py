@@ -28,6 +28,10 @@ class GiantClub(MeleeAttackFacet):
 
 
 class Gore(MeleeAttackFacet):
+    """
+    +2 damage against units this unit wasn't adjacent to at the beginning of its turn.
+    """
+
     damage = 4
 
     # TODO really ugly
@@ -183,6 +187,8 @@ class Sting(MeleeAttackFacet):
 
 
 class RoundhouseKick(MeleeAttackFacet):
+    """+1 damage against staggered units."""
+
     damage = 3
 
     def get_damage_modifier_against(self, unit: Unit) -> int | None:

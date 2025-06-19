@@ -69,7 +69,7 @@ class PoisonTrigger(TriggerEffect[RoundCleanup]):
         ES.resolve(
             Damage(
                 self.status.parent,
-                DamageSignature(self.status.stacks, self.status, type=DamageType.TRUE),
+                DamageSignature(self.status.stacks, self.status, type=DamageType.PURE),
             )
         )
 
@@ -99,7 +99,7 @@ class PanickedTrigger(TriggerEffect[RoundCleanup]):
                 DamageSignature(
                     len(list(GS().map.get_neighboring_units_off(self.status.parent))),
                     self.status,
-                    type=DamageType.TRUE,
+                    type=DamageType.PURE,
                 ),
             )
         )

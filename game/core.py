@@ -19,7 +19,7 @@ from typing import Mapping
 
 from bidict import bidict
 
-from events.eventsystem import Modifiable, ModifiableAttribute, modifiable, ES
+from events.eventsystem import Modifiable, ModifiableAttribute, modifiable, ES, ModifiableMeta
 from game.decisions import (
     DecisionPoint,
     Option,
@@ -70,7 +70,7 @@ class EffortOption(Option[O]):
     facet: EffortFacet
 
     def serialize_values(self, context: SerializationContext) -> JSON:
-        return {"facet": self.facet.serialize(context)}
+        return {"facet": self.facet.serialize()}
 
 
 @dataclasses.dataclass
@@ -108,12 +108,29 @@ class HasStatuses(HasEffects):
 H = TypeVar("H", bound=HasStatuses)
 
 
+class _FacetMeta(ModifiableMeta):
+
+    def __new__(
+        metacls,
+        name: str,
+        bases: tuple[type, ...],
+        attributes: dict[str, Any],
+        **kwargs: Any,
+    ) -> type:
+        cls = super().__new__(metacls, name, bases, attributes, **kwargs)
+        if ABC not in bases and "description" not in attributes and cls.__doc__:
+            cls.description = "\n".join(
+                ln.strip() for ln in cls.__doc__.split("\n")
+            ).strip()
+        return cls
+
+
 # TODO a facet should not have statuses
-class Facet(HasStatuses, Serializable):
+class Facet(HasStatuses, Modifiable, ABC, metaclass=_FacetMeta):
     # TODO hmm
     # name: ClassVar[str]
     # TODO hm
-    display_type: ClassVar[str]
+    category: ClassVar[str] = "not defined"
     description: ClassVar[str | None] = None
     flavor: ClassVar[str | None] = None
 
@@ -126,8 +143,14 @@ class Facet(HasStatuses, Serializable):
     # TODO common interface?
     def create_effects(self) -> None: ...
 
-    def serialize(self, context: SerializationContext) -> JSON:
-        return {"name": self.__class__.__name__, "type": self.display_type}
+    # TODO lmao
+    @classmethod
+    def serialize(cls) -> JSON:
+        return {
+            "name": cls.__name__,
+            "category": cls.category,
+            "description": cls.description,
+        }
 
 
 class EffortCost(ABC):
@@ -150,6 +173,12 @@ class EffortCost(ABC):
             if isinstance(other, EffortCost)
             else [self, *other.costs.values()]
         )
+
+    @abstractmethod
+    def serialize_values(self) -> dict[str, Any]: ...
+
+    def serialize(self) -> dict[str, Any]:
+        return {"type": self.__class__.__name__, **self.serialize_values()}
 
 
 class EffortCostSet:
@@ -186,6 +215,9 @@ class EffortCostSet:
     def __bool__(self) -> bool:
         return bool(self.costs)
 
+    def serialize(self) -> dict[str, Any]:
+        return {"atoms": [cost.serialize() for cost in self.costs.values()]}
+
 
 @dataclasses.dataclass
 class MovementCost(EffortCost):
@@ -201,6 +233,9 @@ class MovementCost(EffortCost):
     def merge(cls, instances: list[Self]) -> Self:
         return cls(amount=sum(cost.amount for cost in instances))
 
+    def serialize_values(self) -> dict[str, Any]:
+        return {"amount": self.amount}
+
 
 class ExclusiveCost(EffortCost):
 
@@ -214,6 +249,9 @@ class ExclusiveCost(EffortCost):
     @classmethod
     def merge(cls, instances: list[Self]) -> Self:
         return cls()
+
+    def serialize_values(self) -> dict[str, Any]:
+        return {}
 
 
 @dataclasses.dataclass
@@ -230,6 +268,9 @@ class EnergyCost(EffortCost):
     def merge(cls, instances: list[Self]) -> Self:
         return cls(amount=sum(cost.amount for cost in instances))
 
+    def serialize_values(self) -> dict[str, Any]:
+        return {"amount": self.amount}
+
 
 class EffortFacet(Facet, Modifiable):
     cost: ClassVar[EffortCostSet | EffortCost | None] = None
@@ -241,10 +282,16 @@ class EffortFacet(Facet, Modifiable):
     @modifiable
     def get_legal_targets(self, _: None = None) -> list[Unit]: ...
 
+    @classmethod
+    def get_cost_set(cls) -> EffortCostSet:
+        if isinstance(cls.cost, EffortCost):
+            return EffortCostSet([cls.cost])
+        return cls.cost or EffortCostSet()
+
     # TODO should prob be modifyable. prob need some way to lock in costs for effort
     #  options then.
     def get_cost(self) -> EffortCostSet:
-        return self.cost or EffortCostSet()
+        return self.get_cost_set()
 
     # TODO how does overriding work with modifiable?
     @modifiable
@@ -258,6 +305,10 @@ class EffortFacet(Facet, Modifiable):
             and self.get_cost().can_be_payed(context)
             and self.get_legal_targets(None)
         )
+
+    @classmethod
+    def serialize(cls) -> JSON:
+        return {**super().serialize(), "cost": cls.get_cost_set().serialize()}
 
 
 class AttackFacet(EffortFacet): ...
@@ -294,9 +345,13 @@ class SingleTargetAttackFacet(AttackFacet):
     def resolve_pre_damage_effects(self, defender: Unit) -> None: ...
     def resolve_post_damage_effects(self, defender: Unit) -> None: ...
 
+    @classmethod
+    def serialize(cls) -> JSON:
+        return {**super().serialize(), "damage": cls.damage, "ap": cls.ap}
+
 
 class MeleeAttackFacet(SingleTargetAttackFacet):
-    display_type = "MeleeAttack"
+    category = "melee_attack"
     damage_type = DamageType.MELEE
 
     @modifiable
@@ -334,7 +389,7 @@ def line_of_sight_obstructed_for_unit(unit: Unit, line_from: CC, line_to: CC) ->
 
 
 class RangedAttackFacet(SingleTargetAttackFacet):
-    display_type = "RangedAttack"
+    category = "ranged_attack"
     damage_type = DamageType.RANGED
     range: ClassVar[int]
 
@@ -354,9 +409,13 @@ class RangedAttackFacet(SingleTargetAttackFacet):
             and unit.can_be_attacked_by(self)
         ]
 
+    @classmethod
+    def serialize(cls) -> JSON:
+        return {**super().serialize(), "range": cls.get_cost_set().serialize()}
+
 
 class ActivatedAbilityFacet(EffortFacet, Generic[O]):
-    display_type = "ActivatedAbility"
+    category = "activated_ability"
 
     @abstractmethod
     def get_target_profile(self) -> TargetProfile[O] | None: ...
@@ -377,7 +436,8 @@ class ActivatedAbilityFacet(EffortFacet, Generic[O]):
         )
 
 
-class StaticAbilityFacet(Facet): ...
+class StaticAbilityFacet(Facet):
+    category = "static_ability"
 
 
 class _StatusMeta(ABCMeta):
@@ -491,6 +551,24 @@ class UnitBlueprint:
 
     def __repr__(self):
         return f"{type(self).__name__}({self.name})"
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "identifier": self.identifier,
+            "name": self.name,
+            # TODO how should this work?
+            "small_image": f"/src/images/units/{self.identifier}_small.png",
+            "health": self.health,
+            "speed": self.speed,
+            "sight": self.sight,
+            "armor": self.armor,
+            "energy": self.energy,
+            # TODO
+            "size": self.size.name[0],
+            "aquatic": self.aquatic,
+            "facets": [facet.serialize() for facet in self.facets],
+            "price": self.price,
+        }
 
 
 class Unit(HasStatuses, Modifiable, VisionBound):

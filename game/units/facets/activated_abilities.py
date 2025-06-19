@@ -76,6 +76,9 @@ class HealBeam(SingleAllyActivatedAbility):
 
 
 class GreaseTheGears(SingleAllyActivatedAbility):
+    """Target other allied unit 1 range. Kills the target. If it does, heal this unit 2, and it restores 2 energy.
+    If the target unit was ready, this unit gains +1 movement point."""
+
     range = 1
     can_target_self = False
     combinable = True
@@ -235,6 +238,8 @@ class Stare(ActivatedAbilityFacet[list[Hex]]):
 
 
 class Jaunt(ActivatedAbilityFacet[Hex]):
+    """Teleports to target hex within 4 range NLoS."""
+
     cost = EnergyCost(3)
     combinable = True
 
@@ -316,6 +321,12 @@ class SummonBees(SingleHexTargetActivatedAbility):
 
 
 class StimulatingInjection(SingleTargetActivatedAbility):
+    """
+    Target other unit within 1 range.
+    Deals 1 pure damage and readies the target.
+    This unit dies.
+    """
+
     range = 1
     cost = EnergyCost(3)
 
@@ -323,9 +334,10 @@ class StimulatingInjection(SingleTargetActivatedAbility):
         return unit != self.owner
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(Damage(target, DamageSignature(1, self, DamageType.TRUE)))
+        ES.resolve(Damage(target, DamageSignature(1, self, DamageType.PURE)))
         # TODO event
         target.exhausted = False
+        # TODO sacrifice as a cost?
         ES.resolve(Kill(self.owner))
 
 

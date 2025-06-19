@@ -21,6 +21,39 @@ body {
 }
 .sidebar-right {
   right: 0;
+  padding: 5px;
+}
+
+.details-view {
+  /*margin: 3px;*/
+}
+
+.facet-details {
+  border-radius: 8px;
+  background: #333333;
+  padding: 8px;
+  margin-top: 10px;
+  font-size: 0.7em;
+  /*width: 200px;*/
+  /*height: 150px;*/
+}
+
+.facet-header {
+  font-size: 25px;
+}
+
+.facet-stats {
+  font-size: 18px;
+}
+
+.facet-description {
+  font-size: 12px;
+}
+
+.facet-icon {
+  display: inline-block;
+  vertical-align: middle;
+  padding-right: 6px;
 }
 
 .info-window {

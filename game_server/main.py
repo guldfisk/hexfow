@@ -108,22 +108,22 @@ class Game(Thread):
                     {
                         cc: HexSpec(
                             random.choice(
-                                [
-                                    Plains,
-                                ]
                                 # [
                                 #     Plains,
-                                #     Plains,
-                                #     Plains,
-                                #     Plains,
-                                #     Forest,
-                                #     Forest,
-                                #     Forest,
-                                #     Forest,
-                                #     # Magma,
-                                #     # Hills,
-                                #     Water,
                                 # ]
+                                [
+                                    Plains,
+                                    Plains,
+                                    Plains,
+                                    Plains,
+                                    Forest,
+                                    Forest,
+                                    Forest,
+                                    Forest,
+                                    # Magma,
+                                    # Hills,
+                                    Water,
+                                ]
                             ),
                             cc.distance_to(CC(0, 0)) <= 1,
                         )
@@ -153,15 +153,15 @@ class Game(Thread):
                     # LEGENDARY_WRESTLER,
                     (RHINO_BEAST, CC(0, 0)),
                     # LIGHT_ARCHER,
-                    INFERNO_TANK
-                    # LIGHT_ARCHER,
+                    INFERNO_TANK,
+                    LIGHT_ARCHER,
                     # LIGHT_ARCHER,
                     # PESTILENCE_PRIEST,
                 ),
             )
 
-            use_random_units = False
-            # use_random_units = True
+            # use_random_units = False
+            use_random_units = True
 
             if use_random_units:
                 min_random_unit_quantity = 7

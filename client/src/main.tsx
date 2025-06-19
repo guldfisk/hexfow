@@ -77,9 +77,9 @@ async function main() {
   app.stage.hitArea = app.screen;
 
   // TODO YIKES
-  document.oncontextmenu = document.body.oncontextmenu = function () {
-    return false;
-  };
+  // document.oncontextmenu = document.body.oncontextmenu = function () {
+  //   return false;
+  // };
 
   // TODO lmao
   const keyHandler = (event: KeyboardEvent) => {

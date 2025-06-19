@@ -114,7 +114,7 @@ class ReceiveDamage(Event[int]):
         defender_armor = self.unit.armor.g()
         damage = (
             self.signature.amount
-            if self.signature.type == DamageType.TRUE
+            if self.signature.type == DamageType.PURE
             else max(
                 self.signature.amount
                 - min(defender_armor, max(defender_armor - self.signature.ap, 0)),
@@ -146,7 +146,7 @@ class Damage(Event[int]):
     def resolve(self) -> int:
         damage = (
             self.signature.amount
-            if self.signature.type == DamageType.TRUE
+            if self.signature.type == DamageType.PURE
             else max(
                 self.signature.amount
                 - self.unit.get_terrain_protection_for(

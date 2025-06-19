@@ -5,13 +5,9 @@ from starlette.middleware.cors import CORSMiddleware
 
 from game.core import UnitBlueprint, Terrain, Status
 from game.map import terrain
-from game.units import blueprints
+from game.units import blueprints  # noqa F401
 
 
-# TODO ultra yikes
-unit_blueprint = [
-    v for v in blueprints.__dict__.values() if isinstance(v, UnitBlueprint)
-]
 terrains = [
     v
     for v in terrain.__dict__.values()
@@ -45,12 +41,8 @@ async def get():
 async def get_game_object_details() -> dict[str, Any]:
     return {
         "units": {
-            unit.identifier: {
-                "identifier": unit.identifier,
-                "name": unit.name,
-                "small_image": f"/src/images/units/{unit.identifier}_small.png",
-            }
-            for unit in unit_blueprint
+            unit.identifier: unit.serialize()
+            for unit in UnitBlueprint.registry.values()
         },
         "terrain": {
             _terrain.identifier: {

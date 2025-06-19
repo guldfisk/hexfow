@@ -111,8 +111,9 @@ export const renderMap = (
     fontFamily: "Arial",
     fontSize: 26,
     fill: "white",
-    stroke: "black",
-    strokeThickness: 2,
+    // stroke: "black",
+    stroke: { color: "black", width: 2 },
+    // strokeThickness: 2,
     // miterLimit: 2,
     // lineJoin: 'round',
     // strokeMiterLimit: 2,
@@ -123,8 +124,10 @@ export const renderMap = (
     fontFamily: "Arial",
     fontSize: 22,
     fill: "white",
-    stroke: "black",
-    strokeThickness: 2,
+    stroke: { color: "black", width: 2 },
+
+    // stroke: "black",
+    // strokeThickness: 2,
     // miterLimit: 2,
     // lineJoin: 'round',
     // strokeMiterLimit: 2,
@@ -149,8 +152,9 @@ export const renderMap = (
     fontSize: 25,
     fill: "white",
     align: "center",
-    stroke: "black",
-    strokeThickness: 3,
+    // stroke: "black",
+    // strokeThickness: 3,
+    stroke: { color: "black", width: 3 },
   });
   const ghostStyle = new TextStyle({
     fontFamily: "Arial",
@@ -177,9 +181,9 @@ export const renderMap = (
   );
 
   const effortTypeMap: { [key: string]: string } = {
-    RangedAttack: "hex_selection_ranged_attack",
-    MeleeAttack: "hex_selection_melee",
-    ActivatedAbility: "hex_selection_ability",
+    ranged_attack: "hex_selection_ranged_attack",
+    melee_attack: "hex_selection_melee",
+    activated_ability: "hex_selection_ability",
   };
 
   // TODO move this somewhere else
@@ -196,8 +200,8 @@ export const renderMap = (
         ].entries()) {
           hexActionMap[ccToKey(unitHexes[unit["id"]].cc)].push({
             type:
-              option.values?.facet?.type in effortTypeMap
-                ? effortTypeMap[option.values?.facet?.type]
+              option.values?.facet?.category in effortTypeMap
+                ? effortTypeMap[option.values?.facet?.category]
                 : "hex_selection",
             content: {
               index: idx,
@@ -213,8 +217,8 @@ export const renderMap = (
         ].entries()) {
           hexActionMap[ccToKey(cc)].push({
             type:
-              option.values?.facet?.type in effortTypeMap
-                ? effortTypeMap[option.values?.facet?.type]
+              option.values?.facet?.category in effortTypeMap
+                ? effortTypeMap[option.values?.facet?.category]
                 : "hex_selection",
             content: {
               index: idx,
@@ -553,7 +557,6 @@ export const renderMap = (
     }
     hexContainer.eventMode = "static";
     hexContainer.on("mouseenter", (event) => {
-      console.log(event);
       if (hexData.unit) {
         store.dispatch(hoverUnit(hexData.unit));
       }

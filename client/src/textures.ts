@@ -31,13 +31,11 @@ export const loadGameTextures = async () => {
   }
 
   fetch("http://localhost:8000/game-object-details").then(async (response) => {
-    let jsonResponse: GameObjectDetails = recursiveCamelCase(
-      await response.json(),
-    );
+    let jsonResponse: GameObjectDetails = await response.json();
 
     for (const unitDetails of Object.values(jsonResponse.units)) {
       textureMap[unitDetails.identifier] = await Assets.load(
-        unitDetails.smallImage,
+        unitDetails.small_image,
       );
     }
 

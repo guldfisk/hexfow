@@ -14,7 +14,7 @@ class DamageType(StrEnum):
     RANGED = auto()
     AOE = auto()
     PHYSICAL = auto()
-    TRUE = auto()
+    PURE = auto()
 
 
 class Resistance(IntEnum):

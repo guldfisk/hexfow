@@ -291,6 +291,7 @@ class PerTurnMovePenaltyIgnoreReplacement(ReplacementEffect[MovePenalty]):
 
 
 class TerrainSavvy(StaticAbilityFacet):
+    """Ignores the first movement penalty each turn."""
     def create_effects(self) -> None:
         self.register_effects(PerTurnMovePenaltyIgnoreReplacement(self.owner, 1))
 

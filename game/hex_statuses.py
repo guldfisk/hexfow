@@ -146,7 +146,7 @@ class SootWalkInTrigger(TriggerEffect[MoveUnit]):
         ES.resolve(
             Damage(
                 event.unit,
-                DamageSignature(self.amount, self.source, type=DamageType.TRUE),
+                DamageSignature(self.amount, self.source, type=DamageType.PURE),
             )
         )
 
@@ -167,7 +167,7 @@ class SootRoundTrigger(TriggerEffect[RoundCleanup]):
             ES.resolve(
                 Damage(
                     unit,
-                    DamageSignature(self.amount, self.source, type=DamageType.TRUE),
+                    DamageSignature(self.amount, self.source, type=DamageType.PURE),
                 )
             )
 

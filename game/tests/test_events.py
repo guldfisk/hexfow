@@ -294,7 +294,7 @@ class MeleeAttackSelector(OptionSelector):
     def should_select(self, option: Mapping[str, Any]) -> bool:
         return (
             option["type"] == EffortOption.__name__
-            and option["values"]["facet"]["type"] == MeleeAttackFacet.display_type
+            and option["values"]["facet"]["category"] == MeleeAttackFacet.category
         )
 
 
@@ -302,7 +302,7 @@ class RangedAttackSelector(OptionSelector):
     def should_select(self, option: Mapping[str, Any]) -> bool:
         return (
             option["type"] == EffortOption.__name__
-            and option["values"]["facet"]["type"] == RangedAttackFacet.display_type
+            and option["values"]["facet"]["category"] == RangedAttackFacet.category
         )
 
 
