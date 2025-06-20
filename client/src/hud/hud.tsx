@@ -168,8 +168,7 @@ const DecisionDetailView = ({
       <div>{menu ? menuDescribers[menu.type](gameState, menu) : gameState.decision.explanation}</div>
       {button}
       {/*{gameState.decision*/}
-      {/*  ? JSON.stringify(gameState.decision, null, 4)*/}
-      {/*  : "waiting for opponent"}*/}
+      {JSON.stringify(gameState.decision, null, 4) }
     </div>
   );
 };

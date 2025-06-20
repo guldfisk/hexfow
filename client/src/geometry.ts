@@ -18,7 +18,16 @@ export const hexVerticeOffsets: [number, number][] = [
   [hexWidth / 2, hexSize / 2],
 ];
 
-export const CCToRC = (hexCoord: CC): RC => ({
+export const ccNeighborOffsets: CC[] = [
+  { r: 1, h: 0 },
+  { r: 1, h: -1 },
+  { r: 0, h: -1 },
+  { r: -1, h: 0 },
+  { r: -1, h: 1 },
+  { r: 0, h: 1 },
+];
+
+export const ccToRC = (hexCoord: CC): RC => ({
   x: hexSize * ((Math.sqrt(3) / 2) * hexCoord.r + Math.sqrt(3) * hexCoord.h),
   y: hexSize * ((3 / 2) * hexCoord.r),
 });
@@ -29,13 +38,17 @@ export const addRCs = (a: RC, b: RC): RC => ({
   x: a.x + b.x,
   y: a.y + b.y,
 });
+export const addCCs = (a: CC, b: CC): CC => ({
+  r: a.r + b.r,
+  h: a.h + b.h,
+});
 
 export const subRCs = (a: RC, b: RC): RC => ({
   x: a.x - b.x,
   y: a.y - b.y,
 });
 
-export const assUnitVector = (rc: RC) =>
+export const asUnitVector = (rc: RC) =>
   constDivRc(rc, Math.sqrt(rc.x ** 2 + rc.y ** 2));
 
 export const constMultRC = (rc: RC, v: number) => ({
@@ -49,3 +62,6 @@ export const hexDistance = (fromCC: CC, toCC: CC): number => {
   const h = fromCC.h - toCC.h;
   return (Math.abs(r) + Math.abs(r + h) + Math.abs(h)) / 2;
 };
+
+export const getNeighborsOffCC = (cc: CC): CC[] =>
+  ccNeighborOffsets.map((offset) => addCCs(cc, offset));

@@ -1122,7 +1122,7 @@ class OneOfHexes(TargetProfile[Hex]):
 
 # TODO where, maybe in "aoe_target_profiles.py"?
 @dataclasses.dataclass
-class SelectConsecutiveAdjacentHexes(TargetProfile[list[Hex]]):
+class ConsecutiveAdjacentHexes(TargetProfile[list[Hex]]):
     adjacent_to: Hex
     arm_length: int
 
@@ -1138,7 +1138,7 @@ class SelectConsecutiveAdjacentHexes(TargetProfile[list[Hex]]):
         for idx, _hex in enumerate(hexes):
             if _hex.position == selected_cc:
                 return [
-                    hexes[offset % len(hexes)]
+                    hexes[(idx + offset) % len(hexes)]
                     for offset in range(-self.arm_length, self.arm_length + 1)
                 ]
         # TODO some sorta standardized error for this. just need actual validation

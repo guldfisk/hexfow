@@ -1,4 +1,9 @@
-import { GameState, Hex, NOfUnits } from "../interfaces/gameState.ts";
+import {
+  ConsecutiveAdjacentHexes,
+  GameState,
+  Hex,
+  NOfUnits,
+} from "../interfaces/gameState.ts";
 import { ccToKey } from "../geometry.ts";
 import { ActionSpace } from "./interface.ts";
 import { activateMenu, store } from "../state/store.ts";
@@ -76,6 +81,24 @@ export const getBaseActionSpace = (
               ),
           });
         }
+      } else if (
+        option.targetProfile.type == "ConsecutiveAdjacentHexes" &&
+        gameState.activeUnitContext
+      ) {
+        actionSpace[
+          ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
+        ].actions.push({
+          type: "menu",
+          do: () =>
+            store.dispatch(
+              activateMenu({
+                type: "ConsecutiveAdjacentHexes",
+                optionIndex: idx,
+                targetProfile: option.targetProfile as ConsecutiveAdjacentHexes,
+                hovering: null,
+              }),
+            ),
+        });
       } else if (
         option.type == "EffortOption" &&
         option.targetProfile.type == "NoTarget" &&

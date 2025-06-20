@@ -1,8 +1,14 @@
 import { GameState, Hex } from "../interfaces/gameState.ts";
 import { getUnitsOfHexes } from "./actionSpace.ts";
-import { ActionSpace, MenuData, NOfUnitsMenu } from "./interface.ts";
-import { ccToKey } from "../geometry.ts";
+import {
+  ActionSpace,
+  ConsecutiveAdjacentHexesMenu,
+  MenuData,
+  NOfUnitsMenu,
+} from "./interface.ts";
+import { ccToKey, getNeighborsOffCC } from "../geometry.ts";
 import { activateMenu, store } from "../state/store.ts";
+import { mod, range } from "../utils/range.ts";
 
 const getNOfUnitsActionSpace = (
   gameState: GameState,
@@ -55,14 +61,66 @@ const getNOfUnitsDescription = (
   return menu.targetProfile.values.labels[menu.selectedUnits.length];
 };
 
+const getConsecutiveAdjacentHexesActionSpace = (
+  gameState: GameState,
+  takeAction: (body: { [key: string]: any }) => void,
+  menu: ConsecutiveAdjacentHexesMenu,
+): ActionSpace => {
+  const actionSpace: ActionSpace = Object.fromEntries(
+    gameState.map.hexes.map((hex) => [
+      ccToKey(hex.cc),
+      { actions: [], highlighted: false },
+    ]),
+  );
+  const options = getNeighborsOffCC(menu.targetProfile.values.adjacentTo);
+  const highlighted =
+    menu.hovering !== null
+      ? range(
+          -menu.targetProfile.values.armLength,
+          menu.targetProfile.values.armLength + 1,
+        ).map((v) => mod(v + menu.hovering, options.length))
+      : [];
+  console.log(highlighted);
+
+  for (const [idx, option] of options.entries()) {
+    actionSpace[ccToKey(option)] = {
+      actions: [
+        {
+          type: "aoe",
+          do: () =>
+            takeAction({ index: menu.optionIndex, target: { cc: option } }),
+        },
+      ],
+      highlighted: highlighted.includes(idx),
+      hoverTrigger: () => {
+        store.dispatch(activateMenu({ ...menu, hovering: idx }));
+      },
+    };
+  }
+  return actionSpace;
+};
+
+const getConsecutiveAdjacentHexesDescription = (
+  gameState: GameState,
+  menu: ConsecutiveAdjacentHexesMenu,
+): string => {
+  return "select aoe";
+};
+
 export const menuActionSpacers: {
   [key: string]: (
     gameState: GameState,
     takeAction: (body: { [key: string]: any }) => void,
     menu: MenuData,
   ) => ActionSpace;
-} = { NOfUnits: getNOfUnitsActionSpace };
+} = {
+  NOfUnits: getNOfUnitsActionSpace,
+  ConsecutiveAdjacentHexes: getConsecutiveAdjacentHexesActionSpace,
+};
 
 export const menuDescribers: {
   [key: string]: (gameState: GameState, menu: MenuData) => string;
-} = { NOfUnits: getNOfUnitsDescription };
+} = {
+  NOfUnits: getNOfUnitsDescription,
+  ConsecutiveAdjacentHexes: getConsecutiveAdjacentHexesDescription,
+};

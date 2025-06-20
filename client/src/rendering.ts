@@ -13,9 +13,9 @@ import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
 import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
 import {
   addRCs,
-  assUnitVector,
+  asUnitVector,
   ccToKey,
-  CCToRC,
+  ccToRC,
   constMultRC,
   getHexDimensions,
   hexDistance,
@@ -40,6 +40,8 @@ const selectionIconMap: { [key in selectionIcon]: string } = {
   melee_attack: "hex_selection_melee",
   activated_ability: "hex_selection_ability",
   generic: "hex_selection",
+  aoe: "hex_selection_aoe",
+  menu: "hex_selection_menu",
 };
 
 export const renderMap = (
@@ -163,7 +165,7 @@ export const renderMap = (
       );
 
   gameState.map.hexes.forEach((hexData) => {
-    let realHexPosition = addRCs(CCToRC(hexData.cc), center);
+    let realHexPosition = addRCs(ccToRC(hexData.cc), center);
 
     const hexContainer = new Container();
     map.addChild(hexContainer);
@@ -429,7 +431,7 @@ export const renderMap = (
       statusContainer.position = addRCs(
         firstPoint,
         constMultRC(
-          assUnitVector(subRCs(lastPoint, firstPoint)),
+          asUnitVector(subRCs(lastPoint, firstPoint)),
           hexData.statuses.length <= 4
             ? idx * 43
             : (hexSize / hexData.statuses.length) * idx,
@@ -494,6 +496,10 @@ export const renderMap = (
     hexContainer.on("mouseenter", (event) => {
       if (hexData.unit) {
         store.dispatch(hoverUnit(hexData.unit));
+      }
+      const hoverTrigger = actionSpace[ccToKey(hexData.cc)].hoverTrigger;
+      if (hoverTrigger) {
+        hoverTrigger();
       }
     });
   });

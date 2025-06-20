@@ -14,6 +14,7 @@ export const loadGameTextures = async () => {
     "hex_selection_menu",
     "hex_selection_ranged_attack",
     "hex_selection_ability",
+    "hex_selection_aoe",
   ]) {
     textureMap[uiIdentifier] = await Assets.load(
       `/src/images/ui/${uiIdentifier}.png`,

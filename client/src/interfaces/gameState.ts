@@ -75,7 +75,12 @@ export interface NOfUnits extends TargetProfileBase {
   values: { units: { id: string }[]; selectCount: number; labels: string[] };
 }
 
-export type TargetProfile = OneOfUnits | NOfUnits | OneOfHexes | NoTarget;
+export interface ConsecutiveAdjacentHexes extends TargetProfileBase {
+  type: "ConsecutiveAdjacentHexes";
+  values: { adjacentTo: CC; armLength: number };
+}
+
+export type TargetProfile = OneOfUnits | NOfUnits | OneOfHexes | NoTarget | ConsecutiveAdjacentHexes;
 
 export interface OptionBase {
   type: string;

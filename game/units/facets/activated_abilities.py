@@ -10,7 +10,7 @@ from game.core import (
     Hex,
     OneOfHexes,
     UnitBlueprint,
-    SelectConsecutiveAdjacentHexes,
+    ConsecutiveAdjacentHexes,
     SelectRadiatingLine,
     RangedAttackFacet,
     MeleeAttackFacet,
@@ -222,7 +222,7 @@ class Sweep(ActivatedAbilityFacet[list[Hex]]):
     cost = MovementCost(1)
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        return SelectConsecutiveAdjacentHexes(GS().map.hex_off(self.owner), 1)
+        return ConsecutiveAdjacentHexes(GS().map.hex_off(self.owner), 1)
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
@@ -537,20 +537,17 @@ class Terrorize(SingleEnemyActivatedAbility):
         )
 
 
-# TODO should be an aoe target and attack
-class Scorch(SingleHexTargetActivatedAbility):
+# TODO should be an attack
+class Scorch(ActivatedAbilityFacet[list[Hex]]):
     cost = MovementCost(1)
 
-    def can_target_hex(self, hex_: Hex) -> bool:
-        return hex_ != GS().map.hex_off(self.owner)
+    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
+        return ConsecutiveAdjacentHexes(GS().map.hex_off(self.owner), 1)
 
-    def perform(self, target: Hex) -> None:
-        hexes = list(GS().map.get_neighbors_off(self.owner))
-        target_index = hexes.index(target)
-
-        for offset in range(-1, 2):
-            if unit := GS().map.unit_on(hexes[(target_index + offset) % len(hexes)]):
-                ES.resolve(Damage(unit, DamageSignature(3, self, type=DamageType.AOE)))
+    def perform(self, target: list[Hex]) -> None:
+        for h in target:
+            if unit := GS().map.unit_on(h):
+                ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.AOE)))
                 ES.resolve(
                     ApplyStatus(
                         unit, self.owner.controller, StatusSignature(Burn, stacks=2)

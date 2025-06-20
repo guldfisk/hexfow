@@ -1,9 +1,11 @@
-import { NOfUnits } from "../interfaces/gameState.ts";
+import { ConsecutiveAdjacentHexes, NOfUnits } from "../interfaces/gameState.ts";
 
 export type selectionIcon =
   | "ranged_attack"
   | "melee_attack"
   | "activated_ability"
+  | "aoe"
+  | "menu"
   | "generic";
 
 export interface Action {
@@ -14,6 +16,7 @@ export interface Action {
 export interface HexActions {
   actions: Action[];
   highlighted?: boolean;
+  hoverTrigger?: () => void;
 }
 
 export type CCkey = string;
@@ -31,4 +34,11 @@ export interface NOfUnitsMenu extends BaseMenuData {
   targetProfile: NOfUnits;
 }
 
-export type MenuData = NOfUnitsMenu;
+export interface ConsecutiveAdjacentHexesMenu extends BaseMenuData {
+  type: "ConsecutiveAdjacentHexes";
+  optionIndex: number;
+  targetProfile: ConsecutiveAdjacentHexes;
+  hovering: number | null;
+}
+
+export type MenuData = NOfUnitsMenu | ConsecutiveAdjacentHexesMenu;
