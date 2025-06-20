@@ -7,13 +7,14 @@ import {
   Text,
   TextStyle,
 } from "pixi.js";
-import { GameState, Hex } from "./interfaces/gameState.ts";
+import { GameState } from "./interfaces/gameState.ts";
 import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
 
 import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
 import {
   addRCs,
   assUnitVector,
+  ccToKey,
   CCToRC,
   constMultRC,
   getHexDimensions,
@@ -24,18 +25,28 @@ import {
   hexWidth,
   subRCs,
 } from "./geometry.ts";
-import { CC } from "./interfaces/geometry.ts";
 import { textureMap } from "./textures.ts";
 import { range } from "./utils/range.ts";
-import { hoverUnit, store } from "./state/store.ts";
+import { deactivateMenu, hoverUnit, store } from "./state/store.ts";
+import { getBaseActionSpace } from "./actions/actionSpace.ts";
+import { MenuData, selectionIcon } from "./actions/interface.ts";
+import { menuActionSpacers } from "./actions/menues.ts";
 
 // TODO where?
 const sizeMap: { S: number; M: number; L: number } = { S: 0.8, M: 1, L: 1.2 };
+
+const selectionIconMap: { [key in selectionIcon]: string } = {
+  ranged_attack: "hex_selection_ranged_attack",
+  melee_attack: "hex_selection_melee",
+  activated_ability: "hex_selection_ability",
+  generic: "hex_selection",
+};
 
 export const renderMap = (
   app: Application,
   gameState: GameState,
   gameObjectDetails: GameObjectDetails,
+  menu: MenuData | null,
   gameConnection: WebSocket,
 ): Container => {
   // TODO this shouldn't be here
@@ -52,11 +63,11 @@ export const renderMap = (
     hexShape.closePath().fill(color).stroke();
     return hexShape;
   };
-  const getHexMask = (): GraphicsContext => {
+  const getHexMask = (color: FillInput): GraphicsContext => {
     let hexShape = new GraphicsContext().moveTo(...hexVerticeOffsets[0]);
     hexVerticeOffsets.slice(1).forEach((vert) => hexShape.lineTo(...vert));
     hexShape.closePath();
-    hexShape.fill({ alpha: 0 });
+    hexShape.fill(color);
     return hexShape;
   };
   const getDividerFrame = (num: number): GraphicsContext => {
@@ -81,7 +92,8 @@ export const renderMap = (
 
   const visibleHexShape = getHexShape({ color: "447744", alpha: 0 });
   const invisibleHexShape = getHexShape({ color: "black", alpha: 100 });
-  const hexMaskShape = getHexMask();
+  const hexMaskShape = getHexMask({ alpha: 0 });
+  const highlightShape = getHexMask({ alpha: 0.5, color: "blue" });
 
   const dividerFrames = [
     [hexMaskShape],
@@ -101,23 +113,11 @@ export const renderMap = (
     fill: 0xff1010,
     align: "center",
   });
-  const healthTextStyle = new TextStyle({
-    fontFamily: "Arial",
-    fontSize: 20,
-    fill: 0xff1010,
-    align: "center",
-  });
   const primaryHealthIndicatorTextStyle = new TextStyle({
     fontFamily: "Arial",
     fontSize: 26,
     fill: "white",
-    // stroke: "black",
     stroke: { color: "black", width: 2 },
-    // strokeThickness: 2,
-    // miterLimit: 2,
-    // lineJoin: 'round',
-    // strokeMiterLimit: 2,
-    // strokeLineJoin: 'round',
     align: "center",
   });
   const secondaryHealthIndicatorTextStyle = new TextStyle({
@@ -125,19 +125,6 @@ export const renderMap = (
     fontSize: 22,
     fill: "white",
     stroke: { color: "black", width: 2 },
-
-    // stroke: "black",
-    // strokeThickness: 2,
-    // miterLimit: 2,
-    // lineJoin: 'round',
-    // strokeMiterLimit: 2,
-    // strokeLineJoin: 'round',
-    align: "center",
-  });
-  const energyTextStyle = new TextStyle({
-    fontFamily: "Arial",
-    fontSize: 20,
-    fill: 0x2163f3,
     align: "center",
   });
   const largeTextStyle = new TextStyle({
@@ -152,8 +139,6 @@ export const renderMap = (
     fontSize: 25,
     fill: "white",
     align: "center",
-    // stroke: "black",
-    // strokeThickness: 3,
     stroke: { color: "black", width: 3 },
   });
   const ghostStyle = new TextStyle({
@@ -167,84 +152,15 @@ export const renderMap = (
 
   app.stage.addChild(map);
 
-  const ccToKey = (cc: CC): string => `${cc.r},${cc.h}`;
-
-  const unitHexes: { [key: string]: Hex } = Object.fromEntries(
-    gameState.map.hexes
-      .filter((h) => h.unit && h.visible)
-      .map((h) => [h.unit.id, h]),
-  );
-
-  type Action = { type: string; content: { [key: string]: any } };
-  const hexActionMap: { [key: string]: Action[] } = Object.fromEntries(
-    gameState.map.hexes.map((hex) => [ccToKey(hex.cc), []]),
-  );
-
-  const effortTypeMap: { [key: string]: string } = {
-    ranged_attack: "hex_selection_ranged_attack",
-    melee_attack: "hex_selection_melee",
-    activated_ability: "hex_selection_ability",
-  };
-
-  // TODO move this somewhere else
-  if (
-    gameState.decision &&
-    gameState.decision["type"] == "SelectOptionDecisionPoint"
-  ) {
-    for (const [idx, option] of gameState.decision["payload"][
-      "options"
-    ].entries()) {
-      if (option["targetProfile"]["type"] == "OneOfUnits") {
-        for (const [targetIdx, unit] of option["targetProfile"]["values"][
-          "units"
-        ].entries()) {
-          hexActionMap[ccToKey(unitHexes[unit["id"]].cc)].push({
-            type:
-              option.values?.facet?.category in effortTypeMap
-                ? effortTypeMap[option.values?.facet?.category]
-                : "hex_selection",
-            content: {
-              index: idx,
-              target: {
-                index: targetIdx,
-              },
-            },
-          });
-        }
-      } else if (option["targetProfile"]["type"] == "OneOfHexes") {
-        for (const [targetIdx, cc] of option["targetProfile"]["values"][
-          "options"
-        ].entries()) {
-          hexActionMap[ccToKey(cc)].push({
-            type:
-              option.values?.facet?.category in effortTypeMap
-                ? effortTypeMap[option.values?.facet?.category]
-                : "hex_selection",
-            content: {
-              index: idx,
-              target: {
-                index: targetIdx,
-              },
-            },
-          });
-        }
-      } else if (
-        option["targetProfile"]["type"] == "ConsecutiveAdjacentHexes"
-      ) {
-      } else if (
-        option["type"] == "EffortOption" &&
-        option["targetProfile"]["type"] == "NoTarget" &&
-        gameState.activeUnitContext
-      ) {
-        hexActionMap[
-          ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
-        ].push({
-          type: "hex_selection_ability",
-          content: { index: idx, target: null },
-        });
-      }
-    }
-  }
+  const actionSpace = menu
+    ? menuActionSpacers[menu.type](
+        gameState,
+        (body) => gameConnection.send(JSON.stringify(body)),
+        menu,
+      )
+    : getBaseActionSpace(gameState, (body) =>
+        gameConnection.send(JSON.stringify(body)),
+      );
 
   gameState.map.hexes.forEach((hexData) => {
     let realHexPosition = addRCs(CCToRC(hexData.cc), center);
@@ -279,27 +195,41 @@ export const renderMap = (
 
     const actionTriggerZones = [];
 
-    for (const [idx, action] of hexActionMap[ccToKey(hexData.cc)].entries()) {
-      const selectionSprite = new Sprite(textureMap[action.type]);
+    for (const [idx, action] of actionSpace[
+      ccToKey(hexData.cc)
+    ].actions.entries()) {
+      const selectionSprite = new Sprite(
+        textureMap[selectionIconMap[action.type]],
+      );
       selectionSprite.anchor = 0.5;
       selectionSprite.alpha = 0.75;
       hexContainer.addChild(selectionSprite);
       let mask = new Graphics(
-        dividerFrames[hexActionMap[ccToKey(hexData.cc)].length - 1][idx],
+        dividerFrames[actionSpace[ccToKey(hexData.cc)].actions.length - 1][idx],
       );
       hexContainer.addChild(mask);
       selectionSprite.mask = mask;
 
       let triggerZone = new Graphics(
-        dividerFrames[hexActionMap[ccToKey(hexData.cc)].length - 1][idx],
+        dividerFrames[actionSpace[ccToKey(hexData.cc)].actions.length - 1][idx],
       );
-
       triggerZone.eventMode = "static";
       triggerZone.on("pointerdown", (event) => {
         console.log("click", event.button, hexData.cc);
         if (event.button == 0) {
-          gameConnection.send(JSON.stringify(action.content));
+          action.do();
         }
+      });
+      actionTriggerZones.push(triggerZone);
+    }
+
+    // TODO common trigger zone
+    if (menu && !actionSpace[ccToKey(hexData.cc)].actions.length) {
+      let triggerZone = new Graphics(dividerFrames[0][0]);
+      triggerZone.eventMode = "static";
+      triggerZone.on("pointerdown", (event) => {
+        console.log("click", event.button, hexData.cc);
+        store.dispatch(deactivateMenu());
       });
       actionTriggerZones.push(triggerZone);
     }
@@ -550,6 +480,11 @@ export const renderMap = (
       eyeContainer.y = hexHeight / 2 - 40;
       eyeContainer.x = -10;
       hexContainer.addChild(eyeContainer);
+    }
+
+    if (actionSpace[ccToKey(hexData.cc)].highlighted) {
+      let highlight = new Graphics(highlightShape);
+      hexContainer.addChild(highlight);
     }
 
     for (const zone of actionTriggerZones) {

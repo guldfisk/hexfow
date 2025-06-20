@@ -23,6 +23,8 @@ export const CCToRC = (hexCoord: CC): RC => ({
   y: hexSize * ((3 / 2) * hexCoord.r),
 });
 
+export const ccToKey = (cc: CC): string => `${cc.r},${cc.h}`;
+
 export const addRCs = (a: RC, b: RC): RC => ({
   x: a.x + b.x,
   y: a.y + b.y,

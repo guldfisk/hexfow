@@ -416,6 +416,7 @@ class ExplosiveTrigger(TriggerEffect[KillUpkeep]):
 
 
 class Explosive(StaticAbilityFacet):
+    """When this unit dies, it deals 5 aoe damage to each adjacent unit."""
     def create_effects(self) -> None:
         self.register_effects(ExplosiveTrigger(self.owner, self, 5))
 
@@ -726,6 +727,9 @@ class ToxicPresenceTrigger(TriggerEffect[TurnCleanup]):
 
 
 class ToxicPresence(StaticAbilityFacet):
+    """
+    At the end of this units turn it applies 1 poison to each adjacent unit.
+    """
     def create_effects(self) -> None:
         self.register_effects(ToxicPresenceTrigger(self.owner, 1))
 

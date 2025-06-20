@@ -1,6 +1,6 @@
 import { RefObject, useEffect, useRef } from "react";
 import { useAppSelector } from "../state/hooks.ts";
-import { Unit } from "../interfaces/gameState.ts";
+import { GameState, OptionBase, Unit } from "../interfaces/gameState.ts";
 import {
   CostAtom,
   EffortCostSet,
@@ -8,6 +8,8 @@ import {
   UnitDetails,
 } from "../interfaces/gameObjectDetails.ts";
 import { getImageUrl } from "../images.ts";
+import { MenuData } from "../actions/interface.ts";
+import {menuDescribers} from "../actions/menues.ts";
 
 const LogList = ({ logLines }: { logLines: string[] }) => {
   const myRef: RefObject<HTMLDivElement | null> = useRef(null);
@@ -17,7 +19,7 @@ const LogList = ({ logLines }: { logLines: string[] }) => {
     }
   });
   return (
-    <div className="info-window" id="event-log" ref={myRef}>
+    <div className="info-window event-log" id="event-log" ref={myRef}>
       {logLines.map((log, idx) => (
         <p key={idx}>{log}</p>
       ))}
@@ -38,24 +40,33 @@ const effortCostAtomToShort = (cost: CostAtom): string => {
     }
   }
 };
+
 const effortCostToShort = (cost: EffortCostSet): string =>
   cost.atoms.length ? cost.atoms.map(effortCostAtomToShort).join(" ") : "-";
 
 const getFacetStatLine = (facet: FacetDetails): string => {
-  switch (facet.category) {
-    case "melee_attack": {
-      return `cost: ${effortCostToShort(facet.cost)} damage: ${facet.damage}`;
-    }
-    case "ranged_attack": {
-      return `cost: ${effortCostToShort(facet.cost)} damage: ${facet.damage}`;
-    }
-    case "activated_ability": {
-      return `cost: ${effortCostToShort(facet.cost)}`;
-    }
-    case "static_ability": {
-      return "";
-    }
+  const stats: string[] = [];
+
+  if ("combineable" in facet && facet.combineable) {
+    stats.push("combineable");
   }
+  if ("max_activations" in facet && facet.max_activations != 1) {
+    stats.push(
+      facet.max_activations === null
+        ? "unlimited activations"
+        : `x${facet.max_activations} max activations`,
+    );
+  }
+  if ("cost" in facet) {
+    stats.push(`cost: ${effortCostToShort(facet.cost)}`);
+  }
+  if ("damage" in facet) {
+    stats.push(`damage: ${facet.damage}`);
+  }
+  if ("range" in facet) {
+    stats.push(`range: ${facet.range}`);
+  }
+  return stats.join(" ");
 };
 
 const FacetDetailView = ({ facet }: { facet: FacetDetails }) => (
@@ -112,7 +123,58 @@ const UnitDetailsView = ({
   );
 };
 
-export const HUD = () => {
+const DecisionDetailView = ({
+  gameState,
+  connection,
+  menu,
+}: {
+  gameState: GameState | null;
+  connection: WebSocket;
+  menu: MenuData | null;
+}) => {
+  if (!gameState?.decision) {
+    return (
+      <div className="info-window decision-details" id="decision-description">
+        "waiting for opponent"
+      </div>
+    );
+  }
+
+  let button = null;
+
+  if (gameState.decision.type == "SelectOptionDecisionPoint") {
+    const skipIndexes = gameState.decision.payload.options
+      .map((option, idx) => [option, idx] as [OptionBase, number])
+      .filter(([option]) => option.type == "SkipOption")
+      .map(([_, idx]) => idx);
+
+    if (skipIndexes.length) {
+      button = (
+        <button
+          onClick={() => {
+            connection.send(
+              JSON.stringify({ index: skipIndexes[0], target: null }),
+            );
+          }}
+        >
+          Skip
+        </button>
+      );
+    }
+  }
+
+  return (
+    <div className="info-window decision-details" id="decision-description">
+      <div>{menu ? menuDescribers[menu.type](gameState, menu) : gameState.decision.explanation}</div>
+      {button}
+      {/*{gameState.decision*/}
+      {/*  ? JSON.stringify(gameState.decision, null, 4)*/}
+      {/*  : "waiting for opponent"}*/}
+    </div>
+  );
+};
+
+export const HUD = ({ connection }: { connection: WebSocket }) => {
   // TODO fucking LMAO
   const applicationState = useAppSelector((state) => state);
 
@@ -123,9 +185,11 @@ export const HUD = () => {
           <LogList logLines={applicationState.gameState.eventLog} />
         ) : null}
 
-        <div className="info-window" id="decision-description">
-          {JSON.stringify(applicationState?.gameState?.decision, null, 4)}
-        </div>
+        <DecisionDetailView
+          gameState={applicationState.gameState}
+          connection={connection}
+          menu={applicationState.menuData}
+        />
       </div>
 
       <div className={"sidebar sidebar-right"}>

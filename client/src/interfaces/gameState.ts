@@ -1,4 +1,5 @@
 import { CC } from "./geometry.ts";
+import { EffortFacetDetails } from "./gameObjectDetails.ts";
 
 export type Size = "S" | "M" | "L";
 
@@ -43,11 +44,64 @@ export interface ActiveUnitContext {
   movementPoints: number;
 }
 
+export interface BaseDecision {
+  explanation: string;
+  type: string;
+  payload: { [key: string]: any };
+}
+
+export interface TargetProfileBase {
+  type: string;
+  values: { [key: string]: any };
+}
+
+export interface OneOfHexes extends TargetProfileBase {
+  type: "OneOfHexes";
+  values: { options: CC[] };
+}
+
+export interface OneOfUnits extends TargetProfileBase {
+  type: "OneOfUnits";
+  values: { units: { id: string }[] };
+}
+
+export interface NoTarget extends TargetProfileBase {
+  type: "NoTarget";
+  values: {};
+}
+
+export interface NOfUnits extends TargetProfileBase {
+  type: "NOfUnits";
+  values: { units: { id: string }[]; selectCount: number; labels: string[] };
+}
+
+export type TargetProfile = OneOfUnits | NOfUnits | OneOfHexes | NoTarget;
+
+export interface OptionBase {
+  type: string;
+  values: { [key: string]: any };
+  targetProfile: TargetProfile;
+}
+
+export interface EffortOption extends OptionBase {
+  type: "EffortOption";
+  values: { facet: EffortFacetDetails };
+}
+
+export type Option = EffortOption;
+
+export interface SelectOptionDecisionPoint extends BaseDecision {
+  type: "SelectOptionDecisionPoint";
+  payload: { options: Option[] };
+}
+
+export type Decision = SelectOptionDecisionPoint;
+
 export interface GameState {
   player: string;
   round: number;
   map: Map;
   eventLog: string[];
-  decision: { [key: string]: any } | null;
+  decision: Decision | null;
   activeUnitContext: ActiveUnitContext | null;
 }

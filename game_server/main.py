@@ -108,22 +108,22 @@ class Game(Thread):
                     {
                         cc: HexSpec(
                             random.choice(
-                                # [
-                                #     Plains,
-                                # ]
                                 [
                                     Plains,
-                                    Plains,
-                                    Plains,
-                                    Plains,
-                                    Forest,
-                                    Forest,
-                                    Forest,
-                                    Forest,
-                                    # Magma,
-                                    # Hills,
-                                    Water,
                                 ]
+                                # [
+                                #     Plains,
+                                #     Plains,
+                                #     Plains,
+                                #     Plains,
+                                #     Forest,
+                                #     Forest,
+                                #     Forest,
+                                #     Forest,
+                                #     Magma,
+                                #     # Hills,
+                                #     Water,
+                                # ]
                             ),
                             cc.distance_to(CC(0, 0)) <= 1,
                         )
@@ -134,34 +134,28 @@ class Game(Thread):
             GameState.instance = gs
 
             player_units = (
-                [
-                    (creature, point * 2)
-                    for creature, point in zip([WITCH_ENGINE] * 6, NEIGHBOR_OFFSETS)
-                ],
-                # (
-                #     # NOTORIOUS_OUTLAW,
-                #     # INFERNO_TANK,
-                #     # ZONE_MECH,
-                #     # WITCH_ENGINE,
-                #     # LIGHT_ARCHER,
-                #     # LIGHT_ARCHER,
-                #     # GIANT_SLAYER_MOUSE,
-                #     # GNOME_COMMANDO,
-                # ),
+                # [
+                #     (creature, point * 2)
+                #     for creature, point in zip([WITCH_ENGINE] * 6, NEIGHBOR_OFFSETS)
+                # ],
                 (
-                    # OTTER_SCOUT,
-                    # LEGENDARY_WRESTLER,
-                    (RHINO_BEAST, CC(0, 0)),
-                    # LIGHT_ARCHER,
-                    INFERNO_TANK,
+                    # VOID_SPRITE,
+                    # WITCH_ENGINE,
+                    # BOMB_TRUCK,
+                    # NOTORIOUS_OUTLAW,
+                    BULLDOZER,
+                ),
+                (
+                    # (RHINO_BEAST, CC(0, 0)),
                     LIGHT_ARCHER,
                     # LIGHT_ARCHER,
-                    # PESTILENCE_PRIEST,
+                    # BLOOD_CONDUIT,
+                    # DIAMOND_GOLEM,
                 ),
             )
 
-            # use_random_units = False
-            use_random_units = True
+            use_random_units = False
+            # use_random_units = True
 
             if use_random_units:
                 min_random_unit_quantity = 7

@@ -3,7 +3,7 @@ from game.units.facets.activated_abilities import (
     Bloom,
     Grow,
     HealBeam,
-    Suicide,
+    NothingStopsTheMail,
     InducePanic,
     LeapFrog,
     BatonPass,
@@ -25,6 +25,7 @@ from game.units.facets.activated_abilities import (
     Showdown,
     SmokeCanister,
     GreaseTheGears,
+    VitalityTransfer,
 )
 from game.units.facets.attacks import (
     Peck,
@@ -48,7 +49,7 @@ from game.units.facets.attacks import (
     SerratedBeak,
     Inject,
     RoundhouseKick,
-    Sting,
+    EtherealSting,
     Stinger,
     GlassFist,
     DiamondFist,
@@ -305,7 +306,12 @@ MEDIC = UnitBlueprint(
 
 
 BOMB_TRUCK = UnitBlueprint(
-    "Bomb Truck", health=5, speed=3, sight=1, facets=[Explosive, Suicide], price=6
+    "Bomb Truck",
+    health=5,
+    speed=3,
+    sight=1,
+    facets=[NothingStopsTheMail, Explosive],
+    price=6,
 )
 
 
@@ -537,12 +543,12 @@ GIANT_SLAYER_MOUSE = UnitBlueprint(
 
 VOID_SPRITE = UnitBlueprint(
     "Void Sprite",
-    health=5,
+    health=3,
     speed=1,
     sight=2,
-    energy=7,
+    energy=6,
     size=Size.SMALL,
-    facets=[Sting, Jaunt],
+    facets=[EtherealSting, Jaunt],
     price=7,
 )
 
@@ -808,3 +814,14 @@ ZONE_MECH = UnitBlueprint(
 #     no movement
 #     applies linked status gate to both hexes for 3 rounds
 #         units on this hex can move to linked hex as normal move action
+
+
+BLOOD_CONDUIT = UnitBlueprint(
+    "Blood Conduit",
+    health=3,
+    speed=3,
+    sight=2,
+    energy=3,
+    facets=[VitalityTransfer],
+    price=4,
+)

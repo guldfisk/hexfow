@@ -19,7 +19,13 @@ from typing import Mapping
 
 from bidict import bidict
 
-from events.eventsystem import Modifiable, ModifiableAttribute, modifiable, ES, ModifiableMeta
+from events.eventsystem import (
+    Modifiable,
+    ModifiableAttribute,
+    modifiable,
+    ES,
+    ModifiableMeta,
+)
 from game.decisions import (
     DecisionPoint,
     Option,
@@ -117,6 +123,15 @@ class _FacetMeta(ModifiableMeta):
         attributes: dict[str, Any],
         **kwargs: Any,
     ) -> type:
+        if ABC not in bases:
+            if "identifier" not in attributes:
+                attributes["identifier"] = "_".join(
+                    s.lower() for s in re.findall("[A-Z][^A-Z]+|[A-Z]+(?![^A-Z])", name)
+                )
+            if "name" not in attributes:
+                attributes["name"] = " ".join(
+                    re.findall("[A-Z][^A-Z]+|[A-Z]+(?![^A-Z])", name)
+                )
         cls = super().__new__(metacls, name, bases, attributes, **kwargs)
         if ABC not in bases and "description" not in attributes and cls.__doc__:
             cls.description = "\n".join(
@@ -130,6 +145,8 @@ class Facet(HasStatuses, Modifiable, ABC, metaclass=_FacetMeta):
     # TODO hmm
     # name: ClassVar[str]
     # TODO hm
+    identifier: ClassVar[str]
+    name: ClassVar[str]
     category: ClassVar[str] = "not defined"
     description: ClassVar[str | None] = None
     flavor: ClassVar[str | None] = None
@@ -147,7 +164,8 @@ class Facet(HasStatuses, Modifiable, ABC, metaclass=_FacetMeta):
     @classmethod
     def serialize(cls) -> JSON:
         return {
-            "name": cls.__name__,
+            "identifier": cls.identifier,
+            "name": cls.name,
             "category": cls.category,
             "description": cls.description,
         }
@@ -308,7 +326,12 @@ class EffortFacet(Facet, Modifiable):
 
     @classmethod
     def serialize(cls) -> JSON:
-        return {**super().serialize(), "cost": cls.get_cost_set().serialize()}
+        return {
+            **super().serialize(),
+            "cost": cls.get_cost_set().serialize(),
+            "combineable": cls.combinable,
+            "max_activations": cls.max_activations,
+        }
 
 
 class AttackFacet(EffortFacet): ...
@@ -411,7 +434,7 @@ class RangedAttackFacet(SingleTargetAttackFacet):
 
     @classmethod
     def serialize(cls) -> JSON:
-        return {**super().serialize(), "range": cls.get_cost_set().serialize()}
+        return {**super().serialize(), "range": cls.range}
 
 
 class ActivatedAbilityFacet(EffortFacet, Generic[O]):
@@ -793,6 +816,27 @@ class OneOfUnits(TargetProfile[Unit]):
 
     def parse_response(self, v: Any) -> Unit:
         return self.units[v["index"]]
+
+
+@dataclasses.dataclass
+class NOfUnits(TargetProfile[list[Unit]]):
+    units: list[Unit]
+    select_count: int
+    labels: list[str]
+
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        return {
+            "units": [{"id": context.id_map.get_id_for(unit)} for unit in self.units],
+            "select_count": self.select_count,
+            "labels": self.labels,
+        }
+
+    def parse_response(self, v: Any) -> list[Unit]:
+        indexes = v["indexes"]
+        # TODO nice validation LMAO
+        assert len(indexes) == self.select_count
+        assert len(indexes) == len(set(indexes))
+        return [self.units[idx] for idx in indexes]
 
 
 class DurationStatusMixin:

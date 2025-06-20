@@ -21,6 +21,8 @@ from game.core import (
     SingleHexTargetActivatedAbility,
     HexStatusSignature,
     DamageSignature,
+    line_of_sight_obstructed_for_unit,
+    NOfUnits,
 )
 from game.decisions import TargetProfile, O
 from game.events import (
@@ -95,7 +97,9 @@ class GreaseTheGears(SingleAllyActivatedAbility):
             GS().active_unit_context.movement_points += movement_bonus
 
 
-class Suicide(NoTargetActivatedAbility):
+class NothingStopsTheMail(NoTargetActivatedAbility):
+    """Kills this unit."""
+
     def perform(self, target: None) -> None:
         ES.resolve(Kill(self.owner))
 
@@ -575,3 +579,42 @@ class FlameWall(SingleHexTargetActivatedAbility):
                         HexStatusSignature(BurningTerrain, stacks=2, duration=3),
                     )
                 )
+
+
+class VitalityTransfer(ActivatedAbilityFacet):
+    """
+    Target two allied units within 3 range LoS.
+    Transfers health from the second to the first unit.
+    Amount transferred is the minimum of 3, how much the recipient is missing, and how much the donor can give without dying.
+    """
+
+    cost = MovementCost(1) | EnergyCost(2)
+
+    def get_target_profile(self) -> TargetProfile[list[Unit]] | None:
+        if (
+            len(
+                # TODO some common logic for this trash
+                units := [
+                    unit
+                    for unit in GS().map.get_units_within_range_off(self.owner, 3)
+                    if unit.controller == self.owner.controller
+                    and unit.is_visible_to(self.owner.controller)
+                    and not line_of_sight_obstructed_for_unit(
+                        self.owner,
+                        GS().map.position_off(self.owner),
+                        GS().map.position_off(unit),
+                    )
+                ]
+            )
+            >= 2
+        ):
+            return NOfUnits(units, 2, ["select recipient", "select donor"])
+
+    def perform(self, target: list[Unit]) -> None:
+        recipient, donor = target
+        available_health = min(donor.health - 1, recipient.damage, 3)
+        if available_health:
+            # TODO yikes should be an event, but unclear what it should be,
+            #  since we don't want it to be damage i think.
+            donor.damage += available_health
+            ES.resolve(Heal(recipient, available_health))

@@ -11,7 +11,7 @@ from game.core import (
 from game.events import Damage, ApplyStatus
 from game.statuses import Staggered, Stumbling, Parasite, BellStruck
 from game.units.facets.hooks import AdjacencyHook
-from game.values import Size
+from game.values import Size, DamageType
 
 
 class Peck(MeleeAttackFacet):
@@ -182,8 +182,11 @@ class Inject(MeleeAttackFacet):
         )
 
 
-class Sting(MeleeAttackFacet):
+class EtherealSting(MeleeAttackFacet):
+    """Deals pure damage."""
+
     damage = 2
+    damage_type = DamageType.PURE
 
 
 class RoundhouseKick(MeleeAttackFacet):

@@ -1,5 +1,6 @@
 export interface BaseFacetDetails {
   name: string;
+  identifier: string;
   category: string;
   description: string | null;
 }
@@ -27,11 +28,13 @@ export interface EffortCostSet {
   atoms: CostAtom[];
 }
 
-export interface EffortFacetDetails extends BaseFacetDetails {
+export interface EffortFacetDetailsBase extends BaseFacetDetails {
   cost: EffortCostSet;
+  combineable: boolean;
+  max_activations: number | null;
 }
 
-interface SingleTargetAttackDetails extends EffortFacetDetails {
+interface SingleTargetAttackDetails extends EffortFacetDetailsBase {
   damage: number;
   ap: number;
 }
@@ -44,7 +47,7 @@ export interface RangedAttackFacetDetails extends SingleTargetAttackDetails {
   range: number;
 }
 
-export interface ActivatedAbilityFacetDetails extends EffortFacetDetails {
+export interface ActivatedAbilityFacetDetails extends EffortFacetDetailsBase {
   category: "activated_ability";
 }
 
@@ -52,11 +55,12 @@ export interface StaticAbilityFacetDetails extends BaseFacetDetails {
   category: "static_ability";
 }
 
-export type FacetDetails =
+export type EffortFacetDetails =
   | MeleeAttackFacetDetails
   | RangedAttackFacetDetails
-  | ActivatedAbilityFacetDetails
-  | StaticAbilityFacetDetails;
+  | ActivatedAbilityFacetDetails;
+
+export type FacetDetails = EffortFacetDetails | StaticAbilityFacetDetails;
 
 export interface UnitDetails {
   identifier: string;

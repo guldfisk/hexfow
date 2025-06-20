@@ -11,6 +11,12 @@ import { HUD } from "./hud/hud.tsx";
 import { Provider } from "react-redux";
 import { receiveGameState, renderedGameState, store } from "./state/store.ts";
 
+const gameConnection = new WebSocket("ws://localhost:8765/ws");
+gameConnection.onmessage = (event) => {
+  console.log(recursiveCamelCase(JSON.parse(event.data)));
+  store.dispatch(receiveGameState(recursiveCamelCase(JSON.parse(event.data))));
+};
+
 async function main() {
   const app = new Application();
   await app.init({ resizeTo: window, antialias: false });
@@ -21,14 +27,6 @@ async function main() {
   app.stage.addChild(map);
 
   await loadGameTextures();
-
-  const gameConnection = new WebSocket("ws://localhost:8765/ws");
-  gameConnection.onmessage = (event) => {
-    console.log(recursiveCamelCase(JSON.parse(event.data)));
-    store.dispatch(
-      receiveGameState(recursiveCamelCase(JSON.parse(event.data))),
-    );
-  };
 
   let isDragging = false;
   let worldTranslation = { x: 0, y: 0 };
@@ -113,6 +111,7 @@ async function main() {
         app,
         state.gameState,
         state.gameObjectDetails,
+        state.menuData,
         gameConnection,
       );
       app.stage.addChild(map);
@@ -128,7 +127,7 @@ await main();
 createRoot(document.getElementById("hud")!).render(
   <StrictMode>
     <Provider store={store}>
-      <HUD />
+      <HUD connection={gameConnection}/>
     </Provider>
   </StrictMode>,
 );

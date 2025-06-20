@@ -2,9 +2,9 @@ FROM python:3.11-slim
 
 RUN apt update && apt install nodejs npm -y
 
-COPY vite_frontend/hex-frontend/package.json /code/vite_frontend/hex-frontend/package.json
-COPY vite_frontend/hex-frontend/package-lock.json /code/vite_frontend/hex-frontend/package-lock.json
-WORKDIR code/vite_frontend/hex-frontend
+COPY client/package.json /code/client/package.json
+COPY client/package-lock.json /code/client/package-lock.json
+WORKDIR code/client
 RUN npm install
 
 WORKDIR /code
