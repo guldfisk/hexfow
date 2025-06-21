@@ -23,6 +23,7 @@ from game.core import (
     DamageSignature,
     line_of_sight_obstructed_for_unit,
     NOfUnits,
+    HexHexes,
 )
 from game.decisions import TargetProfile, O
 from game.events import (
@@ -118,7 +119,12 @@ class InducePanic(SingleEnemyActivatedAbility):
         )
 
 
-class LeapFrog(SingleTargetActivatedAbility):
+class Vault(SingleTargetActivatedAbility):
+    """
+    Moves this unit to the other side of target adjacent unit. If it did, and the target unit was
+    an enemy, apply staggered to it.
+    """
+
     cost = MovementCost(1) | EnergyCost(1)
     range = 1
     combinable = True
@@ -141,7 +147,6 @@ class LeapFrog(SingleTargetActivatedAbility):
                 )
                 and target.controller != self.owner.controller
             ):
-
                 ES.resolve(
                     ApplyStatus(
                         unit=target,
@@ -492,15 +497,17 @@ class GrantCharm(SingleAllyActivatedAbility):
         )
 
 
-# TODO should be an aoe target
-class ChokingSoot(SingleHexTargetActivatedAbility):
-    range = 2
+class ChokingSoot(ActivatedAbilityFacet[list[Hex]]):
     cost = MovementCost(1) | EnergyCost(4)
-    requires_los = False
-    requires_vision = False
 
-    def perform(self, target: Hex) -> None:
-        for _hex in GS().map.get_hexes_within_range_off(target, 1):
+    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
+        if hexes := [
+            _hex for _hex in GS().map.get_hexes_within_range_off(self.owner, 2)
+        ]:
+            return HexHexes(hexes, 1)
+
+    def perform(self, target: list[Hex]) -> None:
+        for _hex in target:
             ES.resolve(
                 ApplyHexStatus(
                     _hex, self.owner.controller, HexStatusSignature(Soot, duration=2)
@@ -615,3 +622,57 @@ class VitalityTransfer(ActivatedAbilityFacet):
             #  since we don't want it to be damage i think.
             donor.damage += available_health
             ES.resolve(Heal(recipient, available_health))
+
+
+class Shove(SingleTargetActivatedAbility):
+    """
+    Moves target adjacent unit one space away from this unit. If it is staggered, this unit gains 1 movement point.
+    """
+
+    cost = MovementCost(1) | EnergyCost(2)
+    range = 1
+    combinable = True
+
+    def can_target_unit(self, unit: Unit) -> bool:
+        return unit != self.owner
+
+    def perform(self, target: Unit) -> None:
+        target_position = GS().map.position_off(target)
+        ES.resolve(
+            MoveUnit(
+                target,
+                GS().map.hexes.get(
+                    target_position
+                    + (target_position - GS().map.position_off(self.owner))
+                ),
+            )
+        )
+        if any(isinstance(status, Staggered) for status in target.statuses):
+            GS().active_unit_context.movement_points += 1
+
+
+class Poof(ActivatedAbilityFacet[Hex]):
+    """Applies Smoke to the current position of this unit for 1 round, and moves this unit to target adjacent hex."""
+
+    cost = EnergyCost(2)
+    combinable = True
+
+    def get_target_profile(self) -> TargetProfile[Hex] | None:
+        # TODO should be able to target own space?
+        if hexes := list(
+            h
+            for h in GS().map.get_neighbors_off(self.owner)
+            if not GS().vision_map[self.owner.controller][h.position]
+            or h.can_move_into(self)
+        ):
+            return OneOfHexes(hexes)
+
+    def perform(self, target: Hex) -> None:
+        ES.resolve(
+            ApplyHexStatus(
+                GS().map.hex_off(self.owner),
+                self.owner.controller,
+                HexStatusSignature(Smoke, duration=1),
+            )
+        )
+        ES.resolve(MoveUnit(self.owner, target))

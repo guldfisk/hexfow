@@ -7,15 +7,20 @@ infrastructure
     lobby system
 
 game functionality
-    hover detail view
+    hover detail view for
+        terrain
+        statuses
+    related statuses in unit detail view
+    current statuses in unit detail view
     game log
     multi action selection menu ui
-    aoe selection ui
+    radiating line menu
     elevation
     status sources + controller
     vision ghosts
     chess clock
     victory points/checking
+    round counter
     nice to have
         dispells
         hidden statuses
@@ -37,6 +42,7 @@ short term
     shrubs
     common effects
     look into pixi viewport
+    update to size/controller presentation
     maybe horror spawns should be ephemeral
     terror/terrified/panic debuff names
     kill source

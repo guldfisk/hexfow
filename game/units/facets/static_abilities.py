@@ -46,6 +46,8 @@ from game.events import (
     ApplyStatus,
     TurnCleanup,
     SufferDamage,
+    ActionUpkeep,
+    ActionCleanup,
 )
 from game.map.terrain import Water
 from game.player import Player
@@ -55,6 +57,7 @@ from game.statuses import (
     MortallyWounded,
     Poison,
     Burn,
+    AllInJest,
 )
 from game.values import DamageType, Resistance
 
@@ -292,6 +295,7 @@ class PerTurnMovePenaltyIgnoreReplacement(ReplacementEffect[MovePenalty]):
 
 class TerrainSavvy(StaticAbilityFacet):
     """Ignores the first movement penalty each turn."""
+
     def create_effects(self) -> None:
         self.register_effects(PerTurnMovePenaltyIgnoreReplacement(self.owner, 1))
 
@@ -417,6 +421,7 @@ class ExplosiveTrigger(TriggerEffect[KillUpkeep]):
 
 class Explosive(StaticAbilityFacet):
     """When this unit dies, it deals 5 aoe damage to each adjacent unit."""
+
     def create_effects(self) -> None:
         self.register_effects(ExplosiveTrigger(self.owner, self, 5))
 
@@ -730,6 +735,7 @@ class ToxicPresence(StaticAbilityFacet):
     """
     At the end of this units turn it applies 1 poison to each adjacent unit.
     """
+
     def create_effects(self) -> None:
         self.register_effects(ToxicPresenceTrigger(self.owner, 1))
 
@@ -768,3 +774,73 @@ class WaterTerrainProtectionModifier(
 class Diver(StaticAbilityFacet):
     def create_effects(self) -> None:
         self.register_effects(WaterTerrainProtectionModifier(self.owner, 1))
+
+
+@dataclasses.dataclass(eq=False)
+class ScurryInTheShadowsModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.speed
+
+    unit: Unit
+    amount: int
+
+    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+        return obj == self.unit and not any(
+            player != self.unit.controller and self.unit.is_visible_to(player)
+            for player in GS().turn_order.players
+        )
+
+    def modify(self, obj: Unit, request: None, value: int) -> int:
+        return value + self.amount
+
+
+class ScurryInTheShadows(StaticAbilityFacet):
+    """
+    As long as no enemy can see this unit, it has +2 speed.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(ScurryInTheShadowsModifier(self.owner, 2))
+
+
+@dataclasses.dataclass(eq=False)
+class JukeAndJiveTrigger(TriggerEffect[ActionCleanup]):
+    priority: ClassVar[int] = 0
+    _visible: bool | None = dataclasses.field(init=False, default=None)
+
+    unit: Unit
+
+    @hook_on(ActionUpkeep)
+    def on_turn_upkeep(self, event: ActionUpkeep) -> None:
+        if event.unit == self.unit:
+            self._visible = any(
+                player != self.unit.controller and self.unit.is_visible_to(player)
+                for player in GS().turn_order.players
+            )
+
+    def should_trigger(self, event: ActionCleanup) -> bool:
+        return (
+            event.unit == self.unit
+            and any(
+                player != self.unit.controller and self.unit.is_visible_to(player)
+                for player in GS().turn_order.players
+            )
+            != self._visible
+        )
+
+    def resolve(self, event: ActionCleanup) -> None:
+        ES.resolve(
+            ApplyStatus(
+                self.unit, self.unit.controller, StatusSignature(AllInJest, stacks=1)
+            )
+        )
+
+
+class JukeAndJive(StaticAbilityFacet):
+    """
+    At the end of each of this units actions, if it isn't visible to the enemy, and it was at the
+    beginning of it's action, or vice versa, it gains a stack of All In Jest.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(JukeAndJiveTrigger(self.owner))

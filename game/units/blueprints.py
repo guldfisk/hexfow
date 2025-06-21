@@ -5,7 +5,7 @@ from game.units.facets.activated_abilities import (
     HealBeam,
     NothingStopsTheMail,
     InducePanic,
-    LeapFrog,
+    Vault,
     BatonPass,
     SummonScarab,
     Sweep,
@@ -26,6 +26,8 @@ from game.units.facets.activated_abilities import (
     SmokeCanister,
     GreaseTheGears,
     VitalityTransfer,
+    Shove,
+    Poof,
 )
 from game.units.facets.attacks import (
     Peck,
@@ -61,6 +63,8 @@ from game.units.facets.attacks import (
     SnappingBeak,
     OtterBite,
     HammerCannon,
+    ScratchAndBite,
+    Shiv,
 )
 from game.units.facets.static_abilities import (
     Prickly,
@@ -86,6 +90,8 @@ from game.units.facets.static_abilities import (
     ToxicPresence,
     FlameResistant,
     Diver,
+    ScurryInTheShadows,
+    JukeAndJive,
 )
 from game.values import Size
 
@@ -321,7 +327,7 @@ CHAINSAW_SADIST = UnitBlueprint(
     speed=3,
     sight=2,
     facets=[Chainsaw, FightFlightFreeze, GrizzlyMurderer],
-    price=10,
+    price=13,
 )
 
 
@@ -390,8 +396,19 @@ EFFORTLESS_ATHLETE = UnitBlueprint(
     speed=3,
     sight=2,
     energy=4,
-    facets=[RoundhouseKick, LeapFrog, BatonPass, TerrainSavvy],
+    facets=[RoundhouseKick, Vault, BatonPass, TerrainSavvy],
     price=8,
+)
+
+
+CAPRICIOUS_TRICKSTER = UnitBlueprint(
+    "Capricious Trickster",
+    health=6,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[Shiv, Vault, Shove, Poof, JukeAndJive],
+    price=11,
 )
 
 # anti-tank mine {1p} x2
@@ -824,4 +841,16 @@ BLOOD_CONDUIT = UnitBlueprint(
     energy=3,
     facets=[VitalityTransfer],
     price=4,
+)
+
+
+RAT_SCOUT = UnitBlueprint(
+    "Rat Scout",
+    health=4,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    facets=[ScratchAndBite, ScurryInTheShadows],
+    price=4,
+    max_count=2,
 )

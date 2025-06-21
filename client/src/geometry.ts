@@ -38,6 +38,7 @@ export const addRCs = (a: RC, b: RC): RC => ({
   x: a.x + b.x,
   y: a.y + b.y,
 });
+
 export const addCCs = (a: CC, b: CC): CC => ({
   r: a.r + b.r,
   h: a.h + b.h,
@@ -47,6 +48,21 @@ export const subRCs = (a: RC, b: RC): RC => ({
   x: a.x - b.x,
   y: a.y - b.y,
 });
+
+export const subCCs = (a: CC, b: CC): CC => ({
+  r: a.r - b.r,
+  h: a.h - b.h,
+});
+
+export const ccDistance = (a: CC, b: CC): number => {
+  const difference = subCCs(a, b);
+  return (
+    (Math.abs(difference.r) +
+      Math.abs(difference.r + difference.h) +
+      Math.abs(difference.h)) /
+    2
+  );
+};
 
 export const asUnitVector = (rc: RC) =>
   constDivRc(rc, Math.sqrt(rc.x ** 2 + rc.y ** 2));

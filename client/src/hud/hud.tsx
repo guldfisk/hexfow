@@ -57,7 +57,7 @@ const getFacetStatLine = (facet: FacetDetails): string => {
         : `x${facet.max_activations} max activations`,
     );
   }
-  if ("cost" in facet) {
+  if ("cost" in facet && facet.cost.atoms.length) {
     stats.push(`cost: ${effortCostToShort(facet.cost)}`);
   }
   if ("damage" in facet) {

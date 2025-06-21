@@ -255,17 +255,18 @@ class Stumbling(UnitStatus):
 
 # TODO maybe this can be merged with the terrified modifier?
 @dataclasses.dataclass(eq=False)
-class TheyVeGotASteelChairModifier(StateModifierEffect[Unit, None, int]):
+class UnitAttackPowerAddModifier(StateModifierEffect[Unit, None, int]):
     priority: ClassVar[int] = 1
     target: ClassVar[object] = Unit.attack_power
 
     unit: Unit
+    amount: int
 
     def should_modify(self, obj: Unit, request: None, value: int) -> bool:
         return obj == self.unit
 
     def modify(self, obj: Unit, request: None, value: int) -> int:
-        return value + 2
+        return value + self.amount
 
 
 class TheyVeGotASteelChair(UnitStatus):
@@ -275,11 +276,11 @@ class TheyVeGotASteelChair(UnitStatus):
         return True
 
     def create_effects(self, by: Player) -> None:
-        self.register_effects(TheyVeGotASteelChairModifier(self.parent))
+        self.register_effects(UnitAttackPowerAddModifier(self.parent, 2))
 
 
 @dataclasses.dataclass(eq=False)
-class StaggeredTrigger(TriggerEffect[Turn]):
+class TurnExpiringStatusTrigger(TriggerEffect[Turn]):
     priority: ClassVar[int] = 0
 
     status: UnitStatus
@@ -295,7 +296,36 @@ class Staggered(UnitStatus):
         return True
 
     def create_effects(self, by: Player) -> None:
-        self.register_effects(StaggeredTrigger(self))
+        self.register_effects(TurnExpiringStatusTrigger(self))
+
+
+# TODO merge
+@dataclasses.dataclass(eq=False)
+class StatusUnitAttackPowerAddModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.attack_power
+
+    status: UnitStatus
+
+    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+        return obj == self.status.parent
+
+    def modify(self, obj: Unit, request: None, value: int) -> int:
+        return value + self.status.stacks
+
+
+class AllInJest(UnitStatus):
+    default_intention = StatusIntention.BUFF
+
+    def merge(self, incoming: Self) -> bool:
+        if incoming.stacks:
+            self.stacks += incoming.stacks
+        return True
+
+    def create_effects(self, by: Player) -> None:
+        self.register_effects(
+            TurnExpiringStatusTrigger(self), StatusUnitAttackPowerAddModifier(self)
+        )
 
 
 @dataclasses.dataclass(eq=False)

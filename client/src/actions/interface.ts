@@ -1,4 +1,9 @@
-import { ConsecutiveAdjacentHexes, NOfUnits } from "../interfaces/gameState.ts";
+import {
+  ConsecutiveAdjacentHexes,
+  HexHexes,
+  NOfUnits,
+} from "../interfaces/gameState.ts";
+import { CC } from "../interfaces/geometry.ts";
 
 export type selectionIcon =
   | "ranged_attack"
@@ -41,4 +46,11 @@ export interface ConsecutiveAdjacentHexesMenu extends BaseMenuData {
   hovering: number | null;
 }
 
-export type MenuData = NOfUnitsMenu | ConsecutiveAdjacentHexesMenu;
+export interface HexHexesMenu extends BaseMenuData {
+  type: "HexHexes";
+  optionIndex: number;
+  targetProfile: HexHexes;
+  hovering: CC | null;
+}
+
+export type MenuData = NOfUnitsMenu | ConsecutiveAdjacentHexesMenu | HexHexesMenu;

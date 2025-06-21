@@ -393,6 +393,10 @@ class MeleeAttackFacet(SingleTargetAttackFacet):
     def get_cost(self) -> EffortCostSet:
         return (self.cost or EffortCostSet()) | MovementCost(1)
 
+    # TODO should prob be modifiable.
+    def should_follow_up(self) -> bool:
+        return True
+
 
 # TODO where should logic for these be?
 def is_vision_obstructed_for_unit_at(unit: Unit, cc: CC) -> bool:
@@ -1144,6 +1148,24 @@ class ConsecutiveAdjacentHexes(TargetProfile[list[Hex]]):
         # TODO some sorta standardized error for this. just need actual validation
         #  general.
         raise ValueError("invalid response")
+
+
+# TODO terrible name
+@dataclasses.dataclass
+class HexHexes(TargetProfile[list[Hex]]):
+    centers: list[Hex]
+    radius: int
+
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        return {
+            "centers": [_hex.position.serialize() for _hex in self.centers],
+            "radius": self.radius,
+        }
+
+    def parse_response(self, v: Any) -> list[Hex]:
+        return list(
+            GS().map.get_hexes_within_range_off(self.centers[v["index"]], self.radius)
+        )
 
 
 @dataclasses.dataclass

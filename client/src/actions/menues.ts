@@ -3,10 +3,11 @@ import { getUnitsOfHexes } from "./actionSpace.ts";
 import {
   ActionSpace,
   ConsecutiveAdjacentHexesMenu,
+  HexHexesMenu,
   MenuData,
   NOfUnitsMenu,
 } from "./interface.ts";
-import { ccToKey, getNeighborsOffCC } from "../geometry.ts";
+import { ccDistance, ccToKey, getNeighborsOffCC } from "../geometry.ts";
 import { activateMenu, store } from "../state/store.ts";
 import { mod, range } from "../utils/range.ts";
 
@@ -80,7 +81,6 @@ const getConsecutiveAdjacentHexesActionSpace = (
           menu.targetProfile.values.armLength + 1,
         ).map((v) => mod(v + menu.hovering, options.length))
       : [];
-  console.log(highlighted);
 
   for (const [idx, option] of options.entries()) {
     actionSpace[ccToKey(option)] = {
@@ -107,6 +107,53 @@ const getConsecutiveAdjacentHexesDescription = (
   return "select aoe";
 };
 
+const getHexHexesActionSpace = (
+  gameState: GameState,
+  takeAction: (body: { [key: string]: any }) => void,
+  menu: HexHexesMenu,
+): ActionSpace => {
+  const actionSpace: ActionSpace = Object.fromEntries(
+    gameState.map.hexes.map((hex) => [
+      ccToKey(hex.cc),
+      {
+        actions: [],
+        highlighted:
+          menu.hovering &&
+          ccDistance(menu.hovering, hex.cc) <= menu.targetProfile.values.radius,
+      },
+    ]),
+  );
+
+  for (const [targetIdx, cc] of menu.targetProfile.values.centers.entries()) {
+    actionSpace[ccToKey(cc)] = {
+      actions: [
+        {
+          type: "aoe",
+          do: () =>
+            takeAction({
+              index: menu.optionIndex,
+              target: {
+                index: targetIdx,
+              },
+            }),
+        },
+      ],
+      highlighted: actionSpace[ccToKey(cc)].highlighted,
+      hoverTrigger: () => {
+        store.dispatch(activateMenu({ ...menu, hovering: cc }));
+      },
+    };
+  }
+  return actionSpace;
+};
+
+const getHexHexesDescription = (
+  gameState: GameState,
+  menu: HexHexesMenu,
+): string => {
+  return "select aoe";
+};
+
 export const menuActionSpacers: {
   [key: string]: (
     gameState: GameState,
@@ -116,6 +163,7 @@ export const menuActionSpacers: {
 } = {
   NOfUnits: getNOfUnitsActionSpace,
   ConsecutiveAdjacentHexes: getConsecutiveAdjacentHexesActionSpace,
+  HexHexes: getHexHexesActionSpace,
 };
 
 export const menuDescribers: {
@@ -123,4 +171,5 @@ export const menuDescribers: {
 } = {
   NOfUnits: getNOfUnitsDescription,
   ConsecutiveAdjacentHexes: getConsecutiveAdjacentHexesDescription,
+  HexHexes: getHexHexesDescription,
 };

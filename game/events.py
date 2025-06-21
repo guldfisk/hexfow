@@ -202,7 +202,10 @@ class MeleeAttackAction(Event[None]):
         )
         ES.resolve(self.branch(SimpleAttack))
         ES.resolve(CheckAlive(self.defender))
-        if defender_position.can_move_into(self.attacker):
+        if (
+            defender_position.can_move_into(self.attacker)
+            and self.attack.should_follow_up()
+        ):
             ES.resolve(MoveUnit(self.attacker, defender_position))
         self.attack.get_cost().pay(GS().active_unit_context)
         ES.resolve(move_out_penalty)
@@ -405,6 +408,14 @@ class ActionUpkeep(Event[None]):
     def resolve(self) -> None: ...
 
 
+# TODO IDK
+@dataclasses.dataclass()
+class ActionCleanup(Event[None]):
+    unit: Unit
+
+    def resolve(self) -> None: ...
+
+
 @dataclasses.dataclass
 class Turn(Event[bool]):
     unit: Unit
@@ -495,6 +506,9 @@ class Turn(Event[bool]):
             else:
                 raise ValueError("blah")
 
+            # TODO yikes. need this right now for juke and jive, not sure what the plan is.
+            GS().update_vision()
+            ES.resolve(ActionCleanup(unit=self.unit))
             do_state_based_check()
             context.has_acted = True
 
@@ -616,6 +630,7 @@ class Round(Event[None]):
                     for turn in ES.resolve(Turn(decision.target)).iter_type(Turn)
                 ):
                     last_action_timestamps[player] = timestamp
+                    do_state_based_check()
             elif isinstance(decision.option, SkipOption):
                 skipped_players.add(player)
                 round_skipped_players.add(player)

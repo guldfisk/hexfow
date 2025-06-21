@@ -199,6 +199,19 @@ class RoundhouseKick(MeleeAttackFacet):
             return 1
 
 
+class ScratchAndBite(MeleeAttackFacet):
+    damage = 2
+
+
+class Shiv(MeleeAttackFacet):
+    """Doesn't follow up."""
+    damage = 2
+    combinable = True
+
+    def should_follow_up(self) -> bool:
+        return False
+
+
 # # bee swarm {-}
 # # health 2, movement 3, sight 1, S
 # # sting

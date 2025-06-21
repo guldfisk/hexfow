@@ -80,7 +80,18 @@ export interface ConsecutiveAdjacentHexes extends TargetProfileBase {
   values: { adjacentTo: CC; armLength: number };
 }
 
-export type TargetProfile = OneOfUnits | NOfUnits | OneOfHexes | NoTarget | ConsecutiveAdjacentHexes;
+export interface HexHexes extends TargetProfileBase {
+  type: "HexHexes";
+  values: { centers: CC[]; radius: number };
+}
+
+export type TargetProfile =
+  | OneOfUnits
+  | NOfUnits
+  | OneOfHexes
+  | NoTarget
+  | ConsecutiveAdjacentHexes
+  | HexHexes;
 
 export interface OptionBase {
   type: string;

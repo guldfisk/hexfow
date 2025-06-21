@@ -269,6 +269,13 @@ psionic synchronization
     target allied unit 2 range NLoS
     activates target
 
+rat scout {4w} x2
+health 4, movement 3, sight 2, S
+scratch and bite
+    melee attack 2 damage
+scurry in the shadows
+    +2 movement as long as the enemy can't see this unit
+
 sparrowhawk {4u} x1
 health 3, movement 3, sight 2, S
 dive
@@ -1007,7 +1014,7 @@ purifying nova
 
 effortless athlete {8wwp} x1
 health 6, movement 3, sight 2, energy 4, M
-leap-frog
+vault
     multi unlimited activations combinable ability 1 energy
     -1 movement, target adjacent unit
     move this unit to the opposite side of the targeted unit
@@ -1540,6 +1547,34 @@ petrify
     target enemy unit 2 range LoS, -2 movement
     apply 1 stun
 - unit melee attacking this unit suffers 1 poison
+
+capricious trickster {10wwp} x1
+health 6, movement 3, sight 2, energy 5, M
+shiv
+    melee attack
+    2 damage
+vault
+    multi unlimited activations combinable ability 1 energy
+    -1 movement, target adjacent unit
+    move this unit to the opposite side of the targeted unit
+    if successful and the target unit is an enemy, apply staggered to it.
+        removed at the end of the turn
+shove
+    combinable ability 2 energy
+    -1 movement, target adjacent unit
+    moves the unit one space away from this unit if possible.
+    if it is staggered, this unit gains 1 movement point
+poof
+    combinable ability 2 energy
+    target hex 1 range
+    applies smoke to the hex of this unit for 1 round and moves this unit to the target hex.
+        hex blocks LoS
+        units have sight reduced to 1
+- juke and jive
+    at the end of each of this units actions, if the enemy can see it and they couldn't at the
+    beginning of the activation, or the other way around, this unit gains a stack of zig zag
+        +1 attack power
+        removed at the end of turn
 
 commando squad {10wrp} x2
 health 6, movement 3, sight 2, energy 5, M
