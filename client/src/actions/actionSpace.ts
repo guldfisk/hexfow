@@ -4,9 +4,10 @@ import {
   Hex,
   HexHexes,
   NOfUnits,
+  RadiatingLine,
 } from "../interfaces/gameState.ts";
 import { ccToKey } from "../geometry.ts";
-import { ActionSpace } from "./interface.ts";
+import { Action, ActionSpace } from "./interface.ts";
 import { activateMenu, store } from "../state/store.ts";
 
 export const getUnitsOfHexes = (gameState: GameState): { [key: string]: Hex } =>
@@ -22,11 +23,8 @@ export const getBaseActionSpace = (
 ): ActionSpace => {
   const unitHexes: { [key: string]: Hex } = getUnitsOfHexes(gameState);
 
-  const actionSpace: ActionSpace = Object.fromEntries(
-    gameState.map.hexes.map((hex) => [
-      ccToKey(hex.cc),
-      { actions: [], highlighted: false },
-    ]),
+  const actions: { [key: string]: Action[] } = Object.fromEntries(
+    gameState.map.hexes.map((hex) => [ccToKey(hex.cc), []]),
   );
 
   if (
@@ -39,7 +37,7 @@ export const getBaseActionSpace = (
           targetIdx,
           unit,
         ] of option.targetProfile.values.units.entries()) {
-          actionSpace[ccToKey(unitHexes[unit["id"]].cc)].actions.push({
+          actions[ccToKey(unitHexes[unit["id"]].cc)].push({
             type: option.values?.facet?.category || "generic",
             do: () =>
               takeAction({
@@ -55,7 +53,7 @@ export const getBaseActionSpace = (
           targetIdx,
           cc,
         ] of option.targetProfile.values.options.entries()) {
-          actionSpace[ccToKey(cc)].actions.push({
+          actions[ccToKey(cc)].push({
             type: option.values?.facet?.category || "generic",
 
             do: () =>
@@ -69,7 +67,7 @@ export const getBaseActionSpace = (
         }
       } else if (option.targetProfile.type == "NOfUnits") {
         for (const unit of option.targetProfile.values.units) {
-          actionSpace[ccToKey(unitHexes[unit.id].cc)].actions.push({
+          actions[ccToKey(unitHexes[unit.id].cc)].push({
             type: "activated_ability",
             do: () =>
               store.dispatch(
@@ -86,9 +84,9 @@ export const getBaseActionSpace = (
         option.targetProfile.type == "ConsecutiveAdjacentHexes" &&
         gameState.activeUnitContext
       ) {
-        actionSpace[
+        actions[
           ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
-        ].actions.push({
+        ].push({
           type: "menu",
           do: () =>
             store.dispatch(
@@ -104,9 +102,9 @@ export const getBaseActionSpace = (
         option.targetProfile.type == "HexHexes" &&
         gameState.activeUnitContext
       ) {
-        actionSpace[
+        actions[
           ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
-        ].actions.push({
+        ].push({
           type: "menu",
           do: () =>
             store.dispatch(
@@ -119,18 +117,41 @@ export const getBaseActionSpace = (
             ),
         });
       } else if (
+        option.targetProfile.type == "RadiatingLine" &&
+        gameState.activeUnitContext
+      ) {
+        actions[
+          ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
+        ].push({
+          type: "menu",
+          do: () =>
+            store.dispatch(
+              activateMenu({
+                type: "RadiatingLine",
+                optionIndex: idx,
+                targetProfile: option.targetProfile as RadiatingLine,
+                hovering: null,
+              }),
+            ),
+        });
+      } else if (
         option.type == "EffortOption" &&
         option.targetProfile.type == "NoTarget" &&
         gameState.activeUnitContext
       ) {
-        actionSpace[
+        actions[
           ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
-        ].actions.push({
+        ].push({
           type: "activated_ability",
           do: () => takeAction({ index: idx, target: null }),
         });
       }
     }
   }
-  return actionSpace;
+  return Object.fromEntries(
+    Object.entries(actions).map(([cc, _actions]) => [
+      cc,
+      { actions: _actions, highlighted: false },
+    ]),
+  );
 };

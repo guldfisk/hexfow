@@ -71,6 +71,10 @@ export const constMultRC = (rc: RC, v: number) => ({
   x: rc.x * v,
   y: rc.y * v,
 });
+export const constMultCC = (cc: CC, v: number) => ({
+  r: cc.r * v,
+  h: cc.h * v,
+});
 export const constDivRc = (rc: RC, v: number) => ({ x: rc.x / v, y: rc.y / v });
 
 export const hexDistance = (fromCC: CC, toCC: CC): number => {

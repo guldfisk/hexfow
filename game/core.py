@@ -1169,26 +1169,26 @@ class HexHexes(TargetProfile[list[Hex]]):
 
 
 @dataclasses.dataclass
-class SelectRadiatingLine(TargetProfile[list[Hex]]):
+class RadiatingLine(TargetProfile[list[Hex]]):
     from_hex: Hex
+    to_hexes: list[Hex]
     length: int
 
     def serialize_values(self, context: SerializationContext) -> JSON:
-        return {"from_hex": self.from_hex.position.serialize(), "length": self.length}
+        return {
+            "from_hex": self.from_hex.position.serialize(),
+            "to_hexes": [h.position.serialize() for h in self.to_hexes],
+            "length": self.length,
+        }
 
     def parse_response(self, v: Any) -> O:
-        selected_cc = CC(**v["cc"])
-        for _hex in GS().map.get_neighbors_off(self.from_hex.position):
-            if _hex.position == selected_cc:
-                difference = selected_cc - _hex.position
-                return [
-                    projected
-                    for i in range(self.length)
-                    if (projected := GS().map.hexes.get(selected_cc + difference * i))
-                ]
-        # TODO some sorta standardized error for this. just need actual validation
-        #  general.
-        raise ValueError("invalid response")
+        selected_cc = self.to_hexes[v['index']].position
+        difference = selected_cc - self.from_hex.position
+        return [
+            projected
+            for i in range(self.length)
+            if (projected := GS().map.hexes.get(selected_cc + difference * i))
+        ]
 
 
 class MovementException(Exception): ...

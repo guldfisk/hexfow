@@ -6,10 +6,20 @@ import {
   HexHexesMenu,
   MenuData,
   NOfUnitsMenu,
+  RadiatingLineMenu,
 } from "./interface.ts";
-import { ccDistance, ccToKey, getNeighborsOffCC } from "../geometry.ts";
+import {
+  addCCs,
+  ccDistance,
+  ccToKey,
+  constMultCC,
+  getNeighborsOffCC,
+  subCCs,
+} from "../geometry.ts";
 import { activateMenu, store } from "../state/store.ts";
 import { mod, range } from "../utils/range.ts";
+
+// TODO some common logic in this mess
 
 const getNOfUnitsActionSpace = (
   gameState: GameState,
@@ -154,6 +164,65 @@ const getHexHexesDescription = (
   return "select aoe";
 };
 
+const getRadiatingLineActionSpace = (
+  gameState: GameState,
+  takeAction: (body: { [key: string]: any }) => void,
+  menu: RadiatingLineMenu,
+): ActionSpace => {
+  const highlightedCCs = menu.hovering
+    ? range(menu.targetProfile.values.length).map((i) =>
+        ccToKey(
+          addCCs(
+            menu.hovering,
+            constMultCC(
+              subCCs(menu.hovering, menu.targetProfile.values.fromHex),
+              i,
+            ),
+          ),
+        ),
+      )
+    : [];
+
+  const actionSpace: ActionSpace = Object.fromEntries(
+    gameState.map.hexes.map((hex) => [
+      ccToKey(hex.cc),
+      {
+        actions: [],
+        highlighted: highlightedCCs.includes(ccToKey(hex.cc)),
+      },
+    ]),
+  );
+
+  for (const [targetIdx, cc] of menu.targetProfile.values.toHexes.entries()) {
+    actionSpace[ccToKey(cc)] = {
+      actions: [
+        {
+          type: "aoe",
+          do: () =>
+            takeAction({
+              index: menu.optionIndex,
+              target: {
+                index: targetIdx,
+              },
+            }),
+        },
+      ],
+      highlighted: actionSpace[ccToKey(cc)].highlighted,
+      hoverTrigger: () => {
+        store.dispatch(activateMenu({ ...menu, hovering: cc }));
+      },
+    };
+  }
+  return actionSpace;
+};
+
+const getRadiatingLineDescription = (
+  gameState: GameState,
+  menu: RadiatingLineMenu,
+): string => {
+  return "select aoe";
+};
+
 export const menuActionSpacers: {
   [key: string]: (
     gameState: GameState,
@@ -164,6 +233,7 @@ export const menuActionSpacers: {
   NOfUnits: getNOfUnitsActionSpace,
   ConsecutiveAdjacentHexes: getConsecutiveAdjacentHexesActionSpace,
   HexHexes: getHexHexesActionSpace,
+  RadiatingLine: getRadiatingLineActionSpace,
 };
 
 export const menuDescribers: {
@@ -172,4 +242,5 @@ export const menuDescribers: {
   NOfUnits: getNOfUnitsDescription,
   ConsecutiveAdjacentHexes: getConsecutiveAdjacentHexesDescription,
   HexHexes: getHexHexesDescription,
+  RadiatingLine: getRadiatingLineDescription,
 };

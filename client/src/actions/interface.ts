@@ -2,6 +2,7 @@ import {
   ConsecutiveAdjacentHexes,
   HexHexes,
   NOfUnits,
+  RadiatingLine,
 } from "../interfaces/gameState.ts";
 import { CC } from "../interfaces/geometry.ts";
 
@@ -53,4 +54,15 @@ export interface HexHexesMenu extends BaseMenuData {
   hovering: CC | null;
 }
 
-export type MenuData = NOfUnitsMenu | ConsecutiveAdjacentHexesMenu | HexHexesMenu;
+export interface RadiatingLineMenu extends BaseMenuData {
+  type: "RadiatingLine";
+  optionIndex: number;
+  targetProfile: RadiatingLine;
+  hovering: CC | null;
+}
+
+export type MenuData =
+  | NOfUnitsMenu
+  | ConsecutiveAdjacentHexesMenu
+  | HexHexesMenu
+  | RadiatingLineMenu;

@@ -85,13 +85,19 @@ export interface HexHexes extends TargetProfileBase {
   values: { centers: CC[]; radius: number };
 }
 
+export interface RadiatingLine extends TargetProfileBase {
+  type: "RadiatingLine";
+  values: { fromHex: CC; toHexes: CC[]; length: number };
+}
+
 export type TargetProfile =
   | OneOfUnits
   | NOfUnits
   | OneOfHexes
   | NoTarget
   | ConsecutiveAdjacentHexes
-  | HexHexes;
+  | HexHexes
+  | RadiatingLine;
 
 export interface OptionBase {
   type: string;

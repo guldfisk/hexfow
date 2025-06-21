@@ -141,9 +141,9 @@ class Game(Thread):
                 (
                     # VOID_SPRITE,
                     # WITCH_ENGINE,
-                    CAPRICIOUS_TRICKSTER,
+                    # CAPRICIOUS_TRICKSTER,
                     # BOMB_TRUCK,
-                    # INFERNO_TANK,
+                    INFERNO_TANK,
                     # RAT_SCOUT,
                     # BULLDOZER,
                 ),

@@ -11,7 +11,7 @@ from game.core import (
     OneOfHexes,
     UnitBlueprint,
     ConsecutiveAdjacentHexes,
-    SelectRadiatingLine,
+    RadiatingLine,
     RangedAttackFacet,
     MeleeAttackFacet,
     StatusSignature,
@@ -239,7 +239,11 @@ class Stare(ActivatedAbilityFacet[list[Hex]]):
     combinable = True
 
     def get_target_profile(self) -> TargetProfile[O] | None:
-        return SelectRadiatingLine(GS().map.hex_off(self.owner), 4)
+        return RadiatingLine(
+            GS().map.hex_off(self.owner),
+            list(GS().map.get_neighbors_off(self.owner)),
+            4,
+        )
 
     def perform(self, target: list[Hex]) -> None:
         # TODO reveal em'
@@ -562,27 +566,28 @@ class Scorch(ActivatedAbilityFacet[list[Hex]]):
                 )
 
 
-# TODO should be an aoe target
-class FlameWall(SingleHexTargetActivatedAbility):
+class FlameWall(ActivatedAbilityFacet[list[Hex]]):
     cost = MovementCost(1) | EnergyCost(3)
 
-    def can_target_hex(self, hex_: Hex) -> bool:
-        return hex_ != GS().map.hex_off(self.owner)
+    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
+        return RadiatingLine(
+            GS().map.hex_off(self.owner),
+            list(GS().map.get_neighbors_off(self.owner)),
+            3,
+        )
 
-    def perform(self, target: Hex) -> None:
-        difference = target.position - GS().map.position_off(self.owner)
-        for i in range(3):
-            if _hex := GS().map.hexes.get(target.position + difference * i):
-                # TODO should it also apply burn to units in aoe initially?
-                #  hard to figure out how to balance numbers, especially with
-                #  order of triggers...
-                ES.resolve(
-                    ApplyHexStatus(
-                        _hex,
-                        self.owner.controller,
-                        HexStatusSignature(BurningTerrain, stacks=2, duration=3),
-                    )
+    def perform(self, target: list[Hex]) -> None:
+        for h in target:
+            # TODO should it also apply burn to units in aoe initially?
+            #  hard to figure out how to balance numbers, especially with
+            #  order of triggers...
+            ES.resolve(
+                ApplyHexStatus(
+                    h,
+                    self.owner.controller,
+                    HexStatusSignature(BurningTerrain, stacks=2, duration=3),
                 )
+            )
 
 
 class VitalityTransfer(ActivatedAbilityFacet):
