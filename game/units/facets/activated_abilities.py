@@ -585,9 +585,15 @@ class FlameWall(ActivatedAbilityFacet[list[Hex]]):
                 ApplyHexStatus(
                     h,
                     self.owner.controller,
-                    HexStatusSignature(BurningTerrain, stacks=2, duration=3),
+                    HexStatusSignature(BurningTerrain, stacks=1, duration=3),
                 )
             )
+            if unit := GS().map.unit_on(h):
+                ES.resolve(
+                    ApplyStatus(
+                        unit, self.owner.controller, StatusSignature(Burn, stacks=2)
+                    )
+                )
 
 
 class VitalityTransfer(ActivatedAbilityFacet):

@@ -9,14 +9,19 @@ export const getHexDimensions = (size: number) => [
 
 export const [hexWidth, hexHeight] = getHexDimensions(hexSize);
 
-export const hexVerticeOffsets: [number, number][] = [
-  [hexWidth / 2, -hexSize / 2],
-  [0, -hexSize],
-  [-hexWidth / 2, -hexSize / 2],
-  [-hexWidth / 2, hexSize / 2],
-  [0, hexHeight / 2],
-  [hexWidth / 2, hexSize / 2],
-];
+export const getHexVerticeOffsets = (hexSize: number): [number, number][] => {
+  const [hexWidth, hexHeight] = getHexDimensions(hexSize);
+  return [
+    [hexWidth / 2, -hexSize / 2],
+    [0, -hexSize],
+    [-hexWidth / 2, -hexSize / 2],
+    [-hexWidth / 2, hexSize / 2],
+    [0, hexHeight / 2],
+    [hexWidth / 2, hexSize / 2],
+  ];
+};
+
+export const hexVerticeOffsets = getHexVerticeOffsets(hexSize);
 
 export const ccNeighborOffsets: CC[] = [
   { r: 1, h: 0 },

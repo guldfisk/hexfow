@@ -1,8 +1,16 @@
-import {Application, Container, Graphics, GraphicsContext, Sprite, Text, TextStyle,} from "pixi.js";
-import {GameState} from "./interfaces/gameState.ts";
-import type {FillInput} from "pixi.js/lib/scene/graphics/shared/FillTypes";
+import {
+  Application,
+  Container,
+  Graphics,
+  GraphicsContext,
+  Sprite,
+  Text,
+  TextStyle,
+} from "pixi.js";
+import { GameState, Status } from "./interfaces/gameState.ts";
+import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
 
-import {GameObjectDetails} from "./interfaces/gameObjectDetails.ts";
+import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
 import {
   addRCs,
   asUnitVector,
@@ -10,6 +18,7 @@ import {
   ccToRC,
   constMultRC,
   getHexDimensions,
+  getHexVerticeOffsets,
   hexDistance,
   hexHeight,
   hexSize,
@@ -17,12 +26,12 @@ import {
   hexWidth,
   subRCs,
 } from "./geometry.ts";
-import {textureMap} from "./textures.ts";
-import {range} from "./utils/range.ts";
-import {deactivateMenu, hoverUnit, store} from "./state/store.ts";
-import {getBaseActionSpace} from "./actions/actionSpace.ts";
-import {MenuData, selectionIcon} from "./actions/interface.ts";
-import {menuActionSpacers} from "./actions/menues.ts";
+import { textureMap } from "./textures.ts";
+import { range } from "./utils/range.ts";
+import { deactivateMenu, hoverUnit, store } from "./state/store.ts";
+import { getBaseActionSpace } from "./actions/actionSpace.ts";
+import { MenuData, selectionIcon } from "./actions/interface.ts";
+import { menuActionSpacers } from "./actions/menues.ts";
 
 // TODO where?
 const sizeMap: { S: number; M: number; L: number } = { S: 0.8, M: 1, L: 1.2 };
@@ -57,7 +66,8 @@ export const renderMap = (
     hexShape.closePath().fill(color).stroke();
     return hexShape;
   };
-  const getHexMask = (color: FillInput): GraphicsContext => {
+  const getHexMask = (color: FillInput, hexSize: number): GraphicsContext => {
+    const hexVerticeOffsets = getHexVerticeOffsets(hexSize);
     let hexShape = new GraphicsContext().moveTo(...hexVerticeOffsets[0]);
     hexVerticeOffsets.slice(1).forEach((vert) => hexShape.lineTo(...vert));
     hexShape.closePath();
@@ -86,8 +96,8 @@ export const renderMap = (
 
   const visibleHexShape = getHexShape({ color: "447744", alpha: 0 });
   const invisibleHexShape = getHexShape({ color: "black", alpha: 100 });
-  const hexMaskShape = getHexMask({ alpha: 0 });
-  const highlightShape = getHexMask({ alpha: 0.5, color: "blue" });
+  const hexMaskShape = getHexMask({ alpha: 0 }, hexSize);
+  const highlightShape = getHexMask({ alpha: 0.5, color: "blue" }, hexSize);
 
   const dividerFrames = [
     [hexMaskShape],
@@ -99,6 +109,12 @@ export const renderMap = (
   const statusBorder = new GraphicsContext()
     .circle(0, 0, 20)
     .stroke({ color: "grey", pixelLine: true });
+
+  const hexStatusFrame = getHexMask({alpha: 0}, 22);
+  const hexStatusBorder = hexStatusFrame.stroke({
+    color: "grey",
+    pixelLine: true,
+  });
 
   // TODO not here
   const smallTextStyle = new TextStyle({
@@ -128,12 +144,19 @@ export const renderMap = (
     align: "center",
     stroke: "white",
   });
-  const statusCountStyle = new TextStyle({
+  const durationStyle = new TextStyle({
     fontFamily: "Arial",
     fontSize: 25,
     fill: "white",
     align: "center",
     stroke: { color: "black", width: 3 },
+  });
+  const stacksStyle = new TextStyle({
+    fontFamily: "Arial",
+    fontSize: 25,
+    fill: "black",
+    align: "center",
+    stroke: { color: "white", width: 3 },
   });
   const ghostStyle = new TextStyle({
     fontFamily: "Arial",
@@ -236,6 +259,48 @@ export const renderMap = (
       actionTriggerZones.push(triggerZone);
     }
 
+    const makeStatusIndicator = (
+      status: Status,
+      hexOutline: boolean,
+    ): Container => {
+      const statusContainer = new Container();
+      const statusSprite = new Sprite(textureMap[status.type]);
+
+      statusSprite.anchor = 0.5;
+      statusContainer.addChild(statusSprite);
+
+      const mask = new Graphics(hexOutline ? hexStatusFrame : statusFrame);
+      statusContainer.addChild(mask);
+      statusSprite.mask = mask;
+
+      const border = new Graphics(hexOutline ? hexStatusBorder : statusBorder);
+      statusContainer.addChild(border);
+
+      if (status.stacks) {
+        const durationText = new Text({
+          text: `${status.stacks}`,
+          style: stacksStyle,
+        });
+        durationText.x = -17;
+        durationText.y = -7;
+        durationText.anchor = 0.5;
+        statusContainer.addChild(durationText);
+      }
+
+      if (status.duration) {
+        const durationText = new Text({
+          text: `${status.duration}`,
+          style: durationStyle,
+        });
+        durationText.x = 17;
+        durationText.y = -7;
+        durationText.anchor = 0.5;
+        statusContainer.addChild(durationText);
+      }
+
+      return statusContainer;
+    };
+
     if (hexData.unit) {
       const unitContainer = new Container();
       const unitSprite = new Sprite(textureMap[hexData.unit.blueprint]);
@@ -272,17 +337,7 @@ export const renderMap = (
       }
 
       for (const [idx, status] of hexData.unit.statuses.entries()) {
-        const statusContainer = new Container();
-        const statusSprite = new Sprite(textureMap[status.type]);
-
-        statusSprite.anchor = 0.5;
-        statusContainer.addChild(statusSprite);
-
-        const mask = new Graphics(statusFrame);
-        statusContainer.addChild(mask);
-        // mask.position = {x: -25 , y: -25 }
-        statusSprite.mask = mask;
-
+        const statusContainer = makeStatusIndicator(status, false);
         statusContainer.position = {
           x: -unitSprite.width / 2,
           y:
@@ -291,19 +346,6 @@ export const renderMap = (
               ? idx * 43
               : (150 / hexData.unit.statuses.length) * idx),
         };
-
-        const border = new Graphics(statusBorder);
-        statusContainer.addChild(border);
-
-        const durationText = new Text({
-          // text: `${status.duration}/${status.originalDuration}`,
-          text: status.duration || status.stacks,
-          style: statusCountStyle,
-        });
-        durationText.x = 17;
-        durationText.y = -7;
-        durationText.anchor = 0.5;
-        statusContainer.addChild(durationText);
 
         unitContainer.addChild(statusContainer);
       }
@@ -409,16 +451,7 @@ export const renderMap = (
     }
 
     for (const [idx, status] of hexData.statuses.entries()) {
-      // TODO common status drawing logic
-      const statusContainer = new Container();
-      const statusSprite = new Sprite(textureMap[status.type]);
-
-      statusSprite.anchor = 0.5;
-      statusContainer.addChild(statusSprite);
-
-      const mask = new Graphics(statusFrame);
-      statusContainer.addChild(mask);
-      statusSprite.mask = mask;
+      const statusContainer = makeStatusIndicator(status, true);
 
       const smallerSize = hexSize - 30;
       const [smallerWidth, smallerHeight] = getHexDimensions(smallerSize);
@@ -435,24 +468,6 @@ export const renderMap = (
             : (hexSize / hexData.statuses.length) * idx,
         ),
       );
-
-      const border = new Graphics(statusBorder);
-      statusContainer.addChild(border);
-
-      if (status.duration || status.stacks) {
-        const durationText = new Text({
-          text:
-            !status.duration != !status.stacks
-              ? `${status.duration || status.stacks}`
-              : //   TODO how show this trash??
-                `${status.stacks}-${status.duration}`,
-          style: statusCountStyle,
-        });
-        durationText.x = 17;
-        durationText.y = -7;
-        durationText.anchor = 0.5;
-        statusContainer.addChild(durationText);
-      }
 
       hexContainer.addChild(statusContainer);
     }

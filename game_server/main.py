@@ -108,22 +108,22 @@ class Game(Thread):
                     {
                         cc: HexSpec(
                             random.choice(
-                                # [
-                                #     Plains,
-                                # ]
                                 [
                                     Plains,
-                                    Plains,
-                                    Plains,
-                                    Plains,
-                                    Forest,
-                                    Forest,
-                                    Forest,
-                                    # Forest,
-                                    # Magma,
-                                    # Hills,
-                                    # Water,
                                 ]
+                                # [
+                                #     Plains,
+                                #     Plains,
+                                #     Plains,
+                                #     Plains,
+                                #     Forest,
+                                #     Forest,
+                                #     Forest,
+                                #     # Forest,
+                                #     # Magma,
+                                #     # Hills,
+                                #     # Water,
+                                # ]
                             ),
                             cc.distance_to(CC(0, 0)) <= 1,
                         )
@@ -140,7 +140,7 @@ class Game(Thread):
                 # ],
                 (
                     # VOID_SPRITE,
-                    # WITCH_ENGINE,
+                    WITCH_ENGINE,
                     # CAPRICIOUS_TRICKSTER,
                     # BOMB_TRUCK,
                     INFERNO_TANK,
