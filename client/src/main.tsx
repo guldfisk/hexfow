@@ -19,7 +19,7 @@ gameConnection.onmessage = (event) => {
 
 async function main() {
   const app = new Application();
-  await app.init({ resizeTo: window, antialias: false });
+  await app.init({ resizeTo: window, antialias: true });
   // TODO
   document.body.appendChild(app.canvas);
 

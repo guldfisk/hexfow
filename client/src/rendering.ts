@@ -33,8 +33,16 @@ import { getBaseActionSpace } from "./actions/actionSpace.ts";
 import { MenuData, selectionIcon } from "./actions/interface.ts";
 import { menuActionSpacers } from "./actions/menues.ts";
 
-// TODO where?
-const sizeMap: { S: number; M: number; L: number } = { S: 0.8, M: 1, L: 1.2 };
+const sizeScales: { S: number; M: number; L: number } = {
+  S: 0.9,
+  M: 1,
+  L: 1.1,
+};
+const sizeArrowPositions: { S: number; M: number; L: number } = {
+  S: 1,
+  M: 0,
+  L: -1,
+};
 
 const selectionIconMap: { [key in selectionIcon]: string } = {
   ranged_attack: "hex_selection_ranged_attack",
@@ -44,6 +52,25 @@ const selectionIconMap: { [key in selectionIcon]: string } = {
   aoe: "hex_selection_aoe",
   menu: "hex_selection_menu",
 };
+
+const colors = {
+  enemy: "0x9b1711",
+  ally: "0x2f71e7",
+  fullHealth: [237, 10, 10],
+  noHealth: [22, 3, 1],
+  fullEnergy: [47, 103, 248],
+  noEnergy: [5, 17, 74],
+};
+// const colors = {
+//   enemy: "0x9b1711",
+//   ally: "0x2f71e7",
+//   // fullHealth: [128, 215, 100],
+//   fullHealth: [88, 230, 68],
+//   noHealth: [43, 1, 1],
+//   // fullEnergy: [250, 218, 77],
+//   fullEnergy: [223, 213, 45],
+//   noEnergy: [133, 10, 7],
+// };
 
 export const renderMap = (
   app: Application,
@@ -110,7 +137,7 @@ export const renderMap = (
     .circle(0, 0, 20)
     .stroke({ color: "grey", pixelLine: true });
 
-  const hexStatusFrame = getHexMask({alpha: 0}, 22);
+  const hexStatusFrame = getHexMask({ alpha: 0 }, 22);
   const hexStatusBorder = hexStatusFrame.stroke({
     color: "grey",
     pixelLine: true,
@@ -303,13 +330,49 @@ export const renderMap = (
 
     if (hexData.unit) {
       const unitContainer = new Container();
+      const baseUnitContainer = new Container();
+      unitContainer.addChild(baseUnitContainer);
       const unitSprite = new Sprite(textureMap[hexData.unit.blueprint]);
       unitSprite.anchor = 0.5;
+      baseUnitContainer.scale = sizeScales[hexData.unit.size];
       if (hexData.unit.controller != gameState.player) {
-        unitSprite.scale.x = -unitSprite.scale.x;
+        baseUnitContainer.scale.x = -baseUnitContainer.scale.x;
       }
 
-      unitContainer.addChild(unitSprite);
+      const borderWith = 4;
+      const arrowLength = 15;
+
+      let graphics = new Graphics()
+        .moveTo(
+          -unitSprite.width / 2 - borderWith,
+          -unitSprite.height / 2 - borderWith,
+        )
+        .lineTo(
+          unitSprite.width / 2 + borderWith,
+          -unitSprite.height / 2 - borderWith,
+        )
+        .lineTo(
+          unitSprite.width / 2 + borderWith + arrowLength,
+          (unitSprite.height / 2 + borderWith) *
+            sizeArrowPositions[hexData.unit.size],
+        )
+        .lineTo(
+          unitSprite.width / 2 + borderWith,
+          unitSprite.height / 2 + borderWith,
+        )
+        .lineTo(
+          -unitSprite.width / 2 - borderWith,
+          unitSprite.height / 2 + borderWith,
+        )
+        .closePath()
+        .fill(
+          hexData.unit.controller != gameState.player
+            ? colors.enemy
+            : colors.ally,
+        );
+
+      baseUnitContainer.addChild(graphics);
+      baseUnitContainer.addChild(unitSprite);
 
       if (
         gameState.activeUnitContext &&
@@ -322,15 +385,6 @@ export const renderMap = (
         movementPoints.anchor = 0.5;
         unitContainer.addChild(movementPoints);
       }
-
-      const graphics = new Graphics()
-        .setStrokeStyle({
-          color: hexData.unit.controller != gameState.player ? "red" : "green",
-          width: 3,
-        })
-        .rect(-60, -74, 120, 148)
-        .stroke();
-      unitContainer.addChild(graphics);
 
       if (hexData.unit.exhausted) {
         unitContainer.angle = 90;
@@ -390,9 +444,32 @@ export const renderMap = (
       const healthIndicatorContainer = makeIndicatorDisplay(
         hexData.unit.maxHealth - hexData.unit.damage,
         hexData.unit.maxHealth,
-        [237, 10, 10],
-        [22, 3, 1],
+        colors.fullHealth,
+        colors.noHealth,
       );
+
+      const imgWidth = unitSprite.width * sizeScales[hexData.unit.size];
+      const imgHeight = unitSprite.height * sizeScales[hexData.unit.size];
+
+      healthIndicatorContainer.position = {
+        x: imgWidth / 2 - healthIndicatorContainer.width / 2 + 20,
+        y: imgHeight / 2 - 10,
+      };
+      unitContainer.addChild(healthIndicatorContainer);
+
+      if (hexData.unit.energy > 0 || hexData.unit.maxEnergy > 0) {
+        const energyIndicatorContainer = makeIndicatorDisplay(
+          hexData.unit.energy,
+          hexData.unit.maxEnergy,
+          colors.fullEnergy,
+          colors.noEnergy,
+        );
+        energyIndicatorContainer.position = {
+          x: imgWidth / 2 - energyIndicatorContainer.width / 2 + 20,
+          y: imgHeight / 2 - 45,
+        };
+        unitContainer.addChild(energyIndicatorContainer);
+      }
 
       if (hexData.unit.armor != 0) {
         const shieldContainer = new Container();
@@ -416,29 +493,6 @@ export const renderMap = (
         shieldContainer.addChild(shieldText);
         healthIndicatorContainer.addChild(shieldContainer);
       }
-
-      healthIndicatorContainer.position = {
-        x: unitSprite.width / 2 - healthIndicatorContainer.width / 2 + 20,
-        y: unitSprite.height / 2 - 10,
-      };
-      unitContainer.addChild(healthIndicatorContainer);
-
-      if (hexData.unit.energy > 0 || hexData.unit.maxEnergy > 0) {
-        const energyIndicatorContainer = makeIndicatorDisplay(
-          hexData.unit.energy,
-          hexData.unit.maxEnergy,
-          [47, 103, 248],
-          [5, 17, 74],
-        );
-        energyIndicatorContainer.position = {
-          x: unitSprite.width / 2 - energyIndicatorContainer.width / 2 + 20,
-          y: unitSprite.height / 2 - 45,
-        };
-        unitContainer.addChild(energyIndicatorContainer);
-      }
-
-      // TODO scaling entire container is dumb
-      unitContainer.scale = sizeMap[hexData.unit.size];
 
       hexContainer.addChild(unitContainer);
     }

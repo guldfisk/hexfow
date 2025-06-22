@@ -109,6 +109,7 @@ class Game(Thread):
                         cc: HexSpec(
                             random.choice(
                                 [
+                                    # Water,
                                     Plains,
                                 ]
                                 # [
@@ -134,32 +135,15 @@ class Game(Thread):
             GameState.instance = gs
 
             player_units = (
-                # [
-                #     (creature, point * 2)
-                #     for creature, point in zip([WITCH_ENGINE] * 6, NEIGHBOR_OFFSETS)
-                # ],
                 (
-                    # VOID_SPRITE,
                     WITCH_ENGINE,
-                    # CAPRICIOUS_TRICKSTER,
-                    # BOMB_TRUCK,
+                    OTTER_SCOUT,
                     INFERNO_TANK,
-                    NOTORIOUS_OUTLAW,
-                    # RAT_SCOUT,
-                    # BULLDOZER,
                 ),
                 (
-                    # (RHINO_BEAST, CC(0, 0)),
-                    CHICKEN,
-                    LIGHT_ARCHER,
-                    # LIGHT_ARCHER,
-                    # LIGHT_ARCHER,
-                    # LIGHT_ARCHER,
-                    # LIGHT_ARCHER,
-                    # LIGHT_ARCHER,
-                    # LIGHT_ARCHER,
-                    # BLOOD_CONDUIT,
-                    # DIAMOND_GOLEM,
+                    WITCH_ENGINE,
+                    OTTER_SCOUT,
+                    INFERNO_TANK,
                 ),
             )
 
@@ -291,6 +275,11 @@ class Game(Thread):
                                     space=gs.map.hexes[ccs.pop(0)],
                                 )
                             )
+
+            # for player in gs.turn_order.players:
+            #     for idx, unit in enumerate(gs.map.units_controlled_by(player)):
+            #         unit.damage = 2 * idx
+            #         unit.energy -= 3 * idx
 
             ES.resolve(Play())
         except GameClosed:
