@@ -16,11 +16,13 @@ export type selectionIcon =
 
 export interface Action {
   type: selectionIcon;
+  description: string;
   do: () => void;
 }
 
 export interface HexActions {
   actions: Action[];
+  sideMenuItems?: Action[];
   highlighted?: boolean;
   hoverTrigger?: () => void;
 }
@@ -61,8 +63,14 @@ export interface RadiatingLineMenu extends BaseMenuData {
   hovering: CC | null;
 }
 
+export interface ListMenu extends BaseMenuData {
+  type: "ListMenu";
+  cc: CC;
+}
+
 export type MenuData =
   | NOfUnitsMenu
   | ConsecutiveAdjacentHexesMenu
   | HexHexesMenu
-  | RadiatingLineMenu;
+  | RadiatingLineMenu
+  | ListMenu;

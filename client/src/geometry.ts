@@ -34,6 +34,11 @@ export const ccToRC = (hexCoord: CC): RC => ({
 
 export const ccToKey = (cc: CC): string => `${cc.r},${cc.h}`;
 
+export const ccFromKey = (key: string): CC => {
+  const [r, h] = key.split(",");
+  return { r: parseInt(r), h: parseInt(h) };
+};
+
 export const addRCs = (a: RC, b: RC): RC => ({
   x: a.x + b.x,
   y: a.y + b.y,
@@ -63,6 +68,8 @@ export const ccDistance = (a: CC, b: CC): number => {
     2
   );
 };
+
+export const ccEquals = (a: CC, b: CC): boolean => a.r == b.r && a.h == b.h;
 
 export const asUnitVector = (rc: RC) =>
   constDivRc(rc, Math.sqrt(rc.x ** 2 + rc.y ** 2));

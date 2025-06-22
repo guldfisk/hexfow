@@ -1,16 +1,8 @@
-import {
-  Application,
-  Container,
-  Graphics,
-  GraphicsContext,
-  Sprite,
-  Text,
-  TextStyle,
-} from "pixi.js";
-import { GameState } from "./interfaces/gameState.ts";
-import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
+import {Application, Container, Graphics, GraphicsContext, Sprite, Text, TextStyle,} from "pixi.js";
+import {GameState} from "./interfaces/gameState.ts";
+import type {FillInput} from "pixi.js/lib/scene/graphics/shared/FillTypes";
 
-import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
+import {GameObjectDetails} from "./interfaces/gameObjectDetails.ts";
 import {
   addRCs,
   asUnitVector,
@@ -25,12 +17,12 @@ import {
   hexWidth,
   subRCs,
 } from "./geometry.ts";
-import { textureMap } from "./textures.ts";
-import { range } from "./utils/range.ts";
-import { deactivateMenu, hoverUnit, store } from "./state/store.ts";
-import { getBaseActionSpace } from "./actions/actionSpace.ts";
-import { MenuData, selectionIcon } from "./actions/interface.ts";
-import { menuActionSpacers } from "./actions/menues.ts";
+import {textureMap} from "./textures.ts";
+import {range} from "./utils/range.ts";
+import {deactivateMenu, hoverUnit, store} from "./state/store.ts";
+import {getBaseActionSpace} from "./actions/actionSpace.ts";
+import {MenuData, selectionIcon} from "./actions/interface.ts";
+import {menuActionSpacers} from "./actions/menues.ts";
 
 // TODO where?
 const sizeMap: { S: number; M: number; L: number } = { S: 0.8, M: 1, L: 1.2 };
@@ -149,6 +141,12 @@ export const renderMap = (
     fill: "0x444444",
     align: "center",
   });
+  const menuStyle = new TextStyle({
+    fontFamily: "Arial",
+    fontSize: 40,
+    fill: "black",
+    align: "center",
+  });
 
   const map = new Container();
 
@@ -231,7 +229,9 @@ export const renderMap = (
       triggerZone.eventMode = "static";
       triggerZone.on("pointerdown", (event) => {
         console.log("click", event.button, hexData.cc);
-        store.dispatch(deactivateMenu());
+        if (event.button == 0) {
+          store.dispatch(deactivateMenu());
+        }
       });
       actionTriggerZones.push(triggerZone);
     }
@@ -403,8 +403,6 @@ export const renderMap = (
 
     if (hexData.isObjective) {
       const flagSprite = new Sprite(textureMap["flag_icon"]);
-      // flagSprite.anchor = {x: 0, y: .5}
-      // flagSprite.y = - hexHeight / 2 + 50
       flagSprite.x = -hexWidth / 2 + 10;
       flagSprite.y = -hexSize / 2;
       hexContainer.addChild(flagSprite);
@@ -502,6 +500,55 @@ export const renderMap = (
         hoverTrigger();
       }
     });
+  });
+
+  gameState.map.hexes.forEach((hexData) => {
+    const menuItems = actionSpace[ccToKey(hexData.cc)].sideMenuItems || [];
+
+    if (menuItems.length) {
+      const hexContainer = new Container();
+      map.addChild(hexContainer);
+      hexContainer.position = addRCs(ccToRC(hexData.cc), center);
+      const buttonHeight = 50;
+      const totalSpaceNeeded = (buttonHeight + 20) * (menuItems.length - 1);
+
+      for (const [idx, menuItem] of menuItems.entries()) {
+        const itemsContainer = new Container();
+        hexContainer.addChild(itemsContainer);
+        const itemText = new Text({
+          text: `${menuItem.description}`,
+          style: menuStyle,
+        });
+        const box = new Graphics()
+          .roundRect(0, 0, itemText.width + buttonHeight + 5, buttonHeight, 5)
+          .fill("0x666666");
+
+        box.x = hexWidth / 2 + 10;
+        box.y =
+          (totalSpaceNeeded * idx) / Math.max(menuItems.length - 1, 1) -
+          totalSpaceNeeded / 2 -
+          buttonHeight / 2;
+
+        const selectionSprite = new Sprite(
+          textureMap[selectionIconMap[menuItem.type]],
+        );
+        selectionSprite.scale = 0.15;
+        selectionSprite.position = { x: box.x + 5, y: box.y + 5 };
+
+        itemText.position = { x: box.x + buttonHeight, y: box.y };
+
+        itemsContainer.addChild(box);
+        itemsContainer.addChild(selectionSprite);
+        itemsContainer.addChild(itemText);
+
+        itemsContainer.eventMode = "static";
+        itemsContainer.on("pointerdown", (event) => {
+          if (event.button == 0) {
+            menuItem.do();
+          }
+        });
+      }
+    }
   });
 
   return map;

@@ -6,7 +6,7 @@ import {
   NOfUnits,
   RadiatingLine,
 } from "../interfaces/gameState.ts";
-import { ccToKey } from "../geometry.ts";
+import { ccFromKey, ccToKey } from "../geometry.ts";
 import { Action, ActionSpace } from "./interface.ts";
 import { activateMenu, store } from "../state/store.ts";
 
@@ -17,10 +17,10 @@ export const getUnitsOfHexes = (gameState: GameState): { [key: string]: Hex } =>
       .map((h) => [h.unit.id, h]),
   );
 
-export const getBaseActionSpace = (
+export const getBaseActions = (
   gameState: GameState,
   takeAction: (body: { [key: string]: any }) => void,
-): ActionSpace => {
+): { [key: string]: Action[] } => {
   const unitHexes: { [key: string]: Hex } = getUnitsOfHexes(gameState);
 
   const actions: { [key: string]: Action[] } = Object.fromEntries(
@@ -39,6 +39,7 @@ export const getBaseActionSpace = (
         ] of option.targetProfile.values.units.entries()) {
           actions[ccToKey(unitHexes[unit["id"]].cc)].push({
             type: option.values?.facet?.category || "generic",
+            description: option.values?.facet?.name || "select unit",
             do: () =>
               takeAction({
                 index: idx,
@@ -55,7 +56,7 @@ export const getBaseActionSpace = (
         ] of option.targetProfile.values.options.entries()) {
           actions[ccToKey(cc)].push({
             type: option.values?.facet?.category || "generic",
-
+            description: option.values?.facet?.name || "select hex",
             do: () =>
               takeAction({
                 index: idx,
@@ -69,6 +70,9 @@ export const getBaseActionSpace = (
         for (const unit of option.targetProfile.values.units) {
           actions[ccToKey(unitHexes[unit.id].cc)].push({
             type: "activated_ability",
+            description:
+              option.values?.facet?.name ||
+              (option.targetProfile as NOfUnits).values.labels[0],
             do: () =>
               store.dispatch(
                 activateMenu({
@@ -88,6 +92,7 @@ export const getBaseActionSpace = (
           ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
         ].push({
           type: "menu",
+          description: option.values?.facet?.name || "select hexes",
           do: () =>
             store.dispatch(
               activateMenu({
@@ -106,6 +111,7 @@ export const getBaseActionSpace = (
           ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
         ].push({
           type: "menu",
+          description: option.values?.facet?.name || "select hexes",
           do: () =>
             store.dispatch(
               activateMenu({
@@ -124,6 +130,7 @@ export const getBaseActionSpace = (
           ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
         ].push({
           type: "menu",
+          description: option.values?.facet?.name || "select hexes",
           do: () =>
             store.dispatch(
               activateMenu({
@@ -143,15 +150,46 @@ export const getBaseActionSpace = (
           ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
         ].push({
           type: "activated_ability",
+          description: option.values?.facet?.name || "activate ability",
           do: () => takeAction({ index: idx, target: null }),
         });
       }
     }
   }
+  return actions;
+};
+
+export const getBaseActionSpace = (
+  gameState: GameState,
+  takeAction: (body: { [key: string]: any }) => void,
+): ActionSpace => {
+  const actions = getBaseActions(gameState, takeAction);
   return Object.fromEntries(
     Object.entries(actions).map(([cc, _actions]) => [
       cc,
-      { actions: _actions, highlighted: false },
+      _actions.length > 2 ||
+      (_actions.length == 2 && _actions.some((a) => a.type == "menu")) ||
+      new Set(_actions.map((a) => a.type)).size != _actions.length
+        ? {
+            actions: [
+              {
+                type: "menu",
+                description: "open menu",
+                do: () => {
+                  store.dispatch(
+                    activateMenu({
+                      type: "ListMenu",
+                      cc: ccFromKey(cc),
+                    }),
+                  );
+                },
+              },
+            ],
+          }
+        : {
+            actions: _actions,
+            highlighted: false,
+          },
     ]),
   );
 };

@@ -1,9 +1,10 @@
 import { GameState, Hex } from "../interfaces/gameState.ts";
-import { getUnitsOfHexes } from "./actionSpace.ts";
+import { getBaseActions, getUnitsOfHexes } from "./actionSpace.ts";
 import {
   ActionSpace,
   ConsecutiveAdjacentHexesMenu,
   HexHexesMenu,
+  ListMenu,
   MenuData,
   NOfUnitsMenu,
   RadiatingLineMenu,
@@ -11,6 +12,7 @@ import {
 import {
   addCCs,
   ccDistance,
+  ccEquals,
   ccToKey,
   constMultCC,
   getNeighborsOffCC,
@@ -38,6 +40,8 @@ const getNOfUnitsActionSpace = (
     if (!menu.selectedUnits.includes(unit.id)) {
       actionSpace[ccToKey(unitHexes[unit.id].cc)].actions.push({
         type: "activated_ability",
+        description:
+          menu.targetProfile.values.labels[menu.selectedUnits.length],
         do: () => {
           const selectedUnitIds = menu.selectedUnits.concat([unit.id]);
           if (selectedUnitIds.length >= menu.targetProfile.values.selectCount) {
@@ -97,6 +101,7 @@ const getConsecutiveAdjacentHexesActionSpace = (
       actions: [
         {
           type: "aoe",
+          description: "select hexes",
           do: () =>
             takeAction({ index: menu.optionIndex, target: { cc: option } }),
         },
@@ -139,6 +144,7 @@ const getHexHexesActionSpace = (
       actions: [
         {
           type: "aoe",
+          description: "select hexes",
           do: () =>
             takeAction({
               index: menu.optionIndex,
@@ -198,6 +204,8 @@ const getRadiatingLineActionSpace = (
       actions: [
         {
           type: "aoe",
+          description: "select hexes",
+
           do: () =>
             takeAction({
               index: menu.optionIndex,
@@ -223,6 +231,32 @@ const getRadiatingLineDescription = (
   return "select aoe";
 };
 
+const getListMenuActionSpace = (
+  gameState: GameState,
+  takeAction: (body: { [key: string]: any }) => void,
+  menu: ListMenu,
+): ActionSpace => {
+  const actions = getBaseActions(gameState, takeAction);
+  return Object.fromEntries(
+    gameState.map.hexes.map((hex) => [
+      ccToKey(hex.cc),
+      {
+        actions: [],
+        sideMenuItems: ccEquals(hex.cc, menu.cc)
+          ? actions[ccToKey(hex.cc)]
+          : [],
+      },
+    ]),
+  );
+};
+
+const getListMenuDescription = (
+  gameState: GameState,
+  menu: ListMenu,
+): string => {
+  return "select item";
+};
+
 export const menuActionSpacers: {
   [key: string]: (
     gameState: GameState,
@@ -234,6 +268,7 @@ export const menuActionSpacers: {
   ConsecutiveAdjacentHexes: getConsecutiveAdjacentHexesActionSpace,
   HexHexes: getHexHexesActionSpace,
   RadiatingLine: getRadiatingLineActionSpace,
+  ListMenu: getListMenuActionSpace,
 };
 
 export const menuDescribers: {
@@ -243,4 +278,5 @@ export const menuDescribers: {
   ConsecutiveAdjacentHexes: getConsecutiveAdjacentHexesDescription,
   HexHexes: getHexHexesDescription,
   RadiatingLine: getRadiatingLineDescription,
+  ListMenu: getListMenuDescription,
 };
