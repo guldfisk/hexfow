@@ -12,8 +12,9 @@ from game.core import (
     DurationStatusMixin,
     DamageSignature,
     Source,
+    Status,
 )
-from game.events import MoveUnit, ApplyStatus, Rest, Heal, Damage, RoundCleanup
+from game.events import MoveUnit, ApplyStatus, Rest, Heal, Damage, RoundCleanup, Turn
 from game.statuses import Fortified, Burn
 from game.values import DamageType, VisionObstruction
 
@@ -67,11 +68,7 @@ class ShrineWalkInTrigger(TriggerEffect[MoveUnit]):
 
     def resolve(self, event: MoveUnit) -> None:
         ES.resolve(
-            ApplyStatus(
-                unit=event.unit,
-                by=None,
-                signature=StatusSignature(Fortified, duration=4),
-            )
+            ApplyStatus(event.unit, StatusSignature(Fortified, self, duration=4))
         )
 
 
@@ -93,42 +90,12 @@ class Shrine(HexStatus):
     def merge(self, incoming: Self) -> bool:
         return True
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(
             HexIncreasesEnergyRegenModifier(self.parent),
             ShrineWalkInTrigger(self.parent, 1),
             ShrineSkipTrigger(self.parent),
         )
-
-
-# witch engine {13pp} x1
-# health 7, movement 2, sight 2, energy, M
-# choking soot
-#     aoe ability 4 energy
-#     aoe type hex size 1 range 3 NLoS
-#     -1 movement
-#     applies status soot to terrain for 2 rounds
-#         unstackable, refreshable
-#         blocks LoS
-#         units on this space has -1 sight, to a minimum of 1
-#         when a unit moves in, and at the end of each round, units on this hex receives 1 true damage
-# terrify
-#     ability 5 energy
-#     4 range LoS
-#     no movement
-#     applies terrified for 2 rounds
-#         unstackable, refreshable
-#         if this unit is adjacent to an enemy unit, it's owner cannot round skip, and the only legal actions
-#         of this units are to move away from any adjacent enemy units
-# into the gears
-#     ability
-#     target adjacent allied unit
-#     this unit heals equal to the the units heals and gains energy equal to its energy
-#     kill the unit
-# - withering presence
-#     at the end of this units turn, it applies 1 poison to each adjacent unit
-# - auro of paranoia
-#     whenever an enemy unit within 4 range becomes the target of an allied ability, it suffers 1 true damage
 
 
 @dataclasses.dataclass(eq=False)
@@ -204,7 +171,7 @@ class SootVisionBlockingModifier(StateModifierEffect[Hex, None, VisionObstructio
 
 class Soot(DurationStatusMixin, HexStatus):
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(
             SootWalkInTrigger(self.parent, self, 1),
             SootRoundTrigger(self.parent, self, 1),
@@ -215,7 +182,7 @@ class Soot(DurationStatusMixin, HexStatus):
 
 class Smoke(DurationStatusMixin, HexStatus):
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(
             SootSightModifier(self.parent), SootVisionBlockingModifier(self.parent)
         )
@@ -226,6 +193,7 @@ class BurningTerrainWalkInTrigger(TriggerEffect[MoveUnit]):
     priority: ClassVar[int] = 0
 
     status: HexStatus
+    source: Source
 
     def should_trigger(self, event: MoveUnit) -> bool:
         return event.to_ == self.status.parent and event.result
@@ -234,8 +202,7 @@ class BurningTerrainWalkInTrigger(TriggerEffect[MoveUnit]):
         ES.resolve(
             ApplyStatus(
                 unit=event.unit,
-                by=None,
-                signature=StatusSignature(Burn, stacks=self.status.stacks),
+                signature=StatusSignature(Burn, self.source, stacks=self.status.stacks),
             )
         )
 
@@ -245,6 +212,7 @@ class BurningTerrainRoundTrigger(TriggerEffect[RoundCleanup]):
     priority: ClassVar[int] = 0
 
     status: HexStatus
+    source: Source
 
     def should_trigger(self, event: RoundCleanup) -> bool:
         return GS().map.unit_on(self.status.parent) is not None
@@ -254,8 +222,9 @@ class BurningTerrainRoundTrigger(TriggerEffect[RoundCleanup]):
             ES.resolve(
                 ApplyStatus(
                     unit=unit,
-                    by=None,
-                    signature=StatusSignature(Burn, stacks=self.status.stacks),
+                    signature=StatusSignature(
+                        Burn, self.source, stacks=self.status.stacks
+                    ),
                 )
             )
 
@@ -264,17 +233,74 @@ class BurningTerrain(HexStatus):
 
     def merge(self, incoming: Self) -> bool:
         # TODO common logic?
-        if (
-            incoming.duration is None
-            or self.duration is None
-            or (incoming.duration > self.duration)
+        if not self.duration is None and (
+            incoming.duration is None or (incoming.duration > self.duration)
         ):
             self.duration = incoming.duration
         if incoming.stacks > self.stacks:
             self.stacks = incoming.stacks
         return True
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(
-            BurningTerrainWalkInTrigger(self), BurningTerrainRoundTrigger(self)
+            BurningTerrainWalkInTrigger(self, self),
+            BurningTerrainRoundTrigger(self, self),
+        )
+
+
+@dataclasses.dataclass(eq=False)
+class RevealedModifier(StateModifierEffect[Hex, Player, bool]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Hex.is_visible_to
+
+    space: Hex
+    controller: Player
+
+    def should_modify(self, obj: Hex, request: Player, value: bool) -> bool:
+        return obj == self.space and request == self.controller
+
+    def modify(self, obj: Hex, request: Player, value: bool) -> bool:
+        return True
+
+
+class Revealed(HexStatus):
+    def merge(self, incoming: Self) -> bool:
+        # TODO common logic?
+        if incoming.controller == self.controller:
+            if not self.duration is None and (
+                incoming.duration is None or (incoming.duration > self.duration)
+            ):
+                self.duration = incoming.duration
+            return True
+        return False
+
+    def is_hidden_for(self, player: Player) -> bool:
+        return player != self.controller
+
+    def create_effects(self) -> None:
+        self.register_effects(RevealedModifier(self.parent, self.controller))
+
+
+# TODO common
+@dataclasses.dataclass(eq=False)
+class TurnExpiringStatusTrigger(TriggerEffect[Turn]):
+    priority: ClassVar[int] = 0
+
+    status: Status
+
+    def resolve(self, event: Turn) -> None:
+        self.status.remove()
+
+
+class Glimpse(HexStatus):
+    def merge(self, incoming: Self) -> bool:
+        return incoming.controller == self.controller
+
+    def is_hidden_for(self, player: Player) -> bool:
+        return player != self.controller
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            RevealedModifier(self.parent, self.controller),
+            TurnExpiringStatusTrigger(self),
         )

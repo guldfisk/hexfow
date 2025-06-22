@@ -22,6 +22,7 @@ from game.core import (
     StatusSignature,
     HexStatusSignature,
     DamageSignature,
+    Facet,
 )
 from game.decisions import SelectOptionDecisionPoint, NoTarget, O, OptionDecision
 from game.player import Player
@@ -226,57 +227,71 @@ class RangedAttackAction(Event[None]):
 
 
 # TODO where?
-def apply_status_to_unit(
-    unit: Unit, signature: StatusSignature, by: Player | None
-) -> None:
+def apply_status_to_unit(unit: Unit, signature: StatusSignature) -> None:
     unit.add_status(
         signature.status_type(
+            controller=(
+                controller := (
+                    (
+                        signature.source.owner.controller
+                        if isinstance(signature.source, Facet)
+                        else signature.source.controller
+                    )
+                    if signature.source
+                    else None
+                )
+            ),
             intention=signature.intention
             or signature.status_type.default_intention
             or (
                 (
                     StatusIntention.BUFF
-                    if unit.controller == by
+                    if unit.controller == controller
                     else StatusIntention.DEBUFF
                 )
-                if by
+                if signature.source
                 else StatusIntention.NEUTRAL
             ),
             duration=signature.duration,
             stacks=signature.stacks,
             parent=unit,
         ),
-        by,
     )
 
 
 @dataclasses.dataclass
 class ApplyStatus(Event[None]):
     unit: Unit
-    by: Player | None
     signature: StatusSignature
 
     def is_valid(self) -> bool:
         return self.unit.on_map()
 
     def resolve(self) -> None:
-        apply_status_to_unit(self.unit, self.signature, self.by)
+        apply_status_to_unit(self.unit, self.signature)
 
 
 @dataclasses.dataclass
 class ApplyHexStatus(Event[None]):
     space: Hex
-    by: Player | None
     signature: HexStatusSignature
 
     def resolve(self) -> None:
         self.space.add_status(
             self.signature.status_type(
+                controller=(
+                    (
+                        self.signature.source.owner.controller
+                        if isinstance(self.signature.source, Facet)
+                        else self.signature.source.controller
+                    )
+                    if self.signature.source
+                    else None
+                ),
                 duration=self.signature.duration,
                 stacks=self.signature.stacks,
                 parent=self.space,
             ),
-            self.by,
         )
 
 
@@ -320,7 +335,7 @@ class SpawnUnit(Event[Unit | None]):
         unit = Unit(self.controller, self.blueprint, exhausted=self.exhausted)
         self.space.map.move_unit_to(unit, self.space)
         for signature in self.with_statuses:
-            apply_status_to_unit(unit, signature, self.controller)
+            apply_status_to_unit(unit, signature)
         return unit
 
 

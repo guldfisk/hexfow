@@ -95,13 +95,13 @@ class HasStatuses(HasEffects):
     statuses: list[Status] = dataclasses.field(default_factory=list, init=False)
 
     # TODO by player, we need controller?
-    def add_status(self, status: Status, by: Player) -> None:
+    def add_status(self, status: Status) -> None:
         # TODO should prob set parent
         for existing_status in self.statuses:
             if type(existing_status) == type(status) and existing_status.merge(status):
                 return
         self.statuses.append(status)
-        status.create_effects(by=by)
+        status.create_effects()
 
     def remove_status(self, status: Status) -> None:
         try:
@@ -495,18 +495,23 @@ class Status(HasEffects[H], Serializable, ABC, metaclass=_StatusMeta):
     def __init__(
         self,
         *,
+        controller: Player | None = None,
         duration: int | None = None,
         stacks: int | None = None,
         parent: H | None,
     ):
         super().__init__(parent=parent)
+        self.controller = controller
         self.duration = duration
         self.stacks = stacks
 
     def merge(self, incoming: Self) -> bool:
         return False
 
-    def create_effects(self, by: Player) -> None: ...
+    def is_hidden_for(self, player: Player) -> bool:
+        return False
+
+    def create_effects(self) -> None: ...
 
     def serialize(self, context: SerializationContext) -> JSON:
         return {
@@ -708,8 +713,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
     @modifiable
     def is_visible_to(self, player: Player) -> bool:
         return (
-            player == self.controller
-            or GS().vision_map[player][GS().map.position_off(self)]
+            player == self.controller or GS().map.hex_off(self).is_visible_to(player)
         ) and not self.is_hidden_for(player)
 
     # TODO should effects modifying get_legal_options on movement modify this instead?
@@ -718,8 +722,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
         return [
             _hex
             for _hex in GS().map.get_neighbors_off(self)
-            if not GS().vision_map[self.controller][_hex.position]
-            or _hex.can_move_into(self)
+            if not _hex.is_visible_to(self.controller) or _hex.can_move_into(self)
         ]
 
     @modifiable
@@ -767,14 +770,14 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             "energy": self.energy,
             # TODO
             "size": self.size.g().name[0],
-            # "attack_power"
             "armor": self.armor.g(),
             "exhausted": self.exhausted,
-            "statuses": [status.serialize(context) for status in self.statuses],
+            "statuses": [
+                status.serialize(context)
+                for status in self.statuses
+                if not status.is_hidden_for(context.player)
+            ],
         }
-
-    # def serialize(self, context: SerializationContext) -> JSON:
-    #     return {"name": self.blueprint.name}
 
     def __eq__(self, other: Any) -> bool:
         return self is other
@@ -792,18 +795,22 @@ class UnitStatus(Status[Unit], ABC):
     def __init__(
         self,
         *,
+        controller: Player | None = None,
         duration: int | None = None,
         stacks: int | None = None,
         parent: H | None,
         intention: StatusIntention,
     ):
-        super().__init__(duration=duration, stacks=stacks, parent=parent)
+        super().__init__(
+            controller=controller, duration=duration, stacks=stacks, parent=parent
+        )
         self.intention = intention
 
 
 @dataclasses.dataclass
 class StatusSignature:
     status_type: type[UnitStatus]
+    source: Source
     stacks: int | None = None
     duration: int | None = None
     intention: StatusIntention | None = None
@@ -991,6 +998,10 @@ class Hex(Modifiable, HasStatuses, Serializable):
         return VisionObstruction.NONE
 
     @modifiable
+    def is_visible_to(self, player: Player) -> bool:
+        return GS().vision_map[player][self.position]
+
+    @modifiable
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
         return self.terrain.get_terrain_protection_for(request)
 
@@ -1009,9 +1020,13 @@ class Hex(Modifiable, HasStatuses, Serializable):
                         and unit.is_visible_to(context.player)
                         else None
                     ),
-                    "statuses": [status.serialize(context) for status in self.statuses],
+                    "statuses": [
+                        status.serialize(context)
+                        for status in self.statuses
+                        if not status.is_hidden_for(context.player)
+                    ],
                 }
-                if GS().vision_map[context.player][self.position]
+                if self.is_visible_to(context.player)
                 else (
                     {
                         "visible": False,
@@ -1079,6 +1094,7 @@ class HexStatus(Status[Hex], ABC): ...
 @dataclasses.dataclass
 class HexStatusSignature:
     status_type: type[HexStatus]
+    source: Source
     stacks: int | None = None
     duration: int | None = None
 
@@ -1095,11 +1111,7 @@ class SingleHexTargetActivatedAbility(ActivatedAbilityFacet[Hex]):
         if hexes := [
             _hex
             for _hex in GS().map.get_hexes_within_range_off(self.owner, self.range)
-            if (
-                not self.requires_vision
-                # TODO function on hex
-                or GS().vision_map[self.owner.controller][_hex.position]
-            )
+            if (not self.requires_vision or _hex.is_visible_to(self.owner.controller))
             and (
                 not self.requires_los
                 or not line_of_sight_obstructed_for_unit(
@@ -1182,7 +1194,7 @@ class RadiatingLine(TargetProfile[list[Hex]]):
         }
 
     def parse_response(self, v: Any) -> O:
-        selected_cc = self.to_hexes[v['index']].position
+        selected_cc = self.to_hexes[v["index"]].position
         difference = selected_cc - self.from_hex.position
         return [
             projected

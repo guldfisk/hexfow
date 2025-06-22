@@ -71,7 +71,7 @@ class BurnOnWalkIn(TriggerEffect[MoveUnit]):
     def resolve(self, event: MoveUnit) -> None:
         ES.resolve(
             ApplyStatus(
-                unit=event.unit, by=None, signature=StatusSignature(Burn, stacks=1)
+                unit=event.unit, signature=StatusSignature(Burn, None, stacks=1)
             )
         )
 
@@ -89,9 +89,7 @@ class BurnOnUpkeep(TriggerEffect[RoundCleanup]):
     def resolve(self, event: RoundCleanup) -> None:
         if unit := GS().map.unit_on(self.hex):
             ES.resolve(
-                ApplyStatus(
-                    unit=unit, by=None, signature=StatusSignature(Burn, stacks=1)
-                )
+                ApplyStatus(unit=unit, signature=StatusSignature(Burn, None, stacks=1))
             )
 
 

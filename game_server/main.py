@@ -108,23 +108,23 @@ class Game(Thread):
                     {
                         cc: HexSpec(
                             random.choice(
-                                [
-                                    # Water,
-                                    Plains,
-                                ]
                                 # [
-                                #     Plains,
-                                #     Plains,
-                                #     Plains,
-                                #     Plains,
-                                #     Forest,
-                                #     Forest,
-                                #     Forest,
-                                #     # Forest,
-                                #     # Magma,
-                                #     # Hills,
                                 #     # Water,
+                                #     Plains,
                                 # ]
+                                [
+                                    Plains,
+                                    Plains,
+                                    Plains,
+                                    Plains,
+                                    Forest,
+                                    Forest,
+                                    Forest,
+                                    # Forest,
+                                    # Magma,
+                                    # Hills,
+                                    # Water,
+                                ]
                             ),
                             cc.distance_to(CC(0, 0)) <= 1,
                         )
@@ -136,19 +136,23 @@ class Game(Thread):
 
             player_units = (
                 (
-                    WITCH_ENGINE,
-                    OTTER_SCOUT,
-                    INFERNO_TANK,
+                    # WITCH_ENGINE,
+                    # OTTER_SCOUT,
+                    # INFERNO_TANK,
+                    # HORROR,
+                    CYCLOPS,
+                    CAPRICIOUS_TRICKSTER,
                 ),
                 (
-                    WITCH_ENGINE,
+                    # WITCH_ENGINE,
                     OTTER_SCOUT,
-                    INFERNO_TANK,
+                    LIGHT_ARCHER,
+                    # INFERNO_TANK,
                 ),
             )
 
-            use_random_units = False
-            # use_random_units = True
+            # use_random_units = False
+            use_random_units = True
 
             if use_random_units:
                 min_random_unit_quantity = 7

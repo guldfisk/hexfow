@@ -173,13 +173,7 @@ class Inject(MeleeAttackFacet):
     damage = 4
 
     def resolve_pre_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                unit=defender,
-                by=self.owner.controller,
-                signature=StatusSignature(Parasite),
-            )
-        )
+        ES.resolve(ApplyStatus(defender, StatusSignature(Parasite, self)))
 
 
 class EtherealSting(MeleeAttackFacet):
@@ -205,6 +199,7 @@ class ScratchAndBite(MeleeAttackFacet):
 
 class Shiv(MeleeAttackFacet):
     """Doesn't follow up."""
+
     damage = 2
     combinable = True
 
@@ -270,13 +265,7 @@ class Tackle(MeleeAttackFacet):
     damage = 2
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                unit=defender,
-                by=self.owner.controller,
-                signature=StatusSignature(Stumbling),
-            )
-        )
+        ES.resolve(ApplyStatus(defender, StatusSignature(Stumbling, self)))
 
 
 class FromTheTopRope(MeleeAttackFacet):
@@ -302,10 +291,4 @@ class BellHammer(MeleeAttackFacet):
     damage = 4
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                unit=defender,
-                by=self.owner.controller,
-                signature=StatusSignature(BellStruck, duration=2),
-            )
-        )
+        ES.resolve(ApplyStatus(defender, StatusSignature(BellStruck, self, duration=2)))

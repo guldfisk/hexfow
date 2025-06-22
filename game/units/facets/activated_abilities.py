@@ -38,7 +38,7 @@ from game.events import (
     ApplyHexStatus,
     GainEnergy,
 )
-from game.hex_statuses import Shrine, Soot, BurningTerrain, Smoke
+from game.hex_statuses import Shrine, Soot, BurningTerrain, Smoke, Glimpse
 from game.statuses import (
     Panicked,
     BurstOfSpeed,
@@ -50,7 +50,7 @@ from game.statuses import (
     Burn,
 )
 from game.units.facets.hooks import AdjacencyHook
-from game.values import DamageType, Size
+from game.values import DamageType, Size, VisionObstruction
 
 
 class Bloom(NoTargetActivatedAbility):
@@ -110,13 +110,7 @@ class InducePanic(SingleEnemyActivatedAbility):
     cost = MovementCost(1) | EnergyCost(3)
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                unit=target,
-                by=self.owner.controller,
-                signature=StatusSignature(Panicked, duration=3),
-            )
-        )
+        ES.resolve(ApplyStatus(target, StatusSignature(Panicked, self, duration=3)))
 
 
 class Vault(SingleTargetActivatedAbility):
@@ -147,13 +141,7 @@ class Vault(SingleTargetActivatedAbility):
                 )
                 and target.controller != self.owner.controller
             ):
-                ES.resolve(
-                    ApplyStatus(
-                        unit=target,
-                        by=self.parent.controller,
-                        signature=StatusSignature(Staggered),
-                    )
-                )
+                ES.resolve(ApplyStatus(target, StatusSignature(Staggered, self)))
 
 
 class BatonPass(SingleTargetActivatedAbility):
@@ -177,13 +165,7 @@ class BatonPass(SingleTargetActivatedAbility):
         )
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                unit=target,
-                by=self.owner.controller,
-                signature=StatusSignature(BurstOfSpeed, stacks=1),
-            )
-        )
+        ES.resolve(ApplyStatus(target, StatusSignature(BurstOfSpeed, self, stacks=1)))
 
 
 class SummonScarab(SingleHexTargetActivatedAbility):
@@ -203,7 +185,7 @@ class SummonScarab(SingleHexTargetActivatedAbility):
                 controller=self.owner.controller,
                 space=target,
                 exhausted=True,
-                with_statuses=[StatusSignature(Ephemeral, duration=3)],
+                with_statuses=[StatusSignature(Ephemeral, self, duration=3)],
             )
         )
 
@@ -246,8 +228,11 @@ class Stare(ActivatedAbilityFacet[list[Hex]]):
         )
 
     def perform(self, target: list[Hex]) -> None:
-        # TODO reveal em'
-        pass
+        for h in target:
+            ES.resolve(ApplyHexStatus(h, HexStatusSignature(Glimpse, self)))
+            # TODO handle highground
+            if h.blocks_vision_for(self.owner.controller) != VisionObstruction.NONE:
+                break
 
 
 class Jaunt(ActivatedAbilityFacet[Hex]):
@@ -328,7 +313,7 @@ class SummonBees(SingleHexTargetActivatedAbility):
                 blueprint=UnitBlueprint.registry["bee_swarm"],
                 controller=self.owner.controller,
                 space=target,
-                with_statuses=[StatusSignature(Ephemeral, duration=1)],
+                with_statuses=[StatusSignature(Ephemeral, self, duration=1)],
             )
         )
 
@@ -422,13 +407,7 @@ class Lasso(SingleEnemyActivatedAbility):
     combinable = True
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                unit=target,
-                by=self.owner.controller,
-                signature=StatusSignature(Rooted, duration=1),
-            )
-        )
+        ES.resolve(ApplyStatus(target, StatusSignature(Rooted, self, duration=1)))
 
 
 class Showdown(SingleEnemyActivatedAbility):
@@ -484,9 +463,7 @@ class RaiseShrine(SingleHexTargetActivatedAbility):
     cost = MovementCost(2) | EnergyCost(3)
 
     def perform(self, target: Hex) -> None:
-        ES.resolve(
-            ApplyHexStatus(target, self.owner.controller, HexStatusSignature(Shrine))
-        )
+        ES.resolve(ApplyHexStatus(target, HexStatusSignature(Shrine, self)))
 
 
 class GrantCharm(SingleAllyActivatedAbility):
@@ -494,11 +471,7 @@ class GrantCharm(SingleAllyActivatedAbility):
     cost = EnergyCost(1)
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                target, self.owner.controller, StatusSignature(LuckyCharm, duration=3)
-            )
-        )
+        ES.resolve(ApplyStatus(target, StatusSignature(LuckyCharm, self, duration=3)))
 
 
 class ChokingSoot(ActivatedAbilityFacet[list[Hex]]):
@@ -512,11 +485,7 @@ class ChokingSoot(ActivatedAbilityFacet[list[Hex]]):
 
     def perform(self, target: list[Hex]) -> None:
         for _hex in target:
-            ES.resolve(
-                ApplyHexStatus(
-                    _hex, self.owner.controller, HexStatusSignature(Soot, duration=2)
-                )
-            )
+            ES.resolve(ApplyHexStatus(_hex, HexStatusSignature(Soot, self, duration=2)))
 
 
 # TODO should be an aoe target
@@ -530,9 +499,7 @@ class SmokeCanister(SingleHexTargetActivatedAbility):
     def perform(self, target: Hex) -> None:
         for _hex in GS().map.get_hexes_within_range_off(target, 1):
             ES.resolve(
-                ApplyHexStatus(
-                    _hex, self.owner.controller, HexStatusSignature(Smoke, duration=2)
-                )
+                ApplyHexStatus(_hex, HexStatusSignature(Smoke, self, duration=2))
             )
 
 
@@ -541,11 +508,7 @@ class Terrorize(SingleEnemyActivatedAbility):
     cost = MovementCost(2) | EnergyCost(5)
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                target, self.owner.controller, StatusSignature(Terror, duration=2)
-            )
-        )
+        ES.resolve(ApplyStatus(target, StatusSignature(Terror, self, duration=2)))
 
 
 # TODO should be an attack
@@ -559,11 +522,7 @@ class Scorch(ActivatedAbilityFacet[list[Hex]]):
         for h in target:
             if unit := GS().map.unit_on(h):
                 ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.AOE)))
-                ES.resolve(
-                    ApplyStatus(
-                        unit, self.owner.controller, StatusSignature(Burn, stacks=2)
-                    )
-                )
+                ES.resolve(ApplyStatus(unit, StatusSignature(Burn, self, stacks=2)))
 
 
 class FlameWall(ActivatedAbilityFacet[list[Hex]]):
@@ -584,16 +543,11 @@ class FlameWall(ActivatedAbilityFacet[list[Hex]]):
             ES.resolve(
                 ApplyHexStatus(
                     h,
-                    self.owner.controller,
-                    HexStatusSignature(BurningTerrain, stacks=1, duration=3),
+                    HexStatusSignature(BurningTerrain, self, stacks=1, duration=3),
                 )
             )
             if unit := GS().map.unit_on(h):
-                ES.resolve(
-                    ApplyStatus(
-                        unit, self.owner.controller, StatusSignature(Burn, stacks=2)
-                    )
-                )
+                ES.resolve(ApplyStatus(unit, StatusSignature(Burn, self, stacks=2)))
 
 
 class VitalityTransfer(ActivatedAbilityFacet):
@@ -662,28 +616,22 @@ class Shove(SingleTargetActivatedAbility):
             GS().active_unit_context.movement_points += 1
 
 
-class Poof(ActivatedAbilityFacet[Hex]):
+class Poof(SingleHexTargetActivatedAbility):
     """Applies Smoke to the current position of this unit for 1 round, and moves this unit to target adjacent hex."""
 
     cost = EnergyCost(2)
     combinable = True
+    requires_los = False
+    requires_vision = False
 
-    def get_target_profile(self) -> TargetProfile[Hex] | None:
-        # TODO should be able to target own space?
-        if hexes := list(
-            h
-            for h in GS().map.get_neighbors_off(self.owner)
-            if not GS().vision_map[self.owner.controller][h.position]
-            or h.can_move_into(self)
-        ):
-            return OneOfHexes(hexes)
+    def can_target_hex(self, hex_: Hex) -> bool:
+        return hex_.can_move_into(self.owner)
 
     def perform(self, target: Hex) -> None:
         ES.resolve(
             ApplyHexStatus(
                 GS().map.hex_off(self.owner),
-                self.owner.controller,
-                HexStatusSignature(Smoke, duration=1),
+                HexStatusSignature(Smoke, self, duration=1),
             )
         )
         ES.resolve(MoveUnit(self.owner, target))

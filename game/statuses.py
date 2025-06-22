@@ -55,7 +55,7 @@ class Burn(UnitStatus):
         self.stacks += incoming.stacks
         return True
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(BurnTrigger(self))
 
 
@@ -81,7 +81,7 @@ class Poison(UnitStatus):
         self.stacks += incoming.stacks
         return True
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(PoisonTrigger(self))
 
 
@@ -108,7 +108,7 @@ class PanickedTrigger(TriggerEffect[RoundCleanup]):
 class Panicked(RefreshableDurationUnitStatus):
     default_intention = StatusIntention.DEBUFF
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(PanickedTrigger(self))
 
 
@@ -142,7 +142,7 @@ class TerrifiedModifier(StateModifierEffect[Unit, None, int]):
 class Terrified(RefreshableDurationUnitStatus):
     default_intention = StatusIntention.DEBUFF
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(TerrifiedModifier(self.parent))
 
 
@@ -197,8 +197,8 @@ class Parasite(UnitStatus):
     def merge(self, incoming: Self) -> bool:
         return True
 
-    def create_effects(self, by: Player) -> None:
-        self.register_effects(ParasiteTrigger(self, by))
+    def create_effects(self) -> None:
+        self.register_effects(ParasiteTrigger(self, self.controller))
 
 
 @dataclasses.dataclass(eq=False)
@@ -222,7 +222,7 @@ class BurstOfSpeed(UnitStatus):
     def merge(self, incoming: Self) -> bool:
         return True
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(BurstOfSpeedTrigger(self))
 
 
@@ -249,7 +249,7 @@ class Stumbling(UnitStatus):
     def merge(self, incoming: Self) -> bool:
         return True
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(StumblingTrigger(self))
 
 
@@ -275,7 +275,7 @@ class TheyVeGotASteelChair(UnitStatus):
     def merge(self, incoming: Self) -> bool:
         return True
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(UnitAttackPowerAddModifier(self.parent, 2))
 
 
@@ -295,7 +295,7 @@ class Staggered(UnitStatus):
     def merge(self, incoming: Self) -> bool:
         return True
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(TurnExpiringStatusTrigger(self))
 
 
@@ -322,7 +322,7 @@ class AllInJest(UnitStatus):
             self.stacks += incoming.stacks
         return True
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(
             TurnExpiringStatusTrigger(self), StatusUnitAttackPowerAddModifier(self)
         )
@@ -359,7 +359,7 @@ class RootedModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]])
 class Rooted(RefreshableDurationUnitStatus):
     default_intention = StatusIntention.DEBUFF
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(RootedModifier(self.parent))
 
 
@@ -381,7 +381,7 @@ class IncreaseUnitMaxHealthModifier(StateModifierEffect[Unit, None, int]):
 class Fortified(RefreshableDurationUnitStatus):
     default_intention = StatusIntention.BUFF
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(IncreaseUnitMaxHealthModifier(self.parent, 1))
 
 
@@ -401,7 +401,7 @@ class LuckyCharmReplacement(ReplacementEffect[SufferDamage]):
 class LuckyCharm(RefreshableDurationUnitStatus):
     default_intention = StatusIntention.BUFF
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(LuckyCharmReplacement(self))
 
 
@@ -421,7 +421,7 @@ class BellStruckTrigger(TriggerEffect[ReceiveDamage]):
 class BellStruck(RefreshableDurationUnitStatus):
     default_intention = StatusIntention.DEBUFF
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(BellStruckTrigger(self.parent))
 
 
@@ -483,5 +483,5 @@ class TerrorModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]])
 class Terror(RefreshableDurationUnitStatus):
     default_intention = StatusIntention.DEBUFF
 
-    def create_effects(self, by: Player) -> None:
+    def create_effects(self) -> None:
         self.register_effects(TerrorModifier(self.parent))

@@ -481,6 +481,7 @@ class GrizzlyMurdererTrigger(TriggerEffect[MeleeAttackAction]):
     priority: ClassVar[int] = 0
 
     unit: Unit
+    source: Source
 
     def should_trigger(self, event: MeleeAttackAction) -> bool:
         return event.attacker == self.unit and any(
@@ -488,23 +489,20 @@ class GrizzlyMurdererTrigger(TriggerEffect[MeleeAttackAction]):
         )
 
     def resolve(self, event: MeleeAttackAction) -> None:
-        # TODO formalize iterating copy
         for unit in GS().map.units:
             if unit.controller != self.unit.controller and unit.can_see(
                 GS().map.hex_off(event.defender)
             ):
                 ES.resolve(
                     ApplyStatus(
-                        unit=unit,
-                        by=self.unit.controller,
-                        signature=StatusSignature(Terrified, duration=2),
+                        unit, StatusSignature(Terrified, self.source, duration=2)
                     )
                 )
 
 
 class GrizzlyMurderer(StaticAbilityFacet):
     def create_effects(self) -> None:
-        self.register_effects(GrizzlyMurdererTrigger(self.owner))
+        self.register_effects(GrizzlyMurdererTrigger(self.owner, self))
 
 
 # telepath {7pp} x1
@@ -590,24 +588,21 @@ class HeelTurnTrigger(TriggerEffect[SufferDamage]):
     priority: ClassVar[int] = 0
 
     unit: Unit
+    source: Source
 
     def should_trigger(self, event: SufferDamage) -> bool:
         return event.unit == self.unit and event.result >= 4
 
     def resolve(self, event: SufferDamage) -> None:
         ES.resolve(
-            ApplyStatus(
-                unit=self.unit,
-                by=self.unit.controller,
-                signature=StatusSignature(TheyVeGotASteelChair),
-            )
+            ApplyStatus(self.unit, StatusSignature(TheyVeGotASteelChair, self.source))
         )
 
 
 class HeelTurn(StaticAbilityFacet):
 
     def create_effects(self) -> None:
-        self.register_effects(HeelTurnTrigger(self.owner))
+        self.register_effects(HeelTurnTrigger(self.owner, self))
 
 
 @dataclasses.dataclass(eq=False)
@@ -686,6 +681,7 @@ class LastStandReplacement(ReplacementEffect[Kill]):
     priority: ClassVar[int] = 0
 
     unit: Unit
+    source: Source
 
     def can_replace(self, event: Kill) -> bool:
         return event.unit == self.unit and not any(
@@ -698,15 +694,14 @@ class LastStandReplacement(ReplacementEffect[Kill]):
         ES.resolve(
             ApplyStatus(
                 event.unit,
-                event.unit.controller,
-                StatusSignature(MortallyWounded, duration=1),
+                StatusSignature(MortallyWounded, self.source, duration=1),
             )
         )
 
 
 class LastStand(StaticAbilityFacet):
     def create_effects(self) -> None:
-        self.register_effects(LastStandReplacement(self.owner))
+        self.register_effects(LastStandReplacement(self.owner, self))
 
 
 @dataclasses.dataclass(eq=False)
@@ -715,6 +710,7 @@ class ToxicPresenceTrigger(TriggerEffect[TurnCleanup]):
     priority: ClassVar[int] = 0
 
     unit: Unit
+    source: Source
     amount: int
 
     def should_trigger(self, event: TurnCleanup) -> bool:
@@ -724,9 +720,7 @@ class ToxicPresenceTrigger(TriggerEffect[TurnCleanup]):
         for unit in GS().map.get_neighboring_units_off(self.unit):
             ES.resolve(
                 ApplyStatus(
-                    unit,
-                    self.unit.controller,
-                    StatusSignature(Poison, stacks=self.amount),
+                    unit, StatusSignature(Poison, self.source, stacks=self.amount)
                 )
             )
 
@@ -737,7 +731,7 @@ class ToxicPresence(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(ToxicPresenceTrigger(self.owner, 1))
+        self.register_effects(ToxicPresenceTrigger(self.owner, self, 1))
 
 
 # otter scout {4w} x2
@@ -809,6 +803,7 @@ class JukeAndJiveTrigger(TriggerEffect[ActionCleanup]):
     _visible: bool | None = dataclasses.field(init=False, default=None)
 
     unit: Unit
+    source: Source
 
     @hook_on(ActionUpkeep)
     def on_turn_upkeep(self, event: ActionUpkeep) -> None:
@@ -830,9 +825,7 @@ class JukeAndJiveTrigger(TriggerEffect[ActionCleanup]):
 
     def resolve(self, event: ActionCleanup) -> None:
         ES.resolve(
-            ApplyStatus(
-                self.unit, self.unit.controller, StatusSignature(AllInJest, stacks=1)
-            )
+            ApplyStatus(self.unit, StatusSignature(AllInJest, self.source, stacks=1))
         )
 
 
@@ -843,4 +836,4 @@ class JukeAndJive(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(JukeAndJiveTrigger(self.owner))
+        self.register_effects(JukeAndJiveTrigger(self.owner, self))
