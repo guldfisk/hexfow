@@ -107,10 +107,10 @@ class NothingStopsTheMail(NoTargetActivatedAbility):
 
 class InducePanic(SingleEnemyActivatedAbility):
     range = 3
-    cost = MovementCost(1) | EnergyCost(3)
+    cost = MovementCost(1) | EnergyCost(5)
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(ApplyStatus(target, StatusSignature(Panicked, self, duration=3)))
+        ES.resolve(ApplyStatus(target, StatusSignature(Panicked, self, duration=2)))
 
 
 class Vault(SingleTargetActivatedAbility):

@@ -1,5 +1,5 @@
-import { GameState, Hex } from "../interfaces/gameState.ts";
-import { getBaseActions, getUnitsOfHexes } from "./actionSpace.ts";
+import {GameState, Hex} from "../interfaces/gameState.ts";
+import {getBaseActions, getUnitsOfHexes} from "./actionSpace.ts";
 import {
   ActionSpace,
   ConsecutiveAdjacentHexesMenu,
@@ -9,17 +9,9 @@ import {
   NOfUnitsMenu,
   RadiatingLineMenu,
 } from "./interface.ts";
-import {
-  addCCs,
-  ccDistance,
-  ccEquals,
-  ccToKey,
-  constMultCC,
-  getNeighborsOffCC,
-  subCCs,
-} from "../geometry.ts";
-import { activateMenu, store } from "../state/store.ts";
-import { mod, range } from "../utils/range.ts";
+import {addCCs, ccDistance, ccEquals, ccToKey, constMultCC, getNeighborsOffCC, subCCs,} from "../geometry.ts";
+import {advanceMenu, store,} from "../state/store.ts";
+import {mod, range} from "../utils/range.ts";
 
 // TODO some common logic in this mess
 
@@ -27,6 +19,7 @@ const getNOfUnitsActionSpace = (
   gameState: GameState,
   takeAction: (body: { [key: string]: any }) => void,
   menu: NOfUnitsMenu,
+  menuId: string,
 ): ActionSpace => {
   const unitHexes: { [key: string]: Hex } = getUnitsOfHexes(gameState);
   const actionSpace: ActionSpace = Object.fromEntries(
@@ -57,7 +50,7 @@ const getNOfUnitsActionSpace = (
             });
           } else {
             store.dispatch(
-              activateMenu({ ...menu, selectedUnits: selectedUnitIds }),
+              advanceMenu({ id: menuId, data: { ...menu, selectedUnits: selectedUnitIds } }),
             );
           }
         },
@@ -80,6 +73,7 @@ const getConsecutiveAdjacentHexesActionSpace = (
   gameState: GameState,
   takeAction: (body: { [key: string]: any }) => void,
   menu: ConsecutiveAdjacentHexesMenu,
+  menuId: string,
 ): ActionSpace => {
   const actionSpace: ActionSpace = Object.fromEntries(
     gameState.map.hexes.map((hex) => [
@@ -102,13 +96,15 @@ const getConsecutiveAdjacentHexesActionSpace = (
         {
           type: "aoe",
           description: "select hexes",
-          do: () =>
-            takeAction({ index: menu.optionIndex, target: { cc: option } }),
+          do: () => {
+            // store.dispatch(deactivateMenu());
+            takeAction({ index: menu.optionIndex, target: { cc: option } });
+          },
         },
       ],
       highlighted: highlighted.includes(idx),
       hoverTrigger: () => {
-        store.dispatch(activateMenu({ ...menu, hovering: idx }));
+        store.dispatch(advanceMenu({id: menuId, data: { ...menu, hovering: idx }}));
       },
     };
   }
@@ -126,6 +122,7 @@ const getHexHexesActionSpace = (
   gameState: GameState,
   takeAction: (body: { [key: string]: any }) => void,
   menu: HexHexesMenu,
+  menuId: string,
 ): ActionSpace => {
   const actionSpace: ActionSpace = Object.fromEntries(
     gameState.map.hexes.map((hex) => [
@@ -145,18 +142,20 @@ const getHexHexesActionSpace = (
         {
           type: "aoe",
           description: "select hexes",
-          do: () =>
+          do: () => {
+            // store.dispatch(deactivateMenu());
             takeAction({
               index: menu.optionIndex,
               target: {
                 index: targetIdx,
               },
-            }),
+            });
+          },
         },
       ],
       highlighted: actionSpace[ccToKey(cc)].highlighted,
       hoverTrigger: () => {
-        store.dispatch(activateMenu({ ...menu, hovering: cc }));
+        store.dispatch(advanceMenu({id: menuId, data: { ...menu, hovering: cc }}));
       },
     };
   }
@@ -174,6 +173,7 @@ const getRadiatingLineActionSpace = (
   gameState: GameState,
   takeAction: (body: { [key: string]: any }) => void,
   menu: RadiatingLineMenu,
+  menuId: string,
 ): ActionSpace => {
   const highlightedCCs = menu.hovering
     ? range(menu.targetProfile.values.length).map((i) =>
@@ -206,18 +206,20 @@ const getRadiatingLineActionSpace = (
           type: "aoe",
           description: "select hexes",
 
-          do: () =>
+          do: () => {
+            // store.dispatch(deactivateMenu());
             takeAction({
               index: menu.optionIndex,
               target: {
                 index: targetIdx,
               },
-            }),
+            });
+          },
         },
       ],
       highlighted: actionSpace[ccToKey(cc)].highlighted,
       hoverTrigger: () => {
-        store.dispatch(activateMenu({ ...menu, hovering: cc }));
+        store.dispatch(advanceMenu({id: menuId, data: { ...menu, hovering: cc }}));
       },
     };
   }
@@ -235,6 +237,7 @@ const getListMenuActionSpace = (
   gameState: GameState,
   takeAction: (body: { [key: string]: any }) => void,
   menu: ListMenu,
+  menuId: string,
 ): ActionSpace => {
   const actions = getBaseActions(gameState, takeAction);
   return Object.fromEntries(
@@ -262,6 +265,7 @@ export const menuActionSpacers: {
     gameState: GameState,
     takeAction: (body: { [key: string]: any }) => void,
     menu: MenuData,
+    menuId: string,
   ) => ActionSpace;
 } = {
   NOfUnits: getNOfUnitsActionSpace,

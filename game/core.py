@@ -19,6 +19,7 @@ from typing import Mapping
 
 from bidict import bidict
 
+from debug_utils import dp
 from events.eventsystem import (
     Modifiable,
     ModifiableAttribute,
@@ -515,7 +516,7 @@ class Status(HasEffects[H], Serializable, ABC, metaclass=_StatusMeta):
 
     def serialize(self, context: SerializationContext) -> JSON:
         return {
-            "type": self.__class__.identifier,
+            "type": self.identifier,
             "duration": self.duration,
             "stacks": self.stacks,
         }
@@ -805,6 +806,9 @@ class UnitStatus(Status[Unit], ABC):
             controller=controller, duration=duration, stacks=stacks, parent=parent
         )
         self.intention = intention
+
+    def serialize(self, context: SerializationContext) -> JSON:
+        return {**super().serialize(context), "intention": self.intention.value}
 
 
 @dataclasses.dataclass

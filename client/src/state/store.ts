@@ -11,12 +11,15 @@ const mainSlice = createSlice({
     gameObjectDetails: null,
     hoveredUnit: null,
     menuData: null,
+    menuId: null,
   } as {
     gameState: GameState | null;
     shouldRerender: boolean;
     gameObjectDetails: GameObjectDetails | null;
     hoveredUnit: Unit | null;
     menuData: MenuData | null;
+    // TODO fix this ultra trash
+    menuId: string | null;
   },
   reducers: {
     receiveGameState: (state, action: PayloadAction<GameState>) => {
@@ -38,10 +41,21 @@ const mainSlice = createSlice({
     },
     activateMenu: (state, action: PayloadAction<MenuData>) => {
       state.menuData = action.payload;
+      state.menuId = crypto.randomUUID();
       state.shouldRerender = true;
+    },
+    advanceMenu: (
+      state,
+      action: PayloadAction<{ id: string; data: MenuData }>,
+    ) => {
+      if (state.menuId == action.payload.id) {
+        state.menuData = action.payload.data;
+        state.shouldRerender = true;
+      }
     },
     deactivateMenu: (state) => {
       state.menuData = null;
+      state.menuId = null;
       state.shouldRerender = true;
     },
   },
@@ -53,6 +67,7 @@ export const {
   receivedGameObjectDetails,
   hoverUnit,
   activateMenu,
+  advanceMenu,
   deactivateMenu,
 } = mainSlice.actions;
 

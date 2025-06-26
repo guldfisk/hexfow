@@ -7,7 +7,7 @@ import {
   Text,
   TextStyle,
 } from "pixi.js";
-import { GameState, Status } from "./interfaces/gameState.ts";
+import { GameState, Intention, Status } from "./interfaces/gameState.ts";
 import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
 
 import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
@@ -56,6 +56,9 @@ const selectionIconMap: { [key in selectionIcon]: string } = {
 const colors = {
   enemy: "0x9b1711",
   ally: "0x2f71e7",
+  buff: "0x3fab48",
+  debuff: "ab3f89",
+  neutralStatus: "757575",
   fullHealth: [237, 10, 10],
   noHealth: [22, 3, 1],
   fullEnergy: [47, 103, 248],
@@ -77,6 +80,7 @@ export const renderMap = (
   gameState: GameState,
   gameObjectDetails: GameObjectDetails,
   menu: MenuData | null,
+  menuId: string | null,
   gameConnection: WebSocket,
 ): Container => {
   // TODO this shouldn't be here
@@ -132,10 +136,32 @@ export const renderMap = (
     [1, 0, 2].map(getThreePartDividerFrame),
   ];
 
-  const statusFrame = new GraphicsContext().circle(0, 0, 20).fill();
-  const statusBorder = new GraphicsContext()
-    .circle(0, 0, 20)
-    .stroke({ color: "grey", pixelLine: true });
+  const statusFrame = new GraphicsContext().circle(0, 0, 20).fill({ alpha: 0 });
+  const diag = Math.sqrt(2) * 22;
+
+  const debuffStatusBorder = new Graphics()
+    .circle(0, 0, 22)
+    .moveTo(-diag / 2, diag / 2)
+    .lineTo(0, diag)
+    .lineTo(diag / 2, diag / 2)
+    .closePath()
+    .fill(colors.debuff);
+  const buffStatusBorder = new Graphics()
+    .circle(0, 0, 22)
+    .moveTo(-diag / 2, -diag / 2)
+    .lineTo(0, -diag)
+    .lineTo(diag / 2, -diag / 2)
+    .closePath()
+    .fill(colors.buff);
+  const neutralStatusBorder = new Graphics()
+    .circle(0, 0, 22)
+    .fill(colors.neutralStatus);
+
+  const intentionBorderMap = {
+    buff: buffStatusBorder,
+    neutral: neutralStatusBorder,
+    debuff: debuffStatusBorder,
+  };
 
   const hexStatusFrame = getHexMask({ alpha: 0 }, 22);
   const hexStatusBorder = hexStatusFrame.stroke({
@@ -207,6 +233,7 @@ export const renderMap = (
         gameState,
         (body) => gameConnection.send(JSON.stringify(body)),
         menu,
+        menuId,
       )
     : getBaseActionSpace(gameState, (body) =>
         gameConnection.send(JSON.stringify(body)),
@@ -288,20 +315,28 @@ export const renderMap = (
 
     const makeStatusIndicator = (
       status: Status,
-      hexOutline: boolean,
+      intention: Intention | null,
     ): Container => {
       const statusContainer = new Container();
       const statusSprite = new Sprite(textureMap[status.type]);
 
+      if (intention) {
+        const frame = new Graphics(intentionBorderMap[intention]);
+        // frame.angle = 22.5;
+        statusContainer.addChild(frame);
+      }
+
       statusSprite.anchor = 0.5;
       statusContainer.addChild(statusSprite);
 
-      const mask = new Graphics(hexOutline ? hexStatusFrame : statusFrame);
+      const mask = new Graphics(!intention ? hexStatusFrame : statusFrame);
       statusContainer.addChild(mask);
       statusSprite.mask = mask;
 
-      const border = new Graphics(hexOutline ? hexStatusBorder : statusBorder);
-      statusContainer.addChild(border);
+      if (!intention) {
+        const border = new Graphics(hexStatusBorder);
+        statusContainer.addChild(border);
+      }
 
       if (status.stacks) {
         const durationText = new Text({
@@ -391,7 +426,7 @@ export const renderMap = (
       }
 
       for (const [idx, status] of hexData.unit.statuses.entries()) {
-        const statusContainer = makeStatusIndicator(status, false);
+        const statusContainer = makeStatusIndicator(status, status.intention);
         statusContainer.position = {
           x: -unitSprite.width / 2,
           y:
@@ -505,7 +540,7 @@ export const renderMap = (
     }
 
     for (const [idx, status] of hexData.statuses.entries()) {
-      const statusContainer = makeStatusIndicator(status, true);
+      const statusContainer = makeStatusIndicator(status, null);
 
       const smallerSize = hexSize - 30;
       const [smallerWidth, smallerHeight] = getHexDimensions(smallerSize);

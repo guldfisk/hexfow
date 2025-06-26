@@ -14,7 +14,6 @@ game functionality
     current statuses in unit detail view
     game log
     elevation
-    status sources + controller
     vision ghosts
     chess clock
     victory points/checking

@@ -9,6 +9,12 @@ export interface Status {
   stacks: number | null;
 }
 
+export type Intention = "buff" | "debuff" | "neutral";
+
+export interface UnitStatus extends Status {
+  intention: Intention;
+}
+
 export interface Unit {
   id: string;
   blueprint: string;
@@ -22,7 +28,7 @@ export interface Unit {
   armor: number;
   size: Size;
   exhausted: boolean;
-  statuses: Status[];
+  statuses: UnitStatus[];
 }
 
 export interface Hex {
