@@ -22,7 +22,6 @@ from game.events import Kill
 from game.values import StatusIntention
 
 
-# TODO what should the order off trigger be for burn vs decrement and such?
 class Burn(UnitStatus):
     default_intention = StatusIntention.DEBUFF
 

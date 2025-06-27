@@ -1,4 +1,5 @@
 import dataclasses
+from enum import IntEnum, auto
 from typing import ClassVar, Callable
 
 from events.eventsystem import TriggerEffect, ES, hook_on
@@ -43,6 +44,11 @@ from game.events import (
     Exhaust,
 )
 from game.values import DamageType, StatusIntention
+
+
+class RoundCleanupLayers(IntEnum):
+    DEBUFFS_TICK = auto()
+    APPLY_DEBUFFS = auto()
 
 
 @dataclasses.dataclass(eq=False)
@@ -339,7 +345,7 @@ class BurnOnWalkIn(TriggerEffect[MoveUnit]):
 
 @dataclasses.dataclass(eq=False)
 class BurnOnUpkeep(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = 0
+    priority: ClassVar[int] = RoundCleanupLayers.APPLY_DEBUFFS
 
     hex: Hex
     amount: int | Callable[..., int]
@@ -367,7 +373,7 @@ class BurnOnUpkeep(TriggerEffect[RoundCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class BurnTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = 0
+    priority: ClassVar[int] = RoundCleanupLayers.DEBUFFS_TICK
 
     status: UnitStatus
 
@@ -432,7 +438,7 @@ class HexWalkInDamageTrigger(TriggerEffect[MoveUnit]):
 
 @dataclasses.dataclass(eq=False)
 class HexRoundDamageTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = 0
+    priority: ClassVar[int] = RoundCleanupLayers.DEBUFFS_TICK
 
     hex: Hex
     source: Source
@@ -463,7 +469,7 @@ class TurnExpiringStatusTrigger(TriggerEffect[Turn]):
 
 @dataclasses.dataclass(eq=False)
 class RoundDamageTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = 0
+    priority: ClassVar[int] = RoundCleanupLayers.DEBUFFS_TICK
 
     unit: Unit
     source: Source
@@ -484,7 +490,7 @@ class RoundDamageTrigger(TriggerEffect[RoundCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class PanickedTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = 0
+    priority: ClassVar[int] = RoundCleanupLayers.DEBUFFS_TICK
 
     status: UnitStatus
 

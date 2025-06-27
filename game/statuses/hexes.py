@@ -89,6 +89,7 @@ class Revealed(HexStatus):
         self.register_effects(HexRevealedModifier(self.parent, self.controller))
 
 
+# TODO how should this work with the turn immediately ending?
 class Glimpse(HexStatus):
     def merge(self, incoming: Self) -> bool:
         return incoming.controller == self.controller
