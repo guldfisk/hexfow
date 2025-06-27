@@ -8,9 +8,9 @@ from game.core import (
     ExclusiveCost,
     DamageSignature,
 )
+from game.effects.hooks import AdjacencyHook
 from game.events import Damage, ApplyStatus
-from game.statuses import Staggered, Stumbling, Parasite, BellStruck
-from game.units.facets.hooks import AdjacencyHook
+from game.statuses.units import Staggered, Stumbling, Parasite, BellStruck
 from game.values import Size, DamageType
 
 

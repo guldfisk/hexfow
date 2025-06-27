@@ -26,6 +26,7 @@ from game.core import (
     HexHexes,
 )
 from game.decisions import TargetProfile, O
+from game.effects.hooks import AdjacencyHook
 from game.events import (
     Kill,
     Heal,
@@ -38,8 +39,8 @@ from game.events import (
     ApplyHexStatus,
     GainEnergy,
 )
-from game.hex_statuses import Shrine, Soot, BurningTerrain, Smoke, Glimpse
-from game.statuses import (
+from game.statuses.hexes import Shrine, Soot, BurningTerrain, Smoke, Glimpse
+from game.statuses.units import (
     Panicked,
     BurstOfSpeed,
     Staggered,
@@ -49,7 +50,6 @@ from game.statuses import (
     Terror,
     Burn,
 )
-from game.units.facets.hooks import AdjacencyHook
 from game.values import DamageType, Size, VisionObstruction
 
 

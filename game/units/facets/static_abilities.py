@@ -34,7 +34,7 @@ from game.effects.triggers import (
     JukeAndJiveTrigger,
 )
 from game.map.terrain import Water
-from game.statuses import Burn
+from game.statuses.units import Burn
 from game.values import Resistance
 
 

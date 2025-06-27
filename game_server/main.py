@@ -110,8 +110,8 @@ class Game(Thread):
                             random.choice(
                                 [
                                     # Water,
-                                    # Plains,
-                                    Magma,
+                                    Plains,
+                                    # Magma,
                                 ]
                                 # [
                                 #     Plains,
@@ -140,17 +140,18 @@ class Game(Thread):
                     WITCH_ENGINE,
                     OTTER_SCOUT,
                     INFERNO_TANK,
-                    # CACTUS,
+                    CACTUS,
                     HORROR,
                     CYCLOPS,
                     CAPRICIOUS_TRICKSTER,
+                    RHINO_BEAST,
                 ),
                 (
-                    # WITCH_ENGINE,
+                    WITCH_ENGINE,
                     OTTER_SCOUT,
                     LIGHT_ARCHER,
                     SHRINE_KEEPER,
-                    # INFERNO_TANK,
+                    INFERNO_TANK,
                     BULLDOZER,
                 ),
             )
