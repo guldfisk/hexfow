@@ -38,6 +38,7 @@ from game.events import (
     SimpleAttack,
     ApplyHexStatus,
     GainEnergy,
+    ModifyMovementPoints,
 )
 from game.statuses.hexes import Shrine, Soot, BurningTerrain, Smoke, Glimpse
 from game.statuses.units import (
@@ -95,7 +96,7 @@ class GreaseTheGears(SingleAllyActivatedAbility):
         ):
             ES.resolve(Heal(self.owner, 2))
             ES.resolve(GainEnergy(self.owner, 2))
-            GS().active_unit_context.movement_points += movement_bonus
+            ES.resolve(ModifyMovementPoints(self.owner, movement_bonus))
 
 
 class NothingStopsTheMail(NoTargetActivatedAbility):
@@ -613,7 +614,7 @@ class Shove(SingleTargetActivatedAbility):
             )
         )
         if any(isinstance(status, Staggered) for status in target.statuses):
-            GS().active_unit_context.movement_points += 1
+            ES.resolve(ModifyMovementPoints(self.owner, 1))
 
 
 class Poof(SingleHexTargetActivatedAbility):

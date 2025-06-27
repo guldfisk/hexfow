@@ -56,6 +56,7 @@ from game.tests.conftest import EventLogger
 
 A = TypeVar("A", bound=DecisionPoint)
 T = TypeVar("T")
+S = TypeVar("S")
 
 
 # TODO wtf if this
@@ -92,17 +93,18 @@ class SkipOption(Option[None]):
 
 
 @dataclasses.dataclass
-class HasStatuses(HasEffects):
+class HasStatuses(HasEffects, Generic[S]):
     statuses: list[Status] = dataclasses.field(default_factory=list, init=False)
 
     # TODO by player, we need controller?
-    def add_status(self, status: Status) -> None:
+    def add_status(self, status: S) -> S:
         # TODO should prob set parent
         for existing_status in self.statuses:
             if type(existing_status) == type(status) and existing_status.merge(status):
-                return
+                return existing_status
         self.statuses.append(status)
         status.create_effects()
+        return status
 
     def remove_status(self, status: Status) -> None:
         try:
@@ -1323,7 +1325,6 @@ class ActiveUnitContext(Serializable):
         return {
             "unit": self.unit.serialize(context),
             "movement_points": self.movement_points,
-            # 'has_acted': self.has_acted,
         }
 
 

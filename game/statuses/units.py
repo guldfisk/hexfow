@@ -4,8 +4,7 @@ from events.eventsystem import ES
 from game.core import UnitStatus, RefreshableDurationUnitStatus
 from game.effects.modifiers import (
     RootedModifier,
-    TerrifiedModifier,
-    UnitAttackPowerAddModifier,
+    UnitAttackPowerFlatModifier,
     IncreaseUnitMaxHealthModifier,
     TerrorModifier,
 )
@@ -16,8 +15,7 @@ from game.effects.triggers import (
     RoundDamageTrigger,
     PanickedTrigger,
     ParasiteTrigger,
-    BurstOfSpeedTrigger,
-    StumblingTrigger,
+    OneTimeModifyMovementPointsStatusTrigger,
     BellStruckTrigger,
 )
 from game.events import Kill
@@ -73,7 +71,7 @@ class Terrified(RefreshableDurationUnitStatus):
     default_intention = StatusIntention.DEBUFF
 
     def create_effects(self) -> None:
-        self.register_effects(TerrifiedModifier(self.parent))
+        self.register_effects(UnitAttackPowerFlatModifier(self.parent, -1))
 
 
 class Parasite(UnitStatus):
@@ -84,7 +82,7 @@ class Parasite(UnitStatus):
         return True
 
     def create_effects(self) -> None:
-        self.register_effects(ParasiteTrigger(self, self.controller))
+        self.register_effects(ParasiteTrigger(self))
 
 
 class BurstOfSpeed(UnitStatus):
@@ -94,7 +92,7 @@ class BurstOfSpeed(UnitStatus):
         return True
 
     def create_effects(self) -> None:
-        self.register_effects(BurstOfSpeedTrigger(self))
+        self.register_effects(OneTimeModifyMovementPointsStatusTrigger(self, 1))
 
 
 class Stumbling(UnitStatus):
@@ -104,7 +102,7 @@ class Stumbling(UnitStatus):
         return True
 
     def create_effects(self) -> None:
-        self.register_effects(StumblingTrigger(self))
+        self.register_effects(OneTimeModifyMovementPointsStatusTrigger(self, -1))
 
 
 class TheyVeGotASteelChair(UnitStatus):
@@ -114,7 +112,7 @@ class TheyVeGotASteelChair(UnitStatus):
         return True
 
     def create_effects(self) -> None:
-        self.register_effects(UnitAttackPowerAddModifier(self.parent, 2))
+        self.register_effects(UnitAttackPowerFlatModifier(self.parent, 2))
 
 
 class Staggered(UnitStatus):
@@ -138,7 +136,7 @@ class AllInJest(UnitStatus):
     def create_effects(self) -> None:
         self.register_effects(
             TurnExpiringStatusTrigger(self),
-            UnitAttackPowerAddModifier(self.parent, lambda: self.stacks),
+            UnitAttackPowerFlatModifier(self.parent, lambda: self.stacks),
         )
 
 

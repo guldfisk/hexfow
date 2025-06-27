@@ -268,7 +268,6 @@ class HexIncreasesEnergyRegenModifier(StateModifierEffect[Unit, None, int]):
         return value + self.amount
 
 
-# TODO same as smoke
 @dataclasses.dataclass(eq=False)
 class HexDecreaseSightCappedModifier(StateModifierEffect[Unit, None, int]):
     priority: ClassVar[int] = 1
@@ -314,24 +313,8 @@ class HexRevealedModifier(StateModifierEffect[Hex, Player, bool]):
         return True
 
 
-# TODO generic attack power modifier
 @dataclasses.dataclass(eq=False)
-class TerrifiedModifier(StateModifierEffect[Unit, None, int]):
-    priority: ClassVar[int] = 1
-    target: ClassVar[object] = Unit.attack_power
-
-    unit: Unit
-
-    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
-        return obj == self.unit
-
-    def modify(self, obj: Unit, request: None, value: int) -> int:
-        return value - 1
-
-
-# TODO maybe this can be merged with the terrified modifier?
-@dataclasses.dataclass(eq=False)
-class UnitAttackPowerAddModifier(StateModifierEffect[Unit, None, int]):
+class UnitAttackPowerFlatModifier(StateModifierEffect[Unit, None, int]):
     priority: ClassVar[int] = 1
     target: ClassVar[object] = Unit.attack_power
 

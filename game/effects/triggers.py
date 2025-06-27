@@ -39,14 +39,14 @@ from game.events import (
     TurnUpkeep,
     SpawnUnit,
     ReceiveDamage,
+    ModifyMovementPoints,
+    Exhaust,
 )
-from game.player import Player
-from game.values import DamageType
+from game.values import DamageType, StatusIntention
 
 
 @dataclasses.dataclass(eq=False)
 class PricklyTrigger(TriggerEffect[SimpleAttack]):
-    # TODO handle priority in shared enum or some shit
     priority: ClassVar[int] = 0
 
     unit: Unit
@@ -72,27 +72,17 @@ class PackHunterTrigger(TriggerEffect[MeleeAttackAction]):
         return (
             event.defender.controller != self.unit.controller
             and event.attacker != self.unit
-            # TODO really awkward having to be defencive about this here, maybe
+            # TODO really awkward having to be defensive about this here, maybe
             #  good argument for triggers being queued before event execution?
             and event.defender.on_map()
             and GS().map.distance_between(self.unit, event.defender) <= 1
         )
 
     def resolve(self, event: MeleeAttackAction) -> None:
-        ES.resolve(
-            SimpleAttack(
-                attacker=self.unit,
-                defender=event.defender,
-                # TODO yikes
-                attack=next(
-                    iter(
-                        facet
-                        for facet in self.unit.attacks
-                        if isinstance(facet, MeleeAttackFacet)
-                    )
-                ),
+        if attack := self.unit.get_primary_attack(MeleeAttackFacet):
+            ES.resolve(
+                SimpleAttack(attacker=self.unit, defender=event.defender, attack=attack)
             )
-        )
 
 
 @dataclasses.dataclass(eq=False)
@@ -145,7 +135,6 @@ class SchadenfreudeDamageTrigger(TriggerEffect[Damage]):
         ES.resolve(GainEnergy(self.unit, 1))
 
 
-# TODO should only trigger on debuffs
 @dataclasses.dataclass(eq=False)
 class SchadenfreudeDebuffTrigger(TriggerEffect[ApplyStatus]):
     priority: ClassVar[int] = 0
@@ -155,6 +144,7 @@ class SchadenfreudeDebuffTrigger(TriggerEffect[ApplyStatus]):
     def should_trigger(self, event: ApplyStatus) -> bool:
         return (
             event.unit != self.unit
+            and event.result.intention == StatusIntention.DEBUFF
             and GS().map.distance_between(self.unit, event.unit) <= 1
         )
 
@@ -217,9 +207,8 @@ class CaughtInTheMatchTrigger(TriggerEffect[MoveAction]):
         )
 
     def resolve(self, event: MoveAction) -> None:
-        # TODO should be event. prob in reality this effect should be a replacement on
-        #  movement penalties...
-        GS().active_unit_context.movement_points -= 1
+        # TODO should be a replacement on move penalty instead?
+        ES.resolve(ModifyMovementPoints(event.unit, -1))
 
 
 @dataclasses.dataclass(eq=False)
@@ -267,7 +256,6 @@ class QuickTrigger(TriggerEffect[TurnCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class ToxicPresenceTrigger(TriggerEffect[TurnCleanup]):
-    # TODO handle priority in shared enum or some shit
     priority: ClassVar[int] = 0
 
     unit: Unit
@@ -463,7 +451,6 @@ class HexRoundDamageTrigger(TriggerEffect[RoundCleanup]):
             )
 
 
-# TODO common
 @dataclasses.dataclass(eq=False)
 class TurnExpiringStatusTrigger(TriggerEffect[Turn]):
     priority: ClassVar[int] = 0
@@ -495,7 +482,6 @@ class RoundDamageTrigger(TriggerEffect[RoundCleanup]):
         )
 
 
-# TODO timings (right now only get to trigger duration -1 times)
 @dataclasses.dataclass(eq=False)
 class PanickedTrigger(TriggerEffect[RoundCleanup]):
     priority: ClassVar[int] = 0
@@ -520,8 +506,6 @@ class ParasiteTrigger(TriggerEffect[KillUpkeep]):
     priority: ClassVar[int] = 0
 
     status: UnitStatus
-    # TODO not needed?
-    created_by: Player
 
     def should_trigger(self, event: KillUpkeep) -> bool:
         return event.unit == self.status.parent
@@ -553,44 +537,25 @@ class ParasiteTrigger(TriggerEffect[KillUpkeep]):
             ES.resolve(
                 SpawnUnit(
                     blueprint=UnitBlueprint.registry["horror_spawn"],
-                    controller=self.created_by,
+                    controller=self.status.controller,
                     space=target_hex,
                     exhausted=True,
                 )
             )
 
 
-# TODO generic
 @dataclasses.dataclass(eq=False)
-class BurstOfSpeedTrigger(TriggerEffect[TurnUpkeep]):
+class OneTimeModifyMovementPointsStatusTrigger(TriggerEffect[TurnUpkeep]):
     priority: ClassVar[int] = 0
 
     status: UnitStatus
+    amount: int
 
     def should_trigger(self, event: TurnUpkeep) -> bool:
         return event.unit == self.status.parent
 
     def resolve(self, event: TurnUpkeep) -> None:
-        # TODO should be an event
-        GS().active_unit_context.movement_points += 1
-        self.status.remove()
-
-
-# TODO separate from burst of speed trigger since it should prob
-#  have different priority
-# TODO NO MERGE
-@dataclasses.dataclass(eq=False)
-class StumblingTrigger(TriggerEffect[TurnUpkeep]):
-    priority: ClassVar[int] = 0
-
-    status: UnitStatus
-
-    def should_trigger(self, event: TurnUpkeep) -> bool:
-        return event.unit == self.status.parent
-
-    def resolve(self, event: TurnUpkeep) -> None:
-        # TODO should be an event
-        GS().active_unit_context.movement_points -= 1
+        ES.resolve(ModifyMovementPoints(self.status.parent, self.amount))
         self.status.remove()
 
 
@@ -604,5 +569,4 @@ class BellStruckTrigger(TriggerEffect[ReceiveDamage]):
         return event.unit == self.unit and event.signature.amount >= 3
 
     def resolve(self, event: ReceiveDamage) -> None:
-        # TODO event?
-        self.unit.exhausted = True
+        ES.resolve(Exhaust(event.unit))

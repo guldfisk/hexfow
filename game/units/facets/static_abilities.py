@@ -54,6 +54,9 @@ class Farsighted(StaticAbilityFacet):
 
 
 class PackHunter(StaticAbilityFacet):
+    """
+    When another allied unit attacks a unit adjacent to this unit, this unit hits the attacked unit with its primary melee attack.
+    """
     def create_effects(self) -> None:
         self.register_effects(PackHunterTrigger(self.owner))
 

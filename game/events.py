@@ -23,6 +23,7 @@ from game.core import (
     HexStatusSignature,
     DamageSignature,
     Facet,
+    UnitStatus,
 )
 from game.decisions import SelectOptionDecisionPoint, NoTarget, O, OptionDecision
 from game.player import Player
@@ -227,8 +228,8 @@ class RangedAttackAction(Event[None]):
 
 
 # TODO where?
-def apply_status_to_unit(unit: Unit, signature: StatusSignature) -> None:
-    unit.add_status(
+def apply_status_to_unit(unit: Unit, signature: StatusSignature) -> UnitStatus:
+    return unit.add_status(
         signature.status_type(
             controller=(
                 controller := (
@@ -260,15 +261,15 @@ def apply_status_to_unit(unit: Unit, signature: StatusSignature) -> None:
 
 
 @dataclasses.dataclass
-class ApplyStatus(Event[None]):
+class ApplyStatus(Event[UnitStatus]):
     unit: Unit
     signature: StatusSignature
 
     def is_valid(self) -> bool:
         return self.unit.on_map()
 
-    def resolve(self) -> None:
-        apply_status_to_unit(self.unit, self.signature)
+    def resolve(self) -> UnitStatus:
+        return apply_status_to_unit(self.unit, self.signature)
 
 
 @dataclasses.dataclass
@@ -337,6 +338,35 @@ class SpawnUnit(Event[Unit | None]):
         for signature in self.with_statuses:
             apply_status_to_unit(unit, signature)
         return unit
+
+
+# TODO currently only used in effects. Should prob be used everywhere.
+#  Requires refactoring movement cost.
+@dataclasses.dataclass
+class ModifyMovementPoints(Event[None]):
+    unit: Unit
+    amount: int
+
+    def is_valid(self) -> bool:
+        return (
+            self.amount
+            and GS().active_unit_context
+            and GS().active_unit_context.unit == self.unit
+        )
+
+    def resolve(self) -> None:
+        GS().active_unit_context.movement_points += self.amount
+
+
+@dataclasses.dataclass
+class Exhaust(Event[None]):
+    unit: Unit
+
+    def is_valid(self) -> bool:
+        return not self.unit.exhausted
+
+    def resolve(self) -> None:
+        self.unit.exhausted = True
 
 
 @dataclasses.dataclass
