@@ -108,23 +108,24 @@ class Game(Thread):
                     {
                         cc: HexSpec(
                             random.choice(
-                                # [
-                                #     # Water,
-                                #     Plains,
-                                # ]
                                 [
-                                    Plains,
-                                    Plains,
-                                    Plains,
-                                    Plains,
-                                    Forest,
-                                    Forest,
-                                    Forest,
-                                    # Forest,
-                                    # Magma,
-                                    # Hills,
                                     # Water,
+                                    # Plains,
+                                    Magma,
                                 ]
+                                # [
+                                #     Plains,
+                                #     Plains,
+                                #     Plains,
+                                #     Plains,
+                                #     Forest,
+                                #     Forest,
+                                #     Forest,
+                                #     # Forest,
+                                #     # Magma,
+                                #     # Hills,
+                                #     # Water,
+                                # ]
                             ),
                             cc.distance_to(CC(0, 0)) <= 1,
                         )
@@ -136,19 +137,21 @@ class Game(Thread):
 
             player_units = (
                 (
-                    # WITCH_ENGINE,
-                    # OTTER_SCOUT,
+                    WITCH_ENGINE,
+                    OTTER_SCOUT,
                     INFERNO_TANK,
-                    # HORROR,
+                    # CACTUS,
+                    HORROR,
                     CYCLOPS,
                     CAPRICIOUS_TRICKSTER,
                 ),
                 (
-                    WITCH_ENGINE,
+                    # WITCH_ENGINE,
                     OTTER_SCOUT,
                     LIGHT_ARCHER,
                     SHRINE_KEEPER,
                     # INFERNO_TANK,
+                    BULLDOZER,
                 ),
             )
 

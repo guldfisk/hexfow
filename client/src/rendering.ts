@@ -527,7 +527,16 @@ export const renderMap = (
         healthIndicatorContainer.addChild(shieldContainer);
       }
 
-      hexContainer.addChild(unitContainer);
+      if (!hexData.visible) {
+        const unitSprite = new Sprite(
+          app.renderer.generateTexture(unitContainer),
+        );
+        unitSprite.alpha = 0.5;
+        unitSprite.anchor = .5
+        hexContainer.addChild(unitSprite);
+      } else {
+        hexContainer.addChild(unitContainer);
+      }
     }
 
     if (hexData.isObjective) {

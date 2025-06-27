@@ -1,17 +1,5 @@
-import dataclasses
-from typing import ClassVar
-
-from events.eventsystem import TriggerEffect, ES
-from game.core import (
-    Terrain,
-    Hex,
-    GS,
-    Unit,
-    TerrainProtectionRequest,
-    StatusSignature,
-)
-from game.events import MoveUnit, ApplyStatus, RoundCleanup
-from game.statuses import Burn
+from game.core import Terrain, Hex, Unit, TerrainProtectionRequest
+from game.effects.triggers import BurnOnWalkIn, BurnOnUpkeep
 from game.values import Size, DamageType
 
 
@@ -52,45 +40,6 @@ class Water(Terrain):
 
     def is_water(self) -> bool:
         return True
-
-
-# TODO should be able to have triggers listening on multiple events, it should even
-#  work with making the generic type a union.
-
-
-@dataclasses.dataclass(eq=False)
-class BurnOnWalkIn(TriggerEffect[MoveUnit]):
-    priority: ClassVar[int] = 0
-
-    hex: Hex
-    amount: int
-
-    def should_trigger(self, event: MoveUnit) -> bool:
-        return event.to_ == self.hex and event.result
-
-    def resolve(self, event: MoveUnit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                unit=event.unit, signature=StatusSignature(Burn, None, stacks=1)
-            )
-        )
-
-
-@dataclasses.dataclass(eq=False)
-class BurnOnUpkeep(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = 0
-
-    hex: Hex
-    amount: int
-
-    def should_trigger(self, event: RoundCleanup) -> bool:
-        return GS().map.unit_on(self.hex) is not None
-
-    def resolve(self, event: RoundCleanup) -> None:
-        if unit := GS().map.unit_on(self.hex):
-            ES.resolve(
-                ApplyStatus(unit=unit, signature=StatusSignature(Burn, None, stacks=1))
-            )
 
 
 class Magma(Terrain):

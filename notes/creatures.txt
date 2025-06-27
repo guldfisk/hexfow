@@ -1650,19 +1650,20 @@ giant spider {11up} x1
 health 9, movement 3, sight 2, energy 5, L
 sting
     melee attack
-    2 damage, -1 movement
-    applies paralysis 4 to damaged units for 3 rounds
-    applies 1 poison to rooted or stunned units
+    3 damage, no movement
+    applies 1 poison to rooted target
 spin web
     aoe ability 3 energy
-    aoe type up to two linked hexes with no enemy units 1 range
-    -2 movement
+    aoe type up to two hexes with no enemy units 1 range
+    no movement
     applies status web to hex
         unstackable
         hidden
-        when non-giant spider unit enters remove this status, alert the owner of this status, and apply snared for 2 rounds
+        when non-giant spider unit enters remove this status, and apply snared for 2 rounds
             rooted
             loses flying
+        if this space was connected to giant spider by hexes with the web status, apply glimpse
+        to the hex
 - stealth while on web
 
 legendary wrestler {11pg} x1

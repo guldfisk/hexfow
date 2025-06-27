@@ -807,6 +807,10 @@ class UnitStatus(Status[Unit], ABC):
         )
         self.intention = intention
 
+    @classmethod
+    def get(cls, identifier: str) -> type[UnitStatus]:
+        return cls.registry[identifier]
+
     def serialize(self, context: SerializationContext) -> JSON:
         return {**super().serialize(context), "intention": self.intention.value}
 
