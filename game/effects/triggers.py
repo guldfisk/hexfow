@@ -46,9 +46,12 @@ from game.events import (
 from game.values import DamageType, StatusIntention
 
 
-class RoundCleanupLayers(IntEnum):
-    DEBUFFS_TICK = auto()
-    APPLY_DEBUFFS = auto()
+class TriggerLayers(IntEnum):
+    ROUND_DEBUFFS_TICK = auto()
+    ROUND_APPLY_DEBUFFS = auto()
+
+    READY = auto()
+    EXHAUST = auto()
 
 
 @dataclasses.dataclass(eq=False)
@@ -93,7 +96,7 @@ class PackHunterTrigger(TriggerEffect[MeleeAttackAction]):
 
 @dataclasses.dataclass(eq=False)
 class FuriousTrigger(TriggerEffect[SimpleAttack]):
-    priority: ClassVar[int] = 0
+    priority: ClassVar[int] = TriggerLayers.READY
 
     unit: Unit
 
@@ -345,7 +348,7 @@ class BurnOnWalkIn(TriggerEffect[MoveUnit]):
 
 @dataclasses.dataclass(eq=False)
 class BurnOnUpkeep(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = RoundCleanupLayers.APPLY_DEBUFFS
+    priority: ClassVar[int] = TriggerLayers.ROUND_APPLY_DEBUFFS
 
     hex: Hex
     amount: int | Callable[..., int]
@@ -373,7 +376,7 @@ class BurnOnUpkeep(TriggerEffect[RoundCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class BurnTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = RoundCleanupLayers.DEBUFFS_TICK
+    priority: ClassVar[int] = TriggerLayers.ROUND_DEBUFFS_TICK
 
     status: UnitStatus
 
@@ -438,7 +441,7 @@ class HexWalkInDamageTrigger(TriggerEffect[MoveUnit]):
 
 @dataclasses.dataclass(eq=False)
 class HexRoundDamageTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = RoundCleanupLayers.DEBUFFS_TICK
+    priority: ClassVar[int] = TriggerLayers.ROUND_DEBUFFS_TICK
 
     hex: Hex
     source: Source
@@ -469,7 +472,7 @@ class TurnExpiringStatusTrigger(TriggerEffect[Turn]):
 
 @dataclasses.dataclass(eq=False)
 class RoundDamageTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = RoundCleanupLayers.DEBUFFS_TICK
+    priority: ClassVar[int] = TriggerLayers.ROUND_DEBUFFS_TICK
 
     unit: Unit
     source: Source
@@ -490,7 +493,7 @@ class RoundDamageTrigger(TriggerEffect[RoundCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class PanickedTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = RoundCleanupLayers.DEBUFFS_TICK
+    priority: ClassVar[int] = TriggerLayers.ROUND_DEBUFFS_TICK
 
     status: UnitStatus
 
@@ -567,7 +570,7 @@ class OneTimeModifyMovementPointsStatusTrigger(TriggerEffect[TurnUpkeep]):
 
 @dataclasses.dataclass(eq=False)
 class BellStruckTrigger(TriggerEffect[ReceiveDamage]):
-    priority: ClassVar[int] = 0
+    priority: ClassVar[int] = TriggerLayers.EXHAUST
 
     unit: Unit
 

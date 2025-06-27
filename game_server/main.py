@@ -141,6 +141,7 @@ class Game(Thread):
                     # WITCH_ENGINE,
                     # OTTER_SCOUT,
                     INFERNO_TANK,
+                    BELL_STRIKER_BRUTE,
                     # HORROR,
                     # BELL_STRIKER_BRUTE,
                     # DIRE_WOLF,
@@ -155,6 +156,8 @@ class Game(Thread):
                 ),
                 (
                     # WITCH_ENGINE,
+                    WAR_HOG,
+                    MEDIC,
                     OTTER_SCOUT,
                     # LIGHT_ARCHER,
                     CYCLOPS,
