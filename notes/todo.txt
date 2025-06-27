@@ -32,7 +32,6 @@ production configuration
 deployment
 
 short term
-    shrubs
     look into pixi viewport
     maybe horror spawns should be ephemeral
         actually only parasite from inject ability instead

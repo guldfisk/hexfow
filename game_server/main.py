@@ -18,7 +18,7 @@ from game.events import SpawnUnit, Play
 from game.interface import Connection
 from game.map.coordinates import CC, cc_to_rc, NEIGHBOR_OFFSETS
 from game.map.geometry import hex_circle
-from game.map.terrain import Plains, Forest, Magma, Hills, Water
+from game.map.terrain import Plains, Forest, Magma, Hills, Water, Shrubs
 from game.player import Player
 from game.units.blueprints import *
 
@@ -108,24 +108,23 @@ class Game(Thread):
                     {
                         cc: HexSpec(
                             random.choice(
-                                [
-                                    # Water,
-                                    Plains,
-                                    # Magma,
-                                ]
                                 # [
-                                #     Plains,
-                                #     Plains,
-                                #     Plains,
-                                #     Plains,
-                                #     Forest,
-                                #     Forest,
-                                #     Forest,
-                                #     # Forest,
-                                #     # Magma,
-                                #     # Hills,
                                 #     # Water,
+                                #     Plains,
+                                #     # Magma,
                                 # ]
+                                [
+                                    Plains,
+                                    Plains,
+                                    Shrubs,
+                                    Forest,
+                                    # Plains,
+                                    # Plains,
+                                    # Plains,
+                                    # Forest,
+                                    # Forest,
+                                    # Forest,
+                                ]
                             ),
                             cc.distance_to(CC(0, 0)) <= 1,
                         )
@@ -149,6 +148,7 @@ class Game(Thread):
                     # HORROR,
                     BLIND_ORACLE,
                     CHICKEN,
+                    ZONE_SKIRMISHER,
                     # DIRE_WOLF,
                     # OTTER_SCOUT,
                     # PESTILENCE_PRIEST,
@@ -164,6 +164,7 @@ class Game(Thread):
                     # HORROR,
                     # LIGHT_ARCHER,
                     CYCLOPS,
+                    ZONE_SKIRMISHER,
                     # LIGHT_ARCHER,
                     # SHRINE_KEEPER,
                     # INFERNO_TANK,

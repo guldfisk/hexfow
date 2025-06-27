@@ -27,6 +27,23 @@ class Forest(Terrain):
     def blocks_vision(self) -> bool:
         return True
 
+# TODO block vision for small units? :^)
+class Shrubs(Terrain):
+    identifier = "shrubs"
+
+    def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
+        if request.unit.size.g() == Size.SMALL:
+            if request.damage_type == DamageType.RANGED:
+                return 2
+            return 1
+        if (
+            request.unit.size.g() == Size.MEDIUM
+            and request.damage_type == DamageType.RANGED
+        ):
+            return 1
+
+        return 0
+
 
 class Hills(Terrain):
     identifier = "hills"
