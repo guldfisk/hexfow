@@ -125,6 +125,33 @@ export interface SelectOptionDecisionPoint extends BaseDecision {
 
 export type Decision = SelectOptionDecisionPoint;
 
+export interface LogLineComponentBase {
+  type: string;
+}
+
+export interface UnitLogLineComponent extends LogLineComponentBase {
+  type: "unit";
+  identifier: string;
+  blueprint: string;
+}
+
+export interface HexLogLineComponent extends LogLineComponentBase {
+  type: "hex";
+  cc: CC;
+}
+
+export interface StringLogLineComponent extends LogLineComponentBase {
+  type: "string";
+  message: string;
+}
+
+export type LogLineComponent =
+  | UnitLogLineComponent
+  | HexLogLineComponent
+  | StringLogLineComponent;
+
+export type LogLine = [number, LogLineComponent[]];
+
 export interface GameState {
   player: string;
   round: number;
@@ -132,4 +159,5 @@ export interface GameState {
   eventLog: string[];
   decision: Decision | null;
   activeUnitContext: ActiveUnitContext | null;
+  logs: LogLine[];
 }

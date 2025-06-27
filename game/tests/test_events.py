@@ -35,7 +35,7 @@ from game.core import (
     Hex,
     HexSpec,
 )
-from game.events import SpawnUnit, SimpleAttack, Turn, Round
+from game.events import SpawnUnit, Hit, Turn, Round
 from game.interface import Connection
 from game.map.coordinates import CC
 from game.map.geometry import hex_circle
@@ -426,7 +426,7 @@ def test_attack(unit_spawner: UnitSpawner) -> None:
     cactus = unit_spawner.spawn(CACTUS)
 
     ES.resolve(
-        SimpleAttack(
+        Hit(
             attacker=chicken, defender=cactus, attack=get_attack(chicken, Peck)
         )
     )
@@ -589,8 +589,8 @@ def test_armor(unit_spawner: UnitSpawner, player2: Player):
     evil_marshmallow = unit_spawner.spawn(
         MARSHMALLOW_TITAN, coordinate=CC(1, 0), controller=player2
     )
-    ES.resolve(SimpleAttack(chicken, evil_pillar, chicken.attacks[0]))
-    ES.resolve(SimpleAttack(chicken, evil_marshmallow, chicken.attacks[0]))
+    ES.resolve(Hit(chicken, evil_pillar, chicken.attacks[0]))
+    ES.resolve(Hit(chicken, evil_marshmallow, chicken.attacks[0]))
 
     assert evil_pillar.damage == 0
     assert evil_marshmallow.damage == 2

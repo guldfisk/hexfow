@@ -1,6 +1,12 @@
 import { RefObject, useEffect, useRef } from "react";
 import { useAppSelector } from "../state/hooks.ts";
-import { GameState, OptionBase, Unit } from "../interfaces/gameState.ts";
+import {
+  GameState,
+  LogLine,
+  LogLineComponent,
+  OptionBase,
+  Unit,
+} from "../interfaces/gameState.ts";
 import {
   CostAtom,
   EffortCostSet,
@@ -9,9 +15,62 @@ import {
 } from "../interfaces/gameObjectDetails.ts";
 import { getImageUrl } from "../images.ts";
 import { MenuData } from "../actions/interface.ts";
-import {menuDescribers} from "../actions/menues.ts";
+import { menuDescribers } from "../actions/menues.ts";
+import { ccToKey } from "../geometry.ts";
+import { range } from "../utils/range.ts";
 
-const LogList = ({ logLines }: { logLines: string[] }) => {
+// const LogList = ({ logLines }: { logLines: string[] }) => {
+//   const myRef: RefObject<HTMLDivElement | null> = useRef(null);
+//   useEffect(() => {
+//     if (myRef.current) {
+//       myRef.current.scrollTop = myRef.current.scrollHeight;
+//     }
+//   });
+//   return (
+//     <div className="info-window event-log" id="event-log" ref={myRef}>
+//       {logLines.map((log, idx) => (
+//         <p key={idx}>{log}</p>
+//       ))}
+//     </div>
+//   );
+// };
+
+const LogLineComponentView = ({ element }: { element: LogLineComponent }) => {
+  if (element.type == "string") {
+    return <div className={"log-component"}>{element.message + ""}</div>;
+  }
+  if (element.type == "unit") {
+    return (
+      <div className={"log-component highlighted-log-component"}>
+        {element.blueprint + ""}
+      </div>
+    );
+  }
+  if (element.type == "hex") {
+    return (
+      <div className={"log-component highlighted-log-component"}>
+        {ccToKey(element.cc) + ""}
+      </div>
+    );
+  }
+};
+
+const LogLineView = ({ line: [indent, content] }: { line: LogLine }) => {
+  // console.log('ok', range(indent).join('  '))
+  return (
+    <p>
+      {"  ".repeat(indent)}
+      {content.map(
+        (element) => (
+          <LogLineComponentView element={element} />
+        ),
+        // element.type == "string" ? element.message : "",
+      )}
+    </p>
+  );
+};
+
+const LogList = ({ logLines }: { logLines: LogLine[] }) => {
   const myRef: RefObject<HTMLDivElement | null> = useRef(null);
   useEffect(() => {
     if (myRef.current) {
@@ -21,7 +80,8 @@ const LogList = ({ logLines }: { logLines: string[] }) => {
   return (
     <div className="info-window event-log" id="event-log" ref={myRef}>
       {logLines.map((log, idx) => (
-        <p key={idx}>{log}</p>
+        <LogLineView line={log} key={idx} />
+        // <p key={idx}>{log}</p>
       ))}
     </div>
   );
@@ -165,10 +225,14 @@ const DecisionDetailView = ({
 
   return (
     <div className="info-window decision-details" id="decision-description">
-      <div>{menu ? menuDescribers[menu.type](gameState, menu) : gameState.decision.explanation}</div>
+      <div>
+        {menu
+          ? menuDescribers[menu.type](gameState, menu)
+          : gameState.decision.explanation}
+      </div>
       {button}
       {/*{gameState.decision*/}
-      {JSON.stringify(gameState.decision, null, 4) }
+      {JSON.stringify(gameState.decision, null, 4)}
     </div>
   );
 };
@@ -181,7 +245,7 @@ export const HUD = ({ connection }: { connection: WebSocket }) => {
     <div>
       <div className={"sidebar sidebar-left"}>
         {applicationState.gameState ? (
-          <LogList logLines={applicationState.gameState.eventLog} />
+          <LogList logLines={applicationState.gameState.logs} />
         ) : null}
 
         <DecisionDetailView

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import dataclasses
 import re
 from abc import ABC, abstractmethod, ABCMeta
@@ -1332,6 +1333,36 @@ class ActiveUnitContext(Serializable):
         }
 
 
+@dataclasses.dataclass
+class LogLine:
+    elements: list[str | Unit | Hex]
+
+    def is_visible_to(self, player: Player) -> bool:
+        for element in self.elements:
+            if isinstance(element, Unit) and not element.is_visible_to(player):
+                return False
+            if isinstance(element, Hex) and not element.is_visible_to(player):
+                return False
+        return True
+
+    @classmethod
+    def _serialize_element(
+        cls, element: str | Unit | Hex, id_map: IDMap
+    ) -> dict[str, Any]:
+        if isinstance(element, Unit):
+            return {
+                "type": "unit",
+                "identifier": id_map.get_id_for(element),
+                "blueprint": element.blueprint.identifier,
+            }
+        if isinstance(element, Hex):
+            return {"type": "hex", "cc": element.position.serialize()}
+        return {"type": "string", "message": element}
+
+    def serialize(self, id_map: IDMap) -> list[dict[str, Any]]:
+        return [self._serialize_element(element, id_map) for element in self.elements]
+
+
 class GameState:
     instance: GameState | None = None
 
@@ -1357,7 +1388,6 @@ class GameState:
         self.round_counter = 0
 
         # TODO move to player
-        # self._id_map = IDMap()
         self.id_maps: dict[Player, IDMap] = {
             player: IDMap() for player in self.turn_order.players
         }
@@ -1368,9 +1398,36 @@ class GameState:
         self.vision_obstruction_map: dict[Player, dict[CC, VisionObstruction]] = {}
         self.vision_map: dict[Player, dict[CC, bool]] = {}
 
+        # TODO move to player
+        self._player_log_levels: dict[Player, int] = {
+            player: 0 for player in self.turn_order.players
+        }
+        self._pending_player_logs: dict[
+            Player, list[tuple[int, list[dict[str, Any]]]]
+        ] = {player: [] for player in self.turn_order.players}
+
         # TODO for debugging
         self._event_log: list[str] = []
         ES.register_event_callback(EventLogger(self._event_log.append))
+
+    @contextlib.contextmanager
+    def log(self, *line_options: LogLine) -> Iterator[None]:
+        incremented_players = []
+        for player in self.turn_order.players:
+            for line in line_options:
+                if line.is_visible_to(player):
+                    incremented_players.append(player)
+                    self._pending_player_logs[player].append(
+                        (
+                            self._player_log_levels[player],
+                            line.serialize(self.id_maps[player]),
+                        )
+                    )
+                    self._player_log_levels[player] += 1
+                    break
+        yield
+        for player in incremented_players:
+            self._player_log_levels[player] -= 1
 
     def update_vision(self) -> None:
         unit_vision_map: dict[player, list[Unit]] = defaultdict(list)
@@ -1404,6 +1461,7 @@ class GameState:
                 if self.active_unit_context
                 else None
             ),
+            "logs": self._pending_player_logs[context.player],
             # TODO for debugging
             "event_log": self._event_log,
         }

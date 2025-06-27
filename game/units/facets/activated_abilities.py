@@ -37,7 +37,7 @@ from game.events import (
     SpawnUnit,
     Damage,
     QueueUnitForActivation,
-    SimpleAttack,
+    Hit,
     ApplyHexStatus,
     GainEnergy,
     ModifyMovementPoints,
@@ -427,7 +427,7 @@ class Showdown(SingleEnemyActivatedAbility):
         if attack := self.owner.get_primary_attack(RangedAttackFacet):
             for _ in range(2):
                 ES.resolve(
-                    SimpleAttack(attacker=self.owner, defender=target, attack=attack)
+                    Hit(attacker=self.owner, defender=target, attack=attack)
                 )
 
         if not target.exhausted:
@@ -436,7 +436,7 @@ class Showdown(SingleEnemyActivatedAbility):
                     defender_attack := target.get_primary_attack(attack_type)
                 ) and self.owner in defender_attack.get_legal_targets(None):
                     ES.resolve(
-                        SimpleAttack(
+                        Hit(
                             attacker=target, defender=self.owner, attack=defender_attack
                         )
                     )

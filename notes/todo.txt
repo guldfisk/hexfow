@@ -22,6 +22,8 @@ game functionality
         dispells
         well-defined effects order
         well-defined order of iterating units on map
+        kill source
+
 
 pre-commit
 project files clean up
@@ -31,9 +33,4 @@ map + army for playtesting
 production configuration
 deployment
 
-short term
-    look into pixi viewport
-    maybe horror spawns should be ephemeral
-        actually only parasite from inject ability instead
-    terror/terrified/panic debuff names
-    kill source
+terror/terrified/panic debuff names

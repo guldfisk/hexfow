@@ -108,23 +108,23 @@ class Game(Thread):
                     {
                         cc: HexSpec(
                             random.choice(
-                                # [
-                                #     # Water,
-                                #     Plains,
-                                #     # Magma,
-                                # ]
                                 [
+                                    # Water,
                                     Plains,
-                                    Plains,
-                                    Shrubs,
-                                    Forest,
-                                    # Plains,
-                                    # Plains,
-                                    # Plains,
-                                    # Forest,
-                                    # Forest,
-                                    # Forest,
+                                    # Magma,
                                 ]
+                                # [
+                                #     Plains,
+                                #     Plains,
+                                #     Shrubs,
+                                #     Forest,
+                                #     # Plains,
+                                #     # Plains,
+                                #     # Plains,
+                                #     # Forest,
+                                #     # Forest,
+                                #     # Forest,
+                                # ]
                             ),
                             cc.distance_to(CC(0, 0)) <= 1,
                         )
@@ -136,39 +136,12 @@ class Game(Thread):
 
             player_units = (
                 (
-                    # CHAINSAW_SADIST,
-                    # WITCH_ENGINE,
-                    # OTTER_SCOUT,
-                    # INFERNO_TANK,
-                    # BELL_STRIKER_BRUTE,
-                    # HORROR,
-                    # BELL_STRIKER_BRUTE,
-                    # DIRE_WOLF,
-                    # CACTUS,
-                    # HORROR,
-                    BLIND_ORACLE,
-                    CHICKEN,
-                    ZONE_SKIRMISHER,
-                    # DIRE_WOLF,
-                    # OTTER_SCOUT,
-                    # PESTILENCE_PRIEST,
-                    # CYCLOPS,
-                    # CAPRICIOUS_TRICKSTER,
-                    # RHINO_BEAST,
+                    LIGHT_ARCHER,
+                    WITCH_ENGINE,
                 ),
                 (
-                    # WITCH_ENGINE,
-                    # WAR_HOG,
-                    # MEDIC,
-                    # OTTER_SCOUT,
-                    # HORROR,
-                    # LIGHT_ARCHER,
                     CYCLOPS,
-                    ZONE_SKIRMISHER,
-                    # LIGHT_ARCHER,
-                    # SHRINE_KEEPER,
-                    # INFERNO_TANK,
-                    # BULLDOZER,
+                    INFERNO_TANK,
                 ),
             )
 
@@ -305,6 +278,9 @@ class Game(Thread):
             #     for idx, unit in enumerate(gs.map.units_controlled_by(player)):
             #         unit.damage = 2 * idx
             #         unit.energy -= 3 * idx
+
+            for logs in gs._pending_player_logs.values():
+                logs[:] = []
 
             ES.resolve(Play())
         except GameClosed:

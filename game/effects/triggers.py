@@ -20,7 +20,7 @@ from game.core import (
 )
 from game.decisions import NoTarget, SelectOptionDecisionPoint
 from game.events import (
-    SimpleAttack,
+    Hit,
     Damage,
     MoveAction,
     MeleeAttackAction,
@@ -55,19 +55,19 @@ class TriggerLayers(IntEnum):
 
 
 @dataclasses.dataclass(eq=False)
-class PricklyTrigger(TriggerEffect[SimpleAttack]):
+class PricklyTrigger(TriggerEffect[Hit]):
     priority: ClassVar[int] = 0
 
     unit: Unit
     source: Source
     amount: int
 
-    def should_trigger(self, event: SimpleAttack) -> bool:
+    def should_trigger(self, event: Hit) -> bool:
         return event.defender == self.unit and isinstance(
             event.attack, MeleeAttackFacet
         )
 
-    def resolve(self, event: SimpleAttack) -> None:
+    def resolve(self, event: Hit) -> None:
         ES.resolve(Damage(event.attacker, DamageSignature(self.amount, self.source)))
 
 
@@ -90,20 +90,20 @@ class PackHunterTrigger(TriggerEffect[MeleeAttackAction]):
     def resolve(self, event: MeleeAttackAction) -> None:
         if attack := self.unit.get_primary_attack(MeleeAttackFacet):
             ES.resolve(
-                SimpleAttack(attacker=self.unit, defender=event.defender, attack=attack)
+                Hit(attacker=self.unit, defender=event.defender, attack=attack)
             )
 
 
 @dataclasses.dataclass(eq=False)
-class FuriousTrigger(TriggerEffect[SimpleAttack]):
+class FuriousTrigger(TriggerEffect[Hit]):
     priority: ClassVar[int] = TriggerLayers.READY
 
     unit: Unit
 
-    def should_trigger(self, event: SimpleAttack) -> bool:
+    def should_trigger(self, event: Hit) -> bool:
         return event.defender == self.unit
 
-    def resolve(self, event: SimpleAttack) -> None:
+    def resolve(self, event: Hit) -> None:
         self.unit.exhausted = False
 
 

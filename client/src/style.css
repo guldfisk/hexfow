@@ -1,9 +1,6 @@
 body {
   margin: 0;
   display: flex;
-  /*place-items: center;*/
-  /*min-width: 320px;*/
-  /*min-height: 100vh;*/
 }
 
 button {
@@ -19,8 +16,6 @@ button {
   height: 100%;
   width: 400px;
   position: fixed;
-  /*z-index: 1;*/
-  /*top: 0;*/
   background-color: #111;
   overflow-x: hidden;
   color: white;
@@ -74,6 +69,16 @@ button {
 }
 .event-log {
   height: 70%;
+}
+.log-component {
+  display: inline;
+  margin-left: 5px;
+
+}
+.highlighted-log-component {
+  border: 0;
+  background: #666;
+  border-radius: 3px;
 }
 .decision-details {
   height: 30%;

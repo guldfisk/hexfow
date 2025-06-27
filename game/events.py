@@ -24,6 +24,7 @@ from game.core import (
     DamageSignature,
     Facet,
     UnitStatus,
+    LogLine,
 )
 from game.decisions import SelectOptionDecisionPoint, NoTarget, O, OptionDecision
 from game.player import Player
@@ -44,9 +45,10 @@ class Kill(Event[None]):
     unit: Unit
 
     def resolve(self) -> None:
-        ES.resolve(self.branch(KillUpkeep))
-        GS().map.remove_unit(self.unit)
-        self.unit.deregister()
+        with GS().log(LogLine([self.unit, "dies"])):
+            ES.resolve(self.branch(KillUpkeep))
+            GS().map.remove_unit(self.unit)
+            self.unit.deregister()
 
 
 # TODO don't think this should be an event?
@@ -70,11 +72,12 @@ class Heal(Event[int]):
     amount: int
 
     def is_valid(self) -> bool:
-        return self.amount > 0
+        return self.amount > 0 and self.unit.damage > 0
 
     def resolve(self) -> int:
         heal_amount = min(self.amount, self.unit.damage)
-        self.unit.damage -= heal_amount
+        with GS().log(LogLine([self.unit, f"is healed {heal_amount}"])):
+            self.unit.damage -= heal_amount
         return heal_amount
 
 
@@ -88,7 +91,8 @@ class GainEnergy(Event[int]):
 
     def resolve(self) -> int:
         amount = max(min(self.amount, self.unit.max_energy.g() - self.unit.energy), 0)
-        self.unit.energy += amount
+        with GS().log(LogLine([self.unit, f"gains {amount} energy"])):
+            self.unit.energy += amount
         return amount
 
 
@@ -101,7 +105,10 @@ class SufferDamage(Event[int]):
         return self.signature.amount > 0
 
     def resolve(self) -> int:
-        return self.unit.suffer_damage(self.signature)
+        result = self.unit.suffer_damage(self.signature)
+        # TODO source? type?
+        with GS().log(LogLine([self.unit, f"suffers {result} damage"])):
+            return result
 
 
 @dataclasses.dataclass
@@ -162,23 +169,30 @@ class Damage(Event[int]):
 
 
 @dataclasses.dataclass
-class SimpleAttack(Event[None]):
+class Hit(Event[None]):
     attacker: Unit
     defender: Unit
     attack: SingleTargetAttackFacet
 
-    def resolve(self) -> None:
+    def is_valid(self) -> bool:
         # TODO some way to formalize this?
-        if not self.attacker.on_map() or not self.defender.on_map():
-            return
-        self.attack.resolve_pre_damage_effects(self.defender)
-        ES.resolve(
-            Damage(
-                self.defender, self.attack.get_damage_signature_against(self.defender)
+        return self.attacker.on_map() and self.defender.on_map()
+
+    def resolve(self) -> None:
+        # TODO facets should be log components
+        with GS().log(
+            LogLine([self.attacker, "hits", self.defender, f"with {self.attack.name}"]),
+            LogLine([self.defender, f"is hit with {self.attack.name}"]),
+        ):
+            self.attack.resolve_pre_damage_effects(self.defender)
+            ES.resolve(
+                Damage(
+                    self.defender,
+                    self.attack.get_damage_signature_against(self.defender),
+                )
             )
-        )
-        # TODO do we actually want this here, or should it be triggers?
-        self.attack.resolve_post_damage_effects(self.defender)
+            # TODO do we actually want this here, or should it be triggers?
+            self.attack.resolve_post_damage_effects(self.defender)
 
 
 @dataclasses.dataclass
@@ -202,7 +216,7 @@ class MeleeAttackAction(Event[None]):
             defender_position.get_move_in_penalty_for(self.attacker),
             True,
         )
-        ES.resolve(self.branch(SimpleAttack))
+        ES.resolve(self.branch(Hit))
         ES.resolve(CheckAlive(self.defender))
         if (
             defender_position.can_move_into(self.attacker)
@@ -222,7 +236,7 @@ class RangedAttackAction(Event[None]):
     attack: RangedAttackFacet
 
     def resolve(self) -> None:
-        ES.resolve(self.branch(SimpleAttack))
+        ES.resolve(self.branch(Hit))
         ES.resolve(CheckAlive(self.defender))
         self.attack.get_cost().pay(GS().active_unit_context)
 
@@ -269,7 +283,14 @@ class ApplyStatus(Event[UnitStatus]):
         return self.unit.on_map()
 
     def resolve(self) -> UnitStatus:
-        return apply_status_to_unit(self.unit, self.signature)
+        # TODO status should be log component
+        # TODO signature values
+        with GS().log(
+            LogLine(
+                [f"{self.signature.status_type.identifier} is applied to", self.unit]
+            )
+        ):
+            return apply_status_to_unit(self.unit, self.signature)
 
 
 @dataclasses.dataclass
@@ -278,22 +299,25 @@ class ApplyHexStatus(Event[None]):
     signature: HexStatusSignature
 
     def resolve(self) -> None:
-        self.space.add_status(
-            self.signature.status_type(
-                controller=(
-                    (
-                        self.signature.source.owner.controller
-                        if isinstance(self.signature.source, Facet)
-                        else self.signature.source.controller
-                    )
-                    if self.signature.source
-                    else None
+        # TODO status should be log component
+        # TODO other aspects of signature
+        with GS().log(LogLine([f'{self.signature.status_type.identifier} is applied to', self.space])):
+            self.space.add_status(
+                self.signature.status_type(
+                    controller=(
+                        (
+                            self.signature.source.owner.controller
+                            if isinstance(self.signature.source, Facet)
+                            else self.signature.source.controller
+                        )
+                        if self.signature.source
+                        else None
+                    ),
+                    duration=self.signature.duration,
+                    stacks=self.signature.stacks,
+                    parent=self.space,
                 ),
-                duration=self.signature.duration,
-                stacks=self.signature.stacks,
-                parent=self.space,
-            ),
-        )
+            )
 
 
 @dataclasses.dataclass
@@ -303,8 +327,10 @@ class ActivatedAbilityAction(Event[None]):
     target: O
 
     def resolve(self) -> None:
-        self.ability.perform(self.target)
-        self.ability.get_cost().pay(GS().active_unit_context)
+        # TODO facet and target profile
+        with GS().log(LogLine([self.unit, f"activates {self.ability.name}"])):
+            self.ability.perform(self.target)
+            self.ability.get_cost().pay(GS().active_unit_context)
 
 
 @dataclasses.dataclass
@@ -312,13 +338,25 @@ class MoveUnit(Event[Hex | None]):
     unit: Unit
     to_: Hex
 
-    def is_valid(self) -> bool:
-        return self.to_.can_move_into(self.unit)
+    # TODO check was used?
+    # def is_valid(self) -> bool:
+    #     return self.to_.can_move_into(self.unit)
 
     def resolve(self) -> Hex | None:
-        from_ = self.to_.map.hex_off(self.unit)
-        self.to_.map.move_unit_to(self.unit, self.to_)
-        return from_
+        if self.to_.can_move_into(self.unit):
+            with GS().log(
+                LogLine([self.unit, "moves into", self.to_]),
+                LogLine([self.unit, "moves"]),
+            ):
+                from_ = self.to_.map.hex_off(self.unit)
+                self.to_.map.move_unit_to(self.unit, self.to_)
+                return from_
+        else:
+            with GS().log(
+                LogLine([self.unit, "fails to move into", self.to_]),
+                LogLine([self.unit, "fails to move"]),
+            ):
+                return None
 
 
 @dataclasses.dataclass
@@ -335,8 +373,12 @@ class SpawnUnit(Event[Unit | None]):
     def resolve(self) -> Unit | None:
         unit = Unit(self.controller, self.blueprint, exhausted=self.exhausted)
         self.space.map.move_unit_to(unit, self.space)
-        for signature in self.with_statuses:
-            apply_status_to_unit(unit, signature)
+        # TODO hmm
+        GS().update_vision()
+        # TODO statuses? exhausted?
+        with GS().log(LogLine([unit, "is spawned in", self.space])):
+            for signature in self.with_statuses:
+                apply_status_to_unit(unit, signature)
         return unit
 
 
@@ -355,6 +397,7 @@ class ModifyMovementPoints(Event[None]):
         )
 
     def resolve(self) -> None:
+        # TODO log ?
         GS().active_unit_context.movement_points += self.amount
 
 
@@ -366,7 +409,8 @@ class Exhaust(Event[None]):
         return not self.unit.exhausted
 
     def resolve(self) -> None:
-        self.unit.exhausted = True
+        with GS().log(LogLine([self.unit, "is exhausted"])):
+            self.unit.exhausted = True
 
 
 @dataclasses.dataclass
@@ -376,7 +420,11 @@ class MovePenalty(Event[None]):
     amount: int
     in_: bool
 
+    def is_valid(self) -> bool:
+        return self.amount > 0
+
     def resolve(self) -> None:
+        # TODO log ?
         GS().active_unit_context.movement_points -= self.amount
 
 
@@ -405,7 +453,8 @@ class Rest(Event[None]):
     unit: Unit
 
     def resolve(self) -> None:
-        GS().active_unit_context.should_stop = True
+        with GS().log(LogLine([self.unit, "rests"])):
+            GS().active_unit_context.should_stop = True
 
 
 # TODO where should this be?
@@ -426,6 +475,7 @@ class QueueUnitForActivation(Event[None]):
     unit: Unit
 
     def resolve(self) -> None:
+        # TODO log ?
         GS().activation_queued_units.add(self.unit)
 
 
@@ -470,98 +520,101 @@ class Turn(Event[bool]):
             self.unit, self.unit.speed.g()
         )
 
-        ES.resolve(TurnUpkeep(unit=self.unit))
-        do_state_based_check()
+        # TODO this prob shouldn't be here. For now it is to make sure we have a
+        #  vision map when unit tests run just a turn.
+        GS().update_vision()
 
-        while not context.should_stop and self.unit.on_map():
-            # TODO this prob shouldn't be here. For now it is to make sure we have a
-            #  vision map when unit tests run just a turn.
-            GS().update_vision()
+        with GS().log(LogLine([self.unit, "is activated"])):
+            ES.resolve(TurnUpkeep(unit=self.unit))
+            do_state_based_check()
 
-            if not (
-                legal_options := [
-                    option
-                    for option in self.unit.get_legal_options(context)
-                    if context.locked_into is None
-                    or isinstance(option, SkipOption)
-                    or (
-                        isinstance(option, EffortOption)
-                        and option.facet == context.locked_into
-                    )
-                ]
-            ):
-                break
+            while not context.should_stop and self.unit.on_map():
+                if not (
+                    legal_options := [
+                        option
+                        for option in self.unit.get_legal_options(context)
+                        if context.locked_into is None
+                        or isinstance(option, SkipOption)
+                        or (
+                            isinstance(option, EffortOption)
+                            and option.facet == context.locked_into
+                        )
+                    ]
+                ):
+                    break
 
-            ES.resolve(ActionUpkeep(unit=self.unit))
+                ES.resolve(ActionUpkeep(unit=self.unit))
 
-            # TODO maybe have some is_auto_resolvable thing instead?
-            if all(isinstance(option, SkipOption) for option in legal_options):
-                decision = OptionDecision(legal_options[0], None)
-            else:
-                decision = GS().make_decision(
-                    self.unit.controller,
-                    SelectOptionDecisionPoint(legal_options, explanation="do shit"),
-                )
-
-            if isinstance(decision.option, SkipOption):
-                # TODO difference here is whether or not it is a "TurnSkip" or an "end actions skip"
-                if context.has_acted:
-                    GS().active_unit_context.should_stop = True
+                # TODO maybe have some is_auto_resolvable thing instead?
+                if all(isinstance(option, SkipOption) for option in legal_options):
+                    decision = OptionDecision(legal_options[0], None)
                 else:
-                    ES.resolve(Rest(self.unit))
-                do_state_based_check()
-                break
-            elif isinstance(decision.option, MoveOption):
-                ES.resolve(MoveAction(self.unit, to_=decision.target))
-            elif isinstance(decision.option, EffortOption):
-                context.activated_facets[decision.option.facet.__class__.__name__] += 1
-                if isinstance(decision.option.facet, MeleeAttackFacet):
-                    ES.resolve(
-                        MeleeAttackAction(
-                            attacker=self.unit,
-                            defender=decision.target,
-                            attack=decision.option.facet,
-                        )
-                    )
-                elif isinstance(decision.option.facet, RangedAttackFacet):
-                    ES.resolve(
-                        RangedAttackAction(
-                            attacker=self.unit,
-                            defender=decision.target,
-                            attack=decision.option.facet,
-                        )
-                    )
-                elif isinstance(decision.option.facet, ActivatedAbilityFacet):
-                    ES.resolve(
-                        ActivatedAbilityAction(
-                            unit=self.unit,
-                            ability=decision.option.facet,
-                            target=decision.target,
-                        )
+                    decision = GS().make_decision(
+                        self.unit.controller,
+                        SelectOptionDecisionPoint(legal_options, explanation="do shit"),
                     )
 
+                if isinstance(decision.option, SkipOption):
+                    # TODO difference here is whether or not it is a "TurnSkip" or an "end actions skip"
+                    if context.has_acted:
+                        GS().active_unit_context.should_stop = True
+                    else:
+                        ES.resolve(Rest(self.unit))
+                    do_state_based_check()
+                    break
+                elif isinstance(decision.option, MoveOption):
+                    ES.resolve(MoveAction(self.unit, to_=decision.target))
+                elif isinstance(decision.option, EffortOption):
+                    context.activated_facets[
+                        decision.option.facet.__class__.__name__
+                    ] += 1
+                    if isinstance(decision.option.facet, MeleeAttackFacet):
+                        ES.resolve(
+                            MeleeAttackAction(
+                                attacker=self.unit,
+                                defender=decision.target,
+                                attack=decision.option.facet,
+                            )
+                        )
+                    elif isinstance(decision.option.facet, RangedAttackFacet):
+                        ES.resolve(
+                            RangedAttackAction(
+                                attacker=self.unit,
+                                defender=decision.target,
+                                attack=decision.option.facet,
+                            )
+                        )
+                    elif isinstance(decision.option.facet, ActivatedAbilityFacet):
+                        ES.resolve(
+                            ActivatedAbilityAction(
+                                unit=self.unit,
+                                ability=decision.option.facet,
+                                target=decision.target,
+                            )
+                        )
+
+                    else:
+                        raise ValueError("blah")
+                    # TODO unclear which of this logic should be on the action event, and which should be here...
+                    if not decision.option.facet.combinable:
+                        if decision.option.facet.max_activations != 1:
+                            context.locked_into = decision.option.facet
+                        else:
+                            context.should_stop = True
                 else:
                     raise ValueError("blah")
-                # TODO unclear which of this logic should be on the action event, and which should be here...
-                if not decision.option.facet.combinable:
-                    if decision.option.facet.max_activations != 1:
-                        context.locked_into = decision.option.facet
-                    else:
-                        context.should_stop = True
-            else:
-                raise ValueError("blah")
 
-            # TODO yikes. need this right now for juke and jive, not sure what the plan is.
-            GS().update_vision()
-            ES.resolve(ActionCleanup(unit=self.unit))
+                # TODO yikes. need this right now for juke and jive, not sure what the plan is.
+                GS().update_vision()
+                ES.resolve(ActionCleanup(unit=self.unit))
+                do_state_based_check()
+                context.has_acted = True
+
+            ES.resolve(TurnCleanup(unit=self.unit))
             do_state_based_check()
-            context.has_acted = True
 
-        ES.resolve(TurnCleanup(unit=self.unit))
-        do_state_based_check()
-
-        self.unit.exhausted = True
-        GS().active_unit_context = None
+            self.unit.exhausted = True
+            GS().active_unit_context = None
 
         return context.has_acted
 
@@ -598,98 +651,99 @@ class Round(Event[None]):
         for unit in gs.map.unit_positions.keys():
             unit.exhausted = False
 
-        # TODO very unclear how this all works
-        ES.resolve(RoundUpkeep())
-        do_state_based_check()
+        with gs.log(LogLine([f"Round {gs.round_counter}"])):
+            # TODO very unclear how this all works
+            ES.resolve(RoundUpkeep())
+            do_state_based_check()
 
-        while skipped_players != all_players:
-            timestamp += 1
-            player = gs.turn_order.active_player
-            gs.turn_order.advance()
-            if player in round_skipped_players:
-                continue
+            while skipped_players != all_players:
+                timestamp += 1
+                player = gs.turn_order.active_player
+                gs.turn_order.advance()
+                if player in round_skipped_players:
+                    continue
 
-            GS().update_vision()
+                GS().update_vision()
 
-            # TODO blah and tests
-            activateable_units = None
-            if gs.activation_queued_units:
-                if activateable_queued_units := [
-                    unit
-                    for unit in gs.activation_queued_units
-                    if unit.can_be_activated(None)
-                ]:
-                    while not (
-                        activateable_units := [
-                            unit
-                            for unit in activateable_queued_units
-                            if unit.controller == player
-                        ]
-                    ):
-                        player = gs.turn_order.advance()
-
-                else:
-                    gs.activation_queued_units.clear()
-            if activateable_units is None:
-                activateable_units = [
-                    unit
-                    for unit in gs.map.units_controlled_by(player)
-                    if unit.can_be_activated(None)
-                ]
-            if not activateable_units:
-                skipped_players.add(player)
-                continue
-            skipped_players.discard(player)
-
-            decision = GS().make_decision(
-                player,
-                SelectOptionDecisionPoint(
-                    [
-                        ActivateUnitOption(
-                            target_profile=OneOfUnits(activateable_units)
-                        ),
-                        *(
-                            ()
-                            if gs.activation_queued_units
-                            or not all(
-                                any(
-                                    isinstance(option, SkipOption)
-                                    for option in unit.get_legal_options(
-                                        # TODO, this is pretty ugly, but it sorta makes sense.
-                                        ActiveUnitContext(unit, -1)
-                                    )
-                                )
-                                for unit in activateable_units
-                            )
-                            else (SkipOption(target_profile=NoTarget()),)
-                        ),
-                    ],
-                    explanation="activate unit?",
-                ),
-            )
-            if isinstance(decision.option, ActivateUnitOption):
+                # TODO blah and tests
+                activateable_units = None
                 if gs.activation_queued_units:
-                    gs.activation_queued_units.discard(decision.target)
-                if any(
-                    turn.result
-                    for turn in ES.resolve(Turn(decision.target)).iter_type(Turn)
-                ):
-                    last_action_timestamps[player] = timestamp
-                    do_state_based_check()
-            elif isinstance(decision.option, SkipOption):
-                skipped_players.add(player)
-                round_skipped_players.add(player)
-            else:
-                raise ValueError("AHLO")
+                    if activateable_queued_units := [
+                        unit
+                        for unit in gs.activation_queued_units
+                        if unit.can_be_activated(None)
+                    ]:
+                        while not (
+                            activateable_units := [
+                                unit
+                                for unit in activateable_queued_units
+                                if unit.controller == player
+                            ]
+                        ):
+                            player = gs.turn_order.advance()
 
-        # TODO should we trigger turn skip for remaining units or something?
+                    else:
+                        gs.activation_queued_units.clear()
+                if activateable_units is None:
+                    activateable_units = [
+                        unit
+                        for unit in gs.map.units_controlled_by(player)
+                        if unit.can_be_activated(None)
+                    ]
+                if not activateable_units:
+                    skipped_players.add(player)
+                    continue
+                skipped_players.discard(player)
 
-        ES.resolve(RoundCleanup())
-        do_state_based_check()
+                decision = GS().make_decision(
+                    player,
+                    SelectOptionDecisionPoint(
+                        [
+                            ActivateUnitOption(
+                                target_profile=OneOfUnits(activateable_units)
+                            ),
+                            *(
+                                ()
+                                if gs.activation_queued_units
+                                or not all(
+                                    any(
+                                        isinstance(option, SkipOption)
+                                        for option in unit.get_legal_options(
+                                            # TODO, this is pretty ugly, but it sorta makes sense.
+                                            ActiveUnitContext(unit, -1)
+                                        )
+                                    )
+                                    for unit in activateable_units
+                                )
+                                else (SkipOption(target_profile=NoTarget()),)
+                            ),
+                        ],
+                        explanation="activate unit?",
+                    ),
+                )
+                if isinstance(decision.option, ActivateUnitOption):
+                    if gs.activation_queued_units:
+                        gs.activation_queued_units.discard(decision.target)
+                    if any(
+                        turn.result
+                        for turn in ES.resolve(Turn(decision.target)).iter_type(Turn)
+                    ):
+                        last_action_timestamps[player] = timestamp
+                        do_state_based_check()
+                elif isinstance(decision.option, SkipOption):
+                    skipped_players.add(player)
+                    round_skipped_players.add(player)
+                else:
+                    raise ValueError("AHLO")
 
-        gs.turn_order.set_player_order(
-            sorted(gs.turn_order.players, key=lambda p: last_action_timestamps[p])
-        )
+            # TODO should we trigger turn skip for remaining units or something?
+
+            ES.resolve(RoundCleanup())
+            do_state_based_check()
+
+            gs.turn_order.set_player_order(
+                sorted(gs.turn_order.players, key=lambda p: last_action_timestamps[p])
+            )
 
 
 @dataclasses.dataclass
