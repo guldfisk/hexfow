@@ -112,7 +112,6 @@ async function main() {
         state.gameState,
         state.gameObjectDetails,
         state.menuData,
-        state.menuId,
         gameConnection,
       );
       app.stage.addChild(map);

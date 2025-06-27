@@ -80,7 +80,6 @@ export const renderMap = (
   gameState: GameState,
   gameObjectDetails: GameObjectDetails,
   menu: MenuData | null,
-  menuId: string | null,
   gameConnection: WebSocket,
 ): Container => {
   // TODO this shouldn't be here
@@ -233,7 +232,6 @@ export const renderMap = (
         gameState,
         (body) => gameConnection.send(JSON.stringify(body)),
         menu,
-        menuId,
       )
     : getBaseActionSpace(gameState, (body) =>
         gameConnection.send(JSON.stringify(body)),
