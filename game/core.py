@@ -1097,7 +1097,11 @@ class DamageSignature:
         return self.branch(amount=amount)
 
 
-class HexStatus(Status[Hex], ABC): ...
+class HexStatus(Status[Hex], ABC):
+
+    @classmethod
+    def get(cls, identifier: str) -> type[HexStatus]:
+        return cls.registry[identifier]
 
 
 # TODO inherit from status signature base?

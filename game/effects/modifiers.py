@@ -1,4 +1,6 @@
 import dataclasses
+import math
+from enum import IntEnum, auto
 from typing import ClassVar, Callable
 
 from events.eventsystem import StateModifierEffect
@@ -22,6 +24,11 @@ from game.core import (
 )
 from game.decisions import Option
 from game.values import Resistance, VisionObstruction
+
+
+class SpeedLayer(IntEnum):
+    FLAT = auto()
+    PROPORTIONAL = auto()
 
 
 @dataclasses.dataclass(eq=False)
@@ -237,7 +244,7 @@ class TerrainProtectionModifier(
 # TODO should be a trigger instead
 @dataclasses.dataclass(eq=False)
 class ScurryInTheShadowsModifier(StateModifierEffect[Unit, None, int]):
-    priority: ClassVar[int] = 1
+    priority: ClassVar[int] = SpeedLayer.FLAT
     target: ClassVar[object] = Unit.speed
 
     unit: Unit
@@ -251,6 +258,22 @@ class ScurryInTheShadowsModifier(StateModifierEffect[Unit, None, int]):
 
     def modify(self, obj: Unit, request: None, value: int) -> int:
         return value + self.amount
+
+
+@dataclasses.dataclass(eq=False)
+class UnitProportionalSpeedModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = SpeedLayer.PROPORTIONAL
+    target: ClassVar[object] = Unit.speed
+
+    unit: Unit
+    multiplier: float
+    round_up: bool = True
+
+    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+        return obj == self.unit
+
+    def modify(self, obj: Unit, request: None, value: int) -> int:
+        return (math.ceil if self.round_up else math.floor)(value * self.multiplier)
 
 
 @dataclasses.dataclass(eq=False)

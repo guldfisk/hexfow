@@ -24,6 +24,8 @@ from game.core import (
     line_of_sight_obstructed_for_unit,
     NOfUnits,
     HexHexes,
+    UnitStatus,
+    HexStatus,
 )
 from game.decisions import TargetProfile, O
 from game.effects.hooks import AdjacencyHook
@@ -71,7 +73,11 @@ class Grow(NoTargetActivatedAbility):
 
 
 class HealBeam(SingleAllyActivatedAbility):
-    cost = MovementCost(1) | EnergyCost(2)
+    """
+    Target other allied unit within 2 range LoS. Heals 3.
+    """
+
+    cost = MovementCost(1) | EnergyCost(3)
     range = 2
     can_target_self = False
 
@@ -80,8 +86,10 @@ class HealBeam(SingleAllyActivatedAbility):
 
 
 class GreaseTheGears(SingleAllyActivatedAbility):
-    """Target other allied unit 1 range. Kills the target. If it does, heal this unit 2, and it restores 2 energy.
-    If the target unit was ready, this unit gains +1 movement point."""
+    """
+    Target other allied unit 1 range. Kills the target. If it does, heal this unit 2, and it restores 2 energy.
+    If the target unit was ready, this unit gains +1 movement point.
+    """
 
     range = 1
     can_target_self = False
@@ -636,3 +644,42 @@ class Poof(SingleHexTargetActivatedAbility):
             )
         )
         ES.resolve(MoveUnit(self.owner, target))
+
+
+class VenomousSpine(SingleEnemyActivatedAbility):
+    """
+    Target enemy unit 2 range LoS. Applies debilitating venom for 2 rounds and parasite.
+    """
+
+    cost = MovementCost(1) | EnergyCost(3)
+    range = 2
+    combinable = True
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(target, StatusSignature(UnitStatus.get("parasite"), self))
+        )
+        ES.resolve(
+            ApplyStatus(
+                target,
+                StatusSignature(UnitStatus.get("debilitating_venom"), self, duration=2),
+            )
+        )
+
+
+# TODO this has the same problem as glimpse with round ending.
+class Scry(SingleHexTargetActivatedAbility):
+    """
+    Target hex within 6 range NLoS. Applies revealed for 1 round.
+    """
+    cost = ExclusiveCost() | EnergyCost(2)
+    range = 6
+    requires_los = False
+    requires_vision = False
+
+    def perform(self, target: Hex) -> None:
+        ES.resolve(
+            ApplyHexStatus(
+                target, HexStatusSignature(HexStatus.get("revealed"), self, duration=1)
+            )
+        )

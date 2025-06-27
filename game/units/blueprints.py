@@ -28,6 +28,8 @@ from game.units.facets.activated_abilities import (
     VitalityTransfer,
     Shove,
     Poof,
+    VenomousSpine,
+    Scry,
 )
 from game.units.facets.attacks import (
     Peck,
@@ -49,7 +51,6 @@ from game.units.facets.attacks import (
     Strafe,
     LightBlaster,
     SerratedBeak,
-    Inject,
     RoundhouseKick,
     EtherealSting,
     Stinger,
@@ -65,6 +66,7 @@ from game.units.facets.attacks import (
     HammerCannon,
     ScratchAndBite,
     Shiv,
+    SerratedClaws,
 )
 from game.units.facets.static_abilities import (
     Prickly,
@@ -263,22 +265,6 @@ BULLDOZER = UnitBlueprint(
     price=9,
 )
 
-# horror {12wp} x1
-# health 7, movement 4, sight 2, energy 4, M
-# inject
-#     melee attack
-#     4 damage, -1 movement
-#     applies horror parasite to damaged target
-#         unstackable
-#         when this unit dies, summon exhausted horror spawn under debuff controllers control on this hex. if hex is occupied by just followed up attacker, instead spawns on hex attacker attacked from.
-# venomous spine
-#     ability 3 energy
-#     target enemy unit 2 range LoS, -1 movement
-#     applies horror parasite and (debilitating venom for 2 rounds) to target.
-#         unstackable, refreshable
-#         +1 move penalty
-#         -1 attack power
-
 
 HORROR_SPAWN = UnitBlueprint(
     "Horror Spawn",
@@ -291,7 +277,13 @@ HORROR_SPAWN = UnitBlueprint(
 )
 
 HORROR = UnitBlueprint(
-    "Horror", health=7, speed=4, sight=2, energy=4, facets=[Inject], price=12
+    "Horror",
+    health=7,
+    speed=4,
+    sight=2,
+    energy=4,
+    facets=[SerratedClaws, VenomousSpine],
+    price=12,
 )
 
 WAR_HOG = UnitBlueprint(
@@ -300,7 +292,7 @@ WAR_HOG = UnitBlueprint(
 
 
 MEDIC = UnitBlueprint(
-    "Medic", health=4, speed=3, sight=2, energy=4, facets=[HealBeam], price=6
+    "Medic", health=4, speed=3, sight=2, energy=5, facets=[HealBeam], price=6
 )
 
 # bombard canon {6rr} x2
@@ -364,15 +356,8 @@ SNAPPING_TURTLE = UnitBlueprint(
     price=2,
 )
 
-# otter scout {4w} x2
-# health 5, movement 3, sight 2, S
-# bite
-#     melee attack
-#     2 damage
-# - aquatic
-# - ignores move penalties on wet terrain
-# - +1 terrain protection on wet terrain
 
+# TODO # - ignores move penalties on wet terrain
 OTTER_SCOUT = UnitBlueprint(
     "Otter Scout",
     health=5,
@@ -425,6 +410,10 @@ CAPRICIOUS_TRICKSTER = UnitBlueprint(
 #     aoe ability 2 energy
 #     aot type hex, 6 range, NLoS, no movement
 #     applies revealed to hex for 1 round
+
+BLIND_ORACLE = UnitBlueprint(
+    "Blind Oracle", health=2, speed=2, sight=0, energy=2, facets=[Scry], price=2
+)
 
 # psy-synced null {4p} x2
 # health 4, movement 3, sight 2, energy 3, M

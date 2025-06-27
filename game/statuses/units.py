@@ -7,6 +7,7 @@ from game.effects.modifiers import (
     UnitAttackPowerFlatModifier,
     IncreaseUnitMaxHealthModifier,
     TerrorModifier,
+    UnitProportionalSpeedModifier,
 )
 from game.effects.replacements import LuckyCharmReplacement
 from game.effects.triggers import (
@@ -182,3 +183,13 @@ class Terror(RefreshableDurationUnitStatus):
 
     def create_effects(self) -> None:
         self.register_effects(TerrorModifier(self.parent))
+
+
+class DebilitatingVenom(RefreshableDurationUnitStatus):
+    default_intention = StatusIntention.DEBUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            UnitAttackPowerFlatModifier(self.parent, -1),
+            UnitProportionalSpeedModifier(self.parent, 0.5),
+        )

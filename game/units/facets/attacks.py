@@ -151,29 +151,15 @@ class HammerCannon(RangedAttackFacet):
     damage = 5
 
 
-# horror {12wp} x1
-# health 7, movement 4, sight 2, energy 4, M
-# inject
-#     melee attack
-#     4 damage, -1 movement
-#     applies horror parasite to damaged target
-#         unstackable
-#         when this unit dies, summon exhausted horror spawn under debuff controllers control on this hex. if hex is occupied by just followed up attacker, instead spawns on hex attacker attacked from.
-# venomous spine
-#     ability 3 energy
-#     target enemy unit 2 range LoS, -1 movement
-#     applies horror parasite and (debilitating venom for 2 rounds) to target.
-#         unstackable, refreshable
-#         +1 move penalty
-#         -1 attack power
+class SerratedClaws(MeleeAttackFacet):
+    """+1 damage against damages units."""
 
-
-class Inject(MeleeAttackFacet):
     cost = MovementCost(1)
-    damage = 4
+    damage = 3
 
-    def resolve_pre_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(ApplyStatus(defender, StatusSignature(Parasite, self)))
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        if unit.damage > 0:
+            return 1
 
 
 class EtherealSting(MeleeAttackFacet):
