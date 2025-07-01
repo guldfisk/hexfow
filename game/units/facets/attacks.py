@@ -193,16 +193,6 @@ class Shiv(MeleeAttackFacet):
         return False
 
 
-# # bee swarm {-}
-# # health 2, movement 3, sight 1, S
-# # sting
-# #     melee attack
-# #     2 damage
-# #     ignores terrain protection
-# # - flying
-# # - greater melee/ranged resistant
-
-
 class Stinger(MeleeAttackFacet):
     damage = 2
 
@@ -221,30 +211,6 @@ class Slay(MeleeAttackFacet):
     def get_damage_modifier_against(self, unit: Unit) -> int | None:
         if unit.size.g() >= Size.LARGE:
             return 2
-
-
-# legendary wrestler {11pg} x1
-# health 7, movement 3, sight 2, energy 4, M
-# tackle
-#     melee attack
-#     2 damage
-#     applies stumble
-#         -1 movement point next activation
-# from the top rope
-#     melee attack
-#     4 damage, -1 movement
-#     +1 damage against units with stumble debuff
-#     deals 2 non-lethal physical damage to this unit
-# supplex
-#     ability 3 energy, -2 movement
-#     target M- adjacent unit
-#     deals 3 melee damage and moves the target to the other side of this unit, if able.
-# - caught in the match
-#     enemies disengageging this units suffers -1 movement point
-# - heel turn
-#     when this unit receives 4 or more damage in a single instance, it gets, "they've got a still chari"
-#         unstackable
-#         +1 attack power
 
 
 class Tackle(MeleeAttackFacet):
@@ -278,3 +244,9 @@ class BellHammer(MeleeAttackFacet):
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
         ES.resolve(ApplyStatus(defender, StatusSignature(BellStruck, self, duration=2)))
+
+
+class DeathLaser(RangedAttackFacet):
+    cost = ExclusiveCost()
+    damage = 4
+    range = 4

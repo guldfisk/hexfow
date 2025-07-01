@@ -32,6 +32,7 @@ from game.effects.triggers import (
     QuickTrigger,
     ToxicPresenceTrigger,
     JukeAndJiveTrigger,
+    InspirationTrigger,
 )
 from game.map.terrain import Water
 from game.statuses.units import Burn
@@ -55,8 +56,9 @@ class Farsighted(StaticAbilityFacet):
 
 class PackHunter(StaticAbilityFacet):
     """
-    When another allied unit attacks a unit adjacent to this unit, this unit hits the attacked unit with its primary melee attack.
+    When another allied unit melee attacks a unit adjacent to this unit, this unit hits the attacked unit with its primary melee attack.
     """
+
     def create_effects(self) -> None:
         self.register_effects(PackHunterTrigger(self.owner))
 
@@ -98,7 +100,7 @@ class FightFlightFreeze(StaticAbilityFacet):
 
 
 class Explosive(StaticAbilityFacet):
-    """When this unit dies, it deals 5 aoe damage to each adjacent unit."""
+    """When this unit dies, it deals 5 aoe damage to unit within 1 range."""
 
     def create_effects(self) -> None:
         self.register_effects(ExplosiveTrigger(self.owner, self, 5))
@@ -196,3 +198,9 @@ class JukeAndJive(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(JukeAndJiveTrigger(self.owner, self))
+
+
+class Inspiration(StaticAbilityFacet):
+
+    def create_effects(self) -> None:
+        self.register_effects(InspirationTrigger(self.owner))

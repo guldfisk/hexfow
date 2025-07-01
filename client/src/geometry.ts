@@ -1,4 +1,5 @@
 import { CC, RC } from "./interfaces/geometry.ts";
+import { mod, range } from "./utils/range.ts";
 
 export const hexSize = 160;
 
@@ -97,3 +98,43 @@ export const hexDistance = (fromCC: CC, toCC: CC): number => {
 
 export const getNeighborsOffCC = (cc: CC): CC[] =>
   ccNeighborOffsets.map((offset) => addCCs(cc, offset));
+
+export const hexRing = (radius: number, center: CC | null = null): CC[] => {
+  const result = [];
+  for (const i of range(radius + 1)) {
+    result.push({ r: -radius, h: i });
+  }
+  for (const i of range(-radius + 1, 1)) {
+    result.push({ r: i, h: radius });
+  }
+  for (const i of range(radius - 1)) {
+    result.push({ r: i + 1, h: radius - 1 - i });
+  }
+  for (const i of range(-radius, 1).reverse()) {
+    result.push({ r: radius, h: i });
+  }
+  for (const i of range(radius).reverse()) {
+    result.push({ r: i, h: -radius });
+  }
+  for (const i of range(radius - 1)) {
+    result.push({ r: -(i + 1), h: -(radius - 1 - i) });
+  }
+  return center ? result.map((cc) => addCCs(cc, center)) : result;
+};
+
+export const hexArc = (
+  radius: number,
+  armLength: number,
+  strokeCenter: CC,
+  arcCenter: CC | null = null,
+): CC[] => {
+  const ring = hexRing(radius, arcCenter);
+  for (const [idx, cc] of ring.entries()) {
+    if (ccEquals(cc, strokeCenter)) {
+      return range(-armLength, armLength + 1).map(
+        (offset) => ring[mod(idx + offset, ring.length)],
+      );
+    }
+  }
+  throw new Error("invalid stroke center");
+};

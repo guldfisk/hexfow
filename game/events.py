@@ -158,8 +158,13 @@ class Damage(Event[int]):
             if self.signature.type == DamageType.PURE
             else max(
                 self.signature.amount
-                - self.unit.get_terrain_protection_for(
-                    TerrainProtectionRequest(self.unit, self.signature.type)
+                - (
+                    self.unit.get_terrain_protection_for(
+                        TerrainProtectionRequest(self.unit, self.signature.type)
+                    )
+                    if self.signature.type
+                    in (DamageType.MELEE, DamageType.RANGED, DamageType.AOE)
+                    else 0
                 ),
                 min(self.signature.amount, 1),
             )
@@ -301,7 +306,11 @@ class ApplyHexStatus(Event[None]):
     def resolve(self) -> None:
         # TODO status should be log component
         # TODO other aspects of signature
-        with GS().log(LogLine([f'{self.signature.status_type.identifier} is applied to', self.space])):
+        with GS().log(
+            LogLine(
+                [f"{self.signature.status_type.identifier} is applied to", self.space]
+            )
+        ):
             self.space.add_status(
                 self.signature.status_type(
                     controller=(
@@ -321,7 +330,7 @@ class ApplyHexStatus(Event[None]):
 
 
 @dataclasses.dataclass
-class ActivatedAbilityAction(Event[None]):
+class ActivateAbilityAction(Event[None]):
     unit: Unit
     ability: ActivatedAbilityFacet[O]
     target: O
@@ -586,7 +595,7 @@ class Turn(Event[bool]):
                         )
                     elif isinstance(decision.option.facet, ActivatedAbilityFacet):
                         ES.resolve(
-                            ActivatedAbilityAction(
+                            ActivateAbilityAction(
                                 unit=self.unit,
                                 ability=decision.option.facet,
                                 target=decision.target,

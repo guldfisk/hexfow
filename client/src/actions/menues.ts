@@ -1,13 +1,16 @@
-import { GameState, Hex } from "../interfaces/gameState.ts";
+import { GameState, Hex, TreeNode } from "../interfaces/gameState.ts";
 import { getBaseActions, getUnitsOfHexes } from "./actionSpace.ts";
 import {
   ActionSpace,
+  ConeMenu,
   ConsecutiveAdjacentHexesMenu,
   HexHexesMenu,
+  HexRingMenu,
   ListMenu,
   MenuData,
   NOfUnitsMenu,
   RadiatingLineMenu,
+  TreeMenu,
 } from "./interface.ts";
 import {
   addCCs,
@@ -16,10 +19,12 @@ import {
   ccToKey,
   constMultCC,
   getNeighborsOffCC,
+  hexArc,
   subCCs,
 } from "../geometry.ts";
 import { advanceMenu, store } from "../state/store.ts";
 import { mod, range } from "../utils/range.ts";
+import { CC } from "../interfaces/geometry.ts";
 
 // TODO some common logic in this mess
 
@@ -76,6 +81,70 @@ const getNOfUnitsDescription = (
   return menu.targetProfile.values.labels[menu.selectedUnits.length];
 };
 
+const getTreeActionSpace = (
+  gameState: GameState,
+  takeAction: (body: { [key: string]: any }) => void,
+  menu: TreeMenu,
+): ActionSpace => {
+  const unitHexes: { [key: string]: Hex } = getUnitsOfHexes(gameState);
+  const actionSpace: ActionSpace = Object.fromEntries(
+    gameState.map.hexes.map((hex) => [
+      ccToKey(hex.cc),
+      { actions: [], highlighted: false },
+    ]),
+  );
+
+  let currentNode = menu.targetProfile.values.rootNode;
+  for (const idx of menu.selectedIndexes) {
+    const [treeOption, child] = currentNode.options[idx];
+    actionSpace[
+      ccToKey(
+        treeOption.type == "unit" ? unitHexes[treeOption.id].cc : treeOption.cc,
+      )
+    ].highlighted = true;
+    currentNode = child as TreeNode;
+  }
+
+  for (const [
+    targetIdx,
+    [treeOption, child],
+  ] of currentNode.options.entries()) {
+    actionSpace[
+      ccToKey(
+        treeOption.type == "unit" ? unitHexes[treeOption.id].cc : treeOption.cc,
+      )
+    ].actions.push({
+      type: "activated_ability",
+      description: currentNode.label,
+      do: () => {
+        if (child) {
+          store.dispatch(
+            advanceMenu({
+              ...menu,
+              selectedIndexes: menu.selectedIndexes.concat(targetIdx),
+            }),
+          );
+        } else {
+          takeAction({
+            index: menu.optionIndex,
+            target: { indexes: menu.selectedIndexes.concat(targetIdx) },
+          });
+        }
+      },
+    });
+  }
+  return actionSpace;
+};
+
+const getTreeDescription = (gameState: GameState, menu: TreeMenu): string => {
+  let currentNode = menu.targetProfile.values.rootNode;
+  for (const idx of menu.selectedIndexes) {
+    const [treeOption, child] = currentNode.options[idx];
+    currentNode = child as TreeNode;
+  }
+  return currentNode.label;
+};
+
 const getConsecutiveAdjacentHexesActionSpace = (
   gameState: GameState,
   takeAction: (body: { [key: string]: any }) => void,
@@ -93,13 +162,12 @@ const getConsecutiveAdjacentHexesActionSpace = (
     ]),
   );
   const options = getNeighborsOffCC(menu.targetProfile.values.adjacentTo);
-  const highlighted =
-    menu.hovering !== null
-      ? range(
-          -menu.targetProfile.values.armLength,
-          menu.targetProfile.values.armLength + 1,
-        ).map((v) => mod(v + menu.hovering, options.length))
-      : [];
+  const highlighted = menu.hovering
+    ? range(
+        -menu.targetProfile.values.armLength,
+        menu.targetProfile.values.armLength + 1,
+      ).map((v) => mod(v + menu.hovering, options.length))
+    : [];
 
   for (const [idx, option] of options.entries()) {
     actionSpace[ccToKey(option)] = {
@@ -179,6 +247,55 @@ const getHexHexesDescription = (
   return "select aoe";
 };
 
+const getHexRingActionSpace = (
+  gameState: GameState,
+  takeAction: (body: { [key: string]: any }) => void,
+  menu: HexRingMenu,
+): ActionSpace => {
+  const actionSpace: ActionSpace = Object.fromEntries(
+    gameState.map.hexes.map((hex) => [
+      ccToKey(hex.cc),
+      {
+        actions: [],
+        highlighted:
+          !!menu.hovering &&
+          ccDistance(menu.hovering, hex.cc) == menu.targetProfile.values.radius,
+      },
+    ]),
+  );
+
+  for (const [targetIdx, cc] of menu.targetProfile.values.centers.entries()) {
+    actionSpace[ccToKey(cc)] = {
+      actions: [
+        {
+          type: "aoe",
+          description: "select hexes",
+          do: () => {
+            takeAction({
+              index: menu.optionIndex,
+              target: {
+                index: targetIdx,
+              },
+            });
+          },
+        },
+      ],
+      highlighted: actionSpace[ccToKey(cc)].highlighted,
+      hoverTrigger: () => {
+        store.dispatch(advanceMenu({ ...menu, hovering: cc }));
+      },
+    };
+  }
+  return actionSpace;
+};
+
+const getHexRingDescription = (
+  gameState: GameState,
+  menu: HexRingMenu,
+): string => {
+  return "select aoe";
+};
+
 const getRadiatingLineActionSpace = (
   gameState: GameState,
   takeAction: (body: { [key: string]: any }) => void,
@@ -245,6 +362,74 @@ const getRadiatingLineDescription = (
   return "select aoe";
 };
 
+const getConeActionSpace = (
+  gameState: GameState,
+  takeAction: (body: { [key: string]: any }) => void,
+  menu: ConeMenu,
+): ActionSpace => {
+  let highlightedCCs: CC[] = [];
+  if (menu.hovering) {
+    const difference = subCCs(menu.hovering, menu.targetProfile.values.fromHex);
+    for (const [
+      idx,
+      armLength,
+    ] of menu.targetProfile.values.armLengths.entries()) {
+      highlightedCCs = highlightedCCs.concat(
+        hexArc(
+          idx + 1,
+          armLength,
+          addCCs(menu.hovering, constMultCC(difference, idx)),
+          menu.targetProfile.values.fromHex,
+        ),
+      );
+    }
+  }
+
+  const highlightedCCKeys = highlightedCCs.map(ccToKey);
+
+  const actionSpace: ActionSpace = Object.fromEntries(
+    gameState.map.hexes.map((hex) => [
+      ccToKey(hex.cc),
+      {
+        actions: [],
+        highlighted: highlightedCCKeys.includes(ccToKey(hex.cc)),
+        hoverTrigger: () => {
+          store.dispatch(advanceMenu({ ...menu, hovering: null }));
+        },
+      },
+    ]),
+  );
+
+  for (const [targetIdx, cc] of menu.targetProfile.values.toHexes.entries()) {
+    actionSpace[ccToKey(cc)] = {
+      actions: [
+        {
+          type: "aoe",
+          description: "select hexes",
+
+          do: () => {
+            takeAction({
+              index: menu.optionIndex,
+              target: {
+                index: targetIdx,
+              },
+            });
+          },
+        },
+      ],
+      highlighted: actionSpace[ccToKey(cc)].highlighted,
+      hoverTrigger: () => {
+        store.dispatch(advanceMenu({ ...menu, hovering: cc }));
+      },
+    };
+  }
+  return actionSpace;
+};
+
+const getConeDescription = (gameState: GameState, menu: ConeMenu): string => {
+  return "select aoe";
+};
+
 const getListMenuActionSpace = (
   gameState: GameState,
   takeAction: (body: { [key: string]: any }) => void,
@@ -283,6 +468,9 @@ export const menuActionSpacers: {
   HexHexes: getHexHexesActionSpace,
   RadiatingLine: getRadiatingLineActionSpace,
   ListMenu: getListMenuActionSpace,
+  HexRing: getHexRingActionSpace,
+  Cone: getConeActionSpace,
+  Tree: getTreeActionSpace,
 };
 
 export const menuDescribers: {
@@ -293,4 +481,7 @@ export const menuDescribers: {
   HexHexes: getHexHexesDescription,
   RadiatingLine: getRadiatingLineDescription,
   ListMenu: getListMenuDescription,
+  HexRing: getHexRingDescription,
+  Cone: getConeDescription,
+  Tree: getTreeDescription,
 };

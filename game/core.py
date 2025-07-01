@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import dataclasses
+import itertools
 import re
 from abc import ABC, abstractmethod, ABCMeta
 from collections import defaultdict
@@ -42,7 +43,7 @@ from game.decisions import (
 from game.has_effects import HasEffects
 from game.interface import Connection
 from game.map.coordinates import CC, line_of_sight_obstructed
-from game.map.geometry import hex_circle
+from game.map.geometry import hex_circle, hex_ring, hex_arc
 from game.player import Player
 from game.turn_order import TurnOrder
 from game.values import (
@@ -106,6 +107,17 @@ class HasStatuses(HasEffects, Generic[S]):
         self.statuses.append(status)
         status.create_effects()
         return status
+
+    def get_statuses(self, status_type: type[S]) -> list[S]:
+        return [status for status in self.statuses if isinstance(status, status_type)]
+
+    def has_status(self, status_type: type[Status] | str) -> bool:
+        status_type = (
+            Status.registry[status_type]
+            if isinstance(status_type, str)
+            else status_type
+        )
+        return any(isinstance(status, status_type) for status in self.statuses)
 
     def remove_status(self, status: Status) -> None:
         try:
@@ -203,6 +215,9 @@ class EffortCost(ABC):
         return {"type": self.__class__.__name__, **self.serialize_values()}
 
 
+Co = TypeVar("Co", bound=EffortCost)
+
+
 class EffortCostSet:
 
     def __init__(self, costs: Iterable[EffortCost] = ()):
@@ -212,6 +227,9 @@ class EffortCostSet:
         self.costs = {
             cost_type: cost_type.merge(_costs) for cost_type, _costs in grouped.items()
         }
+
+    def get(self, cost_type: type[Co]) -> Co | None:
+        return self.costs.get(cost_type)
 
     @abstractmethod
     def can_be_payed(self, context: ActiveUnitContext) -> bool:
@@ -568,6 +586,7 @@ class UnitBlueprint:
         facets: list[type[Facet]] | None = None,
         price: int | None,
         max_count: int = 1,
+        identifier: str | None = None,
     ):
         self.name = name
         self.health = health
@@ -579,7 +598,9 @@ class UnitBlueprint:
         self.size = size
         self.aquatic = aquatic
         self.facets = facets or []
-        self.identifier = re.sub("_+", "_", re.sub("[^a-z]", "_", self.name.lower()))
+        self.identifier = identifier or re.sub(
+            "_+", "_", re.sub("[^a-z]", "_", self.name.lower())
+        )
         self.registry[self.identifier] = self
 
         self.price = price
@@ -1164,17 +1185,16 @@ class ConsecutiveAdjacentHexes(TargetProfile[list[Hex]]):
         }
 
     def parse_response(self, v: Any) -> list[Hex]:
-        selected_cc = CC(**v["cc"])
-        hexes = list(GS().map.get_neighbors_off(self.adjacent_to.position))
-        for idx, _hex in enumerate(hexes):
-            if _hex.position == selected_cc:
-                return [
-                    hexes[(idx + offset) % len(hexes)]
-                    for offset in range(-self.arm_length, self.arm_length + 1)
-                ]
-        # TODO some sorta standardized error for this. just need actual validation
-        #  general.
-        raise ValueError("invalid response")
+        return list(
+            GS().map.get_hexes_of_positions(
+                hex_arc(
+                    radius=1,
+                    arm_length=self.arm_length,
+                    stroke_center=CC(**v["cc"]),
+                    arc_center=self.adjacent_to.position,
+                )
+            )
+        )
 
 
 # TODO terrible name
@@ -1196,6 +1216,25 @@ class HexHexes(TargetProfile[list[Hex]]):
 
 
 @dataclasses.dataclass
+class HexRing(TargetProfile[list[Hex]]):
+    centers: list[Hex]
+    radius: int
+
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        return {
+            "centers": [_hex.position.serialize() for _hex in self.centers],
+            "radius": self.radius,
+        }
+
+    def parse_response(self, v: Any) -> list[Hex]:
+        return list(
+            GS().map.get_hexes_of_positions(
+                hex_ring(self.radius, self.centers[v["index"]].position)
+            )
+        )
+
+
+@dataclasses.dataclass
 class RadiatingLine(TargetProfile[list[Hex]]):
     from_hex: Hex
     to_hexes: list[Hex]
@@ -1208,7 +1247,7 @@ class RadiatingLine(TargetProfile[list[Hex]]):
             "length": self.length,
         }
 
-    def parse_response(self, v: Any) -> O:
+    def parse_response(self, v: Any) -> list[Hex]:
         selected_cc = self.to_hexes[v["index"]].position
         difference = selected_cc - self.from_hex.position
         return [
@@ -1216,6 +1255,83 @@ class RadiatingLine(TargetProfile[list[Hex]]):
             for i in range(self.length)
             if (projected := GS().map.hexes.get(selected_cc + difference * i))
         ]
+
+
+@dataclasses.dataclass
+class Cone(TargetProfile[list[Hex]]):
+    from_hex: Hex
+    to_hexes: list[Hex]
+    arm_lengths: list[int]
+
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        return {
+            "from_hex": self.from_hex.position.serialize(),
+            "to_hexes": [h.position.serialize() for h in self.to_hexes],
+            "arm_lengths": self.arm_lengths,
+        }
+
+    def parse_response(self, v: Any) -> list[Hex]:
+        selected_cc = self.to_hexes[v["index"]].position
+        difference = selected_cc - self.from_hex.position
+        return list(
+            GS().map.get_hexes_of_positions(
+                itertools.chain(
+                    *(
+                        hex_arc(
+                            idx + 1,
+                            arm_length=arm_length,
+                            stroke_center=selected_cc + difference * idx,
+                            arc_center=self.from_hex.position,
+                        )
+                        for idx, arm_length in enumerate(self.arm_lengths)
+                    )
+                )
+            )
+        )
+
+
+@dataclasses.dataclass
+class TreeNode:
+    options: list[tuple[Unit | Hex, TreeNode | None]]
+    label: str
+
+    @classmethod
+    def serialize_option(
+        cls, option: Unit | Hex, context: SerializationContext
+    ) -> JSON:
+        if isinstance(option, Unit):
+            return {"type": "unit", "id": context.id_map.get_id_for(option)}
+        return {"type": "hex", "cc": option.position.serialize()}
+
+    def serialize(self, context: SerializationContext) -> JSON:
+        return {
+            "label": self.label,
+            "options": [
+                (
+                    self.serialize_option(game_object, context),
+                    sub_tree.serialize(context) if sub_tree else None,
+                )
+                for game_object, sub_tree in self.options
+            ],
+        }
+
+
+@dataclasses.dataclass
+class Tree(TargetProfile[list[Unit | Hex]]):
+    root_node: TreeNode
+
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        return {"root_node": self.root_node.serialize(context)}
+
+    def parse_response(self, v: Any) -> list[Unit | Hex]:
+        indexes = v["indexes"]
+        selected = []
+        current = self.root_node
+        for idx in indexes:
+            obj, node = current.options[idx]
+            selected.append(obj)
+            current = node
+        return selected
 
 
 class MovementException(Exception): ...
@@ -1310,6 +1426,11 @@ class HexMap:
         for _hex in self.get_hexes_within_range_off(off, distance):
             if unit := self.unit_positions.inverse.get(_hex):
                 yield unit
+
+    def get_hexes_of_positions(self, positions: Iterable[CC]) -> Iterator[Hex]:
+        for position in positions:
+            if position in self.hexes:
+                yield self.hexes[position]
 
     def serialize(self, context: SerializationContext) -> JSON:
         return {"hexes": [_hex.serialize(context) for _hex in self.hexes.values()]}

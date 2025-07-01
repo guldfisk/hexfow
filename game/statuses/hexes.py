@@ -16,6 +16,7 @@ from game.effects.triggers import (
     BurnOnWalkIn,
     BurnOnUpkeep,
     TurnExpiringStatusTrigger,
+    WalkInDestroyStatusTrigger,
 )
 
 
@@ -102,3 +103,11 @@ class Glimpse(HexStatus):
             HexRevealedModifier(self.parent, self.controller),
             TurnExpiringStatusTrigger(self),
         )
+
+
+class DoombotScaffold(HexStatus):
+    def merge(self, incoming: Self) -> bool:
+        return True
+
+    def create_effects(self) -> None:
+        self.register_effects(WalkInDestroyStatusTrigger(self))

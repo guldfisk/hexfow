@@ -108,23 +108,24 @@ class Game(Thread):
                     {
                         cc: HexSpec(
                             random.choice(
-                                [
-                                    # Water,
-                                    Plains,
-                                    # Magma,
-                                ]
                                 # [
-                                #     Plains,
-                                #     Plains,
+                                #     # Water,
+                                #     # Plains,
                                 #     Shrubs,
-                                #     Forest,
-                                #     # Plains,
-                                #     # Plains,
-                                #     # Plains,
-                                #     # Forest,
-                                #     # Forest,
-                                #     # Forest,
+                                #     # Magma,
                                 # ]
+                                [
+                                    Plains,
+                                    Plains,
+                                    Shrubs,
+                                    Forest,
+                                    # Plains,
+                                    # Plains,
+                                    # Plains,
+                                    # Forest,
+                                    # Forest,
+                                    # Forest,
+                                ]
                             ),
                             cc.distance_to(CC(0, 0)) <= 1,
                         )
@@ -137,16 +138,23 @@ class Game(Thread):
             player_units = (
                 (
                     LIGHT_ARCHER,
-                    WITCH_ENGINE,
+                    # WITCH_ENGINE,
+                    INFERNO_TANK,
+                    MAD_SCIENTIST,
+                    # INFERNO_TANK,
+                    # DOOMBOT_3000,
                 ),
                 (
                     CYCLOPS,
-                    INFERNO_TANK,
+                    LIGHT_ARCHER,
+                    WITCH_ENGINE,
+                    # ZONE_SKIRMISHER,
+                    # INFERNO_TANK,
                 ),
             )
 
-            use_random_units = False
-            # use_random_units = True
+            # use_random_units = False
+            use_random_units = True
 
             if use_random_units:
                 min_random_unit_quantity = 7

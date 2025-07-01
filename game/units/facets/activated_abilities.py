@@ -26,6 +26,9 @@ from game.core import (
     HexHexes,
     UnitStatus,
     HexStatus,
+    Cone,
+    TreeNode,
+    Tree,
 )
 from game.decisions import TargetProfile, O
 from game.effects.hooks import AdjacencyHook
@@ -108,6 +111,13 @@ class GreaseTheGears(SingleAllyActivatedAbility):
 
 
 class NothingStopsTheMail(NoTargetActivatedAbility):
+    """Kills this unit."""
+
+    def perform(self, target: None) -> None:
+        ES.resolve(Kill(self.owner))
+
+
+class SelfDestruct(NoTargetActivatedAbility):
     """Kills this unit."""
 
     def perform(self, target: None) -> None:
@@ -426,9 +436,7 @@ class Showdown(SingleEnemyActivatedAbility):
     def perform(self, target: Unit) -> None:
         if attack := self.owner.get_primary_attack(RangedAttackFacet):
             for _ in range(2):
-                ES.resolve(
-                    Hit(attacker=self.owner, defender=target, attack=attack)
-                )
+                ES.resolve(Hit(attacker=self.owner, defender=target, attack=attack))
 
         if not target.exhausted:
             for attack_type in (RangedAttackFacet, MeleeAttackFacet):
@@ -546,9 +554,6 @@ class FlameWall(ActivatedAbilityFacet[list[Hex]]):
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
-            # TODO should it also apply burn to units in aoe initially?
-            #  hard to figure out how to balance numbers, especially with
-            #  order of triggers...
             ES.resolve(
                 ApplyHexStatus(
                     h,
@@ -557,6 +562,29 @@ class FlameWall(ActivatedAbilityFacet[list[Hex]]):
             )
             if unit := GS().map.unit_on(h):
                 ES.resolve(ApplyStatus(unit, StatusSignature(Burn, self, stacks=2)))
+
+
+class FlameThrower(ActivatedAbilityFacet[list[Hex]]):
+    cost = EnergyCost(3)
+
+    # TODO variable length cone?
+    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
+        return Cone(
+            GS().map.hex_off(self.owner),
+            list(GS().map.get_neighbors_off(self.owner)),
+            [0, 0, 1],
+        )
+
+    def perform(self, target: list[Hex]) -> None:
+        for h in target:
+            ES.resolve(
+                ApplyHexStatus(
+                    h,
+                    HexStatusSignature(BurningTerrain, self, stacks=1, duration=2),
+                )
+            )
+            if unit := GS().map.unit_on(h):
+                ES.resolve(ApplyStatus(unit, StatusSignature(Burn, self, stacks=1)))
 
 
 class VitalityTransfer(ActivatedAbilityFacet):
@@ -672,6 +700,7 @@ class Scry(SingleHexTargetActivatedAbility):
     """
     Target hex within 6 range NLoS. Applies revealed for 1 round.
     """
+
     cost = ExclusiveCost() | EnergyCost(2)
     range = 6
     requires_los = False
@@ -683,3 +712,70 @@ class Scry(SingleHexTargetActivatedAbility):
                 target, HexStatusSignature(HexStatus.get("revealed"), self, duration=1)
             )
         )
+
+
+class ShrinkRay(SingleTargetActivatedAbility):
+    cost = MovementCost(1) | EnergyCost(3)
+    range = 2
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(Damage(target, DamageSignature(1, self, DamageType.RANGED)))
+        ES.resolve(
+            ApplyStatus(
+                target,
+                StatusSignature(UnitStatus.get("shrunk"), self, stacks=1, duration=2),
+            )
+        )
+
+
+class AssembleTheDoombot(SingleHexTargetActivatedAbility):
+    cost = ExclusiveCost() | EnergyCost(4)
+    range = 1
+
+    def can_target_hex(self, hex_: Hex) -> bool:
+        return not GS().map.unit_on(hex_)
+
+    def perform(self, target: Hex) -> None:
+        if statuses := target.get_statuses(HexStatus.get("doombot_scaffold")):
+            # TODO dispell etc
+            for status in statuses:
+                status.remove()
+            ES.resolve(
+                SpawnUnit(
+                    UnitBlueprint.registry["doombot_3000"],
+                    self.owner.controller,
+                    target,
+                    exhausted=True,
+                    with_statuses=[
+                        StatusSignature(UnitStatus.get("ephemeral"), self, duration=4)
+                    ],
+                )
+            )
+        else:
+            ES.resolve(
+                ApplyHexStatus(
+                    target, HexStatusSignature(HexStatus.get("doombot_scaffold"), self)
+                )
+            )
+
+
+class Translocate(ActivatedAbilityFacet):
+    cost = EnergyCost(2)
+    combinable = True
+
+    def get_target_profile(self) -> TargetProfile[list[Unit | Hex]] | None:
+        if units := [
+            (
+                unit,
+                TreeNode(
+                    [(h, None) for h in GS().map.get_neighbors_off(unit)], "select hex"
+                ),
+            )
+            for unit in GS().map.get_units_within_range_off(self.owner, 1)
+            if unit.is_visible_to(self.owner.controller)
+        ]:
+            return Tree(TreeNode(units, "select unit"))
+
+    def perform(self, target: list[Hex | Unit]) -> None:
+        unit, to_ = target
+        ES.resolve(MoveUnit(unit, to_))

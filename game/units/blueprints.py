@@ -30,6 +30,11 @@ from game.units.facets.activated_abilities import (
     Poof,
     VenomousSpine,
     Scry,
+    ShrinkRay,
+    SelfDestruct,
+    FlameThrower,
+    AssembleTheDoombot,
+    Translocate,
 )
 from game.units.facets.attacks import (
     Peck,
@@ -67,6 +72,7 @@ from game.units.facets.attacks import (
     ScratchAndBite,
     Shiv,
     SerratedClaws,
+    DeathLaser,
 )
 from game.units.facets.static_abilities import (
     Prickly,
@@ -94,6 +100,7 @@ from game.units.facets.static_abilities import (
     Diver,
     ScurryInTheShadows,
     JukeAndJive,
+    Inspiration,
 )
 from game.values import Size
 
@@ -232,7 +239,7 @@ ZONE_SKIRMISHER = UnitBlueprint(
     speed=3,
     sight=2,
     facets=[Blaster, Bayonet],
-    price=2,
+    price=6,
     max_count=2,
 )
 
@@ -422,13 +429,6 @@ BLIND_ORACLE = UnitBlueprint(
 #     target allied unit 2 range NLoS
 #     activates target
 
-# blood conduit {4pp} x1
-# health 3, movement 3, sight 2, energy 3, M
-# vitality transfer
-#     ability 2 energy
-#     target two allied units 3 range LoS, -1 movement
-#     transfers up to 3 health from one to the other
-
 
 STIM_DRONE = UnitBlueprint(
     "Stim Drone",
@@ -442,14 +442,6 @@ STIM_DRONE = UnitBlueprint(
 )
 
 
-# TODO how do resistance with current damage thingy, split into 2 events?
-# glass golem {5} x2
-# health 1, movement 3, armor 2, sight 2, M
-# punch
-#     melee attack
-#     3 damage
-# - greater resistance to damage from statuses
-
 GLASS_GOLEM = UnitBlueprint(
     "Glass Golem",
     health=1,
@@ -460,12 +452,6 @@ GLASS_GOLEM = UnitBlueprint(
     price=5,
 )
 
-# diamond golem {7} x2
-# health 1, movement 3, armor 3, sight 2, M
-# diamond fist
-#     melee attack
-#     4 damage
-# - immune to damage from statuses
 
 DIAMOND_GOLEM = UnitBlueprint(
     "Diamond Golem",
@@ -515,16 +501,6 @@ DIAMOND_GOLEM = UnitBlueprint(
 #     -2 movement
 #     apply 1 poison
 
-# giant slayer mouse {7} x1
-# health 5, movement 3, sight 2, S
-# slay
-#     melee attack
-#     3 damage
-#     +2 damage against L
-# - if health would be reduced below 1, instead reduce it to 1, dispel all debuffs and apply mortally wounded for 1 round
-#     unstackable, unrefreshable
-#     undispellable
-#     dies when expires
 
 GIANT_SLAYER_MOUSE = UnitBlueprint(
     "Giant Slayer Mouse",
@@ -558,25 +534,6 @@ VOID_SPRITE = UnitBlueprint(
     price=7,
 )
 
-# bee swarm {-}
-# health 2, movement 3, sight 1, S
-# sting
-#     melee attack
-#     2 damage
-#     ignores terrain protection
-# - flying
-# - greater melee/ranged resistant
-
-# bee shaman {7wrp} x2
-# health 4, movement 3, sight 2, energy 3, S
-# summon bees
-#     ability 2 energy
-#     target hex 2 range LoS, -2 movement
-#     summons bee swarm with ephemeral duration 1 round
-# royal jelly
-#     ability 2 energy
-#     target different allied unit 2 range LoS, -1 movement
-#     heals 2 and restores 1 energy
 
 BEE_SWARM = UnitBlueprint(
     "Bee Swarm",
@@ -625,29 +582,6 @@ TELEPATH = UnitBlueprint(
     price=None,
 )
 
-# legendary wrestler {11pg} x1
-# health 7, movement 3, sight 2, energy 4, M
-# tackle
-#     melee attack
-#     2 damage
-#     applies stumble
-#         -1 movement point next activation
-# from the top rope
-#     melee attack
-#     4 damage, -1 movement
-#     +1 damage against units with stumble debuff
-#     deals 2 non-lethal physical damage to this unit
-# supplex
-#     ability 3 energy, -2 movement
-#     target M- adjacent unit
-#     deals 3 melee damage and moves the target to the other side of this unit, if able.
-# - caught in the match
-#     enemies disengageging this units suffers -1 movement point
-# - heel turn
-#     when this unit receives 4 or more damage in a single instance, it gets, "they've got a still chari"
-#         unstackable
-#         +1 attack power
-
 
 LEGENDARY_WRESTLER = UnitBlueprint(
     "Legendary Wrestler",
@@ -665,26 +599,6 @@ LEGENDARY_WRESTLER = UnitBlueprint(
     price=11,
 )
 
-# notorious outlaw
-# health 5, movement 3, sight 2, energy 3, M
-# twin revolvers
-#     2x repeatable ranged attack
-#     2 damage, 3 range, -1 movement
-# lasso
-#     combineable ability 3 energy
-#     target enemy unit 2 range LoS
-#     -2 movement
-#     applies rooted for 1 round
-# showdown
-#     ability 3 energy
-#     target enemy unit 3 range LoS
-#     no movement
-#     hits the targeted unit with primary ranged attack twice
-#     if it is still alive, it will first try to hit with it's primary ranged attack if it has one, if it doesn't or can't,
-#     it will try to hit with it's primary melee attack.
-#     if it hits this way, exhaust it
-# - dash
-#     when this unit ends it's turn, it may move one space (irregardless of movement points)
 
 NOTORIOUS_OUTLAW = UnitBlueprint(
     "Notorious Outlaw",
@@ -701,23 +615,7 @@ NOTORIOUS_OUTLAW = UnitBlueprint(
     price=12,
 )
 
-# shrine keeper {5pp} x1
-# health 4, movement 3, sight 2, 4 energy, S
-# raise shrine
-#     ability 3 energy, -2 movement
-#     target hex 1 range
-#     applies status shrine to terrain
-#         units on this hex has +1 mana regen
-#         whenever a unit within 1 range skips, heal it 1
-#         whenever a unit enters this hex, apply buff fortified for 4 rounds
-#             unstackable, refreshable
-#             +1 max health
-# lucky charm
-#     ability 1 energy
-#     target different allied unit 1 range
-#     applies buff lucky charm for 3 rounds
-#         unstackable, refreshable
-#         if this unit would suffer exactly one damage, instead remove this buff
+# TODO
 # clean up
 #     combinable ability 2 energy, -2 movement
 #     target hex 1 range
@@ -739,34 +637,6 @@ BELL_STRIKER_BRUTE = UnitBlueprint(
     "Bell-Striker Brute", health=8, speed=3, sight=2, facets=[BellHammer], price=10
 )
 
-# witch engine {13pp} x1
-# health 7, movement 2, sight 2, energy, M
-# choking soot
-#     aoe ability 4 energy
-#     aoe type hex size 1 range 3 NLoS
-#     -1 movement
-#     applies status soot to terrain for 2 rounds
-#         unstackable, refreshable
-#         blocks LoS
-#         units on this space has -1 sight, to a minimum of 1
-#         when a unit moves in, and at the end of each round, units on this hex receives 1 true damage
-# terrify
-#     ability 5 energy
-#     4 range LoS
-#     no movement
-#     applies terrified for 2 rounds
-#         unstackable, refreshable
-#         if this unit is adjacent to an enemy unit, it's owner cannot round skip, and the only legal actions
-#         of this units are to move away from any adjacent enemy units
-# into the gears
-#     ability
-#     target adjacent allied unit
-#     this unit heals equal to the the units heals and gains energy equal to its energy
-#     kill the unit
-# - withering presence
-#     at the end of this units turn, it applies 1 poison to each adjacent unit
-# - auro of paranoia
-#     whenever an enemy unit within 4 range becomes the target of an allied ability, it suffers 1 true damage
 
 WITCH_ENGINE = UnitBlueprint(
     "Witch Engine",
@@ -842,4 +712,29 @@ RAT_SCOUT = UnitBlueprint(
     facets=[ScratchAndBite, ScurryInTheShadows],
     price=4,
     max_count=2,
+)
+
+
+MAD_SCIENTIST = UnitBlueprint(
+    "Mad Scientist",
+    health=6,
+    speed=3,
+    sight=2,
+    energy=8,
+    facets=[ShrinkRay, Translocate, AssembleTheDoombot, Inspiration],
+    price=13,
+)
+
+
+DOOMBOT_3000 = UnitBlueprint(
+    "Doombot 3000",
+    identifier="doombot_3000",
+    health=7,
+    speed=1,
+    sight=2,
+    energy=4,
+    armor=1,
+    size=Size.LARGE,
+    facets=[DeathLaser, FlameThrower, SelfDestruct, Explosive],
+    price=None,
 )

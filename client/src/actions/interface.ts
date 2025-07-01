@@ -1,8 +1,11 @@
 import {
+  Cone,
   ConsecutiveAdjacentHexes,
   HexHexes,
+  HexRing,
   NOfUnits,
   RadiatingLine,
+  Tree,
 } from "../interfaces/gameState.ts";
 import { CC } from "../interfaces/geometry.ts";
 
@@ -27,9 +30,7 @@ export interface HexActions {
   hoverTrigger?: () => void;
 }
 
-export type CCkey = string;
-
-export type ActionSpace = { [key: CCkey]: HexActions };
+export type ActionSpace = { [key: string]: HexActions };
 
 export interface BaseMenuData {
   type: string;
@@ -56,11 +57,32 @@ export interface HexHexesMenu extends BaseMenuData {
   hovering: CC | null;
 }
 
+export interface HexRingMenu extends BaseMenuData {
+  type: "HexRing";
+  optionIndex: number;
+  targetProfile: HexRing;
+  hovering: CC | null;
+}
+
 export interface RadiatingLineMenu extends BaseMenuData {
   type: "RadiatingLine";
   optionIndex: number;
   targetProfile: RadiatingLine;
   hovering: CC | null;
+}
+
+export interface ConeMenu extends BaseMenuData {
+  type: "Cone";
+  optionIndex: number;
+  targetProfile: Cone;
+  hovering: CC | null;
+}
+
+export interface TreeMenu extends BaseMenuData {
+  type: "Tree";
+  optionIndex: number;
+  targetProfile: Tree;
+  selectedIndexes: number[];
 }
 
 export interface ListMenu extends BaseMenuData {
@@ -70,7 +92,10 @@ export interface ListMenu extends BaseMenuData {
 
 export type MenuData =
   | NOfUnitsMenu
+  | TreeMenu
   | ConsecutiveAdjacentHexesMenu
   | HexHexesMenu
+  | HexRingMenu
   | RadiatingLineMenu
+  | ConeMenu
   | ListMenu;

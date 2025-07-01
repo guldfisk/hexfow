@@ -23,7 +23,7 @@ from game.core import (
     Terrain,
 )
 from game.decisions import Option
-from game.values import Resistance, VisionObstruction
+from game.values import Resistance, VisionObstruction, Size
 
 
 class SpeedLayer(IntEnum):
@@ -352,18 +352,42 @@ class UnitAttackPowerFlatModifier(StateModifierEffect[Unit, None, int]):
 
 
 @dataclasses.dataclass(eq=False)
-class IncreaseUnitMaxHealthModifier(StateModifierEffect[Unit, None, int]):
+class UnitMaxHealthFlatModifier(StateModifierEffect[Unit, None, int]):
     priority: ClassVar[int] = 1
     target: ClassVar[object] = Unit.max_health
 
     unit: Unit
-    amount: int
+    amount: int | Callable[..., int]
 
     def should_modify(self, obj: Unit, request: None, value: int) -> bool:
         return obj == self.unit
 
     def modify(self, obj: Unit, request: None, value: int) -> int:
-        return value + self.amount
+        return value + (self.amount if isinstance(self.amount, int) else self.amount())
+
+
+@dataclasses.dataclass(eq=False)
+class UnitSizeFlatModifier(StateModifierEffect[Unit, None, Size]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.size
+
+    unit: Unit
+    amount: int | Callable[..., int]
+
+    def should_modify(self, obj: Unit, request: None, value: Size) -> bool:
+        return obj == self.unit
+
+    def modify(self, obj: Unit, request: None, value: Size) -> Size:
+        return Size(
+            min(
+                max(
+                    value
+                    + (self.amount if isinstance(self.amount, int) else self.amount()),
+                    0,
+                ),
+                2,
+            )
+        )
 
 
 @dataclasses.dataclass(eq=False)

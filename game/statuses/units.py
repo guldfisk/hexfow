@@ -5,9 +5,10 @@ from game.core import UnitStatus, RefreshableDurationUnitStatus
 from game.effects.modifiers import (
     RootedModifier,
     UnitAttackPowerFlatModifier,
-    IncreaseUnitMaxHealthModifier,
+    UnitMaxHealthFlatModifier,
     TerrorModifier,
     UnitProportionalSpeedModifier,
+    UnitSizeFlatModifier,
 )
 from game.effects.replacements import LuckyCharmReplacement
 from game.effects.triggers import (
@@ -151,7 +152,7 @@ class Fortified(RefreshableDurationUnitStatus):
     default_intention = StatusIntention.BUFF
 
     def create_effects(self) -> None:
-        self.register_effects(IncreaseUnitMaxHealthModifier(self.parent, 1))
+        self.register_effects(UnitMaxHealthFlatModifier(self.parent, 1))
 
 
 class LuckyCharm(RefreshableDurationUnitStatus):
@@ -192,4 +193,22 @@ class DebilitatingVenom(RefreshableDurationUnitStatus):
         self.register_effects(
             UnitAttackPowerFlatModifier(self.parent, -1),
             UnitProportionalSpeedModifier(self.parent, 0.5),
+        )
+
+
+class Shrunk(UnitStatus):
+
+    def merge(self, incoming: Self) -> bool:
+        if not self.duration is None and (
+            incoming.duration is None or (incoming.duration > self.duration)
+        ):
+            self.duration = incoming.duration
+        self.stacks += incoming.stacks
+        return True
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            UnitAttackPowerFlatModifier(self.parent, lambda: -self.stacks),
+            UnitSizeFlatModifier(self.parent, lambda: -self.stacks),
+            UnitMaxHealthFlatModifier(self.parent, lambda: -self.stacks * 2),
         )

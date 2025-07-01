@@ -17,6 +17,8 @@ from game.core import (
     UnitStatus,
     Status,
     UnitBlueprint,
+    EnergyCost,
+    HexStatus,
 )
 from game.decisions import NoTarget, SelectOptionDecisionPoint
 from game.events import (
@@ -42,6 +44,7 @@ from game.events import (
     ReceiveDamage,
     ModifyMovementPoints,
     Exhaust,
+    ActivateAbilityAction,
 )
 from game.values import DamageType, StatusIntention
 
@@ -89,9 +92,7 @@ class PackHunterTrigger(TriggerEffect[MeleeAttackAction]):
 
     def resolve(self, event: MeleeAttackAction) -> None:
         if attack := self.unit.get_primary_attack(MeleeAttackFacet):
-            ES.resolve(
-                Hit(attacker=self.unit, defender=event.defender, attack=attack)
-            )
+            ES.resolve(Hit(attacker=self.unit, defender=event.defender, attack=attack))
 
 
 @dataclasses.dataclass(eq=False)
@@ -579,3 +580,45 @@ class BellStruckTrigger(TriggerEffect[ReceiveDamage]):
 
     def resolve(self, event: ReceiveDamage) -> None:
         ES.resolve(Exhaust(event.unit))
+
+
+@dataclasses.dataclass(eq=False)
+class InspirationTrigger(TriggerEffect[ActivateAbilityAction]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def should_trigger(self, event: ActivateAbilityAction) -> bool:
+        return (
+            event.unit != self.unit
+            and (energy_cost := event.ability.get_cost().get(EnergyCost))
+            and energy_cost.amount >= 3
+            # TODO should be able to see unit, not hex
+            and self.unit.can_see(GS().map.hex_off(event.unit))
+        )
+
+    def resolve(self, event: ActivateAbilityAction) -> None:
+        ES.resolve(
+            GainEnergy(
+                self.unit,
+                (
+                    2
+                    if (energy_cost := event.ability.get_cost().get(EnergyCost))
+                    and energy_cost.amount >= 4
+                    else 1
+                ),
+            )
+        )
+
+
+@dataclasses.dataclass(eq=False)
+class WalkInDestroyStatusTrigger(TriggerEffect[MoveUnit]):
+    priority: ClassVar[int] = 0
+
+    status: HexStatus
+
+    def should_trigger(self, event: MoveUnit) -> bool:
+        return event.result and event.to_ == self.status.parent
+
+    def resolve(self, event: MoveUnit) -> None:
+        self.status.remove()

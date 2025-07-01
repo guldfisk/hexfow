@@ -262,10 +262,11 @@ export const renderMap = (
     hexContainer.addChild(hex);
 
     const label = new Text({
-      text: `${hexData.cc.r},${hexData.cc.h}\n${hexDistance({ r: 0, h: 0 }, hexData.cc)}`,
+      text: `${hexData.cc.r},${hexData.cc.h}`,
       style: smallTextStyle,
     });
     label.anchor = 0.5;
+    label.y = hexSize / 2 + 25;
     hexContainer.addChild(label);
 
     const actionTriggerZones = [];
@@ -532,7 +533,7 @@ export const renderMap = (
           app.renderer.generateTexture(unitContainer),
         );
         unitSprite.alpha = 0.5;
-        unitSprite.anchor = .5
+        unitSprite.anchor = 0.5;
         hexContainer.addChild(unitSprite);
       } else {
         hexContainer.addChild(unitContainer);

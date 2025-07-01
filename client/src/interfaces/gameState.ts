@@ -91,9 +91,32 @@ export interface HexHexes extends TargetProfileBase {
   values: { centers: CC[]; radius: number };
 }
 
+export interface HexRing extends TargetProfileBase {
+  type: "HexRing";
+  values: { centers: CC[]; radius: number };
+}
+
 export interface RadiatingLine extends TargetProfileBase {
   type: "RadiatingLine";
   values: { fromHex: CC; toHexes: CC[]; length: number };
+}
+
+export interface Cone extends TargetProfileBase {
+  type: "Cone";
+  values: { fromHex: CC; toHexes: CC[]; armLengths: number[] };
+}
+
+export interface TreeNode {
+  options: [
+    { type: "unit"; id: string } | { type: "hex"; cc: CC },
+    TreeNode | null,
+  ][];
+  label: string;
+}
+
+export interface Tree extends TargetProfileBase {
+  type: "Tree";
+  values: { rootNode: TreeNode };
 }
 
 export type TargetProfile =
@@ -103,7 +126,10 @@ export type TargetProfile =
   | NoTarget
   | ConsecutiveAdjacentHexes
   | HexHexes
-  | RadiatingLine;
+  | HexRing
+  | RadiatingLine
+  | Cone
+  | Tree;
 
 export interface OptionBase {
   type: string;

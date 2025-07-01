@@ -1,10 +1,13 @@
 import {
+  Cone,
   ConsecutiveAdjacentHexes,
   GameState,
   Hex,
   HexHexes,
+  HexRing,
   NOfUnits,
   RadiatingLine,
+  Tree,
 } from "../interfaces/gameState.ts";
 import { ccFromKey, ccToKey } from "../geometry.ts";
 import { Action, ActionSpace } from "./interface.ts";
@@ -84,6 +87,33 @@ export const getBaseActions = (
               ),
           });
         }
+      } else if (option.targetProfile.type == "Tree") {
+        for (const [
+          targetIdx,
+          [treeOption, child],
+        ] of option.targetProfile.values.rootNode.options.entries()) {
+          actions[
+            ccToKey(
+              treeOption.type == "unit"
+                ? unitHexes[treeOption.id].cc
+                : treeOption.cc,
+            )
+          ].push({
+            type: "activated_ability",
+            description:
+              option.values?.facet?.name ||
+              option.targetProfile.values.rootNode.label,
+            do: () =>
+              store.dispatch(
+                activateMenu({
+                  type: "Tree",
+                  optionIndex: idx,
+                  targetProfile: option.targetProfile as Tree,
+                  selectedIndexes: [targetIdx],
+                }),
+              ),
+          });
+        }
       } else if (
         option.targetProfile.type == "ConsecutiveAdjacentHexes" &&
         gameState.activeUnitContext
@@ -123,6 +153,25 @@ export const getBaseActions = (
             ),
         });
       } else if (
+        option.targetProfile.type == "HexRing" &&
+        gameState.activeUnitContext
+      ) {
+        actions[
+          ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
+        ].push({
+          type: "menu",
+          description: option.values?.facet?.name || "select hexes",
+          do: () =>
+            store.dispatch(
+              activateMenu({
+                type: "HexRing",
+                optionIndex: idx,
+                targetProfile: option.targetProfile as HexRing,
+                hovering: null,
+              }),
+            ),
+        });
+      } else if (
         option.targetProfile.type == "RadiatingLine" &&
         gameState.activeUnitContext
       ) {
@@ -137,6 +186,25 @@ export const getBaseActions = (
                 type: "RadiatingLine",
                 optionIndex: idx,
                 targetProfile: option.targetProfile as RadiatingLine,
+                hovering: null,
+              }),
+            ),
+        });
+      } else if (
+        option.targetProfile.type == "Cone" &&
+        gameState.activeUnitContext
+      ) {
+        actions[
+          ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
+        ].push({
+          type: "menu",
+          description: option.values?.facet?.name || "select hexes",
+          do: () =>
+            store.dispatch(
+              activateMenu({
+                type: "Cone",
+                optionIndex: idx,
+                targetProfile: option.targetProfile as Cone,
                 hovering: null,
               }),
             ),
