@@ -117,8 +117,11 @@ class Game(Thread):
                                 [
                                     Plains,
                                     Plains,
-                                    Shrubs,
+                                    Plains,
+                                    # Shrubs,
                                     Forest,
+                                    Forest,
+                                    # Magma,
                                     # Plains,
                                     # Plains,
                                     # Plains,
@@ -137,16 +140,18 @@ class Game(Thread):
 
             player_units = (
                 (
-                    LIGHT_ARCHER,
+                    INK_WITCH,
+                    BOMBARD_CANON,
+                    # LIGHT_ARCHER,
                     # WITCH_ENGINE,
-                    INFERNO_TANK,
-                    MAD_SCIENTIST,
+                    # INFERNO_TANK,
+                    # MAD_SCIENTIST,
                     # INFERNO_TANK,
                     # DOOMBOT_3000,
                 ),
                 (
                     CYCLOPS,
-                    LIGHT_ARCHER,
+                    # LIGHT_ARCHER,
                     WITCH_ENGINE,
                     # ZONE_SKIRMISHER,
                     # INFERNO_TANK,

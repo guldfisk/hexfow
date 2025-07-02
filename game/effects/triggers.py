@@ -43,8 +43,9 @@ from game.events import (
     SpawnUnit,
     ReceiveDamage,
     ModifyMovementPoints,
-    Exhaust,
+    ExhaustUnit,
     ActivateAbilityAction,
+    ReadyUnit,
 )
 from game.values import DamageType, StatusIntention
 
@@ -105,7 +106,7 @@ class FuriousTrigger(TriggerEffect[Hit]):
         return event.defender == self.unit
 
     def resolve(self, event: Hit) -> None:
-        self.unit.exhausted = False
+        ES.resolve(ReadyUnit(self.unit))
 
 
 @dataclasses.dataclass(eq=False)
@@ -579,7 +580,7 @@ class BellStruckTrigger(TriggerEffect[ReceiveDamage]):
         return event.unit == self.unit and event.signature.amount >= 3
 
     def resolve(self, event: ReceiveDamage) -> None:
-        ES.resolve(Exhaust(event.unit))
+        ES.resolve(ExhaustUnit(event.unit))
 
 
 @dataclasses.dataclass(eq=False)

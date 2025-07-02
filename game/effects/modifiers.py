@@ -21,6 +21,7 @@ from game.core import (
     Source,
     TerrainProtectionRequest,
     Terrain,
+    ActivatedAbilityFacet,
 )
 from game.decisions import Option
 from game.values import Resistance, VisionObstruction, Size
@@ -352,6 +353,21 @@ class UnitAttackPowerFlatModifier(StateModifierEffect[Unit, None, int]):
 
 
 @dataclasses.dataclass(eq=False)
+class UnitSightFlatModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.sight
+
+    unit: Unit
+    amount: int | Callable[..., int]
+
+    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+        return obj == self.unit
+
+    def modify(self, obj: Unit, request: None, value: int) -> int:
+        return value + (self.amount if isinstance(self.amount, int) else self.amount())
+
+
+@dataclasses.dataclass(eq=False)
 class UnitMaxHealthFlatModifier(StateModifierEffect[Unit, None, int]):
     priority: ClassVar[int] = 1
     target: ClassVar[object] = Unit.max_health
@@ -433,3 +449,28 @@ class TerrorModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]])
                 if not has_adjacent_enemies:
                     options.append(option)
         return options
+
+
+@dataclasses.dataclass(eq=False)
+class SilencedModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.get_legal_options
+
+    unit: Unit
+
+    def should_modify(
+        self, obj: Unit, request: ActiveUnitContext, value: list[Option]
+    ) -> bool:
+        return obj == self.unit
+
+    def modify(
+        self, obj: Unit, request: ActiveUnitContext, value: list[Option]
+    ) -> list[Option]:
+        return [
+            option
+            for option in value
+            if not (
+                isinstance(option, EffortOption)
+                and isinstance(option.facet, ActivatedAbilityFacet)
+            )
+        ]

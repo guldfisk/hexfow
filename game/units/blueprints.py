@@ -35,6 +35,8 @@ from game.units.facets.activated_abilities import (
     FlameThrower,
     AssembleTheDoombot,
     Translocate,
+    InkRing,
+    MalevolentStare,
 )
 from game.units.facets.attacks import (
     Peck,
@@ -73,6 +75,8 @@ from game.units.facets.attacks import (
     Shiv,
     SerratedClaws,
     DeathLaser,
+    BloodExpunge,
+    SolidMunition,
 )
 from game.units.facets.static_abilities import (
     Prickly,
@@ -116,7 +120,6 @@ CACTUS = UnitBlueprint(
     price=1,
 )
 
-
 LOTUS_BUD = UnitBlueprint(
     name="Lotus Bud",
     health=3,
@@ -143,7 +146,6 @@ LUMBERING_PILLAR = UnitBlueprint(
     price=2,
 )
 
-
 LIGHT_ARCHER = UnitBlueprint(
     name="Light Archer",
     health=4,
@@ -166,20 +168,9 @@ MARSHMALLOW_TITAN = UnitBlueprint(
     max_count=2,
 )
 
-# ap rifle squad {6r} x2
-# health 5, movement 2, sight 2, M
-# ap rifle
-#     ranged attack
-#     3 damage, 3 range
-#     1 ap
-#     +1 damage against large
-#     -1 damage against air
-#     no movement
-
 AP_GUNNER = UnitBlueprint(
-    "AP Gunner", health=5, speed=2, sight=2, facets=[APGun], price=6, max_count=2
+    "AP Gunner", health=4, speed=2, sight=2, facets=[APGun], price=5, max_count=2
 )
-
 
 BUGLING = UnitBlueprint(
     "Bugling",
@@ -192,7 +183,6 @@ BUGLING = UnitBlueprint(
     max_count=3,
 )
 
-
 CYCLOPS = UnitBlueprint(
     "Cyclops",
     health=11,
@@ -202,7 +192,6 @@ CYCLOPS = UnitBlueprint(
     facets=[GiantClub, Sweep, Stare],
     price=15,
 )
-
 
 RHINO_BEAST = UnitBlueprint(
     "Rhino", health=10, speed=4, sight=2, size=Size.LARGE, facets=[Gore], price=15
@@ -218,9 +207,8 @@ BOULDER_HURLER_OAF = UnitBlueprint(
         HurlBoulder,
         Farsighted,
     ],
-    price=8,
+    price=10,
 )
-
 
 GNOME_COMMANDO = UnitBlueprint(
     "Gnome Commando",
@@ -239,10 +227,9 @@ ZONE_SKIRMISHER = UnitBlueprint(
     speed=3,
     sight=2,
     facets=[Blaster, Bayonet],
-    price=6,
+    price=7,
     max_count=2,
 )
-
 
 GOBLIN_ASSASSIN = UnitBlueprint(
     "Goblin Assassin",
@@ -255,11 +242,9 @@ GOBLIN_ASSASSIN = UnitBlueprint(
     max_count=2,
 )
 
-
 DIRE_WOLF = UnitBlueprint(
     "Dire Wolf", health=7, speed=4, sight=2, facets=[Bite, PackHunter], price=9
 )
-
 
 BULLDOZER = UnitBlueprint(
     "Bulldozer",
@@ -269,9 +254,8 @@ BULLDOZER = UnitBlueprint(
     size=Size.LARGE,
     armor=1,
     facets=[Pusher],
-    price=9,
+    price=8,
 )
-
 
 HORROR_SPAWN = UnitBlueprint(
     "Horror Spawn",
@@ -290,25 +274,21 @@ HORROR = UnitBlueprint(
     sight=2,
     energy=4,
     facets=[SerratedClaws, VenomousSpine],
-    price=12,
+    price=11,
 )
 
 WAR_HOG = UnitBlueprint(
     "War Hog", health=8, speed=3, sight=2, facets=[RazorTusk, Furious], price=11
 )
 
-
 MEDIC = UnitBlueprint(
     "Medic", health=4, speed=3, sight=2, energy=5, facets=[HealBeam], price=6
 )
 
-# bombard canon {6rr} x2
-# health 4, movement 1, sight 1, M
-# solid munition
-#     ranged attack
-#     4 damage, 4 range, no movement
-#     stun this unit
 
+BOMBARD_CANON = UnitBlueprint(
+    "Bombard Canon", health=4, speed=1, sight=1, facets=[SolidMunition], price=6
+)
 
 BOMB_TRUCK = UnitBlueprint(
     "Bomb Truck",
@@ -319,7 +299,6 @@ BOMB_TRUCK = UnitBlueprint(
     price=6,
 )
 
-
 CHAINSAW_SADIST = UnitBlueprint(
     "Chainsaw Sadist",
     health=7,
@@ -328,7 +307,6 @@ CHAINSAW_SADIST = UnitBlueprint(
     facets=[Chainsaw, FightFlightFreeze, GrizzlyMurderer],
     price=13,
 )
-
 
 PESTILENCE_PRIEST = UnitBlueprint(
     "Pestilence Priest",
@@ -363,7 +341,6 @@ SNAPPING_TURTLE = UnitBlueprint(
     price=2,
 )
 
-
 # TODO # - ignores move penalties on wet terrain
 OTTER_SCOUT = UnitBlueprint(
     "Otter Scout",
@@ -376,11 +353,9 @@ OTTER_SCOUT = UnitBlueprint(
     price=4,
 )
 
-
 BLITZ_TROOPER = UnitBlueprint(
     "Blitz Trooper", health=6, speed=3, sight=2, facets=[LightBlaster, Strafe], price=10
 )
-
 
 EFFORTLESS_ATHLETE = UnitBlueprint(
     "Effortless Athlete",
@@ -391,7 +366,6 @@ EFFORTLESS_ATHLETE = UnitBlueprint(
     facets=[RoundhouseKick, Vault, BatonPass, TerrainSavvy],
     price=8,
 )
-
 
 CAPRICIOUS_TRICKSTER = UnitBlueprint(
     "Capricious Trickster",
@@ -429,7 +403,6 @@ BLIND_ORACLE = UnitBlueprint(
 #     target allied unit 2 range NLoS
 #     activates target
 
-
 STIM_DRONE = UnitBlueprint(
     "Stim Drone",
     health=3,
@@ -441,7 +414,6 @@ STIM_DRONE = UnitBlueprint(
     price=4,
 )
 
-
 GLASS_GOLEM = UnitBlueprint(
     "Glass Golem",
     health=1,
@@ -451,7 +423,6 @@ GLASS_GOLEM = UnitBlueprint(
     facets=[GlassFist, GlassSkin],
     price=5,
 )
-
 
 DIAMOND_GOLEM = UnitBlueprint(
     "Diamond Golem",
@@ -531,9 +502,8 @@ VOID_SPRITE = UnitBlueprint(
     energy=6,
     size=Size.SMALL,
     facets=[EtherealSting, Jaunt],
-    price=7,
+    price=6,
 )
-
 
 BEE_SWARM = UnitBlueprint(
     "Bee Swarm",
@@ -582,7 +552,6 @@ TELEPATH = UnitBlueprint(
     price=None,
 )
 
-
 LEGENDARY_WRESTLER = UnitBlueprint(
     "Legendary Wrestler",
     health=7,
@@ -596,9 +565,8 @@ LEGENDARY_WRESTLER = UnitBlueprint(
         CaughtInTheMatch,
         HeelTurn,
     ],
-    price=11,
+    price=9,
 )
-
 
 NOTORIOUS_OUTLAW = UnitBlueprint(
     "Notorious Outlaw",
@@ -629,14 +597,12 @@ SHRINE_KEEPER = UnitBlueprint(
     energy=4,
     size=Size.SMALL,
     facets=[RaiseShrine, GrantCharm],
-    price=5,
+    price=4,
 )
-
 
 BELL_STRIKER_BRUTE = UnitBlueprint(
     "Bell-Striker Brute", health=8, speed=3, sight=2, facets=[BellHammer], price=10
 )
-
 
 WITCH_ENGINE = UnitBlueprint(
     "Witch Engine",
@@ -647,7 +613,6 @@ WITCH_ENGINE = UnitBlueprint(
     facets=[ChokingSoot, Terrorize, GreaseTheGears, ToxicPresence],
     price=13,
 )
-
 
 INFERNO_TANK = UnitBlueprint(
     "Inferno Tank",
@@ -664,7 +629,6 @@ INFERNO_TANK = UnitBlueprint(
     ],
     price=12,
 )
-
 
 ZONE_MECH = UnitBlueprint(
     "Zone Mech",
@@ -691,7 +655,6 @@ ZONE_MECH = UnitBlueprint(
 #     applies linked status gate to both hexes for 3 rounds
 #         units on this hex can move to linked hex as normal move action
 
-
 BLOOD_CONDUIT = UnitBlueprint(
     "Blood Conduit",
     health=3,
@@ -699,9 +662,8 @@ BLOOD_CONDUIT = UnitBlueprint(
     sight=2,
     energy=3,
     facets=[VitalityTransfer],
-    price=4,
+    price=3,
 )
-
 
 RAT_SCOUT = UnitBlueprint(
     "Rat Scout",
@@ -714,7 +676,6 @@ RAT_SCOUT = UnitBlueprint(
     max_count=2,
 )
 
-
 MAD_SCIENTIST = UnitBlueprint(
     "Mad Scientist",
     health=6,
@@ -724,7 +685,6 @@ MAD_SCIENTIST = UnitBlueprint(
     facets=[ShrinkRay, Translocate, AssembleTheDoombot, Inspiration],
     price=13,
 )
-
 
 DOOMBOT_3000 = UnitBlueprint(
     "Doombot 3000",
@@ -737,4 +697,14 @@ DOOMBOT_3000 = UnitBlueprint(
     size=Size.LARGE,
     facets=[DeathLaser, FlameThrower, SelfDestruct, Explosive],
     price=None,
+)
+
+INK_WITCH = UnitBlueprint(
+    "Ink Witch",
+    health=6,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[BloodExpunge, InkRing, MalevolentStare],
+    price=9,
 )

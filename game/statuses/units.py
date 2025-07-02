@@ -1,7 +1,7 @@
 from typing import Self
 
 from events.eventsystem import ES
-from game.core import UnitStatus, RefreshableDurationUnitStatus
+from game.core import UnitStatus, RefreshableDurationUnitStatus, Unit, GS
 from game.effects.modifiers import (
     RootedModifier,
     UnitAttackPowerFlatModifier,
@@ -9,8 +9,10 @@ from game.effects.modifiers import (
     TerrorModifier,
     UnitProportionalSpeedModifier,
     UnitSizeFlatModifier,
+    UnitSightFlatModifier,
+    SilencedModifier,
 )
-from game.effects.replacements import LuckyCharmReplacement
+from game.effects.replacements import LuckyCharmReplacement, StunnedReplacement
 from game.effects.triggers import (
     BurnTrigger,
     TurnExpiringStatusTrigger,
@@ -20,7 +22,7 @@ from game.effects.triggers import (
     OneTimeModifyMovementPointsStatusTrigger,
     BellStruckTrigger,
 )
-from game.events import Kill
+from game.events import Kill, ExhaustUnit
 from game.values import StatusIntention
 
 
@@ -212,3 +214,39 @@ class Shrunk(UnitStatus):
             UnitSizeFlatModifier(self.parent, lambda: -self.stacks),
             UnitMaxHealthFlatModifier(self.parent, lambda: -self.stacks * 2),
         )
+
+
+# TODO bad name
+class Blinded(RefreshableDurationUnitStatus):
+    default_intention = StatusIntention.DEBUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            UnitSightFlatModifier(self.parent, -1),
+        )
+
+
+class Silenced(RefreshableDurationUnitStatus):
+    default_intention = StatusIntention.DEBUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(SilencedModifier(self.parent))
+
+
+class Stunned(UnitStatus):
+    def on_apply(self, to: Unit) -> bool:
+        # TODO maybe this logic should be somewhere else?
+        if (context := GS().active_unit_context) and context.unit == to:
+            context.should_stop = True
+        else:
+            while not to.exhausted and self.stacks > 0:
+                ES.resolve(ExhaustUnit(to))
+                self.stacks -= 1
+        return self.stacks > 0
+
+    def merge(self, incoming: Self) -> bool:
+        self.stacks += incoming.stacks
+        return True
+
+    def create_effects(self) -> None:
+        self.register_effects(StunnedReplacement(self))

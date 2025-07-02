@@ -98,8 +98,10 @@ class SkipOption(Option[None]):
 class HasStatuses(HasEffects, Generic[S]):
     statuses: list[Status] = dataclasses.field(default_factory=list, init=False)
 
-    # TODO by player, we need controller?
     def add_status(self, status: S) -> S:
+        if not status.on_apply(self):
+            # TODO should return None instead?
+            return status
         # TODO should prob set parent
         for existing_status in self.statuses:
             if type(existing_status) == type(status) and existing_status.merge(status):
@@ -527,6 +529,9 @@ class Status(HasEffects[H], Serializable, ABC, metaclass=_StatusMeta):
         self.duration = duration
         self.stacks = stacks
 
+    def on_apply(self, to: H) -> bool:
+        return True
+
     def merge(self, incoming: Self) -> bool:
         return False
 
@@ -639,6 +644,8 @@ class Unit(HasStatuses, Modifiable, VisionBound):
     attack_power: ModifiableAttribute[None, int]
     aquatic: ModifiableAttribute[None, bool]
     is_broken: ModifiableAttribute[None, bool]
+
+    statuses: list[UnitStatus]
 
     def __init__(
         self, controller: Player, blueprint: UnitBlueprint, exhausted: bool = False
@@ -1400,6 +1407,11 @@ class HexMap:
 
     def unit_on(self, on: CCArg) -> Unit | None:
         return self.unit_positions.inverse.get(self._to_hex(on))
+
+    def units_on(self, on: Iterable[CCArg]) -> Iterator[Unit]:
+        for o in on:
+            if unit := self.unit_on(o):
+                yield unit
 
     def distance_between(self, from_: CCArg, to_: CCArg) -> int:
         return self._to_cc(from_).distance_to(self._to_cc(to_))

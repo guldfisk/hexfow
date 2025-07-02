@@ -29,6 +29,7 @@ from game.core import (
     Cone,
     TreeNode,
     Tree,
+    HexRing,
 )
 from game.decisions import TargetProfile, O
 from game.effects.hooks import AdjacencyHook
@@ -44,6 +45,8 @@ from game.events import (
     ApplyHexStatus,
     GainEnergy,
     ModifyMovementPoints,
+    ReadyUnit,
+    ExhaustUnit,
 )
 from game.statuses.hexes import Shrine, Soot, BurningTerrain, Smoke, Glimpse
 from game.statuses.units import (
@@ -352,8 +355,7 @@ class StimulatingInjection(SingleTargetActivatedAbility):
 
     def perform(self, target: Unit) -> None:
         ES.resolve(Damage(target, DamageSignature(1, self, DamageType.PURE)))
-        # TODO event
-        target.exhausted = False
+        ES.resolve(ReadyUnit(target))
         # TODO sacrifice as a cost?
         ES.resolve(Kill(self.owner))
 
@@ -448,8 +450,7 @@ class Showdown(SingleEnemyActivatedAbility):
                             attacker=target, defender=self.owner, attack=defender_attack
                         )
                     )
-                    # TODO
-                    target.exhausted = True
+                    ES.resolve(ExhaustUnit(target))
                     break
 
 
@@ -779,3 +780,34 @@ class Translocate(ActivatedAbilityFacet):
     def perform(self, target: list[Hex | Unit]) -> None:
         unit, to_ = target
         ES.resolve(MoveUnit(unit, to_))
+
+
+class InkRing(ActivatedAbilityFacet):
+    cost = EnergyCost(3)
+
+    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
+        if hexes := [
+            _hex for _hex in GS().map.get_hexes_within_range_off(self.owner, 2)
+        ]:
+            return HexRing(hexes, 1)
+
+    def perform(self, target: list[Hex]) -> None:
+        for unit in GS().map.units_on(target):
+            ES.resolve(
+                ApplyStatus(
+                    unit, StatusSignature(UnitStatus.get("blinded"), self, duration=3)
+                )
+            )
+
+
+class MalevolentStare(SingleEnemyActivatedAbility):
+    cost = EnergyCost(3) | MovementCost(2)
+    range = 3
+
+    def perform(self, target: Unit) -> None:
+        # TODO should also dispell buffs
+        ES.resolve(
+            ApplyStatus(
+                target, StatusSignature(UnitStatus.get("silenced"), self, duration=2)
+            )
+        )

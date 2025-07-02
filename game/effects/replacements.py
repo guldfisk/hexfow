@@ -21,6 +21,7 @@ from game.events import (
     Turn,
     ApplyStatus,
     SufferDamage,
+    ReadyUnit,
 )
 
 
@@ -147,3 +148,16 @@ class LuckyCharmReplacement(ReplacementEffect[SufferDamage]):
 
     def resolve(self, event: SufferDamage) -> None:
         self.status.remove()
+
+
+@dataclasses.dataclass(eq=False)
+class StunnedReplacement(ReplacementEffect[ReadyUnit]):
+    priority: ClassVar[int] = 0
+
+    status: UnitStatus
+
+    def can_replace(self, event: ReadyUnit) -> bool:
+        return event.unit == self.status.parent
+
+    def resolve(self, event: ReadyUnit) -> None:
+        self.status.decrement_stacks()

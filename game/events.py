@@ -411,15 +411,27 @@ class ModifyMovementPoints(Event[None]):
 
 
 @dataclasses.dataclass
-class Exhaust(Event[None]):
+class ExhaustUnit(Event[None]):
     unit: Unit
 
     def is_valid(self) -> bool:
         return not self.unit.exhausted
 
     def resolve(self) -> None:
+        # TODO shouldn't log when exhausted through normal action?
         with GS().log(LogLine([self.unit, "is exhausted"])):
             self.unit.exhausted = True
+
+
+@dataclasses.dataclass
+class ReadyUnit(Event[None]):
+    unit: Unit
+
+    def is_valid(self) -> bool:
+        return self.unit.exhausted
+
+    def resolve(self) -> None:
+        self.unit.exhausted = False
 
 
 @dataclasses.dataclass
@@ -622,7 +634,7 @@ class Turn(Event[bool]):
             ES.resolve(TurnCleanup(unit=self.unit))
             do_state_based_check()
 
-            self.unit.exhausted = True
+            ES.resolve(ExhaustUnit(self.unit))
             GS().active_unit_context = None
 
         return context.has_acted
@@ -658,7 +670,7 @@ class Round(Event[None]):
         timestamp = 0
 
         for unit in gs.map.unit_positions.keys():
-            unit.exhausted = False
+            ES.resolve(ReadyUnit(unit))
 
         with gs.log(LogLine([f"Round {gs.round_counter}"])):
             # TODO very unclear how this all works

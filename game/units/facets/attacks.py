@@ -7,11 +7,12 @@ from game.core import (
     MovementCost,
     ExclusiveCost,
     DamageSignature,
+    UnitStatus,
 )
 from game.effects.hooks import AdjacencyHook
 from game.events import Damage, ApplyStatus
-from game.statuses.units import Staggered, Stumbling, Parasite, BellStruck
-from game.values import Size, DamageType
+from game.statuses.units import Staggered, Stumbling, BellStruck
+from game.values import Size, DamageType, StatusIntention
 
 
 class Peck(MeleeAttackFacet):
@@ -68,6 +69,38 @@ class Blaster(RangedAttackFacet):
     damage = 3
     range = 2
     cost = MovementCost(1)
+
+
+class BloodExpunge(RangedAttackFacet):
+    """+1 damage for each unique debuff the target has."""
+
+    damage = 2
+    range = 3
+    cost = MovementCost(2)
+
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        return len(
+            [
+                status
+                for status in unit.statuses
+                if status.intention == StatusIntention.DEBUFF
+            ]
+        )
+
+
+class SolidMunition(RangedAttackFacet):
+    """Stuns this unit."""
+
+    damage = 4
+    range = 4
+    cost = ExclusiveCost()
+
+    def resolve_post_damage_effects(self, defender: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                self.owner, StatusSignature(UnitStatus.get("stunned"), self, stacks=1)
+            )
+        )
 
 
 class LightBlaster(RangedAttackFacet):
