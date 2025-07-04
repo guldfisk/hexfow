@@ -1,5 +1,5 @@
 from game.core import Terrain, Hex, Unit, TerrainProtectionRequest
-from game.effects.triggers import BurnOnWalkIn, BurnOnUpkeep
+from game.effects.triggers import BurnOnWalkIn, BurnOnCleanup
 from game.values import Size, DamageType
 
 
@@ -65,4 +65,4 @@ class Magma(Terrain):
     def create_effects(self, space: Hex) -> None:
         # TODO should this also happen when units on this space are melee attacked? how should that be handled in general
         #  for these types of effects?
-        self.register_effects(BurnOnWalkIn(space, 1), BurnOnUpkeep(space, 1))
+        self.register_effects(BurnOnWalkIn(space, 1), BurnOnCleanup(space, 1))

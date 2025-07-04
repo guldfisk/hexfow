@@ -349,7 +349,7 @@ class BurnOnWalkIn(TriggerEffect[MoveUnit]):
 
 
 @dataclasses.dataclass(eq=False)
-class BurnOnUpkeep(TriggerEffect[RoundCleanup]):
+class BurnOnCleanup(TriggerEffect[RoundCleanup]):
     priority: ClassVar[int] = TriggerLayers.ROUND_APPLY_DEBUFFS
 
     hex: Hex

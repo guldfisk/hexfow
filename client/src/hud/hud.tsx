@@ -11,6 +11,7 @@ import {
   CostAtom,
   EffortCostSet,
   FacetDetails,
+  GameObjectDetails,
   UnitDetails,
 } from "../interfaces/gameObjectDetails.ts";
 import { getImageUrl } from "../images.ts";
@@ -145,13 +146,16 @@ const FacetDetailView = ({ facet }: { facet: FacetDetails }) => (
 const UnitDetailsView = ({
   unit,
   details,
+  //   TODO handle this in a non trash way
+  gameObjectDetails,
 }: {
   unit: Unit;
   details: UnitDetails;
+  gameObjectDetails: GameObjectDetails;
 }) => {
   return (
     <div>
-      <img src={details.small_image} />
+      <img src={getImageUrl('unit', details.identifier)} />
 
       <div
         style={{
@@ -177,7 +181,7 @@ const UnitDetailsView = ({
       </div>
 
       {details.facets.map((facet) => (
-        <FacetDetailView facet={facet} />
+        <FacetDetailView facet={gameObjectDetails.facets[facet]} />
       ))}
     </div>
   );
@@ -265,6 +269,7 @@ export const HUD = ({ connection }: { connection: WebSocket }) => {
                   applicationState.hoveredUnit.blueprint
                 ]
               }
+              gameObjectDetails={applicationState.gameObjectDetails}
             />
           </div>
         ) : (

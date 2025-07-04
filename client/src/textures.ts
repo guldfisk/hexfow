@@ -1,8 +1,8 @@
 import { Assets, Texture } from "pixi.js";
-import { recursiveCamelCase } from "./utils/case.ts";
 
 import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
 import { receivedGameObjectDetails, store } from "./state/store.ts";
+import { getImageUrl } from "./images.ts";
 
 // TODO don't export?
 export const textureMap: { [key: string]: Texture } = {};
@@ -36,19 +36,20 @@ export const loadGameTextures = async () => {
 
     for (const unitDetails of Object.values(jsonResponse.units)) {
       textureMap[unitDetails.identifier] = await Assets.load(
-        unitDetails.small_image,
+        getImageUrl("unit", unitDetails.identifier),
       );
     }
 
     for (const terrainDetails of Object.values(jsonResponse.terrain)) {
       textureMap[terrainDetails.identifier] = await Assets.load(
+        //   TODO
         terrainDetails.image,
       );
     }
 
     for (const statusDetails of Object.values(jsonResponse.statuses)) {
       textureMap[statusDetails.identifier] = await Assets.load(
-        statusDetails.image,
+        getImageUrl("status", statusDetails.identifier),
       );
     }
 

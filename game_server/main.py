@@ -145,7 +145,7 @@ class Game(Thread):
                     # LIGHT_ARCHER,
                     # WITCH_ENGINE,
                     # INFERNO_TANK,
-                    # MAD_SCIENTIST,
+                    MAD_SCIENTIST,
                     # INFERNO_TANK,
                     # DOOMBOT_3000,
                 ),
@@ -158,8 +158,8 @@ class Game(Thread):
                 ),
             )
 
-            # use_random_units = False
-            use_random_units = True
+            use_random_units = False
+            # use_random_units = True
 
             if use_random_units:
                 min_random_unit_quantity = 7

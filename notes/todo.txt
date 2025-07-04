@@ -12,7 +12,7 @@ game functionality
         statuses
     related statuses in unit detail view
     current statuses in unit detail view
-    game log
+    highlights from game log
     elevation
     vision ghosts
     chess clock
@@ -24,9 +24,13 @@ game functionality
         well-defined order of iterating units on map
         kill source
 
+code
+    common status merge mixins
+    don't eager load images during development
+        hmm this doesn't seem easy, maybe some way to only load images relevant for the stuff currently getting tested
+    check negative sight
 
 pre-commit
-project files clean up
 game module structure
 
 map + army for playtesting

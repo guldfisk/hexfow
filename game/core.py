@@ -4,7 +4,7 @@ import contextlib
 import dataclasses
 import itertools
 import re
-from abc import ABC, abstractmethod, ABCMeta
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import (
     ClassVar,
@@ -21,13 +21,11 @@ from typing import Mapping
 
 from bidict import bidict
 
-from debug_utils import dp
 from events.eventsystem import (
     Modifiable,
     ModifiableAttribute,
     modifiable,
     ES,
-    ModifiableMeta,
 )
 from game.decisions import (
     DecisionPoint,
@@ -41,10 +39,12 @@ from game.decisions import (
     IDMap,
 )
 from game.has_effects import HasEffects
+from game.info.registered import Registered, get_registered_meta
 from game.interface import Connection
 from game.map.coordinates import CC, line_of_sight_obstructed
 from game.map.geometry import hex_circle, hex_ring, hex_arc
 from game.player import Player
+from game.tests.conftest import EventLogger
 from game.turn_order import TurnOrder
 from game.values import (
     Size,
@@ -53,7 +53,6 @@ from game.values import (
     StatusIntention,
     Resistance,
 )
-from game.tests.conftest import EventLogger
 
 
 A = TypeVar("A", bound=DecisionPoint)
@@ -80,7 +79,7 @@ class EffortOption(Option[O]):
     facet: EffortFacet
 
     def serialize_values(self, context: SerializationContext) -> JSON:
-        return {"facet": self.facet.serialize()}
+        return {"facet": self.facet.serialize_type()}
 
 
 @dataclasses.dataclass
@@ -132,42 +131,10 @@ class HasStatuses(HasEffects, Generic[S]):
 H = TypeVar("H", bound=HasStatuses)
 
 
-class _FacetMeta(ModifiableMeta):
-
-    def __new__(
-        metacls,
-        name: str,
-        bases: tuple[type, ...],
-        attributes: dict[str, Any],
-        **kwargs: Any,
-    ) -> type:
-        if ABC not in bases:
-            if "identifier" not in attributes:
-                attributes["identifier"] = "_".join(
-                    s.lower() for s in re.findall("[A-Z][^A-Z]+|[A-Z]+(?![^A-Z])", name)
-                )
-            if "name" not in attributes:
-                attributes["name"] = " ".join(
-                    re.findall("[A-Z][^A-Z]+|[A-Z]+(?![^A-Z])", name)
-                )
-        cls = super().__new__(metacls, name, bases, attributes, **kwargs)
-        if ABC not in bases and "description" not in attributes and cls.__doc__:
-            cls.description = "\n".join(
-                ln.strip() for ln in cls.__doc__.split("\n")
-            ).strip()
-        return cls
-
-
 # TODO a facet should not have statuses
-class Facet(HasStatuses, Modifiable, ABC, metaclass=_FacetMeta):
-    # TODO hmm
-    # name: ClassVar[str]
-    # TODO hm
-    identifier: ClassVar[str]
-    name: ClassVar[str]
-    category: ClassVar[str] = "not defined"
-    description: ClassVar[str | None] = None
-    flavor: ClassVar[str | None] = None
+class Facet(HasStatuses, Modifiable, Registered, ABC, metaclass=get_registered_meta()):
+    registry: ClassVar[dict[str, Facet]]
+    category: ClassVar[str]
 
     def __init__(self, owner: Unit):
         super().__init__(parent=owner)
@@ -180,12 +147,13 @@ class Facet(HasStatuses, Modifiable, ABC, metaclass=_FacetMeta):
 
     # TODO lmao
     @classmethod
-    def serialize(cls) -> JSON:
+    def serialize_type(cls) -> JSON:
         return {
             "identifier": cls.identifier,
             "name": cls.name,
             "category": cls.category,
             "description": cls.description,
+            "related_statuses": cls.related_statuses,
         }
 
 
@@ -314,7 +282,7 @@ class EnergyCost(EffortCost):
         return {"amount": self.amount}
 
 
-class EffortFacet(Facet, Modifiable):
+class EffortFacet(Facet, Modifiable, ABC):
     cost: ClassVar[EffortCostSet | EffortCost | None] = None
     # TODO these should be some signature together
     combinable: ClassVar[bool] = False
@@ -349,16 +317,16 @@ class EffortFacet(Facet, Modifiable):
         )
 
     @classmethod
-    def serialize(cls) -> JSON:
+    def serialize_type(cls) -> JSON:
         return {
-            **super().serialize(),
+            **super().serialize_type(),
             "cost": cls.get_cost_set().serialize(),
             "combineable": cls.combinable,
             "max_activations": cls.max_activations,
         }
 
 
-class AttackFacet(EffortFacet): ...
+class AttackFacet(EffortFacet, ABC): ...
 
 
 # TODO cleanup typevar definitions and names
@@ -366,7 +334,8 @@ C = TypeVar("C", bound=AttackFacet)
 
 
 # TODO maybe this is all attacks, and "aoe attacks" are all abilities?
-class SingleTargetAttackFacet(AttackFacet):
+#  Don't think so, but it should prob be called something different.
+class SingleTargetAttackFacet(AttackFacet, ABC):
     damage_type: ClassVar[DamageType]
     damage: ClassVar[int]
     ap: ClassVar[int] = 0
@@ -393,11 +362,11 @@ class SingleTargetAttackFacet(AttackFacet):
     def resolve_post_damage_effects(self, defender: Unit) -> None: ...
 
     @classmethod
-    def serialize(cls) -> JSON:
-        return {**super().serialize(), "damage": cls.damage, "ap": cls.ap}
+    def serialize_type(cls) -> JSON:
+        return {**super().serialize_type(), "damage": cls.damage, "ap": cls.ap}
 
 
-class MeleeAttackFacet(SingleTargetAttackFacet):
+class MeleeAttackFacet(SingleTargetAttackFacet, ABC):
     category = "melee_attack"
     damage_type = DamageType.MELEE
 
@@ -439,7 +408,7 @@ def line_of_sight_obstructed_for_unit(unit: Unit, line_from: CC, line_to: CC) ->
     )
 
 
-class RangedAttackFacet(SingleTargetAttackFacet):
+class RangedAttackFacet(SingleTargetAttackFacet, ABC):
     category = "ranged_attack"
     damage_type = DamageType.RANGED
     range: ClassVar[int]
@@ -461,11 +430,11 @@ class RangedAttackFacet(SingleTargetAttackFacet):
         ]
 
     @classmethod
-    def serialize(cls) -> JSON:
-        return {**super().serialize(), "range": cls.range}
+    def serialize_type(cls) -> JSON:
+        return {**super().serialize_type(), "range": cls.range}
 
 
-class ActivatedAbilityFacet(EffortFacet, Generic[O]):
+class ActivatedAbilityFacet(EffortFacet, Generic[O], ABC):
     category = "activated_ability"
 
     @abstractmethod
@@ -487,34 +456,14 @@ class ActivatedAbilityFacet(EffortFacet, Generic[O]):
         )
 
 
-class StaticAbilityFacet(Facet):
+class StaticAbilityFacet(Facet, ABC):
     category = "static_ability"
 
 
-class _StatusMeta(ABCMeta):
-    registry: ClassVar[dict[str, Status]] = {}
-
-    def __new__(
-        metacls,
-        name: str,
-        bases: tuple[type, ...],
-        attributes: dict[str, Any],
-        **kwargs: Any,
-    ) -> type:
-        if ABC not in bases:
-            if "identifier" not in attributes:
-                attributes["identifier"] = "_".join(
-                    s.lower() for s in re.findall("[A-Z][^A-Z]+|[A-Z]+(?![^A-Z])", name)
-                )
-        cls = super().__new__(metacls, name, bases, attributes, **kwargs)
-        if ABC not in bases:
-            metacls.registry[cls.identifier] = cls
-        return cls
-
-
-class Status(HasEffects[H], Serializable, ABC, metaclass=_StatusMeta):
+class Status(
+    Registered, HasEffects[H], Serializable, ABC, metaclass=get_registered_meta()
+):
     registry: ClassVar[dict[str, Status]]
-    identifier: ClassVar[str]
 
     def __init__(
         self,
@@ -539,6 +488,15 @@ class Status(HasEffects[H], Serializable, ABC, metaclass=_StatusMeta):
         return False
 
     def create_effects(self) -> None: ...
+
+    @classmethod
+    def serialize_type(cls) -> JSON:
+        return {
+            "identifier": cls.identifier,
+            "name": cls.name,
+            "description": cls.description,
+            "related_statuses": cls.related_statuses,
+        }
 
     def serialize(self, context: SerializationContext) -> JSON:
         return {
@@ -628,7 +586,7 @@ class UnitBlueprint:
             # TODO
             "size": self.size.name[0],
             "aquatic": self.aquatic,
-            "facets": [facet.serialize() for facet in self.facets],
+            "facets": [facet.identifier for facet in self.facets],
             "price": self.price,
         }
 
@@ -907,12 +865,12 @@ class DurationStatusMixin:
 class RefreshableDurationUnitStatus(DurationStatusMixin, UnitStatus, ABC): ...
 
 
-class NoTargetActivatedAbility(ActivatedAbilityFacet[None]):
+class NoTargetActivatedAbility(ActivatedAbilityFacet[None], ABC):
     def get_target_profile(self) -> TargetProfile[None] | None:
         return NoTarget()
 
 
-class SingleTargetActivatedAbility(ActivatedAbilityFacet[Unit]):
+class SingleTargetActivatedAbility(ActivatedAbilityFacet[Unit], ABC):
     range: ClassVar[int] = 1
     requires_los: ClassVar[bool] = True
 
@@ -937,7 +895,7 @@ class SingleTargetActivatedAbility(ActivatedAbilityFacet[Unit]):
             return OneOfUnits(units)
 
 
-class SingleAllyActivatedAbility(SingleTargetActivatedAbility):
+class SingleAllyActivatedAbility(SingleTargetActivatedAbility, ABC):
     can_target_self: ClassVar[bool] = True
 
     def can_target_unit(self, unit: Unit) -> bool:
@@ -946,7 +904,7 @@ class SingleAllyActivatedAbility(SingleTargetActivatedAbility):
         )
 
 
-class SingleEnemyActivatedAbility(SingleTargetActivatedAbility):
+class SingleEnemyActivatedAbility(SingleTargetActivatedAbility, ABC):
 
     def can_target_unit(self, unit: Unit) -> bool:
         return unit.controller != self.owner.controller
@@ -1142,7 +1100,7 @@ class HexStatusSignature:
     duration: int | None = None
 
 
-class SingleHexTargetActivatedAbility(ActivatedAbilityFacet[Hex]):
+class SingleHexTargetActivatedAbility(ActivatedAbilityFacet[Hex], ABC):
     range: ClassVar[int] = 1
     requires_los: ClassVar[bool] = True
     requires_vision: ClassVar[bool] = True

@@ -234,6 +234,8 @@ class Silenced(RefreshableDurationUnitStatus):
 
 
 class Stunned(UnitStatus):
+    default_intention = StatusIntention.DEBUFF
+
     def on_apply(self, to: Unit) -> bool:
         # TODO maybe this logic should be somewhere else?
         if (context := GS().active_unit_context) and context.unit == to:

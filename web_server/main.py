@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from game.core import UnitBlueprint, Terrain, Status
+from game.core import UnitBlueprint, Terrain, Status, Facet
 from game.map import terrain
 from game.units import blueprints  # noqa F401
 
@@ -45,6 +45,7 @@ async def get_game_object_details() -> dict[str, Any]:
             for unit in UnitBlueprint.registry.values()
         },
         "terrain": {
+            # TODO serialize func
             _terrain.identifier: {
                 "identifier": _terrain.identifier,
                 "name": _terrain.__name__,
@@ -53,11 +54,11 @@ async def get_game_object_details() -> dict[str, Any]:
             for _terrain in terrains
         },
         "statuses": {
-            status.identifier: {
-                "identifier": status.identifier,
-                "name": status.__name__,
-                "image": f"/src/images/statuses/{status.identifier}.png",
-            }
+            status.identifier: status.serialize_type()
             for status in Status.registry.values()
+        },
+        "facets": {
+            facet.identifier: facet.serialize_type()
+            for facet in Facet.registry.values()
         },
     }

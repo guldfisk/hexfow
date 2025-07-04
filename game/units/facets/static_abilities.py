@@ -35,7 +35,7 @@ from game.effects.triggers import (
     InspirationTrigger,
 )
 from game.map.terrain import Water
-from game.statuses.units import Burn
+from game.statuses.unit_statuses import Burn
 from game.values import Resistance
 
 

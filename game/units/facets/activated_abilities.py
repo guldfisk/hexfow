@@ -48,8 +48,8 @@ from game.events import (
     ReadyUnit,
     ExhaustUnit,
 )
-from game.statuses.hexes import Shrine, Soot, BurningTerrain, Smoke, Glimpse
-from game.statuses.units import (
+from game.statuses.hex_statuses import Shrine, Soot, BurningTerrain, Smoke, Glimpse
+from game.statuses.unit_statuses import (
     Panicked,
     BurstOfSpeed,
     Staggered,
@@ -128,8 +128,8 @@ class SelfDestruct(NoTargetActivatedAbility):
 
 
 class InducePanic(SingleEnemyActivatedAbility):
-    range = 3
-    cost = MovementCost(1) | EnergyCost(5)
+    range = 2
+    cost = MovementCost(1) | EnergyCost(4)
 
     def perform(self, target: Unit) -> None:
         ES.resolve(ApplyStatus(target, StatusSignature(Panicked, self, duration=2)))
@@ -787,7 +787,7 @@ class InkRing(ActivatedAbilityFacet):
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
         if hexes := [
-            _hex for _hex in GS().map.get_hexes_within_range_off(self.owner, 2)
+            _hex for _hex in GS().map.get_hexes_within_range_off(self.owner, 3)
         ]:
             return HexRing(hexes, 1)
 

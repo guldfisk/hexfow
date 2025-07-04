@@ -11,7 +11,7 @@ from game.core import (
 )
 from game.effects.hooks import AdjacencyHook
 from game.events import Damage, ApplyStatus
-from game.statuses.units import Staggered, Stumbling, BellStruck
+from game.statuses.unit_statuses import Staggered, Stumbling, BellStruck
 from game.values import Size, DamageType, StatusIntention
 
 

@@ -1,6 +1,8 @@
 import { CC } from "./geometry.ts";
 import { EffortFacetDetails } from "./gameObjectDetails.ts";
 
+// TODO refactor this shit
+
 export type Size = "S" | "M" | "L";
 
 export interface Status {

@@ -3,6 +3,7 @@ export interface BaseFacetDetails {
   identifier: string;
   category: string;
   description: string | null;
+  relatedStatuses: string[];
 }
 
 export interface AbstractCostAtom {
@@ -73,11 +74,9 @@ export interface UnitDetails {
   energy: number;
   size: number;
   aquatic: boolean;
-  facets: FacetDetails[];
+  facets: string[];
   price: number;
 }
-
-export type UnitsDetails = { [identifier: string]: UnitDetails };
 
 export interface TerrainDetails {
   identifier: string;
@@ -85,18 +84,16 @@ export interface TerrainDetails {
   image: string;
 }
 
-export type TerrainsDetails = { [identifier: string]: TerrainDetails };
-
 export interface StatusDetails {
   identifier: string;
   name: string;
-  image: string;
+  description: string | null;
+  relatedStatuses: string[];
 }
 
-export type StatusesDetails = { [identifier: string]: StatusDetails };
-
 export interface GameObjectDetails {
-  units: UnitsDetails;
-  terrain: TerrainsDetails;
-  statuses: StatusesDetails;
+  units: { [identifier: string]: UnitDetails };
+  terrain: { [identifier: string]: TerrainDetails };
+  statuses: { [identifier: string]: StatusDetails };
+  facets: { [identifier: string]: FacetDetails };
 }

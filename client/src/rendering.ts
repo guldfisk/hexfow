@@ -237,7 +237,7 @@ export const renderMap = (
         gameConnection.send(JSON.stringify(body)),
       );
 
-  gameState.map.hexes.forEach((hexData) => {
+  for (const hexData of gameState.map.hexes) {
     let realHexPosition = addRCs(ccToRC(hexData.cc), center);
 
     const hexContainer = new Container();
@@ -612,7 +612,7 @@ export const renderMap = (
         hoverTrigger();
       }
     });
-  });
+  }
 
   gameState.map.hexes.forEach((hexData) => {
     const menuItems = actionSpace[ccToKey(hexData.cc)].sideMenuItems || [];

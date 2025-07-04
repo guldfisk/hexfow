@@ -14,7 +14,7 @@ from game.effects.triggers import (
     HexWalkInDamageTrigger,
     HexRoundDamageTrigger,
     BurnOnWalkIn,
-    BurnOnUpkeep,
+    BurnOnCleanup,
     TurnExpiringStatusTrigger,
     WalkInDestroyStatusTrigger,
 )
@@ -45,6 +45,9 @@ class Soot(DurationStatusMixin, HexStatus):
 
 
 class Smoke(DurationStatusMixin, HexStatus):
+    """
+    This hex blocks vision, and units on it has -1 sight, to a minimum of 1.
+    """
 
     def create_effects(self) -> None:
         self.register_effects(
@@ -54,6 +57,11 @@ class Smoke(DurationStatusMixin, HexStatus):
 
 
 class BurningTerrain(HexStatus):
+    """
+    When a unit moves into this hex, and at the end of the round, units on this hex suffers 1 burn.
+    """
+
+    related_statuses = ["burn"]
 
     def merge(self, incoming: Self) -> bool:
         # TODO common logic?
@@ -68,7 +76,7 @@ class BurningTerrain(HexStatus):
     def create_effects(self) -> None:
         self.register_effects(
             BurnOnWalkIn(self.parent, lambda: self.stacks),
-            BurnOnUpkeep(self.parent, lambda: self.stacks),
+            BurnOnCleanup(self.parent, lambda: self.stacks),
         )
 
 
