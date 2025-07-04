@@ -33,6 +33,7 @@ import { deactivateMenu, hoverDetail, store } from "./state/store.ts";
 import { getBaseActionSpace } from "./actions/actionSpace.ts";
 import { MenuData, selectionIcon } from "./actions/interface.ts";
 import { menuActionSpacers } from "./actions/menues.ts";
+import { HoveredDetails } from "./interfaces/details.ts";
 
 const sizeScales: { S: number; M: number; L: number } = {
   S: 0.9,
@@ -323,7 +324,6 @@ export const renderMap = (
 
       if (intention) {
         const frame = new Graphics(intentionBorderMap[intention]);
-        // frame.angle = 22.5;
         statusContainer.addChild(frame);
       }
 
@@ -671,17 +671,27 @@ export const renderMap = (
 
     if (hexData) {
       const localPosition = subRCs(positionOnMap, ccToRC(cc));
-      if (
-        hexData.unit &&
-        localPosition.x <= 60 &&
-        localPosition.x >= -60 &&
-        localPosition.y <= 74 &&
-        localPosition.y >= -74
-      ) {
-        store.dispatch(hoverDetail({ type: "unit", unit: hexData.unit }));
-      } else {
-        store.dispatch(hoverDetail({ type: "hex", hex: hexData }));
+      let detail: HoveredDetails = { type: "hex", hex: hexData };
+      if (hexData.unit) {
+        if (
+          hexData.unit.statuses.length &&
+          localPosition.x >= -60 - 22 &&
+          localPosition.x <= -60 + 22 &&
+          localPosition.y >= -74 - 22 &&
+          localPosition.y <= 74
+        ) {
+          detail = { type: "statuses", statuses: hexData.unit.statuses };
+        } else if (
+          localPosition.x <= 60 &&
+          localPosition.x >= -60 &&
+          localPosition.y <= 74 &&
+          localPosition.y >= -74
+        ) {
+          detail = { type: "unit", unit: hexData.unit };
+        }
       }
+
+      store.dispatch(hoverDetail(detail));
 
       const hoverTrigger = actionSpace[ccToKey(hexData.cc)].hoverTrigger;
       if (hoverTrigger) {

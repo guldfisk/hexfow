@@ -1,4 +1,4 @@
-import { Hex, Unit } from "./gameState.ts";
+import { Hex, Unit, UnitStatus } from "./gameState.ts";
 
 interface BaseHovered {
   type: string;
@@ -19,4 +19,9 @@ export interface HoveredHex extends BaseHovered {
   hex: Hex;
 }
 
-export type HoveredDetails = HoveredUnit | HoveredBlueprint | HoveredHex;
+export interface HoveredStatuses extends BaseHovered {
+  type: "statuses";
+  statuses: UnitStatus[];
+}
+
+export type HoveredDetails = HoveredUnit | HoveredBlueprint | HoveredHex | HoveredStatuses;
