@@ -2,6 +2,7 @@ import { RefObject, useEffect, useRef } from "react";
 import { useAppSelector } from "../state/hooks.ts";
 import {
   GameState,
+  Hex,
   LogLine,
   LogLineComponent,
   OptionBase,
@@ -229,6 +230,57 @@ const UnitDetailsView = ({
   );
 };
 
+const HexDetailView = ({
+  hex,
+  //   TODO handle this in a non trash way
+  gameObjectDetails,
+}: {
+  hex: Hex;
+  gameObjectDetails: GameObjectDetails;
+}) => {
+  const terrainDetails = gameObjectDetails.terrain[hex.terrain];
+  const relatedStatuses: string[] = [];
+  for (const status of terrainDetails.related_statuses) {
+    if (!relatedStatuses.includes(status)) {
+      relatedStatuses.push(status);
+      traverseStatuses(status, gameObjectDetails, relatedStatuses);
+    }
+  }
+  return (
+    <div>
+      <div
+        style={{
+          fontSize: "18px",
+        }}
+      >
+        {terrainDetails.name}
+      </div>
+      <img
+        src={getImageUrl("terrain", hex.terrain)}
+        className={"terrain-image"}
+      />
+      {terrainDetails.is_water ||
+      terrainDetails.blocks_vision ||
+      terrainDetails.is_high_ground ? (
+        <div className={"facet-details"}>
+          {terrainDetails.blocks_vision ? <div>Blocks vision</div> : null}
+          {terrainDetails.is_water ? <div>Water</div> : null}
+          {terrainDetails.is_high_ground ? <div>High ground</div> : null}
+        </div>
+      ) : null}
+      {terrainDetails.description ? (
+        <div className={"facet-details"}>{terrainDetails.description}</div>
+      ) : null}
+
+      {relatedStatuses.map((statusIdentifier) => (
+        <StatusDetailView
+          status={gameObjectDetails.statuses[statusIdentifier]}
+        />
+      ))}
+    </div>
+  );
+};
+
 const DecisionDetailView = ({
   gameState,
   connection,
@@ -287,6 +339,30 @@ export const HUD = ({ connection }: { connection: WebSocket }) => {
   // TODO fucking LMAO
   const applicationState = useAppSelector((state) => state);
 
+  let detailView = null;
+  if (applicationState.gameObjectDetails && applicationState.detailed) {
+    if (applicationState.detailed.type == "unit") {
+      detailView = (
+        <UnitDetailsView
+          unit={applicationState.detailed.unit}
+          details={
+            applicationState.gameObjectDetails.units[
+              applicationState.detailed.unit.blueprint
+            ]
+          }
+          gameObjectDetails={applicationState.gameObjectDetails}
+        />
+      );
+    } else if (applicationState.detailed.type == "hex") {
+      detailView = (
+        <HexDetailView
+          hex={applicationState.detailed.hex}
+          gameObjectDetails={applicationState.gameObjectDetails}
+        />
+      );
+    }
+  }
+
   return (
     <div>
       <div className={"sidebar sidebar-left"}>
@@ -302,21 +378,7 @@ export const HUD = ({ connection }: { connection: WebSocket }) => {
       </div>
 
       <div className={"sidebar sidebar-right"}>
-        {applicationState.hoveredUnit && applicationState.gameObjectDetails ? (
-          <div className={"details-view"}>
-            <UnitDetailsView
-              unit={applicationState.hoveredUnit}
-              details={
-                applicationState.gameObjectDetails.units[
-                  applicationState.hoveredUnit.blueprint
-                ]
-              }
-              gameObjectDetails={applicationState.gameObjectDetails}
-            />
-          </div>
-        ) : (
-          "idk"
-        )}
+        <div className={"details-view"}>{detailView}</div>
       </div>
     </div>
   );

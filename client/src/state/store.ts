@@ -1,7 +1,8 @@
 import { configureStore, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { GameState, Unit } from "../interfaces/gameState.ts";
+import { GameState } from "../interfaces/gameState.ts";
 import { GameObjectDetails } from "../interfaces/gameObjectDetails.ts";
 import { MenuData } from "../actions/interface.ts";
+import { HoveredDetails } from "../interfaces/details.ts";
 
 const mainSlice = createSlice({
   name: "application",
@@ -9,13 +10,13 @@ const mainSlice = createSlice({
     gameState: null,
     shouldRerender: true,
     gameObjectDetails: null,
-    hoveredUnit: null,
+    detailed: null,
     menuData: null,
   } as {
     gameState: GameState | null;
     shouldRerender: boolean;
     gameObjectDetails: GameObjectDetails | null;
-    hoveredUnit: Unit | null;
+    detailed: HoveredDetails | null;
     menuData: MenuData | null;
   },
   reducers: {
@@ -33,17 +34,14 @@ const mainSlice = createSlice({
     ) => {
       state.gameObjectDetails = action.payload;
     },
-    hoverUnit: (state, action: PayloadAction<Unit>) => {
-      state.hoveredUnit = action.payload;
+    hoverDetail: (state, action: PayloadAction<HoveredDetails>) => {
+      state.detailed = action.payload;
     },
     activateMenu: (state, action: PayloadAction<MenuData>) => {
       state.menuData = action.payload;
       state.shouldRerender = true;
     },
-    advanceMenu: (
-      state,
-      action: PayloadAction<MenuData>,
-    ) => {
+    advanceMenu: (state, action: PayloadAction<MenuData>) => {
       if (state.menuData) {
         state.menuData = action.payload;
         state.shouldRerender = true;
@@ -60,7 +58,7 @@ export const {
   receiveGameState,
   renderedGameState,
   receivedGameObjectDetails,
-  hoverUnit,
+  hoverDetail,
   activateMenu,
   advanceMenu,
   deactivateMenu,

@@ -117,11 +117,13 @@ class Game(Thread):
                                 [
                                     Plains,
                                     Plains,
-                                    Plains,
+                                    # Plains,
                                     # Shrubs,
                                     Forest,
                                     Forest,
-                                    # Magma,
+                                    Magma,
+                                    Water,
+                                    Hills,
                                     # Plains,
                                     # Plains,
                                     # Plains,
@@ -218,7 +220,7 @@ class Game(Thread):
                 ccs = [
                     cc
                     for cc in hex_circle(3)
-                    if (_hex := gs.map.hexes.get(cc)) and not _hex.terrain.is_water()
+                    if (_hex := gs.map.hexes.get(cc)) and not _hex.terrain.is_water
                 ]
                 random.shuffle(ccs)
                 player_ccs = [

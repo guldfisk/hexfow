@@ -62,10 +62,8 @@ class Smoke(DurationStatusMixin, HexStatus):
 
 class BurningTerrain(HexStatus):
     """
-    When a unit moves into this hex, and at the end of the round, units on this hex suffers 1 burn.
+    When a unit moves into this hex, and at the end of the round, units on this hex suffers stacks of <burn> equals to the stacks of this status.
     """
-
-    related_statuses = ["burn"]
 
     def merge(self, incoming: Self) -> bool:
         # TODO common logic?

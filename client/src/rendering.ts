@@ -14,21 +14,22 @@ import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
 import {
   addRCs,
   asUnitVector,
+  ccEquals,
   ccToKey,
   ccToRC,
   constMultRC,
   getHexDimensions,
   getHexVerticeOffsets,
-  hexDistance,
   hexHeight,
   hexSize,
   hexVerticeOffsets,
   hexWidth,
+  rcToCC,
   subRCs,
 } from "./geometry.ts";
 import { textureMap } from "./textures.ts";
 import { range } from "./utils/range.ts";
-import { deactivateMenu, hoverUnit, store } from "./state/store.ts";
+import { deactivateMenu, hoverDetail, store } from "./state/store.ts";
 import { getBaseActionSpace } from "./actions/actionSpace.ts";
 import { MenuData, selectionIcon } from "./actions/interface.ts";
 import { menuActionSpacers } from "./actions/menues.ts";
@@ -603,15 +604,16 @@ export const renderMap = (
       hexContainer.addChild(zone);
     }
     hexContainer.eventMode = "static";
-    hexContainer.on("mouseenter", (event) => {
-      if (hexData.unit) {
-        store.dispatch(hoverUnit(hexData.unit));
-      }
-      const hoverTrigger = actionSpace[ccToKey(hexData.cc)].hoverTrigger;
-      if (hoverTrigger) {
-        hoverTrigger();
-      }
-    });
+    // hexContainer.on("mouseenter", (event) => {
+    //   console.log('hover', event.x, event.y, hexContainer.toLocal(event.global))
+    //   if (hexData.unit) {
+    //     store.dispatch(hoverUnit(hexData.unit));
+    //   }
+    //   const hoverTrigger = actionSpace[ccToKey(hexData.cc)].hoverTrigger;
+    //   if (hoverTrigger) {
+    //     hoverTrigger();
+    //   }
+    // });
   }
 
   gameState.map.hexes.forEach((hexData) => {
@@ -659,6 +661,33 @@ export const renderMap = (
             menuItem.do();
           }
         });
+      }
+    }
+  });
+
+  map.eventMode = "static";
+  map.on("globalpointermove", (event) => {
+    const positionOnMap = subRCs(map.toLocal(event.global), center);
+    const cc = rcToCC(positionOnMap);
+    const hexData = gameState.map.hexes.find((h) => ccEquals(h.cc, cc));
+
+    if (hexData) {
+      const localPosition = subRCs(positionOnMap, ccToRC(cc));
+      if (
+        hexData.unit &&
+        localPosition.x <= 60 &&
+        localPosition.x >= -60 &&
+        localPosition.y <= 74 &&
+        localPosition.y >= -74
+      ) {
+        store.dispatch(hoverDetail({ type: "unit", unit: hexData.unit }));
+      } else {
+        store.dispatch(hoverDetail({ type: "hex", hex: hexData }));
+      }
+
+      const hoverTrigger = actionSpace[ccToKey(hexData.cc)].hoverTrigger;
+      if (hoverTrigger) {
+        hoverTrigger();
       }
     }
   });

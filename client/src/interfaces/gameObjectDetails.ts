@@ -81,7 +81,11 @@ export interface UnitDetails {
 export interface TerrainDetails {
   identifier: string;
   name: string;
-  image: string;
+  description: string | null;
+  related_statuses: string[];
+  is_water: boolean;
+  is_high_ground: boolean;
+  blocks_vision: boolean;
 }
 
 export type StatusCategory = "unit" | "hex";

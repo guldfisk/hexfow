@@ -3,12 +3,16 @@ from game.effects.triggers import BurnOnWalkIn, BurnOnCleanup
 from game.values import Size, DamageType
 
 
-class Plains(Terrain):
-    identifier = "plains"
+class Plains(Terrain): ...
 
 
 class Forest(Terrain):
-    identifier = "forest"
+    """
+    1/2/2 melee/ranged/aoe protection for small/medium units.
+    0/1/1 melee/ranged/aoe protection for large units.
+    """
+
+    blocks_vision = True
 
     def get_move_in_penalty_for(self, unit: Unit) -> int:
         return 1
@@ -24,12 +28,13 @@ class Forest(Terrain):
             return 1
         return 0
 
-    def blocks_vision(self) -> bool:
-        return True
 
 # TODO block vision for small units? :^)
 class Shrubs(Terrain):
-    identifier = "shrubs"
+    """
+    1/2/1 melee/ranged/aoe protection for small units.
+    0/1/0 melee/ranged/aoe protection for medium units.
+    """
 
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
         if request.unit.size.g() == Size.SMALL:
@@ -46,21 +51,17 @@ class Shrubs(Terrain):
 
 
 class Hills(Terrain):
-    identifier = "hills"
-
-    def is_highground(self) -> bool:
-        return True
+    is_high_ground = True
 
 
 class Water(Terrain):
-    identifier = "water"
-
-    def is_water(self) -> bool:
-        return True
+    is_water = True
 
 
 class Magma(Terrain):
-    identifier = "magma"
+    """
+    When a unit moves into this hex, and at the end of the round, units on this hex suffers 1 <burn>.
+    """
 
     def create_effects(self, space: Hex) -> None:
         # TODO should this also happen when units on this space are melee attacked? how should that be handled in general

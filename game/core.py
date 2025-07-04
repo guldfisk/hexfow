@@ -396,7 +396,7 @@ def is_vision_obstructed_for_unit_at(unit: Unit, cc: CC) -> bool:
         case VisionObstruction.FULL:
             return True
         case VisionObstruction.HIGH_GROUND:
-            return not GS().map.hex_off(unit).terrain.is_highground()
+            return not GS().map.hex_off(unit).terrain.is_high_ground
         case _:
             return False
 
@@ -780,7 +780,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
 
 
 class UnitStatus(Status[Unit], ABC):
-    category: ClassVar[str] = 'unit'
+    category: ClassVar[str] = "unit"
     default_intention: ClassVar[StatusIntention | None] = None
 
     def __init__(
@@ -929,17 +929,13 @@ class TerrainProtectionRequest:
     damage_type: DamageType
 
 
-class Terrain(HasEffects, ABC):
-    # TODO
-    identifier: ClassVar[str]
+class Terrain(HasEffects, Registered, ABC, metaclass=get_registered_meta()):
+    registry: dict[str, type[Terrain]]
+    is_water: ClassVar[bool] = False
+    blocks_vision: ClassVar[bool] = False
+    is_high_ground: ClassVar[bool] = False
 
     def create_effects(self, space: Hex) -> None: ...
-
-    def is_water(self) -> bool:
-        return False
-
-    def blocks_vision(self) -> bool:
-        return False
 
     def get_move_in_penalty_for(self, unit: Unit) -> int:
         return 0
@@ -950,9 +946,17 @@ class Terrain(HasEffects, ABC):
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
         return 0
 
-    # TODO modifyable or whatever
-    def is_highground(self) -> bool:
-        return False
+    @classmethod
+    def serialize_type(cls) -> JSON:
+        return {
+            "identifier": cls.identifier,
+            "name": cls.name,
+            "description": cls.description,
+            "related_statuses": cls.related_statuses,
+            "is_water": cls.is_water,
+            "is_high_ground": cls.is_high_ground,
+            "blocks_vision": cls.blocks_vision,
+        }
 
 
 @dataclasses.dataclass
@@ -964,7 +968,7 @@ class Hex(Modifiable, HasStatuses, Serializable):
 
     @modifiable
     def is_passable_to(self, unit: Unit) -> bool:
-        if self.terrain.is_water():
+        if self.terrain.is_water:
             return unit.aquatic.g()
         return True
 
@@ -987,11 +991,11 @@ class Hex(Modifiable, HasStatuses, Serializable):
 
     @modifiable
     def blocks_vision_for(self, player: Player) -> VisionObstruction:
-        if self.terrain.blocks_vision():
+        if self.terrain.blocks_vision:
             return VisionObstruction.FULL
         if (unit := self.map.unit_on(self)) and unit.blocks_vision_for(player):
             return VisionObstruction.FULL
-        if self.terrain.is_highground():
+        if self.terrain.is_high_ground:
             return VisionObstruction.HIGH_GROUND
         return VisionObstruction.NONE
 
@@ -1086,7 +1090,7 @@ class DamageSignature:
 
 
 class HexStatus(Status[Hex], ABC):
-    category: ClassVar[str] = 'hex'
+    category: ClassVar[str] = "hex"
 
     @classmethod
     def get(cls, identifier: str) -> type[HexStatus]:

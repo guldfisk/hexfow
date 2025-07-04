@@ -4,15 +4,8 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from game.core import UnitBlueprint, Terrain, Status, Facet
-from game.map import terrain
+from game.map import terrain  # noqa F401
 from game.units import blueprints  # noqa F401
-
-
-terrains = [
-    v
-    for v in terrain.__dict__.values()
-    if isinstance(v, type) and issubclass(v, Terrain) and v != Terrain
-]
 
 
 app = FastAPI()
@@ -45,13 +38,8 @@ async def get_game_object_details() -> dict[str, Any]:
             for unit in UnitBlueprint.registry.values()
         },
         "terrain": {
-            # TODO serialize func
-            _terrain.identifier: {
-                "identifier": _terrain.identifier,
-                "name": _terrain.__name__,
-                "image": f"/src/images/terrain/terrain_{_terrain.identifier}_square.png",
-            }
-            for _terrain in terrains
+            _terrain.identifier: _terrain.serialize_type()
+            for _terrain in Terrain.registry.values()
         },
         "statuses": {
             status.identifier: status.serialize_type()

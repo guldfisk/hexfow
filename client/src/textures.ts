@@ -42,8 +42,7 @@ export const loadGameTextures = async () => {
 
     for (const terrainDetails of Object.values(jsonResponse.terrain)) {
       textureMap[terrainDetails.identifier] = await Assets.load(
-        //   TODO
-        terrainDetails.image,
+        getImageUrl("terrain", terrainDetails.identifier),
       );
     }
 

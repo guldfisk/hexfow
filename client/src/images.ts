@@ -1,6 +1,6 @@
 import { Assets, Texture } from "pixi.js";
 
-export type ResourceType = "icon" | "unit" | "status";
+export type ResourceType = "icon" | "unit" | "status"|'terrain';
 
 export const getImageUrl = (
   resourceType: ResourceType,
@@ -13,6 +13,8 @@ export const getImageUrl = (
       return `/src/images/units/${resourceIdentifier}_small.png`;
     case "status":
       return `/src/images/statuses/${resourceIdentifier}.png`;
+    case "terrain":
+      return `/src/images/terrain/terrain_${resourceIdentifier}_square.png`;
   }
 };
 

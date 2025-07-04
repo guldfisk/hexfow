@@ -33,6 +33,31 @@ export const ccNeighborOffsets: CC[] = [
   { r: 0, h: 1 },
 ];
 
+export const getL = (cc: CC): number => -(cc.r + cc.h);
+
+export const roundCC = (cc: CC): CC => {
+  let r = Math.round(cc.r);
+  let h = Math.round(cc.h);
+  let l = Math.round(getL(cc));
+  const rDiff = Math.abs(cc.r - r);
+  const hDiff = Math.abs(cc.h - h);
+  const lDiff = Math.abs(getL(cc) - l);
+
+  if (rDiff > hDiff && rDiff > lDiff) {
+    r = -h - l;
+  } else if (hDiff > lDiff) {
+    h = -r - l;
+  }
+
+  return { r, h };
+};
+
+export const rcToCC = (rc: RC): CC => {
+  const x = rc.x / hexSize;
+  const y = rc.y / hexSize;
+  return roundCC({ r: (2 / 3) * y, h: (Math.sqrt(3) / 3) * x - (1 / 3) * y });
+};
+
 export const ccToRC = (hexCoord: CC): RC => ({
   x: hexSize * ((Math.sqrt(3) / 2) * hexCoord.r + Math.sqrt(3) * hexCoord.h),
   y: hexSize * ((3 / 2) * hexCoord.r),
