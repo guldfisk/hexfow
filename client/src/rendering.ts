@@ -81,6 +81,7 @@ export const renderMap = (
   gameState: GameState,
   gameObjectDetails: GameObjectDetails,
   menu: MenuData | null,
+  highlightedCCs: string[] | null,
   gameConnection: WebSocket,
 ): Container => {
   // TODO this shouldn't be here
@@ -595,7 +596,10 @@ export const renderMap = (
       hexContainer.addChild(eyeContainer);
     }
 
-    if (actionSpace[ccToKey(hexData.cc)].highlighted) {
+    if (
+      actionSpace[ccToKey(hexData.cc)].highlighted ||
+      (highlightedCCs && highlightedCCs.includes(ccToKey(hexData.cc)))
+    ) {
       let highlight = new Graphics(highlightShape);
       hexContainer.addChild(highlight);
     }
@@ -604,16 +608,6 @@ export const renderMap = (
       hexContainer.addChild(zone);
     }
     hexContainer.eventMode = "static";
-    // hexContainer.on("mouseenter", (event) => {
-    //   console.log('hover', event.x, event.y, hexContainer.toLocal(event.global))
-    //   if (hexData.unit) {
-    //     store.dispatch(hoverUnit(hexData.unit));
-    //   }
-    //   const hoverTrigger = actionSpace[ccToKey(hexData.cc)].hoverTrigger;
-    //   if (hoverTrigger) {
-    //     hoverTrigger();
-    //   }
-    // });
   }
 
   gameState.map.hexes.forEach((hexData) => {
@@ -667,6 +661,10 @@ export const renderMap = (
 
   map.eventMode = "static";
   map.on("globalpointermove", (event) => {
+    // TODO ultra lmao, should just not render game beneath the sidebars instead...
+    if (event.x < 400 || event.x > maxX - 400) {
+      return;
+    }
     const positionOnMap = subRCs(map.toLocal(event.global), center);
     const cc = rcToCC(positionOnMap);
     const hexData = gameState.map.hexes.find((h) => ccEquals(h.cc, cc));

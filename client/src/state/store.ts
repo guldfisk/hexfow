@@ -12,17 +12,20 @@ const mainSlice = createSlice({
     gameObjectDetails: null,
     detailed: null,
     menuData: null,
+    highlightedCCs: null,
   } as {
     gameState: GameState | null;
     shouldRerender: boolean;
     gameObjectDetails: GameObjectDetails | null;
     detailed: HoveredDetails | null;
     menuData: MenuData | null;
+    highlightedCCs: string[] | null;
   },
   reducers: {
     receiveGameState: (state, action: PayloadAction<GameState>) => {
       state.gameState = action.payload;
       state.menuData = null;
+      state.highlightedCCs = null;
       state.shouldRerender = true;
     },
     renderedGameState: (state) => {
@@ -39,16 +42,26 @@ const mainSlice = createSlice({
     },
     activateMenu: (state, action: PayloadAction<MenuData>) => {
       state.menuData = action.payload;
+      state.highlightedCCs = null;
       state.shouldRerender = true;
     },
     advanceMenu: (state, action: PayloadAction<MenuData>) => {
       if (state.menuData) {
         state.menuData = action.payload;
+        state.highlightedCCs = null;
         state.shouldRerender = true;
       }
     },
     deactivateMenu: (state) => {
       state.menuData = null;
+      state.shouldRerender = true;
+    },
+    highlightCCs: (state, action: PayloadAction<string[]>) => {
+      state.highlightedCCs = action.payload;
+      state.shouldRerender = true;
+    },
+    removeCCHighlight: (state) => {
+      state.highlightedCCs = null;
       state.shouldRerender = true;
     },
   },
@@ -62,6 +75,8 @@ export const {
   activateMenu,
   advanceMenu,
   deactivateMenu,
+  highlightCCs,
+  removeCCHighlight,
 } = mainSlice.actions;
 
 export const store = configureStore({

@@ -21,6 +21,12 @@ import { MenuData } from "../actions/interface.ts";
 import { menuDescribers } from "../actions/menues.ts";
 import { ccToKey } from "../geometry.ts";
 import { range } from "../utils/range.ts";
+import {
+  highlightCCs,
+  hoverDetail,
+  removeCCHighlight,
+  store,
+} from "../state/store.ts";
 
 // const LogList = ({ logLines }: { logLines: string[] }) => {
 //   const myRef: RefObject<HTMLDivElement | null> = useRef(null);
@@ -44,14 +50,26 @@ const LogLineComponentView = ({ element }: { element: LogLineComponent }) => {
   }
   if (element.type == "unit") {
     return (
-      <div className={"log-component highlighted-log-component"}>
+      //   TODO should highlight hex of unit / detail actual unit if the id is still known
+      <div
+        className={"log-component highlighted-log-component"}
+        onMouseEnter={() => {
+          store.dispatch(
+            hoverDetail({ type: "blueprint", blueprint: element.blueprint }),
+          );
+        }}
+      >
         {element.blueprint + ""}
       </div>
     );
   }
   if (element.type == "hex") {
     return (
-      <div className={"log-component highlighted-log-component"}>
+      <div
+        className={"log-component highlighted-log-component"}
+        onMouseEnter={() => store.dispatch(highlightCCs([ccToKey(element.cc)]))}
+        onMouseLeave={() => store.dispatch(removeCCHighlight())}
+      >
         {ccToKey(element.cc) + ""}
       </div>
     );
@@ -178,7 +196,7 @@ const UnitDetailsView = ({
   //   TODO handle this in a non trash way
   gameObjectDetails,
 }: {
-  unit: Unit;
+  unit: Unit | null;
   details: UnitDetails;
   gameObjectDetails: GameObjectDetails;
 }) => {
@@ -203,18 +221,28 @@ const UnitDetailsView = ({
         }}
       >
         <div>{details.name}</div>
-        <div>
-          health: {unit.maxHealth - unit.damage}/{unit.maxHealth}
-        </div>
-        <div>speed: {unit.speed}</div>
-        <div>sight: {unit.sight}</div>
-        {unit.armor != 0 ? <div>armor: {unit.armor}</div> : null}
-        {unit.energy != 0 || unit.maxEnergy != 0 ? (
+        {unit ? (
           <div>
-            energy: {unit.energy}/{unit.maxEnergy}
+            health: {unit.maxHealth - unit.damage}/{unit.maxHealth}
           </div>
+        ) : (
+          <div>max health: {details.health}</div>
+        )}
+        <div>speed: {(unit || details).speed}</div>
+        <div>sight: {(unit || details).sight}</div>
+        {(unit || details).armor != 0 ? (
+          <div>armor: {(unit || details).armor}</div>
         ) : null}
-        <div>size: {unit.size}</div>
+        {unit ? (
+          unit.energy != 0 || unit.maxEnergy != 0 ? (
+            <div>
+              energy: {unit.energy}/{unit.maxEnergy}
+            </div>
+          ) : null
+        ) : details.energy > 0 ? (
+          <div>energy: {details.energy}</div>
+        ) : null}
+        <div>size: {(unit || details).size}</div>
         <div>price: {details.price}</div>
       </div>
 
@@ -341,13 +369,22 @@ export const HUD = ({ connection }: { connection: WebSocket }) => {
 
   let detailView = null;
   if (applicationState.gameObjectDetails && applicationState.detailed) {
-    if (applicationState.detailed.type == "unit") {
+    if (
+      applicationState.detailed.type == "unit" ||
+      applicationState.detailed.type == "blueprint"
+    ) {
       detailView = (
         <UnitDetailsView
-          unit={applicationState.detailed.unit}
+          unit={
+            applicationState.detailed.type == "unit"
+              ? applicationState.detailed.unit
+              : null
+          }
           details={
             applicationState.gameObjectDetails.units[
-              applicationState.detailed.unit.blueprint
+              applicationState.detailed.type == "unit"
+                ? applicationState.detailed.unit.blueprint
+                : applicationState.detailed.blueprint
             ]
           }
           gameObjectDetails={applicationState.gameObjectDetails}
