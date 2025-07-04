@@ -10,7 +10,6 @@ game functionality
     hover detail view for
         terrain
         statuses
-    related statuses in unit detail view
     current statuses in unit detail view
     highlights from game log
     elevation
@@ -29,6 +28,7 @@ code
     don't eager load images during development
         hmm this doesn't seem easy, maybe some way to only load images relevant for the stuff currently getting tested
     check negative sight
+    only fire detail hover if changed
 
 pre-commit
 game module structure

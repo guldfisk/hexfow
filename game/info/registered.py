@@ -32,6 +32,17 @@ def get_registered_meta():
                 metacls.registry[cls.identifier] = cls
                 if "description" not in attributes and cls.__doc__:
                     cls.description = description_from_docstring(cls.__doc__)
+                cls.related_statuses = list(cls.related_statuses)
+                if cls.description:
+                    def _sub(match: re.Match) -> str:
+                        if match.group(1) not in cls.related_statuses:
+                            cls.related_statuses.append(match.group(1))
+
+                        return " ".join(
+                            e.capitalize() for e in match.group(1).split("_")
+                        )
+
+                    cls.description = re.sub("<([^<>]+)>", _sub, cls.description)
             return cls
 
     return _RegisteredMeta
@@ -40,5 +51,6 @@ def get_registered_meta():
 class Registered(ABC):
     identifier: ClassVar[str]
     name: ClassVar[str]
+    category: ClassVar[str]
     description: ClassVar[str | None] = None
     related_statuses: ClassVar[list[str]] = []

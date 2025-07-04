@@ -12,6 +12,7 @@ import {
   EffortCostSet,
   FacetDetails,
   GameObjectDetails,
+  StatusDetails,
   UnitDetails,
 } from "../interfaces/gameObjectDetails.ts";
 import { getImageUrl } from "../images.ts";
@@ -57,16 +58,12 @@ const LogLineComponentView = ({ element }: { element: LogLineComponent }) => {
 };
 
 const LogLineView = ({ line: [indent, content] }: { line: LogLine }) => {
-  // console.log('ok', range(indent).join('  '))
   return (
     <p>
       {"  ".repeat(indent)}
-      {content.map(
-        (element) => (
-          <LogLineComponentView element={element} />
-        ),
-        // element.type == "string" ? element.message : "",
-      )}
+      {content.map((element) => (
+        <LogLineComponentView element={element} />
+      ))}
     </p>
   );
 };
@@ -143,6 +140,37 @@ const FacetDetailView = ({ facet }: { facet: FacetDetails }) => (
   </div>
 );
 
+const StatusDetailView = ({ status }: { status: StatusDetails }) => (
+  <div className={"status-details"}>
+    <div className={"facet-header"}>
+      <img
+        src={getImageUrl("status", status.identifier)}
+        className={
+          status.category == "unit" ? "status-icon-unit" : "status-icon-hex"
+        }
+      />
+      {status.name}
+    </div>
+    {status.description ? (
+      <div className={"facet-description"}>{status.description}</div>
+    ) : null}
+  </div>
+);
+
+const traverseStatuses = (
+  statusIdentifier: string,
+  gameObjectDetails: GameObjectDetails,
+  seen: string[],
+) => {
+  for (const related of gameObjectDetails.statuses[statusIdentifier]
+    .related_statuses) {
+    if (!seen.includes(related)) {
+      seen.push(related);
+      traverseStatuses(related, gameObjectDetails, seen);
+    }
+  }
+};
+
 const UnitDetailsView = ({
   unit,
   details,
@@ -153,9 +181,18 @@ const UnitDetailsView = ({
   details: UnitDetails;
   gameObjectDetails: GameObjectDetails;
 }) => {
+  const relatedStatuses: string[] = [];
+  for (const facetName of details.facets) {
+    for (const status of gameObjectDetails.facets[facetName].related_statuses) {
+      if (!relatedStatuses.includes(status)) {
+        relatedStatuses.push(status);
+        traverseStatuses(status, gameObjectDetails, relatedStatuses);
+      }
+    }
+  }
   return (
     <div>
-      <img src={getImageUrl('unit', details.identifier)} />
+      <img src={getImageUrl("unit", details.identifier)} />
 
       <div
         style={{
@@ -182,6 +219,11 @@ const UnitDetailsView = ({
 
       {details.facets.map((facet) => (
         <FacetDetailView facet={gameObjectDetails.facets[facet]} />
+      ))}
+      {relatedStatuses.map((statusIdentifier) => (
+        <StatusDetailView
+          status={gameObjectDetails.statuses[statusIdentifier]}
+        />
       ))}
     </div>
   );

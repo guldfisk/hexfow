@@ -47,7 +47,7 @@ export interface ConsecutiveAdjacentHexesMenu extends BaseMenuData {
   type: "ConsecutiveAdjacentHexes";
   optionIndex: number;
   targetProfile: ConsecutiveAdjacentHexes;
-  hovering: number | null;
+  hovering: CC | null;
 }
 
 export interface HexHexesMenu extends BaseMenuData {

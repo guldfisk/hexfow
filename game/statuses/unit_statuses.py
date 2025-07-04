@@ -27,6 +27,10 @@ from game.values import StatusIntention
 
 
 class Burn(UnitStatus):
+    """
+    At the end of each round, this unit suffers damage equals to its stacks of burn, then remove a stack of burn.
+    """
+
     default_intention = StatusIntention.DEBUFF
 
     def merge(self, incoming: Self) -> bool:
@@ -38,6 +42,10 @@ class Burn(UnitStatus):
 
 
 class Poison(UnitStatus):
+    """
+    At the end of each round this unit suffers pure damage equals to its stacks of poison.
+    """
+
     default_intention = StatusIntention.DEBUFF
 
     def merge(self, incoming: Self) -> bool:
@@ -58,6 +66,10 @@ class Panicked(RefreshableDurationUnitStatus):
 
 
 class Ephemeral(UnitStatus):
+    """
+    When this status expires, this unit dies.
+    """
+
     default_intention = StatusIntention.DEBUFF
 
     def merge(self, incoming: Self) -> bool:
@@ -182,6 +194,10 @@ class MortallyWounded(UnitStatus):
 
 
 class Terror(RefreshableDurationUnitStatus):
+    """
+    This unit can't move into spaces adjacent to visible enemy units. As long as it is adjacent to an enemy unit, the only legal action this unit can take is move away.
+    """
+
     default_intention = StatusIntention.DEBUFF
 
     def create_effects(self) -> None:
@@ -199,6 +215,9 @@ class DebilitatingVenom(RefreshableDurationUnitStatus):
 
 
 class Shrunk(UnitStatus):
+    """
+    This unit has -1 attack power, -1 size and -2 max health per stack.
+    """
 
     def merge(self, incoming: Self) -> bool:
         if not self.duration is None and (

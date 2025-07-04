@@ -140,13 +140,13 @@ class Game(Thread):
 
             player_units = (
                 (
-                    INK_WITCH,
-                    BOMBARD_CANON,
+                    # INK_WITCH,
+                    # BOMBARD_CANON,
                     # LIGHT_ARCHER,
                     # WITCH_ENGINE,
                     # INFERNO_TANK,
                     MAD_SCIENTIST,
-                    # INFERNO_TANK,
+                    INFERNO_TANK,
                     # DOOMBOT_3000,
                 ),
                 (

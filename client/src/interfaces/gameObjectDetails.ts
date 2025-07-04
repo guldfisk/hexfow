@@ -3,7 +3,7 @@ export interface BaseFacetDetails {
   identifier: string;
   category: string;
   description: string | null;
-  relatedStatuses: string[];
+  related_statuses: string[];
 }
 
 export interface AbstractCostAtom {
@@ -84,11 +84,14 @@ export interface TerrainDetails {
   image: string;
 }
 
+export type StatusCategory = "unit" | "hex";
+
 export interface StatusDetails {
   identifier: string;
   name: string;
+  category: StatusCategory;
   description: string | null;
-  relatedStatuses: string[];
+  related_statuses: string[];
 }
 
 export interface GameObjectDetails {

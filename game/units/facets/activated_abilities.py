@@ -212,22 +212,11 @@ class SummonScarab(SingleHexTargetActivatedAbility):
         )
 
 
-# cyclops {15gg} x1
-# health 11, movement 3, sight 1, L
-# club
-#     melee attack
-#     5 damage
-# sweep
-#     aoe attack
-#     aoe type 3 consecutive adjacent hexes
-#     4 melee damage, -1 movement
-# stare
-#     combinable aoe ability
-#         aoe type radiating line length 4 FoV propagation
-#         reveals hexes this action
-
-
 class Sweep(ActivatedAbilityFacet[list[Hex]]):
+    """
+    Target length 4 adjacent arc. Deals 3 melee damage to units on hexes.
+    """
+
     cost = MovementCost(1)
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
@@ -236,10 +225,14 @@ class Sweep(ActivatedAbilityFacet[list[Hex]]):
     def perform(self, target: list[Hex]) -> None:
         for h in target:
             if unit := GS().map.unit_on(h):
-                ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.MELEE)))
+                ES.resolve(Damage(unit, DamageSignature(4, self, DamageType.MELEE)))
 
 
 class Stare(ActivatedAbilityFacet[list[Hex]]):
+    """
+    Target radiating line length 4. Applies <glimpse> to hexes sequentially, starting from the hex closest to this unit, until a hex blocks vision.
+    """
+
     combinable = True
 
     def get_target_profile(self) -> TargetProfile[O] | None:
@@ -454,29 +447,6 @@ class Showdown(SingleEnemyActivatedAbility):
                     break
 
 
-# shrine keeper {5pp} x1
-# health 4, movement 3, sight 2, 4 energy, S
-# raise shrine
-#     ability 3 energy, -2 movement
-#     target hex 1 range
-#     applies status shrine to terrain
-#         units on this hex has +1 mana regen
-#         whenever a unit within 1 range skips, heal it 1
-#         whenever a unit enters this hex, apply buff fortified for 4 rounds
-#             unstackable, refreshable
-#             +1 max health
-# lucky charm
-#     ability 1 energy
-#     target different allied unit 1 range
-#     applies buff lucky charm for 3 rounds
-#         unstackable, refreshable
-#         if this unit would suffer exactly one damage, instead remove this buff
-# clean up
-#     combinable ability 2 energy, -2 movement
-#     target hex 1 range
-#     removes all statuses from hex
-
-
 class RaiseShrine(SingleHexTargetActivatedAbility):
     cost = MovementCost(2) | EnergyCost(3)
 
@@ -493,6 +463,11 @@ class GrantCharm(SingleAllyActivatedAbility):
 
 
 class ChokingSoot(ActivatedAbilityFacet[list[Hex]]):
+    """
+    Target hex circle size 2, center within 2 range NLoS.
+    Applies status <soot> to hexes for 2 rounds.
+    """
+
     cost = MovementCost(1) | EnergyCost(4)
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
@@ -522,6 +497,10 @@ class SmokeCanister(SingleHexTargetActivatedAbility):
 
 
 class Terrorize(SingleEnemyActivatedAbility):
+    """
+    Target enemy unit within 4 range LoS. Applies <terror> for 2 rounds.
+    """
+
     range = 4
     cost = MovementCost(2) | EnergyCost(5)
 
@@ -531,6 +510,10 @@ class Terrorize(SingleEnemyActivatedAbility):
 
 # TODO should be an attack
 class Scorch(ActivatedAbilityFacet[list[Hex]]):
+    """
+    Target length 3 adjacent arc. Deals 3 ranged damage and applies 2 stacks of <burn> to units on hexes.
+    """
+
     cost = MovementCost(1)
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
@@ -544,6 +527,10 @@ class Scorch(ActivatedAbilityFacet[list[Hex]]):
 
 
 class FlameWall(ActivatedAbilityFacet[list[Hex]]):
+    """
+    Target length 3 radiating line. Applies 2 stacks of <burn> to each unit on hexes, and 1 stack of <burning_terrain> to the hex for 3 rounds.
+    """
+
     cost = MovementCost(1) | EnergyCost(3)
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
@@ -566,6 +553,11 @@ class FlameWall(ActivatedAbilityFacet[list[Hex]]):
 
 
 class FlameThrower(ActivatedAbilityFacet[list[Hex]]):
+    """
+    Target 1-1-3 arc lengths radiating cone.
+    Applies 1 stacks of <burn> to each unit on hexes, and 1 stack of <burning_terrain> to the hex for 2 rounds.
+    """
+
     cost = EnergyCost(3)
 
     # TODO variable length cone?
@@ -716,6 +708,10 @@ class Scry(SingleHexTargetActivatedAbility):
 
 
 class ShrinkRay(SingleTargetActivatedAbility):
+    """
+    Target unit within 2 range LoS. Deals 1 ranged damage and applies 1 stack of <shrunk> for 2 rounds.
+    """
+
     cost = MovementCost(1) | EnergyCost(3)
     range = 2
 
@@ -730,6 +726,11 @@ class ShrinkRay(SingleTargetActivatedAbility):
 
 
 class AssembleTheDoombot(SingleHexTargetActivatedAbility):
+    """
+    Target adjacent visible empty hex. Applies <doombot_scaffold> to hex.
+    If it already has <doombot_scaffold>, instead remove it, and spawn an exhausted Doombot 3000 with <ephemeral> for 4 rounds.
+    """
+
     cost = ExclusiveCost() | EnergyCost(4)
     range = 1
 
@@ -761,6 +762,10 @@ class AssembleTheDoombot(SingleHexTargetActivatedAbility):
 
 
 class Translocate(ActivatedAbilityFacet):
+    """
+    Target adjacent unit, and a hex within 1 range of that unit. Moves the unit to the hex.
+    """
+
     cost = EnergyCost(2)
     combinable = True
 

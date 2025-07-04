@@ -134,7 +134,6 @@ H = TypeVar("H", bound=HasStatuses)
 # TODO a facet should not have statuses
 class Facet(HasStatuses, Modifiable, Registered, ABC, metaclass=get_registered_meta()):
     registry: ClassVar[dict[str, Facet]]
-    category: ClassVar[str]
 
     def __init__(self, owner: Unit):
         super().__init__(parent=owner)
@@ -494,6 +493,7 @@ class Status(
         return {
             "identifier": cls.identifier,
             "name": cls.name,
+            "category": cls.category,
             "description": cls.description,
             "related_statuses": cls.related_statuses,
         }
@@ -780,6 +780,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
 
 
 class UnitStatus(Status[Unit], ABC):
+    category: ClassVar[str] = 'unit'
     default_intention: ClassVar[StatusIntention | None] = None
 
     def __init__(
@@ -1085,6 +1086,7 @@ class DamageSignature:
 
 
 class HexStatus(Status[Hex], ABC):
+    category: ClassVar[str] = 'hex'
 
     @classmethod
     def get(cls, identifier: str) -> type[HexStatus]:

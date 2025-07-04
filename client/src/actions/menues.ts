@@ -163,27 +163,28 @@ const getConsecutiveAdjacentHexesActionSpace = (
   );
   const options = getNeighborsOffCC(menu.targetProfile.values.adjacentTo);
   const highlighted = menu.hovering
-    ? range(
-        -menu.targetProfile.values.armLength,
-        menu.targetProfile.values.armLength + 1,
-      ).map((v) => mod(v + menu.hovering, options.length))
+    ? hexArc(
+        1,
+        menu.targetProfile.values.armLength,
+        menu.hovering,
+        menu.targetProfile.values.adjacentTo,
+      ).map(ccToKey)
     : [];
 
-  for (const [idx, option] of options.entries()) {
+  for (const option of options) {
     actionSpace[ccToKey(option)] = {
       actions: [
         {
           type: "aoe",
           description: "select hexes",
           do: () => {
-            // store.dispatch(deactivateMenu());
             takeAction({ index: menu.optionIndex, target: { cc: option } });
           },
         },
       ],
-      highlighted: highlighted.includes(idx),
+      highlighted: highlighted.includes(ccToKey(option)),
       hoverTrigger: () => {
-        store.dispatch(advanceMenu({ ...menu, hovering: idx }));
+        store.dispatch(advanceMenu({ ...menu, hovering: option }));
       },
     };
   }

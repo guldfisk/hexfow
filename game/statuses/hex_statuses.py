@@ -34,6 +34,10 @@ class Shrine(HexStatus):
 
 
 class Soot(DurationStatusMixin, HexStatus):
+    """
+    This hex blocks vision, and units on it has -1 sight, to a minimum of 1.
+    When a unit moves into this hex, and at the end of the round, units on this hex suffers 1 pure damage.
+    """
 
     def create_effects(self) -> None:
         self.register_effects(
@@ -100,6 +104,10 @@ class Revealed(HexStatus):
 
 # TODO how should this work with the turn immediately ending?
 class Glimpse(HexStatus):
+    """
+    This hex is visible to the controller of this status. Expires at the end of the turn.
+    """
+
     def merge(self, incoming: Self) -> bool:
         return incoming.controller == self.controller
 
@@ -114,6 +122,10 @@ class Glimpse(HexStatus):
 
 
 class DoombotScaffold(HexStatus):
+    """
+    Removed when a unit moves into this hex.
+    """
+
     def merge(self, incoming: Self) -> bool:
         return True
 

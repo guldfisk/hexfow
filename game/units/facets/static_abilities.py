@@ -158,6 +158,10 @@ class DiamondSkin(StaticAbilityFacet):
 
 
 class FlameResistant(StaticAbilityFacet):
+    """
+    Resistant to damage from the <burn> status.
+    """
+
     def create_effects(self) -> None:
         self.register_effects(SourceTypeResistance(self.owner, Burn, Resistance.MAJOR))
 
@@ -169,7 +173,7 @@ class LastStand(StaticAbilityFacet):
 
 class ToxicPresence(StaticAbilityFacet):
     """
-    At the end of this units turn it applies 1 poison to each adjacent unit.
+    At the end of this units turn it applies 1 <poison> to each adjacent unit.
     """
 
     def create_effects(self) -> None:
@@ -201,6 +205,9 @@ class JukeAndJive(StaticAbilityFacet):
 
 
 class Inspiration(StaticAbilityFacet):
+    """
+    When this unit sees another unit activate an ability costing 3 or more energy, this unit gains 1 energy, or 2 if it cost 4 or more.
+    """
 
     def create_effects(self) -> None:
         self.register_effects(InspirationTrigger(self.owner))

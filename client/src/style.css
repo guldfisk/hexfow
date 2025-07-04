@@ -42,6 +42,13 @@ button {
   /*width: 200px;*/
   /*height: 150px;*/
 }
+.status-details {
+  border-radius: 8px;
+  background: #231828;
+  padding: 8px;
+  margin-top: 10px;
+  font-size: 0.7em;
+}
 
 .facet-header {
   font-size: 25px;
@@ -61,6 +68,20 @@ button {
   padding-right: 6px;
 }
 
+.status-icon-unit {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 6px;
+  clip-path: circle(50%);
+}
+
+.status-icon-hex {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 6px;
+  clip-path: polygon(93% 25%, 50% 0, 6% 25%, 6% 75%, 50% 100%, 93% 75%);
+}
+
 .info-window {
   width: 100%;
   /*border: 1px solid #ccc;*/
@@ -73,7 +94,6 @@ button {
 .log-component {
   display: inline;
   margin-left: 5px;
-
 }
 .highlighted-log-component {
   border: 0;
