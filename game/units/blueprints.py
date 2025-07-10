@@ -37,6 +37,7 @@ from game.units.facets.activated_abilities import (
     Translocate,
     InkRing,
     MalevolentStare,
+    IronBlessing,
 )
 from game.units.facets.attacks import (
     Peck,
@@ -77,6 +78,8 @@ from game.units.facets.attacks import (
     DeathLaser,
     BloodExpunge,
     SolidMunition,
+    HammerBlow,
+    MightyBlow,
 )
 from game.units.facets.static_abilities import (
     Prickly,
@@ -315,7 +318,7 @@ PESTILENCE_PRIEST = UnitBlueprint(
     sight=2,
     energy=6,
     facets=[SummonScarab, InducePanic, Schadenfreude],
-    price=10,
+    price=11,
 )
 
 SCARAB = UnitBlueprint(
@@ -566,6 +569,17 @@ LEGENDARY_WRESTLER = UnitBlueprint(
         HeelTurn,
     ],
     price=9,
+)
+
+STAUNCH_IRON_HEART = UnitBlueprint(
+    "Staunch Iron-Heart",
+    health=7,
+    speed=2,
+    armor=1,
+    sight=2,
+    energy=4,
+    facets=[HammerBlow, MightyBlow, IronBlessing],
+    price=11,
 )
 
 NOTORIOUS_OUTLAW = UnitBlueprint(

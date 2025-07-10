@@ -816,3 +816,16 @@ class MalevolentStare(SingleEnemyActivatedAbility):
                 target, StatusSignature(UnitStatus.get("silenced"), self, duration=2)
             )
         )
+
+
+class IronBlessing(SingleAllyActivatedAbility):
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 1
+    can_target_self = False
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                target, StatusSignature(UnitStatus.get("armored"), self, duration=2)
+            )
+        )

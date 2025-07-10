@@ -11,6 +11,7 @@ from game.effects.modifiers import (
     UnitSizeFlatModifier,
     UnitSightFlatModifier,
     SilencedModifier,
+    UnitArmorFlatModifier,
 )
 from game.effects.replacements import LuckyCharmReplacement, StunnedReplacement
 from game.effects.triggers import (
@@ -271,3 +272,10 @@ class Stunned(UnitStatus):
 
     def create_effects(self) -> None:
         self.register_effects(StunnedReplacement(self))
+
+
+class Armored(RefreshableDurationUnitStatus):
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(UnitArmorFlatModifier(self.parent, 1))

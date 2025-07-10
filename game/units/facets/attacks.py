@@ -103,6 +103,24 @@ class SolidMunition(RangedAttackFacet):
         )
 
 
+class HammerBlow(MeleeAttackFacet):
+    damage = 4
+
+
+class MightyBlow(MeleeAttackFacet):
+    """Stuns this unit."""
+
+    cost = ExclusiveCost()
+    damage = 6
+
+    def resolve_post_damage_effects(self, defender: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                self.owner, StatusSignature(UnitStatus.get("stunned"), self, stacks=1)
+            )
+        )
+
+
 class LightBlaster(RangedAttackFacet):
     damage = 2
     range = 3
