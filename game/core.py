@@ -1437,10 +1437,14 @@ class ActiveUnitContext(Serializable):
 
 @dataclasses.dataclass
 class LogLine:
-    elements: list[str | Unit | Hex | EffortFacet | Status]
+    elements: list[str | Unit | Hex | list[Hex | Unit] | EffortFacet | Status]
 
     def is_visible_to(self, player: Player) -> bool:
         for element in self.elements:
+            if isinstance(element, list) and not any(
+                e.is_visible_to(player) for e in element
+            ):
+                return False
             if isinstance(element, Unit) and not element.is_visible_to(player):
                 return False
             if isinstance(element, Hex) and not element.is_visible_to(player):
@@ -1451,7 +1455,7 @@ class LogLine:
 
     @classmethod
     def _serialize_element(
-        cls, element: str | Unit | Hex, id_map: IDMap
+        cls, element: str | Unit | Hex, player: Player, id_map: IDMap
     ) -> dict[str, Any]:
         if isinstance(element, Unit):
             return {
@@ -1466,10 +1470,19 @@ class LogLine:
             return {"type": "facet", "identifier": element.identifier}
         if isinstance(element, Status):
             return {"type": "status", "identifier": element.identifier}
+        if isinstance(element, list):
+            return {
+                "type": "list",
+                "items": [
+                    cls._serialize_element(e, player, id_map)
+                    for e in element
+                    if e.is_visible_to(player)
+                ],
+            }
         return {"type": "string", "message": element}
 
-    def serialize(self, id_map: IDMap) -> list[dict[str, Any]]:
-        return [self._serialize_element(element, id_map) for element in self.elements]
+    def serialize(self, player: Player, id_map: IDMap) -> list[dict[str, Any]]:
+        return [self._serialize_element(element, player, id_map) for element in self.elements]
 
 
 class GameState:
@@ -1529,7 +1542,7 @@ class GameState:
                     self._pending_player_logs[player].append(
                         (
                             self._player_log_levels[player],
-                            line.serialize(self.id_maps[player]),
+                            line.serialize(player, self.id_maps[player]),
                         )
                     )
                     self._player_log_levels[player] += 1

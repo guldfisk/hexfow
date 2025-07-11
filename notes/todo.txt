@@ -7,13 +7,7 @@ infrastructure
     lobby system
 
 game functionality
-    hover detail view for
-        terrain
-        statuses
-    current statuses in unit detail view
-    highlights from game log
     elevation
-    vision ghosts
     chess clock
     victory points/checking
     round counter

@@ -350,8 +350,10 @@ class ActivateAbilityAction(Event[None]):
     target: O
 
     def resolve(self) -> None:
-        # TODO target profile
-        with GS().log(LogLine([self.unit, "activates", self.ability])):
+        with GS().log(
+            LogLine([self.unit, "activates", self.ability, "targeting", self.target]),
+            LogLine([self.unit, "activates", self.ability]),
+        ):
             self.ability.perform(self.target)
             self.ability.get_cost().pay(GS().active_unit_context)
 

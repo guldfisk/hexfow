@@ -18,7 +18,6 @@ JSON: TypeAlias = Mapping[str, Any]
 class IDMap:
 
     def __init__(self):
-        #         self.unit_positions: bidict[Unit, Hex] = bidict()
         self._ids: bidict[int, str] = bidict()
         self._objects: dict[int, object] = {}
         self._accessed: set[int] = set()

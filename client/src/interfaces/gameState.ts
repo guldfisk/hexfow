@@ -185,11 +185,17 @@ export interface StringLogLineComponent extends LogLineComponentBase {
   message: string;
 }
 
+export interface ListLogLineComponent extends LogLineComponentBase {
+  type: "list";
+  items: (UnitLogLineComponent | HexLogLineComponent)[];
+}
+
 export type LogLineComponent =
   | UnitLogLineComponent
   | HexLogLineComponent
   | FacetLogLineComponent
   | StatusLogLineComponent
+  | ListLogLineComponent
   | StringLogLineComponent;
 
 export type LogLine = [number, LogLineComponent[]];

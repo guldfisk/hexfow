@@ -99,7 +99,7 @@ const LogLineComponentView = ({
         onMouseEnter={() => store.dispatch(highlightCCs([ccToKey(element.cc)]))}
         onMouseLeave={() => store.dispatch(removeCCHighlight())}
       >
-        {ccToKey(element.cc) + ""}
+        {ccToKey(element.cc)}
       </div>
     );
   }
@@ -142,6 +142,26 @@ const LogLineComponentView = ({
         {gameObjectDetails.statuses[element.identifier].name}
       </div>
     );
+  }
+  if (element.type == "list") {
+    if (element.items.every((item) => item.type == "hex")) {
+      return (
+        <div
+          className={"log-component highlighted-log-component"}
+          onMouseEnter={() =>
+            store.dispatch(
+              highlightCCs(element.items.map((item) => ccToKey(item.cc))),
+            )
+          }
+          onMouseLeave={() => store.dispatch(removeCCHighlight())}
+        >
+          {`${element.items.length} hexes`}
+        </div>
+      );
+    }
+    return element.items.map((item) => (
+      <LogLineComponentView element={item} unitMap={unitMap} />
+    ));
   }
 };
 

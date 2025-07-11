@@ -149,6 +149,7 @@ class Game(Thread):
                     # BULLDOZER,
                 ),
                 (
+                    BLOOD_CONDUIT,
                     CYCLOPS,
                     WITCH_ENGINE,
                     LIGHT_ARCHER,

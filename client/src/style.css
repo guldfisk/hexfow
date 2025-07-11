@@ -96,6 +96,7 @@ button {
   display: flex;
   flex-wrap: wrap;
   width: auto;
+  margin-bottom: 5px;
 }
 
 .log-component {
