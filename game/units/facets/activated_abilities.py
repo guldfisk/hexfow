@@ -819,6 +819,9 @@ class MalevolentStare(SingleEnemyActivatedAbility):
 
 
 class IronBlessing(SingleAllyActivatedAbility):
+    """
+    Target other allied unit within 1 range. Applies <armored> for 2 rounds.
+    """
     cost = EnergyCost(3) | MovementCost(1)
     range = 1
     can_target_self = False

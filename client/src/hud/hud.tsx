@@ -6,7 +6,9 @@ import {
   LogLine,
   LogLineComponent,
   OptionBase,
+  Status,
   Unit,
+  UnitStatus,
 } from "../interfaces/gameState.ts";
 import {
   CostAtom,
@@ -146,6 +148,24 @@ const getFacetStatLine = (facet: FacetDetails): string => {
   return stats.join(" ");
 };
 
+const getStatusStatLine = (status: Status | UnitStatus): string => {
+  const stats: string[] = [];
+
+  if ("intention" in status) {
+    stats.push(status.intention);
+  }
+
+  if (status.stacks) {
+    stats.push(`stacks: ${status.stacks}`);
+  }
+
+  if (status.duration) {
+    stats.push(`duration: ${status.duration} rounds`);
+  }
+
+  return stats.join(" ");
+};
+
 const FacetDetailView = ({ facet }: { facet: FacetDetails }) => (
   <div className={"facet-details"}>
     <div className={"facet-header"}>
@@ -159,19 +179,30 @@ const FacetDetailView = ({ facet }: { facet: FacetDetails }) => (
   </div>
 );
 
-const StatusDetailView = ({ status }: { status: StatusDetails }) => (
+const StatusDetailView = ({
+  status,
+  statusDetails,
+}: {
+  status: Status | null;
+  statusDetails: StatusDetails;
+}) => (
   <div className={"status-details"}>
     <div className={"facet-header"}>
       <img
-        src={getImageUrl("status", status.identifier)}
+        src={getImageUrl("status", statusDetails.identifier)}
         className={
-          status.category == "unit" ? "status-icon-unit" : "status-icon-hex"
+          statusDetails.category == "unit"
+            ? "status-icon-unit"
+            : "status-icon-hex"
         }
       />
-      {status.name}
+      {statusDetails.name}
     </div>
-    {status.description ? (
-      <div className={"facet-description"}>{status.description}</div>
+    {status ? (
+      <div className={"facet-stats"}>{getStatusStatLine(status)}</div>
+    ) : null}
+    {statusDetails.description ? (
+      <div className={"facet-description"}>{statusDetails.description}</div>
     ) : null}
   </div>
 );
@@ -251,7 +282,8 @@ const UnitDetailsView = ({
       ))}
       {relatedStatuses.map((statusIdentifier) => (
         <StatusDetailView
-          status={gameObjectDetails.statuses[statusIdentifier]}
+          status={null}
+          statusDetails={gameObjectDetails.statuses[statusIdentifier]}
         />
       ))}
     </div>
@@ -302,10 +334,30 @@ const HexDetailView = ({
 
       {relatedStatuses.map((statusIdentifier) => (
         <StatusDetailView
-          status={gameObjectDetails.statuses[statusIdentifier]}
+          statusDetails={gameObjectDetails.statuses[statusIdentifier]}
         />
       ))}
     </div>
+  );
+};
+
+const StatusesDetailView = ({
+  statuses,
+  //   TODO handle this in a non trash way
+  gameObjectDetails,
+}: {
+  statuses: Status[] | UnitStatus[];
+  gameObjectDetails: GameObjectDetails;
+}) => {
+  return (
+    <>
+      {statuses.map((status) => (
+        <StatusDetailView
+          status={status}
+          statusDetails={gameObjectDetails.statuses[status.type]}
+        />
+      ))}
+    </>
   );
 };
 
@@ -394,6 +446,13 @@ export const HUD = ({ connection }: { connection: WebSocket }) => {
       detailView = (
         <HexDetailView
           hex={applicationState.detailed.hex}
+          gameObjectDetails={applicationState.gameObjectDetails}
+        />
+      );
+    } else if (applicationState.detailed.type == "statuses") {
+      detailView = (
+        <StatusesDetailView
+          statuses={applicationState.detailed.statuses}
           gameObjectDetails={applicationState.gameObjectDetails}
         />
       );

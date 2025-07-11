@@ -163,3 +163,15 @@ export const hexArc = (
   }
   throw new Error("invalid stroke center");
 };
+
+export const rcInBox = (
+  rc: RC,
+  boxX: number,
+  boxY: number,
+  boxWidth: number,
+  boxHeight: number,
+): boolean =>
+  rc.x >= boxX &&
+  rc.x <= boxX + boxWidth &&
+  rc.y >= boxY &&
+  rc.y <= boxY + boxHeight;

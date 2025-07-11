@@ -254,6 +254,11 @@ class Silenced(RefreshableDurationUnitStatus):
 
 
 class Stunned(UnitStatus):
+    """
+    This unit cannot take any actions.
+    If this unit would be become ready, instead remove a stack of this debuff.
+    If this debuff would be applied to a ready unit, instead exhaust it, and apply this debuff with one less stack.
+    """
     default_intention = StatusIntention.DEBUFF
 
     def on_apply(self, to: Unit) -> bool:
@@ -275,6 +280,9 @@ class Stunned(UnitStatus):
 
 
 class Armored(RefreshableDurationUnitStatus):
+    """
+    +1 armor.
+    """
     default_intention = StatusIntention.BUFF
 
     def create_effects(self) -> None:

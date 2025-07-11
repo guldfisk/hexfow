@@ -89,7 +89,9 @@ class BloodExpunge(RangedAttackFacet):
 
 
 class SolidMunition(RangedAttackFacet):
-    """Stuns this unit."""
+    """
+    Applies 1 stack of <stunned> to this unit.
+    """
 
     damage = 4
     range = 4
@@ -108,7 +110,9 @@ class HammerBlow(MeleeAttackFacet):
 
 
 class MightyBlow(MeleeAttackFacet):
-    """Stuns this unit."""
+    """
+    Applies 1 stack of <stunned> to this unit.
+    """
 
     cost = ExclusiveCost()
     damage = 6

@@ -24,6 +24,7 @@ import {
   hexSize,
   hexVerticeOffsets,
   hexWidth,
+  rcInBox,
   rcToCC,
   subRCs,
 } from "./geometry.ts";
@@ -672,20 +673,25 @@ export const renderMap = (
     if (hexData) {
       const localPosition = subRCs(positionOnMap, ccToRC(cc));
       let detail: HoveredDetails = { type: "hex", hex: hexData };
+
+      if (
+        hexData.statuses.length &&
+        rcInBox(localPosition, -22, -hexHeight / 2, hexWidth / 2 + 22, (hexHeight - hexSize) / 2)
+      ) {
+        detail = {type: 'statuses', statuses: hexData.statuses}
+      }
+
       if (hexData.unit) {
         if (
-          hexData.unit.statuses.length &&
-          localPosition.x >= -60 - 22 &&
-          localPosition.x <= -60 + 22 &&
-          localPosition.y >= -74 - 22 &&
-          localPosition.y <= 74
+          hexData.unit.statuses.length && hexData.unit.exhausted
+            ? rcInBox(localPosition, -74, -60 - 22, 148 + 22, 44)
+            : rcInBox(localPosition, -60 - 22, -74 - 22, 44, 148 + 22)
         ) {
           detail = { type: "statuses", statuses: hexData.unit.statuses };
         } else if (
-          localPosition.x <= 60 &&
-          localPosition.x >= -60 &&
-          localPosition.y <= 74 &&
-          localPosition.y >= -74
+          hexData.unit.exhausted
+            ? rcInBox(localPosition, -74, -60, 148, 120)
+            : rcInBox(localPosition, -60, -74, 120, 148)
         ) {
           detail = { type: "unit", unit: hexData.unit };
         }
