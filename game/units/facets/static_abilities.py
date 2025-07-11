@@ -71,6 +71,12 @@ class Nourishing(StaticAbilityFacet):
 
 
 class Pusher(StaticAbilityFacet):
+    """
+    This unit can move into occupied spaces. If it would do so, it first pushes the occupying unit one space, repeating
+    if that unit would be pushed into an occupied space as well. If occupying units can't be pushed back due to impassable
+    terrain, each unit that would be pushed this way suffers 1 damage.
+    """
+
     def create_effects(self) -> None:
         self.register_effects(
             PusherModifier(self.owner), PusherReplacement(self.owner, self)

@@ -91,14 +91,28 @@ button {
 .event-log {
   height: 70%;
 }
+
+.log-line {
+  display: flex;
+  flex-wrap: wrap;
+  width: auto;
+}
+
 .log-component {
   display: inline;
-  margin-left: 5px;
+  margin: 3px;
 }
+
 .highlighted-log-component {
   border: 0;
   background: #666;
   border-radius: 3px;
+}
+.allied-highlighted-log-component {
+  background: #2f71e7;
+}
+.enemy-highlighted-log-component {
+  background: #9b1711;
 }
 .decision-details {
   height: 30%;

@@ -162,11 +162,22 @@ export interface UnitLogLineComponent extends LogLineComponentBase {
   type: "unit";
   identifier: string;
   blueprint: string;
+  controller: string;
 }
 
 export interface HexLogLineComponent extends LogLineComponentBase {
   type: "hex";
   cc: CC;
+}
+
+export interface FacetLogLineComponent extends LogLineComponentBase {
+  type: "facet";
+  identifier: string;
+}
+
+export interface StatusLogLineComponent extends LogLineComponentBase {
+  type: "status";
+  identifier: string;
 }
 
 export interface StringLogLineComponent extends LogLineComponentBase {
@@ -177,6 +188,8 @@ export interface StringLogLineComponent extends LogLineComponentBase {
 export type LogLineComponent =
   | UnitLogLineComponent
   | HexLogLineComponent
+  | FacetLogLineComponent
+  | StatusLogLineComponent
   | StringLogLineComponent;
 
 export type LogLine = [number, LogLineComponent[]];

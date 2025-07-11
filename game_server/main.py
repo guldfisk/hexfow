@@ -143,19 +143,20 @@ class Game(Thread):
 
             player_units = (
                 (
-                    # STAUNCH_IRON_HEART,
-                    # MAD_SCIENTIST,
-                    # INFERNO_TANK,
-                    BULLDOZER,
+                    STAUNCH_IRON_HEART,
+                    MAD_SCIENTIST,
+                    INFERNO_TANK,
+                    # BULLDOZER,
                 ),
                 (
                     CYCLOPS,
-                    # WITCH_ENGINE,
+                    WITCH_ENGINE,
+                    LIGHT_ARCHER,
                 ),
             )
 
-            # use_random_units = False
-            use_random_units = True
+            use_random_units = False
+            # use_random_units = True
 
             if use_random_units:
                 min_random_unit_quantity = 7

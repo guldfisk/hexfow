@@ -25,6 +25,7 @@ from game.core import (
     Facet,
     UnitStatus,
     LogLine,
+    Status,
 )
 from game.decisions import SelectOptionDecisionPoint, NoTarget, O, OptionDecision
 from game.player import Player
@@ -186,8 +187,8 @@ class Hit(Event[None]):
     def resolve(self) -> None:
         # TODO facets should be log components
         with GS().log(
-            LogLine([self.attacker, "hits", self.defender, f"with {self.attack.name}"]),
-            LogLine([self.defender, f"is hit with {self.attack.name}"]),
+            LogLine([self.attacker, "hits", self.defender, "with", self.attack]),
+            LogLine([self.defender, "is hit with", self.attack]),
         ):
             self.attack.resolve_pre_damage_effects(self.defender)
             ES.resolve(
@@ -247,35 +248,58 @@ class RangedAttackAction(Event[None]):
 
 
 # TODO where?
-def apply_status_to_unit(unit: Unit, signature: StatusSignature) -> UnitStatus:
-    return unit.add_status(
-        signature.status_type(
-            controller=(
-                controller := (
-                    (
-                        signature.source.owner.controller
-                        if isinstance(signature.source, Facet)
-                        else signature.source.controller
-                    )
-                    if signature.source
-                    else None
-                )
-            ),
-            intention=signature.intention
-            or signature.status_type.default_intention
-            or (
+def realize_status_for_unit(unit: Unit, signature: StatusSignature) -> UnitStatus:
+    return signature.status_type(
+        controller=(
+            controller := (
                 (
-                    StatusIntention.BUFF
-                    if unit.controller == controller
-                    else StatusIntention.DEBUFF
+                    signature.source.owner.controller
+                    if isinstance(signature.source, Facet)
+                    else signature.source.controller
                 )
                 if signature.source
-                else StatusIntention.NEUTRAL
-            ),
-            duration=signature.duration,
-            stacks=signature.stacks,
-            parent=unit,
+                else None
+            )
         ),
+        intention=signature.intention
+        or signature.status_type.default_intention
+        or (
+            (
+                StatusIntention.BUFF
+                if unit.controller == controller
+                else StatusIntention.DEBUFF
+            )
+            if signature.source
+            else StatusIntention.NEUTRAL
+        ),
+        duration=signature.duration,
+        stacks=signature.stacks,
+        parent=unit,
+    )
+
+
+# TODO where?
+def apply_status_to_unit(unit: Unit, signature: StatusSignature) -> UnitStatus:
+    return unit.add_status(realize_status_for_unit(unit, signature))
+
+
+def make_status_log_line(status: Status, recipient: Unit | Hex) -> LogLine:
+    return LogLine(
+        [
+            *(
+                (f"{status.stacks} stack{'s' if status.stacks > 1 else ''} off",)
+                if status.stacks
+                else ()
+            ),
+            status,
+            "is applied to",
+            recipient,
+            *(
+                (f"for {status.duration} round{'s' if status.duration > 1 else ''}",)
+                if status.duration
+                else ()
+            ),
+        ]
     )
 
 
@@ -288,14 +312,10 @@ class ApplyStatus(Event[UnitStatus]):
         return self.unit.on_map()
 
     def resolve(self) -> UnitStatus:
-        # TODO status should be log component
-        # TODO signature values
-        with GS().log(
-            LogLine(
-                [f"{self.signature.status_type.identifier} is applied to", self.unit]
-            )
-        ):
-            return apply_status_to_unit(self.unit, self.signature)
+        status = realize_status_for_unit(self.unit, self.signature)
+
+        with GS().log(make_status_log_line(status, self.unit)):
+            return self.unit.add_status(status)
 
 
 @dataclasses.dataclass
@@ -304,29 +324,23 @@ class ApplyHexStatus(Event[None]):
     signature: HexStatusSignature
 
     def resolve(self) -> None:
-        # TODO status should be log component
-        # TODO other aspects of signature
-        with GS().log(
-            LogLine(
-                [f"{self.signature.status_type.identifier} is applied to", self.space]
-            )
-        ):
-            self.space.add_status(
-                self.signature.status_type(
-                    controller=(
-                        (
-                            self.signature.source.owner.controller
-                            if isinstance(self.signature.source, Facet)
-                            else self.signature.source.controller
-                        )
-                        if self.signature.source
-                        else None
-                    ),
-                    duration=self.signature.duration,
-                    stacks=self.signature.stacks,
-                    parent=self.space,
-                ),
-            )
+        status = self.signature.status_type(
+            controller=(
+                (
+                    self.signature.source.owner.controller
+                    if isinstance(self.signature.source, Facet)
+                    else self.signature.source.controller
+                )
+                if self.signature.source
+                else None
+            ),
+            duration=self.signature.duration,
+            stacks=self.signature.stacks,
+            parent=self.space,
+        )
+
+        with GS().log(make_status_log_line(status, self.space)):
+            self.space.add_status(status)
 
 
 @dataclasses.dataclass
@@ -336,8 +350,8 @@ class ActivateAbilityAction(Event[None]):
     target: O
 
     def resolve(self) -> None:
-        # TODO facet and target profile
-        with GS().log(LogLine([self.unit, f"activates {self.ability.name}"])):
+        # TODO target profile
+        with GS().log(LogLine([self.unit, "activates", self.ability])):
             self.ability.perform(self.target)
             self.ability.get_cost().pay(GS().active_unit_context)
 
@@ -353,12 +367,14 @@ class MoveUnit(Event[Hex | None]):
 
     def resolve(self) -> Hex | None:
         if self.to_.can_move_into(self.unit):
+            # TODO hmm
+            from_ = self.to_.map.hex_off(self.unit)
+            self.to_.map.move_unit_to(self.unit, self.to_)
+            GS().update_vision()
             with GS().log(
                 LogLine([self.unit, "moves into", self.to_]),
                 LogLine([self.unit, "moves"]),
             ):
-                from_ = self.to_.map.hex_off(self.unit)
-                self.to_.map.move_unit_to(self.unit, self.to_)
                 return from_
         else:
             with GS().log(

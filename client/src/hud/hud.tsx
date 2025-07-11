@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useRef } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import { useAppSelector } from "../state/hooks.ts";
 import {
   GameState,
@@ -46,7 +46,20 @@ import {
 //   );
 // };
 
-const LogLineComponentView = ({ element }: { element: LogLineComponent }) => {
+const LogLineComponentView = ({
+  element,
+  unitMap,
+}: {
+  element: LogLineComponent;
+  unitMap: { [key: string]: [Hex, Unit] };
+}) => {
+  const player = useAppSelector((state) => state.gameState?.player);
+  const gameObjectDetails = useAppSelector((state) => state.gameObjectDetails);
+
+  if (!player || !gameObjectDetails) {
+    return;
+  }
+
   if (element.type == "string") {
     return <div className={"log-component"}>{element.message + ""}</div>;
   }
@@ -54,14 +67,28 @@ const LogLineComponentView = ({ element }: { element: LogLineComponent }) => {
     return (
       //   TODO should highlight hex of unit / detail actual unit if the id is still known
       <div
-        className={"log-component highlighted-log-component"}
+        className={`log-component highlighted-log-component ${player == element.controller ? "allied" : "enemy"}-highlighted-log-component`}
         onMouseEnter={() => {
-          store.dispatch(
-            hoverDetail({ type: "blueprint", blueprint: element.blueprint }),
-          );
+          if (unitMap[element.identifier]) {
+            store.dispatch(
+              hoverDetail({
+                type: "unit",
+                unit: unitMap[element.identifier][1],
+              }),
+            );
+            store.dispatch(
+              highlightCCs([ccToKey(unitMap[element.identifier][0].cc)]),
+            );
+          } else {
+            console.log("HUH??+", element.blueprint, element);
+            store.dispatch(
+              hoverDetail({ type: "blueprint", blueprint: element.blueprint }),
+            );
+          }
         }}
+        onMouseLeave={() => store.dispatch(removeCCHighlight())}
       >
-        {element.blueprint + ""}
+        {gameObjectDetails.units[element.blueprint].name}
       </div>
     );
   }
@@ -76,24 +103,76 @@ const LogLineComponentView = ({ element }: { element: LogLineComponent }) => {
       </div>
     );
   }
+  if (element.type == "facet") {
+    return (
+      <div
+        className={"log-component highlighted-log-component"}
+        onMouseEnter={() => {
+          const units = Object.values(gameObjectDetails.units).filter((unit) =>
+            unit.facets.includes(element.identifier),
+          );
+          if (units.length == 1) {
+            store.dispatch(
+              hoverDetail({
+                type: "blueprint",
+                blueprint: units[0].identifier,
+              }),
+            );
+          }
+          //   TODO else idk
+        }}
+      >
+        {gameObjectDetails.facets[element.identifier].name}
+      </div>
+    );
+  }
+  if (element.type == "status") {
+    return (
+      <div
+        className={"log-component highlighted-log-component"}
+        onMouseEnter={() => {
+          store.dispatch(
+            hoverDetail({
+              type: "statusTypes",
+              statuses: [element.identifier],
+            }),
+          );
+        }}
+      >
+        {gameObjectDetails.statuses[element.identifier].name}
+      </div>
+    );
+  }
 };
 
 const LogLineView = ({ line: [indent, content] }: { line: LogLine }) => {
+  const map = useAppSelector((state) => state.gameState?.map);
+  const unitMap = map
+    ? Object.fromEntries(
+        map.hexes
+          .filter((h) => h.unit)
+          .map((h: any) => [h.unit.id, [h, h.unit]]),
+      )
+    : {};
+
   return (
-    <p>
-      {"  ".repeat(indent)}
+    <div className={"log-line"} style={{ paddingLeft: `${indent * 10}px` }}>
       {content.map((element) => (
-        <LogLineComponentView element={element} />
+        <LogLineComponentView element={element} unitMap={unitMap} />
       ))}
-    </p>
+    </div>
   );
 };
 
 const LogList = ({ logLines }: { logLines: LogLine[] }) => {
+  const [length, setLength] = useState(0);
   const myRef: RefObject<HTMLDivElement | null> = useRef(null);
   useEffect(() => {
     if (myRef.current) {
-      myRef.current.scrollTop = myRef.current.scrollHeight;
+      if (logLines.length > length) {
+        myRef.current.scrollTop = myRef.current.scrollHeight;
+        setLength(logLines.length);
+      }
     }
   });
   return (
@@ -334,6 +413,7 @@ const HexDetailView = ({
 
       {relatedStatuses.map((statusIdentifier) => (
         <StatusDetailView
+          status={null}
           statusDetails={gameObjectDetails.statuses[statusIdentifier]}
         />
       ))}
@@ -343,20 +423,31 @@ const HexDetailView = ({
 
 const StatusesDetailView = ({
   statuses,
+  statusIdentifiers,
   //   TODO handle this in a non trash way
   gameObjectDetails,
 }: {
-  statuses: Status[] | UnitStatus[];
+  statuses: Status[] | UnitStatus[] | null;
+  statusIdentifiers: string[] | null;
   gameObjectDetails: GameObjectDetails;
 }) => {
   return (
     <>
-      {statuses.map((status) => (
-        <StatusDetailView
-          status={status}
-          statusDetails={gameObjectDetails.statuses[status.type]}
-        />
-      ))}
+      {statuses
+        ? statuses.map((status) => (
+            <StatusDetailView
+              status={status}
+              statusDetails={gameObjectDetails.statuses[status.type]}
+            />
+          ))
+        : statusIdentifiers
+          ? statusIdentifiers.map((identifier) => (
+              <StatusDetailView
+                status={null}
+                statusDetails={gameObjectDetails.statuses[identifier]}
+              />
+            ))
+          : null}
     </>
   );
 };
@@ -453,6 +544,15 @@ export const HUD = ({ connection }: { connection: WebSocket }) => {
       detailView = (
         <StatusesDetailView
           statuses={applicationState.detailed.statuses}
+          statusIdentifiers={null}
+          gameObjectDetails={applicationState.gameObjectDetails}
+        />
+      );
+    } else if (applicationState.detailed.type == "statusTypes") {
+      detailView = (
+        <StatusesDetailView
+          statuses={null}
+          statusIdentifiers={applicationState.detailed.statuses}
           gameObjectDetails={applicationState.gameObjectDetails}
         />
       );

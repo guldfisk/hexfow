@@ -1437,13 +1437,15 @@ class ActiveUnitContext(Serializable):
 
 @dataclasses.dataclass
 class LogLine:
-    elements: list[str | Unit | Hex]
+    elements: list[str | Unit | Hex | EffortFacet | Status]
 
     def is_visible_to(self, player: Player) -> bool:
         for element in self.elements:
             if isinstance(element, Unit) and not element.is_visible_to(player):
                 return False
             if isinstance(element, Hex) and not element.is_visible_to(player):
+                return False
+            if isinstance(element, Status) and element.is_hidden_for(player):
                 return False
         return True
 
@@ -1456,9 +1458,14 @@ class LogLine:
                 "type": "unit",
                 "identifier": id_map.get_id_for(element),
                 "blueprint": element.blueprint.identifier,
+                "controller": element.controller.name,
             }
         if isinstance(element, Hex):
             return {"type": "hex", "cc": element.position.serialize()}
+        if isinstance(element, EffortFacet):
+            return {"type": "facet", "identifier": element.identifier}
+        if isinstance(element, Status):
+            return {"type": "status", "identifier": element.identifier}
         return {"type": "string", "message": element}
 
     def serialize(self, id_map: IDMap) -> list[dict[str, Any]]:
