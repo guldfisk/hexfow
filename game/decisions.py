@@ -48,6 +48,7 @@ class SerializationContext:
     player: Player
     id_map: IDMap
     last_hex_states: dict[CC : dict[str, Any]] | None
+    visible_unit_ids: set[str]
 
 
 # TODO this should just be a protocol?

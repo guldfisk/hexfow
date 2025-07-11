@@ -762,6 +762,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             "size": self.size.g().name[0],
             "armor": self.armor.g(),
             "exhausted": self.exhausted,
+            "is_ghost": False,
             "statuses": [
                 status.serialize(context)
                 for status in self.statuses
@@ -1008,6 +1009,7 @@ class Hex(Modifiable, HasStatuses, Serializable):
         return self.terrain.get_terrain_protection_for(request)
 
     def serialize(self, context: SerializationContext) -> JSON:
+        old_hex = (context.last_hex_states or {}).get(self.position)
         return {
             "cc": self.position.serialize(),
             "terrain": self.terrain.__class__.identifier,
@@ -1020,7 +1022,13 @@ class Hex(Modifiable, HasStatuses, Serializable):
                         unit.serialize(context)
                         if (unit := self.map.unit_on(self))
                         and unit.is_visible_to(context.player)
-                        else None
+                        else (
+                            old_hex["unit"] | {"is_ghost": True}
+                            if old_hex
+                            and old_hex["unit"]
+                            and old_hex["unit"]["id"] not in context.visible_unit_ids
+                            else None
+                        )
                     ),
                     "statuses": [
                         status.serialize(context)
@@ -1033,18 +1041,15 @@ class Hex(Modifiable, HasStatuses, Serializable):
                     {
                         "visible": False,
                         "last_visible_round": old_hex["last_visible_round"],
-                        # TODO big hmm
-                        # "unit": (
-                        #     old_hex["unit"]
-                        #     if old_hex["unit"]
-                        #     and not context.id_map.has_id(old_hex["unit"]["id"])
-                        #     else None
-                        # ),
-                        "unit": old_hex["unit"],
+                        "unit": (
+                            old_hex["unit"] | {"is_ghost": True}
+                            if old_hex["unit"]
+                            and old_hex["unit"]["id"] not in context.visible_unit_ids
+                            else None
+                        ),
                         "statuses": old_hex["statuses"],
                     }
-                    if context.last_hex_states
-                    and (old_hex := context.last_hex_states.get(self.position))
+                    if old_hex
                     else {
                         "visible": False,
                         "last_visible_round": None,
@@ -1571,26 +1576,26 @@ class GameState:
         context.id_map.prune()
         return serialized_game_state
 
+    def _get_context_for(self, player: Player) -> SerializationContext:
+        return SerializationContext(
+            player,
+            self.id_maps[player],
+            self.previous_hex_states[player],
+            visible_unit_ids={
+                self.id_maps[player].get_id_for(unit)
+                for unit in self.map.units
+                if unit.is_visible_to(player)
+            },
+        )
+
     def make_decision(self, player: Player, decision_point: DecisionPoint[O]) -> O:
         for _player in self.turn_order.players:
             if _player != player:
                 self.connections[_player].send(
-                    self.serialize_for(
-                        SerializationContext(
-                            _player,
-                            self.id_maps[_player],
-                            self.previous_hex_states[_player],
-                        ),
-                        None,
-                    )
+                    self.serialize_for(self._get_context_for(_player), None)
                 )
         response = self.connections[player].get_response(
-            self.serialize_for(
-                SerializationContext(
-                    player, self.id_maps[player], self.previous_hex_states[player]
-                ),
-                decision_point,
-            )
+            self.serialize_for(self._get_context_for(player), decision_point)
         )
         # TODO
         print("response in game state", response)

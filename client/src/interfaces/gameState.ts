@@ -30,6 +30,7 @@ export interface Unit {
   armor: number;
   size: Size;
   exhausted: boolean;
+  isGhost: boolean;
   statuses: UnitStatus[];
 }
 

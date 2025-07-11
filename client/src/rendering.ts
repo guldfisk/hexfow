@@ -531,7 +531,7 @@ export const renderMap = (
         healthIndicatorContainer.addChild(shieldContainer);
       }
 
-      if (!hexData.visible) {
+      if (hexData.unit.isGhost) {
         const unitSprite = new Sprite(
           app.renderer.generateTexture(unitContainer),
         );

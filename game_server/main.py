@@ -110,8 +110,8 @@ class Game(Thread):
                             random.choice(
                                 # [
                                 #     # Water,
-                                #     # Plains,
-                                #     Shrubs,
+                                #     Plains,
+                                #     # Shrubs,
                                 #     # Magma,
                                 # ]
                                 [
@@ -143,27 +143,19 @@ class Game(Thread):
 
             player_units = (
                 (
-                    # INK_WITCH,
-                    # BOMBARD_CANON,
-                    # LIGHT_ARCHER,
-                    # WITCH_ENGINE,
+                    # STAUNCH_IRON_HEART,
+                    # MAD_SCIENTIST,
                     # INFERNO_TANK,
-                    STAUNCH_IRON_HEART,
-                    MAD_SCIENTIST,
-                    INFERNO_TANK,
-                    # DOOMBOT_3000,
+                    BULLDOZER,
                 ),
                 (
                     CYCLOPS,
-                    # LIGHT_ARCHER,
-                    WITCH_ENGINE,
-                    # ZONE_SKIRMISHER,
-                    # INFERNO_TANK,
+                    # WITCH_ENGINE,
                 ),
             )
 
-            use_random_units = False
-            # use_random_units = True
+            # use_random_units = False
+            use_random_units = True
 
             if use_random_units:
                 min_random_unit_quantity = 7

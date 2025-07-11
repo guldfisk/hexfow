@@ -238,6 +238,9 @@ class Shrunk(UnitStatus):
 
 # TODO bad name
 class Blinded(RefreshableDurationUnitStatus):
+    """
+    -1 sight.
+    """
     default_intention = StatusIntention.DEBUFF
 
     def create_effects(self) -> None:
