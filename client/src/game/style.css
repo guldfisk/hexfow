@@ -96,12 +96,14 @@ button {
   display: flex;
   flex-wrap: wrap;
   width: auto;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
+  background-color: #242424;
 }
 
 .log-component {
   display: inline;
-  margin: 3px;
+  margin-right: 4px;
+  margin-bottom: 2px;
 }
 
 .highlighted-log-component {

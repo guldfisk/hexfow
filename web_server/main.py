@@ -1,11 +1,14 @@
-from typing import Any
+from typing import Any, Iterator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter, Depends
 from starlette.middleware.cors import CORSMiddleware
 
 from game.core import UnitBlueprint, Terrain, Status, Facet
 from game.map import terrain  # noqa F401
 from game.units import blueprints  # noqa F401
+from model.engine import SS
+from model.models import Game, Seat
+from web_server.schemas import CreateGameSchema
 
 
 app = FastAPI()
@@ -25,12 +28,28 @@ app.add_middleware(
 )
 
 
-@app.get("/")
+def _session() -> Iterator[None]:
+    """
+    Wrap all views in a transaction, commited or rolled back if there
+    is an exception.
+    """
+    try:
+        yield
+        SS.commit()
+    except:
+        SS.remove()
+        raise
+
+
+top_router = APIRouter(dependencies=[Depends(_session)])
+
+
+@top_router.get("/")
 async def get():
     return {"status": "ok"}
 
 
-@app.get("/game-object-details")
+@top_router.get("/game-object-details")
 async def get_game_object_details() -> dict[str, Any]:
     return {
         "units": {
@@ -50,3 +69,22 @@ async def get_game_object_details() -> dict[str, Any]:
             for facet in Facet.registry.values()
         },
     }
+
+
+@top_router.post("/create-game")
+def create_game(body: CreateGameSchema) -> dict[str, Any]:
+    game = Game(
+        game_type=body.game_type,
+        seats=[Seat(position=i, player_name=f"player {i}") for i in range(1, 3)],
+    )
+    SS.add(game)
+    SS.flush()
+    return {
+        "seats": [
+            {"id": seat.id, "position": seat.position, "player_name": seat.player_name}
+            for seat in game.seats
+        ]
+    }
+
+
+app.include_router(top_router)

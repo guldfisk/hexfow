@@ -7,7 +7,6 @@ from game.core import (
     Unit,
     Hex,
     UnitBlueprint,
-    GS,
     ActiveUnitContext,
     MoveOption,
     EffortOption,
@@ -26,6 +25,7 @@ from game.core import (
     UnitStatus,
     LogLine,
     Status,
+    GS,
 )
 from game.decisions import SelectOptionDecisionPoint, NoTarget, O, OptionDecision
 from game.player import Player
@@ -46,9 +46,9 @@ class Kill(Event[None]):
     unit: Unit
 
     def resolve(self) -> None:
-        with GS().log(LogLine([self.unit, "dies"])):
+        with GS.log(LogLine([self.unit, "dies"])):
             ES.resolve(self.branch(KillUpkeep))
-            GS().map.remove_unit(self.unit)
+            GS.map.remove_unit(self.unit)
             self.unit.deregister()
 
 
@@ -59,7 +59,7 @@ class CheckAlive(Event[bool]):
 
     def resolve(self) -> bool:
         # TODO common logic
-        if self.unit.health <= 0 or not GS().map.hex_off(self.unit).is_passable_to(
+        if self.unit.health <= 0 or not GS.map.hex_off(self.unit).is_passable_to(
             self.unit
         ):
             ES.resolve(Kill(self.unit))
@@ -77,7 +77,7 @@ class Heal(Event[int]):
 
     def resolve(self) -> int:
         heal_amount = min(self.amount, self.unit.damage)
-        with GS().log(LogLine([self.unit, f"is healed {heal_amount}"])):
+        with GS.log(LogLine([self.unit, f"is healed {heal_amount}"])):
             self.unit.damage -= heal_amount
         return heal_amount
 
@@ -92,7 +92,7 @@ class GainEnergy(Event[int]):
 
     def resolve(self) -> int:
         amount = max(min(self.amount, self.unit.max_energy.g() - self.unit.energy), 0)
-        with GS().log(LogLine([self.unit, f"gains {amount} energy"])):
+        with GS.log(LogLine([self.unit, f"gains {amount} energy"])):
             self.unit.energy += amount
         return amount
 
@@ -108,7 +108,7 @@ class SufferDamage(Event[int]):
     def resolve(self) -> int:
         result = self.unit.suffer_damage(self.signature)
         # TODO source? type?
-        with GS().log(LogLine([self.unit, f"suffers {result} damage"])):
+        with GS.log(LogLine([self.unit, f"suffers {result} damage"])):
             return result
 
 
@@ -186,7 +186,7 @@ class Hit(Event[None]):
 
     def resolve(self) -> None:
         # TODO facets should be log components
-        with GS().log(
+        with GS.log(
             LogLine([self.attacker, "hits", self.defender, "with", self.attack]),
             LogLine([self.defender, "is hit with", self.attack]),
         ):
@@ -208,8 +208,8 @@ class MeleeAttackAction(Event[None]):
     attack: MeleeAttackFacet
 
     def resolve(self) -> None:
-        defender_position = GS().map.hex_off(self.defender)
-        attacker_position = GS().map.hex_off(self.attacker)
+        defender_position = GS.map.hex_off(self.defender)
+        attacker_position = GS.map.hex_off(self.attacker)
         move_out_penalty = MovePenalty(
             self.attacker,
             attacker_position,
@@ -229,10 +229,10 @@ class MeleeAttackAction(Event[None]):
             and self.attack.should_follow_up()
         ):
             ES.resolve(MoveUnit(self.attacker, defender_position))
-        self.attack.get_cost().pay(GS().active_unit_context)
+        self.attack.get_cost().pay(GS.active_unit_context)
         ES.resolve(move_out_penalty)
         ES.resolve(move_in_penalty)
-        # GS().active_unit_context.should_stop = True
+        # GS2.active_unit_context.should_stop = True
 
 
 @dataclasses.dataclass
@@ -244,7 +244,7 @@ class RangedAttackAction(Event[None]):
     def resolve(self) -> None:
         ES.resolve(self.branch(Hit))
         ES.resolve(CheckAlive(self.defender))
-        self.attack.get_cost().pay(GS().active_unit_context)
+        self.attack.get_cost().pay(GS.active_unit_context)
 
 
 # TODO where?
@@ -314,7 +314,7 @@ class ApplyStatus(Event[UnitStatus]):
     def resolve(self) -> UnitStatus:
         status = realize_status_for_unit(self.unit, self.signature)
 
-        with GS().log(make_status_log_line(status, self.unit)):
+        with GS.log(make_status_log_line(status, self.unit)):
             return self.unit.add_status(status)
 
 
@@ -339,7 +339,7 @@ class ApplyHexStatus(Event[None]):
             parent=self.space,
         )
 
-        with GS().log(make_status_log_line(status, self.space)):
+        with GS.log(make_status_log_line(status, self.space)):
             self.space.add_status(status)
 
 
@@ -350,12 +350,12 @@ class ActivateAbilityAction(Event[None]):
     target: O
 
     def resolve(self) -> None:
-        with GS().log(
+        with GS.log(
             LogLine([self.unit, "activates", self.ability, "targeting", self.target]),
             LogLine([self.unit, "activates", self.ability]),
         ):
             self.ability.perform(self.target)
-            self.ability.get_cost().pay(GS().active_unit_context)
+            self.ability.get_cost().pay(GS.active_unit_context)
 
 
 @dataclasses.dataclass
@@ -372,14 +372,14 @@ class MoveUnit(Event[Hex | None]):
             # TODO hmm
             from_ = self.to_.map.hex_off(self.unit)
             self.to_.map.move_unit_to(self.unit, self.to_)
-            GS().update_vision()
-            with GS().log(
+            GS.update_vision()
+            with GS.log(
                 LogLine([self.unit, "moves into", self.to_]),
                 LogLine([self.unit, "moves"]),
             ):
                 return from_
         else:
-            with GS().log(
+            with GS.log(
                 LogLine([self.unit, "fails to move into", self.to_]),
                 LogLine([self.unit, "fails to move"]),
             ):
@@ -401,9 +401,9 @@ class SpawnUnit(Event[Unit | None]):
         unit = Unit(self.controller, self.blueprint, exhausted=self.exhausted)
         self.space.map.move_unit_to(unit, self.space)
         # TODO hmm
-        GS().update_vision()
+        GS.update_vision()
         # TODO statuses? exhausted?
-        with GS().log(LogLine([unit, "is spawned in", self.space])):
+        with GS.log(LogLine([unit, "is spawned in", self.space])):
             for signature in self.with_statuses:
                 apply_status_to_unit(unit, signature)
         return unit
@@ -419,13 +419,13 @@ class ModifyMovementPoints(Event[None]):
     def is_valid(self) -> bool:
         return (
             self.amount
-            and GS().active_unit_context
-            and GS().active_unit_context.unit == self.unit
+            and GS.active_unit_context
+            and GS.active_unit_context.unit == self.unit
         )
 
     def resolve(self) -> None:
         # TODO log ?
-        GS().active_unit_context.movement_points += self.amount
+        GS.active_unit_context.movement_points += self.amount
 
 
 @dataclasses.dataclass
@@ -437,7 +437,7 @@ class ExhaustUnit(Event[None]):
 
     def resolve(self) -> None:
         # TODO shouldn't log when exhausted through normal action?
-        with GS().log(LogLine([self.unit, "is exhausted"])):
+        with GS.log(LogLine([self.unit, "is exhausted"])):
             self.unit.exhausted = True
 
 
@@ -464,7 +464,7 @@ class MovePenalty(Event[None]):
 
     def resolve(self) -> None:
         # TODO log ?
-        GS().active_unit_context.movement_points -= self.amount
+        GS.active_unit_context.movement_points -= self.amount
 
 
 @dataclasses.dataclass
@@ -473,7 +473,7 @@ class MoveAction(Event[None]):
     to_: Hex
 
     def resolve(self) -> None:
-        _from = GS().map.hex_off(self.unit)
+        _from = GS.map.hex_off(self.unit)
         move_out_penalty = MovePenalty(
             self.unit, _from, _from.get_move_out_penalty_for(self.unit), False
         )
@@ -482,7 +482,7 @@ class MoveAction(Event[None]):
         )
         ES.resolve(self.branch(MoveUnit))
         # TODO event only valid if context is not null?
-        GS().active_unit_context.movement_points -= 1
+        GS.active_unit_context.movement_points -= 1
         ES.resolve(move_out_penalty)
         ES.resolve(move_in_penalty)
 
@@ -492,8 +492,8 @@ class Rest(Event[None]):
     unit: Unit
 
     def resolve(self) -> None:
-        with GS().log(LogLine([self.unit, "rests"])):
-            GS().active_unit_context.should_stop = True
+        with GS.log(LogLine([self.unit, "rests"])):
+            GS.active_unit_context.should_stop = True
 
 
 # TODO where should this be?
@@ -503,8 +503,8 @@ def do_state_based_check() -> None:
     while has_changed:
         has_changed = ES.resolve_pending_triggers()
         # TODO order?
-        for unit in list(GS().map.unit_positions.keys()):
-            if unit.health <= 0 or not GS().map.hex_off(unit).is_passable_to(unit):
+        for unit in list(GS.map.unit_positions.keys()):
+            if unit.health <= 0 or not GS.map.hex_off(unit).is_passable_to(unit):
                 has_changed = True
                 ES.resolve(Kill(unit))
 
@@ -515,7 +515,7 @@ class QueueUnitForActivation(Event[None]):
 
     def resolve(self) -> None:
         # TODO log ?
-        GS().activation_queued_units.add(self.unit)
+        GS.activation_queued_units.add(self.unit)
 
 
 # TODO IDK
@@ -555,15 +555,15 @@ class Turn(Event[bool]):
     unit: Unit
 
     def resolve(self) -> bool:
-        GS().active_unit_context = context = ActiveUnitContext(
+        GS.active_unit_context = context = ActiveUnitContext(
             self.unit, self.unit.speed.g()
         )
 
         # TODO this prob shouldn't be here. For now it is to make sure we have a
         #  vision map when unit tests run just a turn.
-        GS().update_vision()
+        GS.update_vision()
 
-        with GS().log(LogLine([self.unit, "is activated"])):
+        with GS.log(LogLine([self.unit, "is activated"])):
             ES.resolve(TurnUpkeep(unit=self.unit))
             do_state_based_check()
 
@@ -588,7 +588,7 @@ class Turn(Event[bool]):
                 if all(isinstance(option, SkipOption) for option in legal_options):
                     decision = OptionDecision(legal_options[0], None)
                 else:
-                    decision = GS().make_decision(
+                    decision = GS.make_decision(
                         self.unit.controller,
                         SelectOptionDecisionPoint(legal_options, explanation="do shit"),
                     )
@@ -596,7 +596,7 @@ class Turn(Event[bool]):
                 if isinstance(decision.option, SkipOption):
                     # TODO difference here is whether or not it is a "TurnSkip" or an "end actions skip"
                     if context.has_acted:
-                        GS().active_unit_context.should_stop = True
+                        GS.active_unit_context.should_stop = True
                     else:
                         ES.resolve(Rest(self.unit))
                     do_state_based_check()
@@ -644,7 +644,7 @@ class Turn(Event[bool]):
                     raise ValueError("blah")
 
                 # TODO yikes. need this right now for juke and jive, not sure what the plan is.
-                GS().update_vision()
+                GS.update_vision()
                 ES.resolve(ActionCleanup(unit=self.unit))
                 do_state_based_check()
                 context.has_acted = True
@@ -653,18 +653,18 @@ class Turn(Event[bool]):
             do_state_based_check()
 
             ES.resolve(ExhaustUnit(self.unit))
-            GS().active_unit_context = None
+            GS.active_unit_context = None
 
         return context.has_acted
 
 
 class RoundUpkeep(Event[None]):
     def resolve(self) -> None:
-        for unit in list(GS().map.unit_positions.keys()):
+        for unit in list(GS.map.unit_positions.keys()):
             ES.resolve(GainEnergy(unit, unit.energy_regen.g()))
             for status in list(unit.statuses):
                 status.decrement_duration()
-        for hex_ in GS().map.hexes.values():
+        for hex_ in GS.map.hexes.values():
             for status in list(hex_.statuses):
                 status.decrement_duration()
 
@@ -676,7 +676,7 @@ class RoundCleanup(Event[None]):
 
 class Round(Event[None]):
     def resolve(self) -> None:
-        gs = GS()
+        gs = GS
         gs.round_counter += 1
         skipped_players: set[Player] = set()
         # TODO asker's shit
@@ -702,7 +702,7 @@ class Round(Event[None]):
                 if player in round_skipped_players:
                     continue
 
-                GS().update_vision()
+                GS.update_vision()
 
                 # TODO blah and tests
                 activateable_units = None
@@ -734,7 +734,7 @@ class Round(Event[None]):
                     continue
                 skipped_players.discard(player)
 
-                decision = GS().make_decision(
+                decision = GS.make_decision(
                     player,
                     SelectOptionDecisionPoint(
                         [
@@ -788,7 +788,7 @@ class Round(Event[None]):
 @dataclasses.dataclass
 class Play(Event[None]):
     def resolve(self) -> None:
-        gs = GS()
+        gs = GS
         first_player = gs.turn_order.players[0]
         while (
             not (

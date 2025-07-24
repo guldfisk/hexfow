@@ -1,0 +1,35 @@
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-height: 100vh;
+  background-color: #111111;
+}
+
+button {
+  border: 0;
+  background: #666;
+  box-shadow: none;
+  border-radius: 8px;
+}
+
+button:hover {
+  background: #99acb3;
+}
+
+button:disabled {
+  background-color: #333;
+}
+
+.big-button {
+  font-size: 4em;
+  padding-bottom: 10px;
+}
+
+.game-result {
+  background: #444;
+  border-radius: 8px;
+  font-size: 2em;
+  padding: 10px;
+}

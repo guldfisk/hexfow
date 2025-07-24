@@ -4,6 +4,7 @@ import contextlib
 import dataclasses
 import itertools
 import re
+import threading
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import (
@@ -374,12 +375,12 @@ class MeleeAttackFacet(SingleTargetAttackFacet, ABC):
         # TODO handle vision
         return [
             unit
-            for unit in GS().map.get_neighboring_units_off(self.owner)
+            for unit in GS.map.get_neighboring_units_off(self.owner)
             if unit.controller != self.owner.controller
             and unit.is_visible_to(self.owner.controller)
             and unit.can_be_attacked_by(self)
             # TODO test
-            and GS().map.hex_off(unit).is_passable_to(self.owner)
+            and GS.map.hex_off(unit).is_passable_to(self.owner)
         ]
 
     def get_cost(self) -> EffortCostSet:
@@ -392,11 +393,11 @@ class MeleeAttackFacet(SingleTargetAttackFacet, ABC):
 
 # TODO where should logic for these be?
 def is_vision_obstructed_for_unit_at(unit: Unit, cc: CC) -> bool:
-    match GS().vision_obstruction_map[unit.controller][cc]:
+    match GS.vision_obstruction_map[unit.controller][cc]:
         case VisionObstruction.FULL:
             return True
         case VisionObstruction.HIGH_GROUND:
-            return not GS().map.hex_off(unit).terrain.is_high_ground
+            return not GS.map.hex_off(unit).terrain.is_high_ground
         case _:
             return False
 
@@ -416,14 +417,14 @@ class RangedAttackFacet(SingleTargetAttackFacet, ABC):
     def get_legal_targets(self, _: None = None) -> list[Unit]:
         return [
             unit
-            for unit in GS().map.get_units_within_range_off(self.owner, self.range)
+            for unit in GS.map.get_units_within_range_off(self.owner, self.range)
             if unit.controller != self.owner.controller
             # TODO test on this
             and unit.is_visible_to(self.owner.controller)
             and not line_of_sight_obstructed_for_unit(
                 self.owner,
-                GS().map.position_off(self.owner),
-                GS().map.position_off(unit),
+                GS.map.position_off(self.owner),
+                GS.map.position_off(unit),
             )
             and unit.can_be_attacked_by(self)
         ]
@@ -658,7 +659,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
 
     @modifiable
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
-        return GS().map.hex_off(self).get_terrain_protection_for(request)
+        return GS.map.hex_off(self).get_terrain_protection_for(request)
 
     def suffer_damage(self, signature: DamageSignature) -> int:
         damage = min(
@@ -703,7 +704,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
     @modifiable
     def is_visible_to(self, player: Player) -> bool:
         return (
-            player == self.controller or GS().map.hex_off(self).is_visible_to(player)
+            player == self.controller or GS.map.hex_off(self).is_visible_to(player)
         ) and not self.is_hidden_for(player)
 
     # TODO should effects modifying get_legal_options on movement modify this instead?
@@ -711,7 +712,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
     def get_potential_move_destinations(self, _: None) -> list[Hex]:
         return [
             _hex
-            for _hex in GS().map.get_neighbors_off(self)
+            for _hex in GS.map.get_neighbors_off(self)
             if not _hex.is_visible_to(self.controller) or _hex.can_move_into(self)
         ]
 
@@ -725,7 +726,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             for facet in self.attacks:
                 if isinstance(
                     facet, (MeleeAttackFacet, RangedAttackFacet)
-                ) and facet.can_be_activated(GS().active_unit_context):
+                ) and facet.can_be_activated(GS.active_unit_context):
                     options.append(
                         EffortOption(
                             facet,
@@ -733,7 +734,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
                         )
                     )
             for facet in self.activated_abilities:
-                if facet.can_be_activated(GS().active_unit_context):
+                if facet.can_be_activated(GS.active_unit_context):
                     options.append(
                         EffortOption(facet, target_profile=facet.get_target_profile())
                     )
@@ -742,7 +743,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
         return options
 
     def on_map(self) -> bool:
-        return self in GS().map.unit_positions
+        return self in GS.map.unit_positions
 
     @property
     def health(self) -> int:
@@ -882,15 +883,15 @@ class SingleTargetActivatedAbility(ActivatedAbilityFacet[Unit], ABC):
     def get_target_profile(self) -> TargetProfile[Unit] | None:
         if units := [
             unit
-            for unit in GS().map.get_units_within_range_off(self.owner, self.range)
+            for unit in GS.map.get_units_within_range_off(self.owner, self.range)
             if self.can_target_unit(unit)
             and unit.is_visible_to(self.owner.controller)
             and (
                 not self.requires_los
                 or not line_of_sight_obstructed_for_unit(
                     self.owner,
-                    GS().map.position_off(self.owner),
-                    GS().map.position_off(unit),
+                    GS.map.position_off(self.owner),
+                    GS.map.position_off(unit),
                 )
             )
         ]:
@@ -922,6 +923,12 @@ class HexSpec:
 class Landscape:
     terrain_map: Mapping[CC, HexSpec]
     # deployment_zones: Collection[AbstractSet[CubeCoordinate]]
+
+
+@dataclasses.dataclass
+class Scenario:
+    landscape: Landscape
+    units: list[Mapping[CC, UnitBlueprint]]
 
 
 @dataclasses.dataclass
@@ -1002,7 +1009,7 @@ class Hex(Modifiable, HasStatuses, Serializable):
 
     @modifiable
     def is_visible_to(self, player: Player) -> bool:
-        return GS().vision_map[player][self.position]
+        return GS.vision_map[player][self.position]
 
     @modifiable
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
@@ -1017,7 +1024,7 @@ class Hex(Modifiable, HasStatuses, Serializable):
             **(
                 {
                     "visible": True,
-                    "last_visible_round": GS().round_counter,
+                    "last_visible_round": GS.round_counter,
                     "unit": (
                         unit.serialize(context)
                         if (unit := self.map.unit_on(self))
@@ -1122,13 +1129,13 @@ class SingleHexTargetActivatedAbility(ActivatedAbilityFacet[Hex], ABC):
     def get_target_profile(self) -> TargetProfile[Hex] | None:
         if hexes := [
             _hex
-            for _hex in GS().map.get_hexes_within_range_off(self.owner, self.range)
+            for _hex in GS.map.get_hexes_within_range_off(self.owner, self.range)
             if (not self.requires_vision or _hex.is_visible_to(self.owner.controller))
             and (
                 not self.requires_los
                 or not line_of_sight_obstructed_for_unit(
                     self.owner,
-                    GS().map.position_off(self.owner),
+                    GS.map.position_off(self.owner),
                     _hex.position,
                 )
             )
@@ -1162,7 +1169,7 @@ class ConsecutiveAdjacentHexes(TargetProfile[list[Hex]]):
 
     def parse_response(self, v: Any) -> list[Hex]:
         return list(
-            GS().map.get_hexes_of_positions(
+            GS.map.get_hexes_of_positions(
                 hex_arc(
                     radius=1,
                     arm_length=self.arm_length,
@@ -1187,7 +1194,7 @@ class HexHexes(TargetProfile[list[Hex]]):
 
     def parse_response(self, v: Any) -> list[Hex]:
         return list(
-            GS().map.get_hexes_within_range_off(self.centers[v["index"]], self.radius)
+            GS.map.get_hexes_within_range_off(self.centers[v["index"]], self.radius)
         )
 
 
@@ -1204,7 +1211,7 @@ class HexRing(TargetProfile[list[Hex]]):
 
     def parse_response(self, v: Any) -> list[Hex]:
         return list(
-            GS().map.get_hexes_of_positions(
+            GS.map.get_hexes_of_positions(
                 hex_ring(self.radius, self.centers[v["index"]].position)
             )
         )
@@ -1229,7 +1236,7 @@ class RadiatingLine(TargetProfile[list[Hex]]):
         return [
             projected
             for i in range(self.length)
-            if (projected := GS().map.hexes.get(selected_cc + difference * i))
+            if (projected := GS.map.hexes.get(selected_cc + difference * i))
         ]
 
 
@@ -1250,7 +1257,7 @@ class Cone(TargetProfile[list[Hex]]):
         selected_cc = self.to_hexes[v["index"]].position
         difference = selected_cc - self.from_hex.position
         return list(
-            GS().map.get_hexes_of_positions(
+            GS.map.get_hexes_of_positions(
                 itertools.chain(
                     *(
                         hex_arc(
@@ -1482,7 +1489,10 @@ class LogLine:
         return {"type": "string", "message": element}
 
     def serialize(self, player: Player, id_map: IDMap) -> list[dict[str, Any]]:
-        return [self._serialize_element(element, player, id_map) for element in self.elements]
+        return [
+            self._serialize_element(element, player, id_map)
+            for element in self.elements
+        ]
 
 
 class GameState:
@@ -1495,6 +1505,7 @@ class GameState:
         connection_class: type[Connection],
         landscape: Landscape,
     ):
+        # TODO handle names
         self.turn_order = TurnOrder(
             [Player(f"player {i+1}") for i in range(player_count)]
         )
@@ -1529,8 +1540,8 @@ class GameState:
         ] = {player: [] for player in self.turn_order.players}
 
         # TODO for debugging
-        self._event_log: list[str] = []
-        ES.register_event_callback(EventLogger(self._event_log.append))
+        # self._event_log: list[str] = []
+        # ES.register_event_callback(EventLogger(self._event_log.append))
 
     @contextlib.contextmanager
     def log(self, *line_options: LogLine) -> Iterator[None]:
@@ -1585,7 +1596,7 @@ class GameState:
             ),
             "logs": self._pending_player_logs[context.player],
             # TODO for debugging
-            "event_log": self._event_log,
+            # "event_log": self._event_log,
         }
         # TODO yikes
         self.previous_hex_states[context.player] = {
@@ -1622,6 +1633,88 @@ class GameState:
         return decision_point.parse_response(response)
 
 
-# TODO
-def GS() -> GameState:
-    return GameState.instance
+class ScopedGameState:
+
+    # TODO protocol/interface?
+    def __init__(self):
+        # self._gs: GameState | None = None
+        self._store = threading.local()
+
+    def bind(self, gs: GameState) -> None:
+        self._store.value = gs
+
+    @property
+    def _gs(self) -> GameState:
+        return self._store.value
+
+    @property
+    def turn_order(self) -> TurnOrder:
+        return self._gs.turn_order
+
+    @property
+    def connections(self) -> dict[Player, Connection]:
+        return self._gs.connections
+
+    @property
+    def map(self) -> HexMap:
+        return self._gs.map
+
+    @property
+    def active_unit_context(self) -> ActiveUnitContext | None:
+        return self._gs.active_unit_context
+
+    @active_unit_context.setter
+    def active_unit_context(self, v: ActiveUnitContext) -> None:
+        self._gs.active_unit_context = v
+
+    @property
+    def activation_queued_units(self) -> set[Unit]:
+        return self._gs.activation_queued_units
+
+    @property
+    def target_points(self) -> int:
+        return self._gs.target_points
+
+    @property
+    def round_counter(self) -> int:
+        return self._gs.round_counter
+
+    @round_counter.setter
+    def round_counter(self, v: int) -> None:
+        self._gs.round_counter = v
+
+    @property
+    def id_maps(self) -> dict[Player, IDMap]:
+        return self._gs.id_maps
+
+    @property
+    def previous_hex_states(self) -> dict[Player, dict[CC, dict[str, Any]]]:
+        return self._gs.previous_hex_states
+
+    @property
+    def vision_obstruction_map(self) -> dict[Player, dict[CC, VisionObstruction]]:
+        return self._gs.vision_obstruction_map
+
+    @property
+    def vision_map(self) -> dict[Player, dict[CC, bool]]:
+        return self._gs.vision_map
+
+    # TODO pretty dumb
+    @contextlib.contextmanager
+    def log(self, *line_options: LogLine) -> Iterator[None]:
+        with self._gs.log(*line_options):
+            yield None
+
+    def update_vision(self) -> None:
+        self._gs.update_vision()
+
+    def serialize_for(
+        self, context: SerializationContext, decision_point: DecisionPoint | None
+    ) -> Mapping[str, Any]:
+        return self._gs.serialize_for(context, decision_point)
+
+    def make_decision(self, player: Player, decision_point: DecisionPoint[O]) -> O:
+        return self._gs.make_decision(player, decision_point)
+
+
+GS = ScopedGameState()

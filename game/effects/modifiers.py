@@ -6,7 +6,6 @@ from typing import ClassVar, Callable
 from events.eventsystem import StateModifierEffect
 from events.tests.game_objects.advanced_units import Player
 from game.core import (
-    GS,
     Unit,
     ActiveUnitContext,
     MoveOption,
@@ -22,6 +21,7 @@ from game.core import (
     TerrainProtectionRequest,
     Terrain,
     ActivatedAbilityFacet,
+    GS,
 )
 from game.decisions import Option
 from game.values import Resistance, VisionObstruction, Size
@@ -85,7 +85,7 @@ class CrushableModifier(StateModifierEffect[Hex, Unit, bool]):
     unit: Unit
 
     def should_modify(self, obj: Hex, request: Unit, value: bool) -> bool:
-        return request.controller == self.unit.controller and obj == GS().map.hex_off(
+        return request.controller == self.unit.controller and obj == GS.map.hex_off(
             self.unit
         )
 
@@ -121,8 +121,8 @@ class StealthModifier(StateModifierEffect[Unit, Player, bool]):
             and request != self.unit.controller
             and not any(
                 request in unit.provides_vision_for(None)
-                and unit.can_see(GS().map.hex_off(self.unit))
-                for unit in GS().map.get_neighboring_units_off(self.unit)
+                and unit.can_see(GS.map.hex_off(self.unit))
+                for unit in GS.map.get_neighboring_units_off(self.unit)
             )
         )
 
@@ -145,7 +145,7 @@ class FightFlightFreezeModifier(
     ) -> bool:
         return (
             obj.controller != self.unit.controller
-            and GS().map.distance_between(self.unit, obj) <= 1
+            and GS.map.distance_between(self.unit, obj) <= 1
         )
 
     def modify(
@@ -169,7 +169,7 @@ class FightFlightFreezeModifier(
                     valid_hexes := [
                         _hex
                         for _hex in option.target_profile.hexes
-                        if GS().map.distance_between(self.unit, _hex) > 1
+                        if GS.map.distance_between(self.unit, _hex) > 1
                     ]
                 )
             ):
@@ -189,7 +189,7 @@ class TelepathicSpyModifier(StateModifierEffect[Unit, None, set[Player]]):
     def should_modify(self, obj: Unit, request: None, value: set[Player]) -> bool:
         return (
             obj.controller != self.unit.controller
-            and GS().map.distance_between(self.unit, obj) <= 1
+            and GS.map.distance_between(self.unit, obj) <= 1
         )
 
     def modify(self, obj: Unit, request: None, value: set[Player]) -> set[Player]:
@@ -235,7 +235,7 @@ class TerrainProtectionModifier(
         self, obj: Unit, request: TerrainProtectionRequest, value: int
     ) -> bool:
         return obj == self.unit and isinstance(
-            GS().map.hex_off(self.unit).terrain, self.terrain_type
+            GS.map.hex_off(self.unit).terrain, self.terrain_type
         )
 
     def modify(self, obj: Unit, request: TerrainProtectionRequest, value: int) -> int:
@@ -254,7 +254,7 @@ class ScurryInTheShadowsModifier(StateModifierEffect[Unit, None, int]):
     def should_modify(self, obj: Unit, request: None, value: int) -> bool:
         return obj == self.unit and not any(
             player != self.unit.controller and self.unit.is_visible_to(player)
-            for player in GS().turn_order.players
+            for player in GS.turn_order.players
         )
 
     def modify(self, obj: Unit, request: None, value: int) -> int:
@@ -286,7 +286,7 @@ class HexIncreasesEnergyRegenModifier(StateModifierEffect[Unit, None, int]):
     amount: int
 
     def should_modify(self, obj: Unit, request: None, value: int) -> bool:
-        return GS().map.hex_off(obj) == self.space
+        return GS.map.hex_off(obj) == self.space
 
     def modify(self, obj: Unit, request: None, value: int) -> int:
         return value + self.amount
@@ -300,7 +300,7 @@ class HexDecreaseSightCappedModifier(StateModifierEffect[Unit, None, int]):
     space: Hex
 
     def should_modify(self, obj: Unit, request: None, value: int) -> bool:
-        return GS().map.hex_off(obj) == self.space
+        return GS.map.hex_off(obj) == self.space
 
     def modify(self, obj: Unit, request: None, value: int) -> int:
         return min(max(value - 1, 1), value)
@@ -438,7 +438,7 @@ class TerrorModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]])
     ) -> list[Option]:
         has_adjacent_enemies = any(
             unit
-            for unit in GS().map.get_neighboring_units_off(obj)
+            for unit in GS.map.get_neighboring_units_off(obj)
             if unit.controller != obj.controller and unit.is_visible_to(obj.controller)
         )
         options = []
@@ -452,7 +452,7 @@ class TerrorModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]])
                         for _hex in option.target_profile.hexes
                         if not any(
                             unit
-                            for unit in GS().map.get_neighboring_units_off(_hex)
+                            for unit in GS.map.get_neighboring_units_off(_hex)
                             if unit.controller != obj.controller
                             and unit.is_visible_to(obj.controller)
                         )

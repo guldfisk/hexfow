@@ -11,11 +11,20 @@ import { HUD } from "./hud/hud.tsx";
 import { Provider } from "react-redux";
 import { receiveGameState, renderedGameState, store } from "./state/store.ts";
 
+// const urlParams = new URLSearchParams(window.location.search);
+// const myParam = urlParams.get('myParam');
+
 const gameConnection = new WebSocket("ws://localhost:8765/ws");
 gameConnection.onmessage = (event) => {
   console.log(recursiveCamelCase(JSON.parse(event.data)));
   store.dispatch(receiveGameState(recursiveCamelCase(JSON.parse(event.data))));
 };
+gameConnection.onopen = () =>
+  gameConnection.send(
+    JSON.stringify({
+      seat_id: new URLSearchParams(window.location.search).get("seat"),
+    }),
+  );
 
 async function main() {
   const app = new Application();
@@ -128,7 +137,7 @@ await main();
 createRoot(document.getElementById("hud")!).render(
   <StrictMode>
     <Provider store={store}>
-      <HUD connection={gameConnection}/>
+      <HUD connection={gameConnection} />
     </Provider>
   </StrictMode>,
 );

@@ -6,7 +6,6 @@ from events.eventsystem import TriggerEffect, ES, hook_on
 from game.core import (
     Unit,
     Hex,
-    GS,
     MeleeAttackFacet,
     MoveOption,
     OneOfHexes,
@@ -19,6 +18,7 @@ from game.core import (
     UnitBlueprint,
     EnergyCost,
     HexStatus,
+    GS,
 )
 from game.decisions import NoTarget, SelectOptionDecisionPoint
 from game.events import (
@@ -88,7 +88,7 @@ class PackHunterTrigger(TriggerEffect[MeleeAttackAction]):
             # TODO really awkward having to be defensive about this here, maybe
             #  good argument for triggers being queued before event execution?
             and event.defender.on_map()
-            and GS().map.distance_between(self.unit, event.defender) <= 1
+            and GS.map.distance_between(self.unit, event.defender) <= 1
         )
 
     def resolve(self, event: MeleeAttackAction) -> None:
@@ -121,7 +121,7 @@ class ExplosiveTrigger(TriggerEffect[KillUpkeep]):
         return event.unit == self.unit
 
     def resolve(self, event: KillUpkeep) -> None:
-        for unit in GS().map.get_units_within_range_off(self.unit, 1):
+        for unit in GS.map.get_units_within_range_off(self.unit, 1):
             ES.resolve(
                 Damage(
                     unit, DamageSignature(self.damage, self.source, type=DamageType.AOE)
@@ -139,7 +139,7 @@ class SchadenfreudeDamageTrigger(TriggerEffect[Damage]):
     def should_trigger(self, event: Damage) -> bool:
         return (
             event.unit != self.unit
-            and GS().map.distance_between(self.unit, event.unit) <= 1
+            and GS.map.distance_between(self.unit, event.unit) <= 1
         )
 
     def resolve(self, event: Damage) -> None:
@@ -156,7 +156,7 @@ class SchadenfreudeDebuffTrigger(TriggerEffect[ApplyStatus]):
         return (
             event.unit != self.unit
             and event.result.intention == StatusIntention.DEBUFF
-            and GS().map.distance_between(self.unit, event.unit) <= 1
+            and GS.map.distance_between(self.unit, event.unit) <= 1
         )
 
     def resolve(self, event: ApplyStatus) -> None:
@@ -183,9 +183,9 @@ class GrizzlyMurdererTrigger(TriggerEffect[MeleeAttackAction]):
         )
 
     def resolve(self, event: MeleeAttackAction) -> None:
-        for unit in GS().map.units:
+        for unit in GS.map.units:
             if unit.controller != self.unit.controller and unit.can_see(
-                GS().map.hex_off(event.defender)
+                GS.map.hex_off(event.defender)
             ):
                 ES.resolve(
                     ApplyStatus(
@@ -206,13 +206,13 @@ class CaughtInTheMatchTrigger(TriggerEffect[MoveAction]):
     def should_trigger(self, event: MoveAction) -> bool:
         return (
             event.unit.controller != self.unit.controller
-            and GS().active_unit_context
-            and GS().active_unit_context.unit == event.unit
+            and GS.active_unit_context
+            and GS.active_unit_context.unit == event.unit
             and any(
                 move_event.unit == event.unit
                 and move_event.result
-                and GS().map.distance_between(self.unit, move_event.result) <= 1
-                and GS().map.distance_between(self.unit, move_event.to_) > 1
+                and GS.map.distance_between(self.unit, move_event.result) <= 1
+                and GS.map.distance_between(self.unit, move_event.to_) > 1
                 for move_event in event.iter_type(MoveUnit)
             )
         )
@@ -257,7 +257,7 @@ class QuickTrigger(TriggerEffect[TurnCleanup]):
         if moveable_hexes := self.unit.get_potential_move_destinations(None):
             options.append(MoveOption(target_profile=OneOfHexes(moveable_hexes)))
 
-        decision = GS().make_decision(
+        decision = GS.make_decision(
             self.unit.controller,
             SelectOptionDecisionPoint(options, explanation="quick"),
         )
@@ -277,7 +277,7 @@ class ToxicPresenceTrigger(TriggerEffect[TurnCleanup]):
         return event.unit == self.unit
 
     def resolve(self, event: TurnCleanup) -> None:
-        for unit in GS().map.get_neighboring_units_off(self.unit):
+        for unit in GS.map.get_neighboring_units_off(self.unit):
             ES.resolve(
                 ApplyStatus(
                     unit,
@@ -301,7 +301,7 @@ class JukeAndJiveTrigger(TriggerEffect[ActionCleanup]):
         if event.unit == self.unit:
             self._visible = any(
                 player != self.unit.controller and self.unit.is_visible_to(player)
-                for player in GS().turn_order.players
+                for player in GS.turn_order.players
             )
 
     def should_trigger(self, event: ActionCleanup) -> bool:
@@ -309,7 +309,7 @@ class JukeAndJiveTrigger(TriggerEffect[ActionCleanup]):
             event.unit == self.unit
             and any(
                 player != self.unit.controller and self.unit.is_visible_to(player)
-                for player in GS().turn_order.players
+                for player in GS.turn_order.players
             )
             != self._visible
         )
@@ -356,10 +356,10 @@ class BurnOnCleanup(TriggerEffect[RoundCleanup]):
     amount: int | Callable[..., int]
 
     def should_trigger(self, event: RoundCleanup) -> bool:
-        return GS().map.unit_on(self.hex) is not None
+        return GS.map.unit_on(self.hex) is not None
 
     def resolve(self, event: RoundCleanup) -> None:
-        if unit := GS().map.unit_on(self.hex):
+        if unit := GS.map.unit_on(self.hex):
             ES.resolve(
                 ApplyStatus(
                     unit=unit,
@@ -415,7 +415,7 @@ class ShrineSkipTrigger(TriggerEffect[Rest]):
     hex: Hex
 
     def should_trigger(self, event: Rest) -> bool:
-        return GS().map.distance_between(event.unit, self.hex) <= 1
+        return GS.map.distance_between(event.unit, self.hex) <= 1
 
     def resolve(self, event: Rest) -> None:
         ES.resolve(Heal(event.unit, 1))
@@ -450,10 +450,10 @@ class HexRoundDamageTrigger(TriggerEffect[RoundCleanup]):
     amount: int
 
     def should_trigger(self, event: RoundCleanup) -> bool:
-        return GS().map.unit_on(self.hex) is not None
+        return GS.map.unit_on(self.hex) is not None
 
     def resolve(self, event: RoundCleanup) -> None:
-        if unit := GS().map.unit_on(self.hex):
+        if unit := GS.map.unit_on(self.hex):
             ES.resolve(
                 Damage(
                     unit,
@@ -504,7 +504,7 @@ class PanickedTrigger(TriggerEffect[RoundCleanup]):
             Damage(
                 self.status.parent,
                 DamageSignature(
-                    len(list(GS().map.get_neighboring_units_off(self.status.parent))),
+                    len(list(GS.map.get_neighboring_units_off(self.status.parent))),
                     self.status,
                     type=DamageType.PURE,
                 ),
@@ -522,8 +522,8 @@ class ParasiteTrigger(TriggerEffect[KillUpkeep]):
         return event.unit == self.status.parent
 
     def resolve(self, event: KillUpkeep) -> None:
-        target_hex = GS().map.hex_off(event.unit)
-        if GS().map.unit_on(target_hex):
+        target_hex = GS.map.hex_off(event.unit)
+        if GS.map.unit_on(target_hex):
             target_hex = None
 
             for historic_event in reversed(ES.history):
@@ -537,7 +537,7 @@ class ParasiteTrigger(TriggerEffect[KillUpkeep]):
                         if (
                             move.unit == historic_event.attacker
                             and move.result
-                            and not GS().map.unit_on(move.result)
+                            and not GS.map.unit_on(move.result)
                         ):
                             target_hex = move.result
                             break
@@ -595,7 +595,7 @@ class InspirationTrigger(TriggerEffect[ActivateAbilityAction]):
             and (energy_cost := event.ability.get_cost().get(EnergyCost))
             and energy_cost.amount >= 3
             # TODO should be able to see unit, not hex
-            and self.unit.can_see(GS().map.hex_off(event.unit))
+            and self.unit.can_see(GS.map.hex_off(event.unit))
         )
 
     def resolve(self, event: ActivateAbilityAction) -> None:

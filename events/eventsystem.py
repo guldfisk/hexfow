@@ -4,6 +4,7 @@ import dataclasses
 import functools
 import inspect
 import re
+import threading
 from abc import ABC, abstractmethod, ABCMeta
 from collections import defaultdict
 from collections.abc import Iterable
@@ -256,14 +257,19 @@ class ScopedEventSystem(EventSystem):
 
     # TODO protocol/interface?
     def __init__(self):
-        self._es: EventSystem | None = None
+        # self._es: EventSystem | None = None
+        self._store = threading.local()
+
+    def bind(self, es: EventSystem) -> None:
+        self._store.value = es
+
+    @property
+    def _es(self) -> EventSystem:
+        return self._store.value
 
     @property
     def history(self) -> list[Event]:
         return self._es.history
-
-    def bind(self, es: EventSystem) -> None:
-        self._es = es
 
     def register_event_callback(self, callback: Callable[[Event, bool], ...]) -> None:
         return self._es.register_event_callback(callback)

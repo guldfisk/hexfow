@@ -5,11 +5,11 @@ from events.eventsystem import ES, ReplacementEffect, hook_on
 from game.core import (
     Unit,
     Hex,
-    GS,
     StatusSignature,
     DamageSignature,
     Source,
     UnitStatus,
+    GS,
 )
 from game.events import (
     Damage,
@@ -34,7 +34,7 @@ class CrushableReplacement(ReplacementEffect[MoveUnit]):
     def can_replace(self, event: MoveUnit) -> bool:
         return (
             self.unit.controller == event.unit.controller
-            and event.to_ == GS().map.hex_off(self.unit)
+            and event.to_ == GS.map.hex_off(self.unit)
         )
 
     def resolve(self, event: MoveUnit) -> None:
@@ -51,10 +51,10 @@ class PusherReplacement(ReplacementEffect[MoveUnit]):
     source: Source
 
     def can_replace(self, event: MoveUnit) -> bool:
-        return event.unit == self.unit and GS().map.unit_on(event.to_)
+        return event.unit == self.unit and GS.map.unit_on(event.to_)
 
     def resolve(self, event: MoveUnit) -> None:
-        _map = GS().map
+        _map = GS.map
         direction = event.to_.position - _map.position_off(event.unit)
 
         unit_positions: list[tuple[Unit, Hex | None]] = []

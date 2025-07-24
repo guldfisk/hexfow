@@ -11,4 +11,4 @@ class AdjacencyHook(HookEffect[TurnUpkeep]):
     adjacent_units: list[Unit] = dataclasses.field(default_factory=list)
 
     def resolve_hook_call(self, event: Event):
-        self.adjacent_units = list(GS().map.get_neighboring_units_off(self.unit))
+        self.adjacent_units = list(GS.map.get_neighboring_units_off(self.unit))

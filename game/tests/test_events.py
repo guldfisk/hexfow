@@ -26,7 +26,6 @@ from game.core import (
     UnitBlueprint,
     Unit,
     MoveOption,
-    GS,
     EffortOption,
     MeleeAttackFacet,
     SkipOption,
@@ -34,6 +33,7 @@ from game.core import (
     ActivateUnitOption,
     Hex,
     HexSpec,
+    GS,
 )
 from game.events import SpawnUnit, Hit, Turn, Round
 from game.interface import Connection
@@ -41,6 +41,8 @@ from game.map.coordinates import CC
 from game.map.geometry import hex_circle
 from game.map.terrain import Water, Plains
 from game.player import Player
+from game.tests.conftest import TestScope
+from game.tests.test_terrain import InstantDamageMagma
 from game.units.blueprints import (
     CHICKEN,
     CACTUS,
@@ -50,8 +52,6 @@ from game.units.blueprints import (
 )
 from game.units.facets.attacks import Peck
 from game.values import Size
-from game.tests.conftest import TestScope
-from game.tests.test_terrain import InstantDamageMagma
 
 
 A = TypeVar("A")
@@ -217,7 +217,7 @@ class OneOfUnitsSelector(TargetSelector):
 
     def select(self, values: Mapping[str, Any], player: Player) -> Mapping[str, Any]:
         # # TODO player etc
-        # _id = GS().id_maps[player].get_id_for(self.unit)
+        # _id = GS2.id_maps[player].get_id_for(self.unit)
         # for idx, option in enumerate(values["values"]["units"]):
         #     if option["id"] == _id:
         #         return {"index": idx}
@@ -228,7 +228,7 @@ class OneOfUnitsSelector(TargetSelector):
 
         if self.available_choices is not None:
             unit_choices = {
-                GS().id_maps[player].get_id_for(unit): unit
+                GS.id_maps[player].get_id_for(unit): unit
                 for unit in self.available_choices
             }
             try:
@@ -237,7 +237,7 @@ class OneOfUnitsSelector(TargetSelector):
                 print("Unexpected units available for selection:")
                 print(
                     [
-                        GS().id_maps[player].get_object_for(_id)
+                        GS.id_maps[player].get_object_for(_id)
                         for _id in options.keys() - unit_choices.keys()
                     ]
                     # [unit_choices[_id] for _id in options.keys() - unit_choices.keys()]
@@ -245,13 +245,13 @@ class OneOfUnitsSelector(TargetSelector):
                 print("Expected units not available for selection:")
                 print(
                     [
-                        GS().id_maps[player].get_object_for(_id)
+                        GS.id_maps[player].get_object_for(_id)
                         for _id in unit_choices.keys() - options.keys()
                     ]
                 )
                 raise
 
-        return {"index": options[GS().id_maps[player].get_id_for(self.unit)]}
+        return {"index": options[GS.id_maps[player].get_id_for(self.unit)]}
 
         # raise ValueError("Blah")
 
@@ -316,7 +316,7 @@ class SkipOptionSelector(OptionSelector):
 #     unit: Unit
 #
 #     def __call__(self, values: Mapping[str, Any], player: Player) -> Mapping[str, Any]:
-#         _id = GS().id_maps[player].get_id_for(self.unit)
+#         _id = GS2.id_maps[player].get_id_for(self.unit)
 #         for idx, option in enumerate(values["decision"]["payload"]["units"]):
 #             if option["id"] == _id:
 #                 return {"index": idx}
@@ -348,7 +348,8 @@ def ground_landscape() -> Landscape:
 @pytest.fixture
 def game_state(ground_landscape: Landscape) -> Iterator[GameState]:
     gs = GameState(2, MockConnection, ground_landscape)
-    GameState.instance = gs
+    # GameState.instance = gs
+    GS.bind(gs)
     yield gs
     for interface in gs.connections.values():
         assert not cast(MockConnection, interface).queued_responses
@@ -425,11 +426,7 @@ def test_attack(unit_spawner: UnitSpawner) -> None:
     chicken = unit_spawner.spawn(CHICKEN)
     cactus = unit_spawner.spawn(CACTUS)
 
-    ES.resolve(
-        Hit(
-            attacker=chicken, defender=cactus, attack=get_attack(chicken, Peck)
-        )
-    )
+    ES.resolve(Hit(attacker=chicken, defender=cactus, attack=get_attack(chicken, Peck)))
     ES.resolve_pending_triggers()
 
     assert cactus.damage == 1
@@ -442,7 +439,7 @@ def test_move(unit_spawner: UnitSpawner, player1_connection: MockConnection) -> 
         MoveOptionSelector(OneOfHexesSelector(CC(1, -1)))
     )
     ES.resolve(Turn(chicken))
-    assert GS().map.unit_positions[chicken].position == CC(1, -1)
+    assert GS.map.unit_positions[chicken].position == CC(1, -1)
 
 
 def test_move_is_blocked(
@@ -467,7 +464,7 @@ def test_move_fails(
     )
     # with pytest.raises(SelectionError):
     ES.resolve(Turn(pillar))
-    assert GS().map.unit_positions[pillar].position == CC(0, 0)
+    assert GS.map.unit_positions[pillar].position == CC(0, 0)
 
 
 def test_fight(
@@ -492,13 +489,13 @@ def test_fight(
     ES.resolve(Round())
     assert chicken.health == 1
     assert evil_chicken.health == 1
-    assert GS().map.unit_positions[chicken].position == CC(0, 0)
-    assert GS().map.unit_positions[evil_chicken].position == CC(1, -1)
+    assert GS.map.unit_positions[chicken].position == CC(0, 0)
+    assert GS.map.unit_positions[evil_chicken].position == CC(1, -1)
     ES.resolve(Round())
     assert evil_chicken.health == 0
     assert chicken.health == 1
-    assert GS().map.unit_positions[chicken].position == CC(1, -1)
-    assert GS().map.unit_positions.get(evil_chicken) is None
+    assert GS.map.unit_positions[chicken].position == CC(1, -1)
+    assert GS.map.unit_positions.get(evil_chicken) is None
 
     assert len(player1_connection.history) == 6
 
@@ -614,10 +611,10 @@ def test_round(unit_spawner, player1_connection: MockConnection) -> None:
         ),
     )
     ES.resolve(Round())
-    assert GS().map.unit_positions[chicken].position == CC(1, 0)
+    assert GS.map.unit_positions[chicken].position == CC(1, 0)
     assert chicken.exhausted is True
     ES.resolve(Round())
-    assert GS().map.unit_positions[chicken].position == CC(0, 0)
+    assert GS.map.unit_positions[chicken].position == CC(0, 0)
     assert chicken.exhausted is True
 
 
@@ -680,18 +677,18 @@ def test_vision_blocked(
 def test_impassable_terrain(
     unit_spawner, player1_connection: MockConnection, player2: Player
 ) -> None:
-    make_hex_terrain(GS().map.hexes[CC(0, 1)], Water)
+    make_hex_terrain(GS.map.hexes[CC(0, 1)], Water)
     chicken = unit_spawner.spawn(CHICKEN, coordinate=CC(0, 0))
     player1_connection.queue_responses(MoveOptionSelector(OneOfHexesSelector(CC(0, 1))))
     with pytest.raises(SelectionError):
         ES.resolve(Turn(chicken))
-    assert GS().map.unit_positions[chicken].position == CC(0, 0)
+    assert GS.map.unit_positions[chicken].position == CC(0, 0)
 
 
 def test_walk_onto_magma(
     unit_spawner, player1_connection: MockConnection, player2: Player
 ) -> None:
-    make_hex_terrain(GS().map.hexes[CC(0, 1)], InstantDamageMagma)
+    make_hex_terrain(GS.map.hexes[CC(0, 1)], InstantDamageMagma)
     archer = unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(0, 0))
     player1_connection.queue_responses(
         ActivateSelector(OneOfUnitsSelector(archer)),
@@ -699,7 +696,7 @@ def test_walk_onto_magma(
         SkipOptionSelector(),
     )
     ES.resolve(Round())
-    assert GS().map.unit_positions[archer].position == CC(0, 1)
+    assert GS.map.unit_positions[archer].position == CC(0, 1)
 
     assert archer.damage == 2
 
@@ -707,7 +704,7 @@ def test_walk_onto_magma(
 def test_unit_dies_mid_turn(
     unit_spawner: UnitSpawner, player1_connection: MockConnection, player2: Player
 ) -> None:
-    make_hex_terrain(GS().map.hexes[CC(0, 1)], InstantDamageMagma)
+    make_hex_terrain(GS.map.hexes[CC(0, 1)], InstantDamageMagma)
     archer = unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(0, 0))
     archer.damage = archer.max_health.g() - 1
     player1_connection.queue_responses(

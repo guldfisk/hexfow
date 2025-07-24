@@ -2,7 +2,7 @@ import dataclasses
 from typing import ClassVar
 
 from events.eventsystem import TriggerEffect, ES
-from game.core import Terrain, Hex, GS, DamageSignature
+from game.core import Terrain, Hex, DamageSignature, GS
 from game.events import MoveUnit, Damage, RoundCleanup
 
 
@@ -28,10 +28,10 @@ class DamageOnUpkeep(TriggerEffect[RoundCleanup]):
     amount: int
 
     def should_trigger(self, event: RoundCleanup) -> bool:
-        return GS().map.unit_on(self.hex) is not None
+        return GS.map.unit_on(self.hex) is not None
 
     def resolve(self, event: RoundCleanup) -> None:
-        if unit := GS().map.unit_on(self.hex):
+        if unit := GS.map.unit_on(self.hex):
             ES.resolve(Damage(unit, DamageSignature(self.amount, None)))
 
 

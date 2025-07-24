@@ -1,7 +1,6 @@
 from events.eventsystem import ES
 from game.core import (
     NoTargetActivatedAbility,
-    GS,
     Unit,
     SingleAllyActivatedAbility,
     SingleEnemyActivatedAbility,
@@ -30,6 +29,7 @@ from game.core import (
     TreeNode,
     Tree,
     HexRing,
+    GS,
 )
 from game.decisions import TargetProfile, O
 from game.effects.hooks import AdjacencyHook
@@ -66,7 +66,7 @@ class Bloom(NoTargetActivatedAbility):
     cost = EnergyCost(2)
 
     def perform(self, target: None) -> None:
-        for unit in GS().map.get_neighboring_units_off(self.owner):
+        for unit in GS.map.get_neighboring_units_off(self.owner):
             ES.resolve(Heal(unit, 1))
         ES.resolve(Kill(self.owner))
 
@@ -103,7 +103,7 @@ class GreaseTheGears(SingleAllyActivatedAbility):
     max_activations = None
 
     def perform(self, target: Unit) -> None:
-        movement_bonus = 1 if not target.exhausted and GS().active_unit_context else 0
+        movement_bonus = 1 if not target.exhausted and GS.active_unit_context else 0
         if any(
             kill_event.unit == target
             for kill_event in ES.resolve(Kill(target)).iter_type(Kill)
@@ -150,9 +150,9 @@ class Vault(SingleTargetActivatedAbility):
         return unit != self.owner
 
     def perform(self, target: Unit) -> None:
-        target_position = GS().map.position_off(target)
-        difference = target_position - GS().map.position_off(self.owner)
-        target_hex = GS().map.hexes.get(target_position + difference)
+        target_position = GS.map.position_off(target)
+        difference = target_position - GS.map.position_off(self.owner)
+        target_hex = GS.map.hexes.get(target_position + difference)
         if target_hex and target_hex.can_move_into(self.owner):
             if (
                 any(
@@ -196,7 +196,7 @@ class SummonScarab(SingleHexTargetActivatedAbility):
 
     # TODO common logic? or flag on SingleHexTargetActivatedAbility?
     def can_target_hex(self, hex_: Hex) -> bool:
-        return (unit := GS().map.unit_on(hex_)) is None or unit.is_hidden_for(
+        return (unit := GS.map.unit_on(hex_)) is None or unit.is_hidden_for(
             self.owner.controller
         )
 
@@ -220,11 +220,11 @@ class Sweep(ActivatedAbilityFacet[list[Hex]]):
     cost = MovementCost(1)
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        return ConsecutiveAdjacentHexes(GS().map.hex_off(self.owner), 1)
+        return ConsecutiveAdjacentHexes(GS.map.hex_off(self.owner), 1)
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
-            if unit := GS().map.unit_on(h):
+            if unit := GS.map.unit_on(h):
                 ES.resolve(Damage(unit, DamageSignature(4, self, DamageType.MELEE)))
 
 
@@ -237,8 +237,8 @@ class Stare(ActivatedAbilityFacet[list[Hex]]):
 
     def get_target_profile(self) -> TargetProfile[O] | None:
         return RadiatingLine(
-            GS().map.hex_off(self.owner),
-            list(GS().map.get_neighbors_off(self.owner)),
+            GS.map.hex_off(self.owner),
+            list(GS.map.get_neighbors_off(self.owner)),
             4,
         )
 
@@ -257,7 +257,7 @@ class Jaunt(ActivatedAbilityFacet[Hex]):
     combinable = True
 
     def get_target_profile(self) -> TargetProfile[Hex] | None:
-        if hexes := list(GS().map.get_hexes_within_range_off(self.owner, 4)):
+        if hexes := list(GS.map.get_hexes_within_range_off(self.owner, 4)):
             return OneOfHexes(hexes)
 
     def perform(self, target: Hex) -> None:
@@ -318,7 +318,7 @@ class SummonBees(SingleHexTargetActivatedAbility):
     range = 2
 
     def can_target_hex(self, hex_: Hex) -> bool:
-        return (unit := GS().map.unit_on(hex_)) is None or unit.is_hidden_for(
+        return (unit := GS.map.unit_on(hex_)) is None or unit.is_hidden_for(
             self.owner.controller
         )
 
@@ -386,9 +386,9 @@ class Suplex(SingleTargetActivatedAbility):
 
     def perform(self, target: Unit) -> None:
         ES.resolve(Damage(target, DamageSignature(3, self, DamageType.MELEE)))
-        own_position = GS().map.position_off(self.owner)
-        if target_hex := GS().map.hexes.get(
-            own_position + (own_position - GS().map.position_off(target))
+        own_position = GS.map.position_off(self.owner)
+        if target_hex := GS.map.hexes.get(
+            own_position + (own_position - GS.map.position_off(target))
         ):
             ES.resolve(MoveUnit(target, target_hex))
 
@@ -471,9 +471,7 @@ class ChokingSoot(ActivatedAbilityFacet[list[Hex]]):
     cost = MovementCost(1) | EnergyCost(4)
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        if hexes := [
-            _hex for _hex in GS().map.get_hexes_within_range_off(self.owner, 2)
-        ]:
+        if hexes := [_hex for _hex in GS.map.get_hexes_within_range_off(self.owner, 2)]:
             return HexHexes(hexes, 1)
 
     def perform(self, target: list[Hex]) -> None:
@@ -490,7 +488,7 @@ class SmokeCanister(SingleHexTargetActivatedAbility):
     combinable = True
 
     def perform(self, target: Hex) -> None:
-        for _hex in GS().map.get_hexes_within_range_off(target, 1):
+        for _hex in GS.map.get_hexes_within_range_off(target, 1):
             ES.resolve(
                 ApplyHexStatus(_hex, HexStatusSignature(Smoke, self, duration=2))
             )
@@ -517,11 +515,11 @@ class Scorch(ActivatedAbilityFacet[list[Hex]]):
     cost = MovementCost(1)
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        return ConsecutiveAdjacentHexes(GS().map.hex_off(self.owner), 1)
+        return ConsecutiveAdjacentHexes(GS.map.hex_off(self.owner), 1)
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
-            if unit := GS().map.unit_on(h):
+            if unit := GS.map.unit_on(h):
                 ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.AOE)))
                 ES.resolve(ApplyStatus(unit, StatusSignature(Burn, self, stacks=2)))
 
@@ -535,8 +533,8 @@ class FlameWall(ActivatedAbilityFacet[list[Hex]]):
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
         return RadiatingLine(
-            GS().map.hex_off(self.owner),
-            list(GS().map.get_neighbors_off(self.owner)),
+            GS.map.hex_off(self.owner),
+            list(GS.map.get_neighbors_off(self.owner)),
             3,
         )
 
@@ -548,7 +546,7 @@ class FlameWall(ActivatedAbilityFacet[list[Hex]]):
                     HexStatusSignature(BurningTerrain, self, stacks=1, duration=3),
                 )
             )
-            if unit := GS().map.unit_on(h):
+            if unit := GS.map.unit_on(h):
                 ES.resolve(ApplyStatus(unit, StatusSignature(Burn, self, stacks=2)))
 
 
@@ -563,8 +561,8 @@ class FlameThrower(ActivatedAbilityFacet[list[Hex]]):
     # TODO variable length cone?
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
         return Cone(
-            GS().map.hex_off(self.owner),
-            list(GS().map.get_neighbors_off(self.owner)),
+            GS.map.hex_off(self.owner),
+            list(GS.map.get_neighbors_off(self.owner)),
             [0, 0, 1],
         )
 
@@ -576,7 +574,7 @@ class FlameThrower(ActivatedAbilityFacet[list[Hex]]):
                     HexStatusSignature(BurningTerrain, self, stacks=1, duration=2),
                 )
             )
-            if unit := GS().map.unit_on(h):
+            if unit := GS.map.unit_on(h):
                 ES.resolve(ApplyStatus(unit, StatusSignature(Burn, self, stacks=1)))
 
 
@@ -595,13 +593,13 @@ class VitalityTransfer(ActivatedAbilityFacet):
                 # TODO some common logic for this trash
                 units := [
                     unit
-                    for unit in GS().map.get_units_within_range_off(self.owner, 3)
+                    for unit in GS.map.get_units_within_range_off(self.owner, 3)
                     if unit.controller == self.owner.controller
                     and unit.is_visible_to(self.owner.controller)
                     and not line_of_sight_obstructed_for_unit(
                         self.owner,
-                        GS().map.position_off(self.owner),
-                        GS().map.position_off(unit),
+                        GS.map.position_off(self.owner),
+                        GS.map.position_off(unit),
                     )
                 ]
             )
@@ -632,13 +630,13 @@ class Shove(SingleTargetActivatedAbility):
         return unit != self.owner
 
     def perform(self, target: Unit) -> None:
-        target_position = GS().map.position_off(target)
+        target_position = GS.map.position_off(target)
         ES.resolve(
             MoveUnit(
                 target,
-                GS().map.hexes.get(
+                GS.map.hexes.get(
                     target_position
-                    + (target_position - GS().map.position_off(self.owner))
+                    + (target_position - GS.map.position_off(self.owner))
                 ),
             )
         )
@@ -660,7 +658,7 @@ class Poof(SingleHexTargetActivatedAbility):
     def perform(self, target: Hex) -> None:
         ES.resolve(
             ApplyHexStatus(
-                GS().map.hex_off(self.owner),
+                GS.map.hex_off(self.owner),
                 HexStatusSignature(Smoke, self, duration=1),
             )
         )
@@ -735,7 +733,7 @@ class AssembleTheDoombot(SingleHexTargetActivatedAbility):
     range = 1
 
     def can_target_hex(self, hex_: Hex) -> bool:
-        return not GS().map.unit_on(hex_)
+        return not GS.map.unit_on(hex_)
 
     def perform(self, target: Hex) -> None:
         if statuses := target.get_statuses(HexStatus.get("doombot_scaffold")):
@@ -774,10 +772,10 @@ class Translocate(ActivatedAbilityFacet):
             (
                 unit,
                 TreeNode(
-                    [(h, None) for h in GS().map.get_neighbors_off(unit)], "select hex"
+                    [(h, None) for h in GS.map.get_neighbors_off(unit)], "select hex"
                 ),
             )
-            for unit in GS().map.get_units_within_range_off(self.owner, 1)
+            for unit in GS.map.get_units_within_range_off(self.owner, 1)
             if unit.is_visible_to(self.owner.controller)
         ]:
             return Tree(TreeNode(units, "select unit"))
@@ -791,13 +789,11 @@ class InkRing(ActivatedAbilityFacet):
     cost = EnergyCost(3)
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        if hexes := [
-            _hex for _hex in GS().map.get_hexes_within_range_off(self.owner, 3)
-        ]:
+        if hexes := [_hex for _hex in GS.map.get_hexes_within_range_off(self.owner, 3)]:
             return HexRing(hexes, 1)
 
     def perform(self, target: list[Hex]) -> None:
-        for unit in GS().map.units_on(target):
+        for unit in GS.map.units_on(target):
             ES.resolve(
                 ApplyStatus(
                     unit, StatusSignature(UnitStatus.get("blinded"), self, duration=3)
@@ -822,6 +818,7 @@ class IronBlessing(SingleAllyActivatedAbility):
     """
     Target other allied unit within 1 range. Applies <armored> for 2 rounds.
     """
+
     cost = EnergyCost(3) | MovementCost(1)
     range = 1
     can_target_self = False

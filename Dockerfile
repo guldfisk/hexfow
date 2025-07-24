@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-RUN apt update && apt install nodejs npm -y
+RUN apt update && apt install nodejs npm libpq-dev python3-dev -y
 
 COPY client/package.json /code/client/package.json
 COPY client/package-lock.json /code/client/package-lock.json

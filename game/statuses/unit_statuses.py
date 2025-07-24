@@ -266,7 +266,7 @@ class Stunned(UnitStatus):
 
     def on_apply(self, to: Unit) -> bool:
         # TODO maybe this logic should be somewhere else?
-        if (context := GS().active_unit_context) and context.unit == to:
+        if (context := GS.active_unit_context) and context.unit == to:
             context.should_stop = True
         else:
             while not to.exhausted and self.stacks > 0:
