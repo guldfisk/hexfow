@@ -19,12 +19,12 @@ class Forest(Terrain):
 
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
         if request.unit.size.g() < Size.LARGE:
-            if request.damage_type in (DamageType.RANGED, DamageType.AOE):
+            if request.damage_signature.type in (DamageType.RANGED, DamageType.AOE):
                 return 2
-            if request.damage_type == DamageType.MELEE:
+            if request.damage_signature.type == DamageType.MELEE:
                 return 1
 
-        if request.damage_type in (DamageType.RANGED, DamageType.AOE):
+        if request.damage_signature.type in (DamageType.RANGED, DamageType.AOE):
             return 1
         return 0
 
@@ -38,12 +38,12 @@ class Shrubs(Terrain):
 
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
         if request.unit.size.g() == Size.SMALL:
-            if request.damage_type == DamageType.RANGED:
+            if request.damage_signature.type == DamageType.RANGED:
                 return 2
             return 1
         if (
             request.unit.size.g() == Size.MEDIUM
-            and request.damage_type == DamageType.RANGED
+            and request.damage_signature.type == DamageType.RANGED
         ):
             return 1
 

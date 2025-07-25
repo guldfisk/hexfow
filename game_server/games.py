@@ -11,7 +11,6 @@ from uuid import UUID
 
 from sqlalchemy import select, Exists
 
-from debug_utils import dp
 from events.eventsystem import ES, EventSystem
 from events.exceptions import GameException
 from game.core import GameState, GS

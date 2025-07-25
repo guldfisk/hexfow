@@ -10,12 +10,12 @@ import {
   updateTerrain,
   updateUnit,
 } from "./state/store.ts";
-import { mapCoordinates } from "./mapShape.ts";
 import { createRoot } from "react-dom/client";
 import { StrictMode } from "react";
 import { Provider } from "react-redux";
 import { HUD } from "./hud.tsx";
 import { loadGameTextures } from "./textures.ts";
+import * as baseData from "./base.json";
 
 const terrainMapping: { [key: string]: string } = {
   f: "forest",
@@ -63,16 +63,7 @@ async function main() {
 
   document.addEventListener("keydown", keyHandler);
 
-  store.dispatch(
-    setMapData(
-      mapCoordinates.map((cc) => ({
-        cc,
-        terrainType: "plains",
-        unit: null,
-        isObjective: false,
-      })),
-    ),
-  );
+  store.dispatch(setMapData(Object.values(baseData.default)));
 
   let map = new Container();
   app.stage.addChild(map);

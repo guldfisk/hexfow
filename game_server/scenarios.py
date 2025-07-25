@@ -5,7 +5,7 @@ from pathlib import Path
 from game.core import Landscape, HexSpec, Scenario, Terrain
 from game.map.coordinates import CC
 from game.map.geometry import hex_circle
-from game.map.terrain import Plains, Forest
+from game.map.terrain import Plains, Forest, Hills
 from game.units.blueprints import *
 
 
@@ -13,7 +13,7 @@ def get_test_scenario() -> Scenario:
     landscape = Landscape(
         {
             cc: HexSpec(
-                random.choice([Plains, Forest]),
+                random.choice([Plains, Forest, Hills]),
                 cc.distance_to(CC(0, 0)) <= 1,
             )
             for cc in hex_circle(4)
@@ -25,6 +25,8 @@ def get_test_scenario() -> Scenario:
             STAUNCH_IRON_HEART,
             MAD_SCIENTIST,
             INFERNO_TANK,
+            GNOME_COMMANDO,
+            LUMBERING_PILLAR,
         ),
         (
             BLOOD_CONDUIT,

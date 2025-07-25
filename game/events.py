@@ -161,7 +161,7 @@ class Damage(Event[int]):
                 self.signature.amount
                 - (
                     self.unit.get_terrain_protection_for(
-                        TerrainProtectionRequest(self.unit, self.signature.type)
+                        TerrainProtectionRequest(self.unit, self.signature)
                     )
                     if self.signature.type
                     in (DamageType.MELEE, DamageType.RANGED, DamageType.AOE)
@@ -474,6 +474,7 @@ class MoveAction(Event[None]):
 
     def resolve(self) -> None:
         _from = GS.map.hex_off(self.unit)
+        movement_cost = self.to_.get_move_in_cost_for(self.unit)
         move_out_penalty = MovePenalty(
             self.unit, _from, _from.get_move_out_penalty_for(self.unit), False
         )
@@ -482,7 +483,7 @@ class MoveAction(Event[None]):
         )
         ES.resolve(self.branch(MoveUnit))
         # TODO event only valid if context is not null?
-        GS.active_unit_context.movement_points -= 1
+        GS.active_unit_context.movement_points -= movement_cost
         ES.resolve(move_out_penalty)
         ES.resolve(move_in_penalty)
 

@@ -718,7 +718,12 @@ class Unit(HasStatuses, Modifiable, VisionBound):
     def get_legal_options(self, context: ActiveUnitContext) -> list[Option]:
         options = []
         if context.movement_points > 0:
-            if moveable_hexes := self.get_potential_move_destinations(None):
+            if moveable_hexes := [
+                h
+                for h in self.get_potential_move_destinations(None)
+                if not context.has_acted
+                or h.get_move_in_cost_for(self) <= context.movement_points
+            ]:
                 options.append(MoveOption(target_profile=OneOfHexes(moveable_hexes)))
         if context.movement_points >= 0:
             for facet in self.attacks:
@@ -932,7 +937,7 @@ class Scenario:
 @dataclasses.dataclass
 class TerrainProtectionRequest:
     unit: Unit
-    damage_type: DamageType
+    damage_signature: DamageSignature
 
 
 class Terrain(HasEffects, Registered, ABC, metaclass=get_registered_meta()):
@@ -988,6 +993,15 @@ class Hex(Modifiable, HasStatuses, Serializable):
         return self.is_occupied_for(unit) and self.is_passable_to(unit)
 
     @modifiable
+    def get_move_in_cost_for(self, unit: Unit) -> int:
+        if (
+            self.terrain.is_high_ground
+            and not GS.map.hex_off(unit).terrain.is_high_ground
+        ):
+            return 2
+        return 1
+
+    @modifiable
     def get_move_in_penalty_for(self, unit: Unit) -> int:
         return self.terrain.get_move_in_penalty_for(unit)
 
@@ -1011,7 +1025,17 @@ class Hex(Modifiable, HasStatuses, Serializable):
 
     @modifiable
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
-        return self.terrain.get_terrain_protection_for(request)
+        return self.terrain.get_terrain_protection_for(request) + (
+            1
+            if request.damage_signature.type
+            in (DamageType.RANGED, DamageType.MELEE, DamageType.AOE)
+            and isinstance(request.damage_signature.source, Facet)
+            and GS.map.hex_off(request.unit).terrain.is_high_ground
+            and not GS.map.hex_off(
+                request.damage_signature.source.owner
+            ).terrain.is_high_ground
+            else 0
+        )
 
     def serialize(self, context: SerializationContext) -> JSON:
         old_hex = (context.last_hex_states or {}).get(self.position)

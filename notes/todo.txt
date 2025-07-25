@@ -7,11 +7,11 @@ infrastructure
     lobby system
 
 game functionality
-    elevation
-    chess clock
     victory points/checking
     round counter
     nice to have
+        look over non elevation to other elevation?
+        chess clock
         dispells
         well-defined effects order
         well-defined order of iterating units on map
