@@ -152,6 +152,10 @@ class SnappingBeak(MeleeAttackFacet):
 
 
 class Chainsaw(MeleeAttackFacet):
+    """
+    +2 damage against unarmored units.
+    """
+
     cost = MovementCost(1)
     damage = 3
 
@@ -185,11 +189,15 @@ class HurlBoulder(RangedAttackFacet):
 
 
 class HiddenBlade(MeleeAttackFacet):
+    """
+    +2 damage against exhausted units.
+    """
+
     damage = 1
 
     def get_damage_modifier_against(self, unit: Unit) -> int | None:
         if unit.exhausted:
-            return 1
+            return 2
 
 
 class Bite(MeleeAttackFacet):

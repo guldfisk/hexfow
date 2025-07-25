@@ -74,7 +74,7 @@ class Pusher(StaticAbilityFacet):
     """
     This unit can move into occupied spaces. If it would do so, it first pushes the occupying unit one space, repeating
     if that unit would be pushed into an occupied space as well. If occupying units can't be pushed back due to impassable
-    terrain, each unit that would be pushed this way suffers 1 damage.
+    terrain, each unit that would be pushed this way suffers 2 damage.
     """
 
     def create_effects(self) -> None:
@@ -96,11 +96,20 @@ class Furious(StaticAbilityFacet):
 
 
 class Stealth(StaticAbilityFacet):
+    """
+    Can't be seen by units not adjacent to this unit.
+    """
+
     def create_effects(self) -> None:
         self.register_effects(StealthModifier(self.owner))
 
 
 class FightFlightFreeze(StaticAbilityFacet):
+    """
+    Opponents units adjacent to this units can't take any actions that aren't attacking this unit, moving away from this unit,
+    or skipping.
+    """
+
     def create_effects(self) -> None:
         self.register_effects(FightFlightFreezeModifier(self.owner))
 
@@ -113,6 +122,9 @@ class Explosive(StaticAbilityFacet):
 
 
 class Schadenfreude(StaticAbilityFacet):
+    """
+    Whenever an adjacent unit is damaged or debuffed, this unit gains 1 energy.
+    """
 
     def create_effects(self) -> None:
         self.register_effects(
@@ -122,6 +134,11 @@ class Schadenfreude(StaticAbilityFacet):
 
 
 class GrizzlyMurderer(StaticAbilityFacet):
+    """
+    When this unit kills an opposing unit with a melee attack, each unit allied to
+    the killed units that could see it suffers <terrified> for 2 rounds.
+    """
+
     def create_effects(self) -> None:
         self.register_effects(GrizzlyMurdererTrigger(self.owner, self))
 

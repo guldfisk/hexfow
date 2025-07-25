@@ -60,6 +60,10 @@ class Poison(UnitStatus):
 
 
 class Panicked(RefreshableDurationUnitStatus):
+    """
+    At the end of eah round, this unit suffers pure damage equal to the number of adjacent units.
+    """
+
     default_intention = StatusIntention.DEBUFF
 
     def create_effects(self) -> None:
@@ -84,6 +88,10 @@ class Ephemeral(UnitStatus):
 
 
 class Terrified(RefreshableDurationUnitStatus):
+    """
+    -1 attack power.
+    """
+
     default_intention = StatusIntention.DEBUFF
 
     def create_effects(self) -> None:
@@ -102,6 +110,8 @@ class Parasite(UnitStatus):
 
 
 class BurstOfSpeed(UnitStatus):
+    """When this unit is activated, it gains +1 movement point, and this status is removed."""
+
     default_intention = StatusIntention.BUFF
 
     def merge(self, incoming: Self) -> bool:
@@ -132,6 +142,8 @@ class TheyVeGotASteelChair(UnitStatus):
 
 
 class Staggered(UnitStatus):
+    """Removed at the end of the turn."""
+
     default_intention = StatusIntention.DEBUFF
 
     def merge(self, incoming: Self) -> bool:
@@ -241,6 +253,7 @@ class Blinded(RefreshableDurationUnitStatus):
     """
     -1 sight.
     """
+
     default_intention = StatusIntention.DEBUFF
 
     def create_effects(self) -> None:
@@ -262,6 +275,7 @@ class Stunned(UnitStatus):
     If this unit would be become ready, instead remove a stack of this debuff.
     If this debuff would be applied to a ready unit, instead exhaust it, and apply this debuff with one less stack.
     """
+
     default_intention = StatusIntention.DEBUFF
 
     def on_apply(self, to: Unit) -> bool:
@@ -286,6 +300,7 @@ class Armored(RefreshableDurationUnitStatus):
     """
     +1 armor.
     """
+
     default_intention = StatusIntention.BUFF
 
     def create_effects(self) -> None:

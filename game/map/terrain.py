@@ -10,6 +10,7 @@ class Forest(Terrain):
     """
     1/2/2 melee/ranged/aoe protection for small/medium units.
     0/1/1 melee/ranged/aoe protection for large units.
+    1 move in penalty.
     """
 
     blocks_vision = True
@@ -32,29 +33,31 @@ class Forest(Terrain):
 # TODO block vision for small units? :^)
 class Shrubs(Terrain):
     """
-    1/2/1 melee/ranged/aoe protection for small units.
-    0/1/0 melee/ranged/aoe protection for medium units.
+    0/1/1 melee/ranged/aoe protection for small units.
     """
 
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
         if request.unit.size.g() == Size.SMALL:
-            if request.damage_signature.type == DamageType.RANGED:
-                return 2
-            return 1
-        if (
-            request.unit.size.g() == Size.MEDIUM
-            and request.damage_signature.type == DamageType.RANGED
-        ):
+            if request.damage_signature.type == DamageType.MELEE:
+                return 0
             return 1
 
         return 0
 
 
 class Hills(Terrain):
+    """
+    +1 move in cost for units moving in from non high-ground spaces (can still move in with 1 movement point if it's the first action).
+    +1 terrain protection against attacks from units not on high-ground.
+    Blocks vision for units not on high-ground.
+    """
+
     is_high_ground = True
 
 
 class Water(Terrain):
+    """Impassable."""
+
     is_water = True
 
 

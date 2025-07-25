@@ -312,7 +312,7 @@
       "r": 4,
       "h": 3
     },
-    "terrainType": "plains",
+    "terrainType": "hills",
     "isObjective": false
   },
   "5,2": {
@@ -320,7 +320,7 @@
       "r": 5,
       "h": 2
     },
-    "terrainType": "plains",
+    "terrainType": "hills",
     "isObjective": false
   },
   "-3,6": {
@@ -372,7 +372,7 @@
       "r": -4,
       "h": -3
     },
-    "terrainType": "plains",
+    "terrainType": "hills",
     "isObjective": false
   },
   "-4,-2": {
@@ -388,7 +388,7 @@
       "r": -5,
       "h": -2
     },
-    "terrainType": "plains",
+    "terrainType": "hills",
     "isObjective": false
   },
   "6,2": {
@@ -412,7 +412,7 @@
       "r": 6,
       "h": -7
     },
-    "terrainType": "plains",
+    "terrainType": "forest",
     "isObjective": false
   },
   "6,-8": {
@@ -444,7 +444,7 @@
       "r": -6,
       "h": 7
     },
-    "terrainType": "plains",
+    "terrainType": "forest",
     "isObjective": false
   },
   "-6,8": {
@@ -484,7 +484,7 @@
       "r": 6,
       "h": -4
     },
-    "terrainType": "forest",
+    "terrainType": "plains",
     "isObjective": false
   },
   "6,-5": {
@@ -536,7 +536,7 @@
       "r": 5,
       "h": -2
     },
-    "terrainType": "plains",
+    "terrainType": "forest",
     "isObjective": false
   },
   "5,-1": {
@@ -563,7 +563,7 @@
     "terrainType": "plains",
     "isObjective": false,
     "unit": {
-      "identifier": "bugling",
+      "identifier": "light_archer",
       "allied": true
     }
   },
@@ -992,7 +992,7 @@
       "r": -5,
       "h": 2
     },
-    "terrainType": "plains",
+    "terrainType": "forest",
     "isObjective": false
   },
   "-5,1": {
@@ -1076,7 +1076,7 @@
       "r": -6,
       "h": 4
     },
-    "terrainType": "forest",
+    "terrainType": "plains",
     "isObjective": false
   },
   "-6,1": {
@@ -1103,7 +1103,7 @@
     "terrainType": "plains",
     "isObjective": false,
     "unit": {
-      "identifier": "bugling",
+      "identifier": "light_archer",
       "allied": false
     }
   },

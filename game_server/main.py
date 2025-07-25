@@ -1,18 +1,15 @@
 from __future__ import annotations
 
 import json
-import threading
-import time
 import traceback
 from uuid import UUID
 
 from websockets import ConnectionClosed
 from websockets.sync.server import serve, ServerConnection
 
-from game_server.games import GM, GameRunner
+from game_server.games import GM
 
 
-#
 # class Game(Thread):
 #     def __init__(self, connection: ServerConnection):
 #         super().__init__()
@@ -268,8 +265,6 @@ from game_server.games import GM, GameRunner
 #             GM.deregister(self)
 
 
-
-
 def handle_connection(connection: ServerConnection) -> None:
     print("connected")
 
@@ -285,31 +280,14 @@ def handle_connection(connection: ServerConnection) -> None:
             pass
         except ConnectionClosed:
             print("player disconnected")
-            # game.stop()
             break
         except:
             traceback.print_exc()
             raise
     interface.deregister_callback(connection.send)
-    interface.game_runner.schedule_stop_check(10)
+    interface.game_runner.schedule_stop_check(60)
 
     print("connection closed")
-
-    # # print("connected", connection.path)
-    # game = Game(connection)
-    # game.start()
-    # while game.is_running:
-    #     try:
-    #         game.in_queue.put(json.loads(connection.recv(timeout=1)))
-    #     except TimeoutError:
-    #         pass
-    #     except ConnectionClosed:
-    #         game.stop()
-    #         break
-    #     except:
-    #         traceback.print_exc()
-    #         raise
-    # print("connection closed")
 
 
 def main():

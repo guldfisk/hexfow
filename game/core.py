@@ -158,7 +158,7 @@ class Facet(HasStatuses, Modifiable, Registered, ABC, metaclass=get_registered_m
 class EffortCost(ABC):
 
     @abstractmethod
-    def can_be_payed(self, context: ActiveUnitContext) -> bool:
+    def can_be_paid(self, context: ActiveUnitContext) -> bool:
         pass
 
     @abstractmethod
@@ -200,8 +200,8 @@ class EffortCostSet:
         return self.costs.get(cost_type)
 
     @abstractmethod
-    def can_be_payed(self, context: ActiveUnitContext) -> bool:
-        return all(cost.can_be_payed(context) for cost in self.costs.values())
+    def can_be_paid(self, context: ActiveUnitContext) -> bool:
+        return all(cost.can_be_paid(context) for cost in self.costs.values())
 
     @abstractmethod
     def pay(self, context: ActiveUnitContext) -> None:
@@ -231,7 +231,7 @@ class EffortCostSet:
 class MovementCost(EffortCost):
     amount: int
 
-    def can_be_payed(self, context: ActiveUnitContext) -> bool:
+    def can_be_paid(self, context: ActiveUnitContext) -> bool:
         return not context.has_acted or self.amount <= context.movement_points
 
     def pay(self, context: ActiveUnitContext) -> None:
@@ -247,7 +247,7 @@ class MovementCost(EffortCost):
 
 class ExclusiveCost(EffortCost):
 
-    def can_be_payed(self, context: ActiveUnitContext) -> bool:
+    def can_be_paid(self, context: ActiveUnitContext) -> bool:
         return not context.has_acted
 
     def pay(self, context: ActiveUnitContext) -> None:
@@ -266,7 +266,7 @@ class ExclusiveCost(EffortCost):
 class EnergyCost(EffortCost):
     amount: int
 
-    def can_be_payed(self, context: ActiveUnitContext) -> bool:
+    def can_be_paid(self, context: ActiveUnitContext) -> bool:
         return self.amount <= context.unit.energy
 
     def pay(self, context: ActiveUnitContext) -> None:
@@ -288,7 +288,7 @@ class EffortFacet(Facet, Modifiable, ABC):
 
     # TODO how does overriding work with modifiable? also, can it be abstract?
     @modifiable
-    def get_legal_targets(self, _: None = None) -> list[Unit]: ...
+    def get_legal_targets(self, context: ActiveUnitContext) -> list[Unit]: ...
 
     @classmethod
     def get_cost_set(cls) -> EffortCostSet:
@@ -310,8 +310,8 @@ class EffortFacet(Facet, Modifiable, ABC):
                 or context.activated_facets[self.__class__.__name__]
                 < self.max_activations
             )
-            and self.get_cost().can_be_payed(context)
-            and self.get_legal_targets(None)
+            and self.get_cost().can_be_paid(context)
+            and self.get_legal_targets(context)
         )
 
     @classmethod
@@ -369,20 +369,21 @@ class MeleeAttackFacet(SingleTargetAttackFacet, ABC):
     damage_type = DamageType.MELEE
 
     @modifiable
-    def get_legal_targets(self, _: None = None) -> list[Unit]:
-        # TODO handle vision
+    def get_legal_targets(self, context: ActiveUnitContext) -> list[Unit]:
         return [
             unit
             for unit in GS.map.get_neighboring_units_off(self.owner)
             if unit.controller != self.owner.controller
             and unit.is_visible_to(self.owner.controller)
             and unit.can_be_attacked_by(self)
-            # TODO test
             and GS.map.hex_off(unit).is_passable_to(self.owner)
+            and (
+                not context.has_acted
+                or GS.map.hex_off(unit).get_move_in_cost_for(self.owner)
+                + (self.get_cost().get(MovementCost) or MovementCost(0)).amount
+                <= context.movement_points
+            )
         ]
-
-    def get_cost(self) -> EffortCostSet:
-        return (self.cost or EffortCostSet()) | MovementCost(1)
 
     # TODO should prob be modifiable.
     def should_follow_up(self) -> bool:
@@ -412,7 +413,7 @@ class RangedAttackFacet(SingleTargetAttackFacet, ABC):
     range: ClassVar[int]
 
     @modifiable
-    def get_legal_targets(self, _: None = None) -> list[Unit]:
+    def get_legal_targets(self, context: ActiveUnitContext) -> list[Unit]:
         return [
             unit
             for unit in GS.map.get_units_within_range_off(self.owner, self.range)
@@ -449,7 +450,7 @@ class ActivatedAbilityFacet(EffortFacet, Generic[O], ABC):
                 or context.activated_facets[self.__class__.__name__]
                 < self.max_activations
             )
-            and self.get_cost().can_be_payed(context)
+            and self.get_cost().can_be_paid(context)
             and self.get_target_profile() is not None
         )
 
@@ -733,7 +734,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
                     options.append(
                         EffortOption(
                             facet,
-                            target_profile=OneOfUnits(facet.get_legal_targets(None)),
+                            target_profile=OneOfUnits(facet.get_legal_targets(context)),
                         )
                     )
             for facet in self.activated_abilities:

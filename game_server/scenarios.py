@@ -22,11 +22,13 @@ def get_test_scenario() -> Scenario:
 
     player_units = (
         (
-            STAUNCH_IRON_HEART,
-            MAD_SCIENTIST,
-            INFERNO_TANK,
-            GNOME_COMMANDO,
-            LUMBERING_PILLAR,
+            # STAUNCH_IRON_HEART,
+            # MAD_SCIENTIST,
+            # INFERNO_TANK,
+            # GNOME_COMMANDO,
+            # LUMBERING_PILLAR,
+            BUGLING,
+            CYCLOPS,
         ),
         (
             BLOOD_CONDUIT,

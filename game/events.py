@@ -210,6 +210,7 @@ class MeleeAttackAction(Event[None]):
     def resolve(self) -> None:
         defender_position = GS.map.hex_off(self.defender)
         attacker_position = GS.map.hex_off(self.attacker)
+        movement_cost = GS.map.hex_off(self.defender).get_move_in_cost_for(self.attacker)
         move_out_penalty = MovePenalty(
             self.attacker,
             attacker_position,
@@ -230,6 +231,7 @@ class MeleeAttackAction(Event[None]):
         ):
             ES.resolve(MoveUnit(self.attacker, defender_position))
         self.attack.get_cost().pay(GS.active_unit_context)
+        GS.active_unit_context.movement_points -= movement_cost
         ES.resolve(move_out_penalty)
         ES.resolve(move_in_penalty)
         # GS2.active_unit_context.should_stop = True

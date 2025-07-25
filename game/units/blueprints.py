@@ -285,7 +285,7 @@ WAR_HOG = UnitBlueprint(
 )
 
 MEDIC = UnitBlueprint(
-    "Medic", health=4, speed=3, sight=2, energy=5, facets=[HealBeam], price=6
+    "Medic", health=3, speed=3, sight=2, energy=5, facets=[HealBeam], price=5
 )
 
 
@@ -366,7 +366,7 @@ EFFORTLESS_ATHLETE = UnitBlueprint(
     speed=3,
     sight=2,
     energy=4,
-    facets=[RoundhouseKick, Vault, BatonPass, TerrainSavvy],
+    facets=[RoundhouseKick, Vault, BatonPass],
     price=8,
 )
 

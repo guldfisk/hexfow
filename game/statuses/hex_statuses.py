@@ -83,6 +83,10 @@ class BurningTerrain(HexStatus):
 
 
 class Revealed(HexStatus):
+    """
+    You have vision of this hex. This status is hidden for opponents.
+    """
+
     def merge(self, incoming: Self) -> bool:
         # TODO common logic?
         if incoming.controller == self.controller:

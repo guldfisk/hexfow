@@ -83,7 +83,7 @@ class PusherReplacement(ReplacementEffect[MoveUnit]):
                 )
             if not moved:
                 # TODO should damage when move fails, even if the target wasn't non to begin with
-                ES.resolve(Damage(unit, DamageSignature(1, self.source)))
+                ES.resolve(Damage(unit, DamageSignature(2, self.source)))
                 ES.resolve(CheckAlive(unit))
 
         if not _map.unit_on(event.to_):

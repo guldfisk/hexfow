@@ -30,6 +30,7 @@ from game.core import (
     Tree,
     HexRing,
     GS,
+    ActiveUnitContext,
 )
 from game.decisions import TargetProfile, O
 from game.effects.hooks import AdjacencyHook
@@ -80,7 +81,7 @@ class Grow(NoTargetActivatedAbility):
 
 class HealBeam(SingleAllyActivatedAbility):
     """
-    Target other allied unit within 2 range LoS. Heals 3.
+    Target other allied unit within 2 range LoS. Heals 2.
     """
 
     cost = MovementCost(1) | EnergyCost(3)
@@ -88,7 +89,7 @@ class HealBeam(SingleAllyActivatedAbility):
     can_target_self = False
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(Heal(target, 3))
+        ES.resolve(Heal(target, 2))
 
 
 class GreaseTheGears(SingleAllyActivatedAbility):
@@ -128,6 +129,10 @@ class SelfDestruct(NoTargetActivatedAbility):
 
 
 class InducePanic(SingleEnemyActivatedAbility):
+    """
+    Target enemy unit within 2 range LoS. Applies <panicked> for 2 rounds.
+    """
+
     range = 2
     cost = MovementCost(1) | EnergyCost(4)
 
@@ -138,7 +143,7 @@ class InducePanic(SingleEnemyActivatedAbility):
 class Vault(SingleTargetActivatedAbility):
     """
     Moves this unit to the other side of target adjacent unit. If it did, and the target unit was
-    an enemy, apply staggered to it.
+    an enemy, apply <staggered> to it.
     """
 
     cost = MovementCost(1) | EnergyCost(1)
@@ -167,6 +172,11 @@ class Vault(SingleTargetActivatedAbility):
 
 
 class BatonPass(SingleTargetActivatedAbility):
+    """
+    Target different allied unit within 1 range that wasn't adjacent to this unit
+    at the beginning of this units turn. Applies <burst_of_speed> to the target unit.
+    """
+
     range = 1
     cost = EnergyCost(1)
 
@@ -191,6 +201,10 @@ class BatonPass(SingleTargetActivatedAbility):
 
 
 class SummonScarab(SingleHexTargetActivatedAbility):
+    """
+    Target empty space within 3 range LoS. Summons an exhausted Scarab (2 health, 2 speed, 1 armor, 1 sight, S, 2 attack damange with -1 movement) with <ephemeral> for 3 rounds.
+    """
+
     cost = MovementCost(2) | EnergyCost(3)
     range = 3
 
@@ -436,8 +450,11 @@ class Showdown(SingleEnemyActivatedAbility):
         if not target.exhausted:
             for attack_type in (RangedAttackFacet, MeleeAttackFacet):
                 if (
-                    defender_attack := target.get_primary_attack(attack_type)
-                ) and self.owner in defender_attack.get_legal_targets(None):
+                    (defender_attack := target.get_primary_attack(attack_type))
+                    and self.owner in
+                    # TODO yikes
+                    defender_attack.get_legal_targets(ActiveUnitContext(target, 1))
+                ):
                     ES.resolve(
                         Hit(
                             attacker=target, defender=self.owner, attack=defender_attack
@@ -689,7 +706,7 @@ class VenomousSpine(SingleEnemyActivatedAbility):
 # TODO this has the same problem as glimpse with round ending.
 class Scry(SingleHexTargetActivatedAbility):
     """
-    Target hex within 6 range NLoS. Applies revealed for 1 round.
+    Target hex within 6 range NLoS. Applies <revealed> for 1 round.
     """
 
     cost = ExclusiveCost() | EnergyCost(2)
