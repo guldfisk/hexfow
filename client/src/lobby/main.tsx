@@ -13,7 +13,7 @@ interface GameResponse {
 
 const SeatRow = ({ seat }: { seat: Seat }) => {
   const [copied, setCopied] = useState(false);
-  const link = `http://localhost:5173/play/?seat=${seat.id}`;
+  const link = `${window.location.protocol + "//" + window.location.hostname}:5173/play/?seat=${seat.id}`;
 
   return (
     <tr>
@@ -44,24 +44,7 @@ const GameCreator = ({}: {}) => {
       <div className={"game-result"}>
         <table>
           {game.seats.map((seat) => (
-            <SeatRow seat={seat}/>
-              // <tr>
-            //   <td>{seat.player_name}</td>
-            //   <td>
-            //     <a href={`http://localhost:5173/seat/${seat.id}`}>join</a>
-            //   </td>
-            //   <td>
-            //     <button
-            //       onClick={() => {
-            //         navigator.clipboard.writeText(
-            //           `http://localhost:5173/seat/${seat.id}`,
-            //         );
-            //       }}
-            //     >
-            //       copy
-            //     </button>
-            //   </td>
-            // </tr>
+            <SeatRow seat={seat} />
           ))}
         </table>
       </div>
@@ -74,13 +57,16 @@ const GameCreator = ({}: {}) => {
         className={"big-button"}
         onClick={() => {
           setLoading(true);
-          fetch("http://localhost:8000/create-game", {
-            method: "POST",
-            body: JSON.stringify({ game_type: "tutorial" }),
-            headers: {
-              "Content-type": "application/json",
+          fetch(
+            `${window.location.protocol + "//" + window.location.hostname}:8000/create-game`,
+            {
+              method: "POST",
+              body: JSON.stringify({ game_type: "tutorial" }),
+              headers: {
+                "Content-type": "application/json",
+              },
             },
-          })
+          )
             .then((response) => response.json())
             .then(setGame);
         }}

@@ -93,6 +93,10 @@ class SeatInterface(Connection):
             if self._latest_frame is not None:
                 f(json.dumps(self._latest_frame))
 
+    def is_connected(self) -> bool:
+        with self._lock:
+            return bool(self._callbacks)
+
     def deregister_callback(self, f: Callable[[str], ...]) -> None:
         with self._lock:
             self._callbacks.remove(f)
@@ -117,6 +121,26 @@ class SeatInterface(Connection):
         raise GameClosed()
 
 
+class Cleaner(Thread):
+
+    def __init__(self, game_runner: GameRunner, delay: int):
+        super().__init__()
+        self._runner = game_runner
+        self._delay = delay
+        self._is_running = False
+
+    def stop(self):
+        self._is_running = False
+
+    def run(self):
+        self._is_running = True
+        for i in range(self._delay):
+            if not self._is_running:
+                return
+            time.sleep(1)
+        self._runner.stop_if_deserted()
+
+
 class GameRunner(Thread):
     def __init__(self, game: Game):
         super().__init__()
@@ -124,11 +148,23 @@ class GameRunner(Thread):
         self._game = game
         self._lock = threading.Lock()
         self._is_running = False
+        self._children: list[Thread] = []
 
         self.seat_map: dict[UUID, SeatInterface] = {}
 
     def stop(self):
+        for child in self._children:
+            child.stop()
         self._is_running = False
+
+    def stop_if_deserted(self) -> None:
+        if not any(interface.is_connected() for interface in self.seat_map.values()):
+            self.stop()
+
+    def schedule_stop_check(self, delay: int) -> None:
+        thread = Cleaner(self, delay)
+        self._children.append(thread)
+        thread.start()
 
     @property
     def is_running(self) -> bool:
@@ -185,3 +221,5 @@ class GameRunner(Thread):
         finally:
             self.is_running = False
             GM.deregister(self)
+
+        print("game finished")

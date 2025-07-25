@@ -472,6 +472,15 @@ const StatusesDetailView = ({
   );
 };
 
+const GameInfoView = ({ gameState }: { gameState: GameState }) => (
+  <div>
+    {gameState.players.map((player) => (
+      <div>{`${player.name}${player.name == gameState.player ? " (you)" : ""}: ${player.points}/21 points`}</div>
+    ))}
+    {`round: ${gameState.round}/10`}
+  </div>
+);
+
 const DecisionDetailView = ({
   gameState,
   connection,
@@ -484,7 +493,8 @@ const DecisionDetailView = ({
   if (!gameState?.decision) {
     return (
       <div className="info-window decision-details" id="decision-description">
-        "waiting for opponent"
+        waiting for opponent
+        {gameState ? <GameInfoView gameState={gameState} /> : null}
       </div>
     );
   }
@@ -520,8 +530,8 @@ const DecisionDetailView = ({
           : gameState.decision.explanation}
       </div>
       {button}
-      {/*{gameState.decision*/}
-      {JSON.stringify(gameState.decision, null, 4)}
+      {gameState ? <GameInfoView gameState={gameState} /> : null}
+      {/*{JSON.stringify(gameState.decision, null, 4)}*/}
     </div>
   );
 };

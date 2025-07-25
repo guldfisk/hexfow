@@ -797,16 +797,16 @@ class Play(Event[None]):
                 and len({p.points for p in gs.turn_order.players}) != 1
             )
             # TODO do want something like this prob, annoying when testing
-            # and gs.round_counter < 20
+            and gs.round_counter < 10
         ):
             print(
                 any(p.points >= gs.target_points for p in gs.turn_order.players),
                 len({p.points for p in gs.turn_order.players}) == 1,
             )
             ES.resolve(Round())
-            # for unit, _hex in gs.map.unit_positions.items():
-            #     if _hex.is_objective:
-            #         unit.controller.points += 1
+            for unit, _hex in gs.map.unit_positions.items():
+                if _hex.is_objective:
+                    unit.controller.points += 1
 
         winner = max(gs.turn_order.players, key=lambda p: (p.points, p == first_player))
         print("WINNER: ", winner)

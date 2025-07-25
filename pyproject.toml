@@ -16,6 +16,7 @@ fastapi = {extras = ["standard"], version = "^0.115.12"}
 websockets = "^15.0.1"
 sqlalchemy = "^2.0.41"
 psycopg2 = "^2.9.10"
+dotenv = "^0.9.9"
 
 
 [tool.poetry.group.dev]

@@ -1,8 +1,8 @@
 import { Assets, Texture } from "pixi.js";
 
 import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
-import {receivedGameObjectDetails, store} from "./state/store.ts";
-import {getImageUrl} from "../game/images.ts";
+import { receivedGameObjectDetails, store } from "./state/store.ts";
+import { getImageUrl } from "../game/images.ts";
 
 // TODO don't export?
 export const textureMap: { [key: string]: Texture } = {};
@@ -31,7 +31,9 @@ export const loadGameTextures = async () => {
     );
   }
 
-  await fetch("http://localhost:8000/game-object-details").then(async (response) => {
+  await fetch(
+    `${window.location.protocol + "//" + window.location.hostname}:8000/game-object-details`,
+  ).then(async (response) => {
     let jsonResponse: GameObjectDetails = await response.json();
 
     for (const unitDetails of Object.values(jsonResponse.units)) {

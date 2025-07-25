@@ -1,5 +1,7 @@
+import os
 from typing import Any, Iterator
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, APIRouter, Depends
 from starlette.middleware.cors import CORSMiddleware
 
@@ -10,6 +12,9 @@ from model.engine import SS
 from model.models import Game, Seat
 from web_server.schemas import CreateGameSchema
 
+load_dotenv()
+
+HOST_NAME = os.environ.get("HOST")
 
 app = FastAPI()
 
@@ -17,7 +22,14 @@ origins = [
     "http://localhost",
     "http://localhost:5173",
     "http://0.0.0.0:5173",
-]
+] + (
+    [
+        f"http://{HOST_NAME}",
+        f"http://{HOST_NAME}:5173",
+    ]
+    if HOST_NAME
+    else []
+)
 
 app.add_middleware(
     CORSMiddleware,

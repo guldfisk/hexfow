@@ -31,7 +31,9 @@ export const loadGameTextures = async () => {
     );
   }
 
-  fetch("http://localhost:8000/game-object-details").then(async (response) => {
+  fetch(
+    `${window.location.protocol + "//" + window.location.hostname}:8000/game-object-details`,
+  ).then(async (response) => {
     let jsonResponse: GameObjectDetails = await response.json();
 
     for (const unitDetails of Object.values(jsonResponse.units)) {

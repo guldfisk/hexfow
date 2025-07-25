@@ -1,55 +1,17 @@
 from __future__ import annotations
 
 import json
-import random
 import threading
+import time
 import traceback
-from queue import Empty, SimpleQueue
-from threading import Thread
-from typing import Mapping, Any
 from uuid import UUID
 
 from websockets import ConnectionClosed
 from websockets.sync.server import serve, ServerConnection
 
-from events.eventsystem import ES, EventSystem
-from events.exceptions import GameException
-from game.core import GameState, Landscape, HexSpec
-from game.events import SpawnUnit, Play
-from game.interface import Connection
-from game.map.coordinates import CC, cc_to_rc, NEIGHBOR_OFFSETS
-from game.map.geometry import hex_circle
-from game.map.terrain import Plains, Forest, Magma, Hills, Water, Shrubs
-from game.player import Player
-from game.units.blueprints import *
-from game_server.games import GM
+from game_server.games import GM, GameRunner
 
 
-# class GameClosed(GameException):
-#     pass
-#
-#
-# class GameManager:
-#     def __init__(self):
-#         self._running: list[Game] = []
-#         self._lock = threading.Lock()
-#
-#     def register(self, game: Game) -> None:
-#         with self._lock:
-#             self._running.append(game)
-#
-#     def deregister(self, game: Game) -> None:
-#         with self._lock:
-#             self._running.remove(game)
-#
-#     def stop_all(self) -> None:
-#         with self._lock:
-#             for game in self._running:
-#                 game.stop()
-#
-#
-# GM = GameManager()
-#
 #
 # class Game(Thread):
 #     def __init__(self, connection: ServerConnection):
@@ -306,10 +268,12 @@ from game_server.games import GM
 #             GM.deregister(self)
 
 
+
+
 def handle_connection(connection: ServerConnection) -> None:
     print("connected")
 
-    seat_id = UUID(json.loads(connection.recv())['seat_id'])
+    seat_id = UUID(json.loads(connection.recv())["seat_id"])
 
     interface = GM.get_seat_interface(seat_id)
     interface.register_callback(connection.send)
@@ -320,16 +284,16 @@ def handle_connection(connection: ServerConnection) -> None:
         except TimeoutError:
             pass
         except ConnectionClosed:
-            print('player disconnected')
+            print("player disconnected")
             # game.stop()
             break
         except:
             traceback.print_exc()
             raise
     interface.deregister_callback(connection.send)
+    interface.game_runner.schedule_stop_check(10)
 
     print("connection closed")
-
 
     # # print("connected", connection.path)
     # game = Game(connection)

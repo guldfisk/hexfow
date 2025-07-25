@@ -372,7 +372,7 @@ export const renderMap = (
       const unitSprite = new Sprite(textureMap[hexData.unit.blueprint]);
       unitSprite.anchor = 0.5;
       baseUnitContainer.scale = sizeScales[hexData.unit.size];
-      if (hexData.unit.controller != gameState.player) {
+      if (hexData.unit.controller == gameState.players[0].name) {
         baseUnitContainer.scale.x = -baseUnitContainer.scale.x;
       }
 

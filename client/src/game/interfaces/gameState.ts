@@ -200,8 +200,14 @@ export type LogLineComponent =
 
 export type LogLine = [number, LogLineComponent[]];
 
+export interface Player {
+  name: string;
+  points: number;
+}
+
 export interface GameState {
   player: string;
+  players: Player[];
   round: number;
   map: Map;
   eventLog: string[];

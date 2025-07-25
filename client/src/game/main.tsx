@@ -11,10 +11,7 @@ import { HUD } from "./hud/hud.tsx";
 import { Provider } from "react-redux";
 import { receiveGameState, renderedGameState, store } from "./state/store.ts";
 
-// const urlParams = new URLSearchParams(window.location.search);
-// const myParam = urlParams.get('myParam');
-
-const gameConnection = new WebSocket("ws://localhost:8765/ws");
+const gameConnection = new WebSocket(`ws://${window.location.hostname}:8765/ws`);
 gameConnection.onmessage = (event) => {
   console.log(recursiveCamelCase(JSON.parse(event.data)));
   store.dispatch(receiveGameState(recursiveCamelCase(JSON.parse(event.data))));
