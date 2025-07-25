@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import json
-import random
 import threading
+import time
 import traceback
 from queue import Empty, SimpleQueue
 from threading import Thread
@@ -10,20 +10,15 @@ from typing import Mapping, Any, Callable
 from uuid import UUID
 
 from sqlalchemy import select, Exists
-from websockets import ConnectionClosed
-from websockets.sync.server import serve, ServerConnection
 
+from debug_utils import dp
 from events.eventsystem import ES, EventSystem
 from events.exceptions import GameException
-from game.core import GameState, Landscape, HexSpec, GS
+from game.core import GameState, GS
 from game.events import SpawnUnit, Play
 from game.interface import Connection
-from game.map.coordinates import CC, cc_to_rc, NEIGHBOR_OFFSETS
-from game.map.geometry import hex_circle
-from game.map.terrain import Plains, Forest, Magma, Hills, Water, Shrubs
 from game.player import Player
-from game.units.blueprints import *
-from game_server.scenarios import get_test_scenario, get_simple_scenario
+from game_server.scenarios import get_playtest_scenario
 from model.engine import SS
 from model.models import Seat, Game
 
@@ -74,6 +69,10 @@ class GameManager:
             if game:
                 runner = GameRunner(game)
                 runner.start()
+                # TODO ultra tikes
+                for i in range(10):
+                    if not runner.seat_map:
+                        time.sleep(0.1)
                 return runner.seat_map[seat_id]
 
 
@@ -120,36 +119,14 @@ class SeatInterface(Connection):
 
 
 class GameRunner(Thread):
-    # def __init__(self, seats: list[Seat]):
     def __init__(self, game: Game):
         super().__init__()
-        self._scenario = get_simple_scenario()
+        self._scenario = get_playtest_scenario()
         self._game = game
-        # self.seats = seats
         self._lock = threading.Lock()
         self._is_running = False
 
-        self.gs = GameState(
-            2,
-            lambda *args, **kwargs: SeatInterface(*args, **kwargs, game=self),
-            self._scenario.landscape,
-            # Landscape(
-            #     {
-            #         cc: HexSpec(
-            #             random.choice([Plains, Forest]),
-            #             cc.distance_to(CC(0, 0)) <= 1,
-            #         )
-            #         for cc in hex_circle(4)
-            #     }
-            # ),
-        )
-
-        self.seat_map: dict[UUID, SeatInterface] = {
-            seat.id: connection
-            for (player, connection), seat in zip(
-                self.gs.connections.items(), self._game.seats
-            )
-        }
+        self.seat_map: dict[UUID, SeatInterface] = {}
 
     def stop(self):
         self._is_running = False
@@ -169,60 +146,35 @@ class GameRunner(Thread):
             self.is_running = True
 
             ES.bind(EventSystem())
-            GS.bind(self.gs)
+
+            gs = GameState(
+                2,
+                lambda *args, **kwargs: SeatInterface(*args, **kwargs, game=self),
+                self._scenario.landscape,
+            )
+
+            self.seat_map: dict[UUID, SeatInterface] = {
+                seat.id: connection
+                for (player, connection), seat in zip(
+                    gs.connections.items(), self._game.seats
+                )
+            }
+
+            GS.bind(gs)
 
             GM.register(self)
 
-            # player_units = (
-            #     (
-            #         STAUNCH_IRON_HEART,
-            #         MAD_SCIENTIST,
-            #         INFERNO_TANK,
-            #     ),
-            #     (
-            #         BLOOD_CONDUIT,
-            #         CYCLOPS,
-            #         WITCH_ENGINE,
-            #         LIGHT_ARCHER,
-            #     ),
-            # )
-            #
-            # ccs = sorted(
-            #     self.gs.map.hexes.keys(),
-            #     key=lambda cc: (cc.distance_to(CC(0, 0)), cc.r, CC.h),
-            # )
-            # for player, values in zip(self.gs.turn_order.players, player_units):
-            #     for v in values:
-            #         if isinstance(v, tuple):
-            #             blueprint, cc = v
-            #             ccs.remove(cc)
-            #             ES.resolve(
-            #                 SpawnUnit(
-            #                     blueprint=blueprint,
-            #                     controller=player,
-            #                     space=self.gs.map.hexes[cc],
-            #                 )
-            #             )
-            #         else:
-            #             ES.resolve(
-            #                 SpawnUnit(
-            #                     blueprint=v,
-            #                     controller=player,
-            #                     space=self.gs.map.hexes[ccs.pop(0)],
-            #                 )
-            #             )
-
-            for player, units in zip(self.gs.turn_order.players, self._scenario.units):
+            for player, units in zip(gs.turn_order.players, self._scenario.units):
                 for cc, blueprint in units.items():
                     ES.resolve(
                         SpawnUnit(
                             blueprint=blueprint,
                             controller=player,
-                            space=self.gs.map.hexes[cc],
+                            space=gs.map.hexes[cc],
                         )
                     )
 
-            for logs in self.gs._pending_player_logs.values():
+            for logs in gs._pending_player_logs.values():
                 logs[:] = []
 
             ES.resolve(Play())

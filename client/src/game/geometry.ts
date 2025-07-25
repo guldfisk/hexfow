@@ -147,6 +147,18 @@ export const hexRing = (radius: number, center: CC | null = null): CC[] => {
   return center ? result.map((cc) => addCCs(cc, center)) : result;
 };
 
+export const hexCircle = (radius: number): CC[] => {
+  const ccs: CC[] = [];
+  for (const r of range(-radius, radius + 1)) {
+    for (const h of range(-radius, radius + 1)) {
+      if (-radius <= -(r + h) && -(r + h) <= radius) {
+        ccs.push({ r, h });
+      }
+    }
+  }
+  return ccs;
+};
+
 export const hexArc = (
   radius: number,
   armLength: number,

@@ -1,0 +1,20 @@
+body {
+  margin: 0;
+  display: flex;
+}
+.sidebar {
+  height: 100%;
+  width: 400px;
+  position: fixed;
+  background-color: #111;
+  overflow-x: hidden;
+  color: white;
+}
+.sidebar-left {
+  left: 0;
+  padding: 5px;
+}
+.sidebar-right {
+  right: 0;
+  padding: 5px;
+}

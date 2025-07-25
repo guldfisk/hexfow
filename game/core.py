@@ -26,7 +26,6 @@ from events.eventsystem import (
     Modifiable,
     ModifiableAttribute,
     modifiable,
-    ES,
 )
 from game.decisions import (
     DecisionPoint,
@@ -45,7 +44,6 @@ from game.interface import Connection
 from game.map.coordinates import CC, line_of_sight_obstructed
 from game.map.geometry import hex_circle, hex_ring, hex_arc
 from game.player import Player
-from game.tests.conftest import EventLogger
 from game.turn_order import TurnOrder
 from game.values import (
     Size,
@@ -393,7 +391,7 @@ class MeleeAttackFacet(SingleTargetAttackFacet, ABC):
 
 # TODO where should logic for these be?
 def is_vision_obstructed_for_unit_at(unit: Unit, cc: CC) -> bool:
-    match GS.vision_obstruction_map[unit.controller][cc]:
+    match GS.vision_obstruction_map[unit.controller].get(cc):
         case VisionObstruction.FULL:
             return True
         case VisionObstruction.HIGH_GROUND:
