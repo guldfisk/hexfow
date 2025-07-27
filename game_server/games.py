@@ -1,19 +1,20 @@
 from __future__ import annotations
 
+import dataclasses
 import json
 import threading
 import time
 import traceback
 from queue import Empty, SimpleQueue
 from threading import Thread
-from typing import Mapping, Any, Callable
+from typing import Mapping, Any, Callable, ClassVar
 from uuid import UUID
 
 from sqlalchemy import select, Exists
 
-from events.eventsystem import ES, EventSystem
+from events.eventsystem import ES, EventSystem, StateModifierEffect
 from events.exceptions import GameException
-from game.core import GameState, GS
+from game.core import GameState, GS, Hex, Unit
 from game.events import SpawnUnit, Play
 from game.interface import Connection
 from game.player import Player
@@ -208,6 +209,31 @@ class GameRunner(Thread):
                             space=gs.map.hexes[cc],
                         )
                     )
+
+            @dataclasses.dataclass(eq=False)
+            class AllHexRevealedModifier(StateModifierEffect[Hex, Player, bool]):
+                priority: ClassVar[int] = 100
+                target: ClassVar[object] = Hex.is_visible_to
+
+                def modify(self, obj: Hex, request: Player, value: bool) -> bool:
+                    return True
+
+            @dataclasses.dataclass(eq=False)
+            class AllUnitsRevealedModifier(StateModifierEffect[Hex, Player, bool]):
+                priority: ClassVar[int] = 100
+                target: ClassVar[object] = Unit.is_hidden_for
+
+                def modify(self, obj: Unit, request: Player, value: bool) -> bool:
+                    return False
+
+            effects = [AllHexRevealedModifier(), AllUnitsRevealedModifier()]
+
+            ES.register_effects(*effects)
+
+            for player in gs.turn_order.players:
+                gs.serialize_for(gs._get_context_for(player), None)
+
+            ES.deregister_effects(*effects)
 
             for logs in gs._pending_player_logs.values():
                 logs[:] = []
