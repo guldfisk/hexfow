@@ -165,7 +165,6 @@ class Chainsaw(MeleeAttackFacet):
 
 
 class LightBow(RangedAttackFacet):
-    # TODO in notes or how should this be done?
     range = 3
     damage = 1
 
@@ -204,7 +203,6 @@ class Bite(MeleeAttackFacet):
     damage = 3
 
 
-# TODO xd, simple facet factory please
 class OtterBite(MeleeAttackFacet):
     damage = 2
 
@@ -277,6 +275,10 @@ class Slay(MeleeAttackFacet):
 
 
 class Tackle(MeleeAttackFacet):
+    """
+    Applies <stumbling>.
+    """
+
     damage = 2
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
@@ -284,6 +286,10 @@ class Tackle(MeleeAttackFacet):
 
 
 class FromTheTopRope(MeleeAttackFacet):
+    """
+    +1 damage against stumbling units. Deals 2 non-lethal damage to this unit as well.
+    """
+
     damage = 4
     cost = MovementCost(1)
 
@@ -303,6 +309,10 @@ class TwinRevolvers(RangedAttackFacet):
 
 
 class BellHammer(MeleeAttackFacet):
+    """
+    Applies status <bell_struck> for 2 rounds.
+    """
+
     damage = 4
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:

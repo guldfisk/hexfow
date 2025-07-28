@@ -50,6 +50,10 @@ class Immobile(StaticAbilityFacet):
 
 
 class Farsighted(StaticAbilityFacet):
+    """
+    Can't see adjacent spaces.
+    """
+
     def create_effects(self) -> None:
         self.register_effects(FarsightedModifier(self.owner))
 
@@ -91,6 +95,10 @@ class TerrainSavvy(StaticAbilityFacet):
 
 
 class Furious(StaticAbilityFacet):
+    """
+    When this unit is hit by an attack, it is readied.
+    """
+
     def create_effects(self) -> None:
         self.register_effects(FuriousTrigger(self.owner))
 
@@ -149,24 +157,37 @@ class TelepathicSpy(StaticAbilityFacet):
 
 
 class CaughtInTheMatch(StaticAbilityFacet):
+    """
+    Whenever an enemy unit disengages this unit, the enemy unit loses 1 movement point.
+    """
 
     def create_effects(self) -> None:
         self.register_effects(CaughtInTheMatchTrigger(self.owner))
 
 
 class HeelTurn(StaticAbilityFacet):
+    """
+    When this unit suffers 4 or more damage at once, it gains <they_ve_got_a_steel_chair>.
+    """
 
     def create_effects(self) -> None:
         self.register_effects(HeelTurnTrigger(self.owner, self))
 
 
 class Quick(StaticAbilityFacet):
+    """
+    At the end of this units turn, it may move on space (unaffected by movement points).
+    """
 
     def create_effects(self) -> None:
         self.register_effects(QuickTrigger(self.owner))
 
 
 class GlassSkin(StaticAbilityFacet):
+    """
+    Major resistance to damage from statuses.
+    """
+
     def create_effects(self) -> None:
         self.register_effects(
             SourceTypeResistance(self.owner, Status, Resistance.MAJOR)
@@ -174,6 +195,10 @@ class GlassSkin(StaticAbilityFacet):
 
 
 class DiamondSkin(StaticAbilityFacet):
+    """
+    Immune to damage from statuses.
+    """
+
     def create_effects(self) -> None:
         self.register_effects(
             SourceTypeResistance(self.owner, Status, Resistance.IMMUNE)
@@ -182,7 +207,7 @@ class DiamondSkin(StaticAbilityFacet):
 
 class FlameResistant(StaticAbilityFacet):
     """
-    Resistant to damage from the <burn> status.
+    Major resistant to damage from the <burn> status.
     """
 
     def create_effects(self) -> None:
@@ -190,6 +215,11 @@ class FlameResistant(StaticAbilityFacet):
 
 
 class LastStand(StaticAbilityFacet):
+    """
+    If this unit would die, and it isn't mortally wounded, instead set its health to
+    1, and it gains <mortally_wounded> for 1 round.
+    """
+
     def create_effects(self) -> None:
         self.register_effects(LastStandReplacement(self.owner, self))
 
@@ -204,6 +234,10 @@ class ToxicPresence(StaticAbilityFacet):
 
 
 class Diver(StaticAbilityFacet):
+    """
+    +1 terrain protection on water.
+    """
+
     def create_effects(self) -> None:
         self.register_effects(TerrainProtectionModifier(self.owner, Water, 1))
 
@@ -220,7 +254,7 @@ class ScurryInTheShadows(StaticAbilityFacet):
 class JukeAndJive(StaticAbilityFacet):
     """
     At the end of each of this units actions, if it isn't visible to the enemy, and it was at the
-    beginning of it's action, or vice versa, it gains a stack of All In Jest.
+    beginning of it's action, or vice versa, it gains a stack of <all_in_jest>.
     """
 
     def create_effects(self) -> None:

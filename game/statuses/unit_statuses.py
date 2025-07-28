@@ -99,6 +99,12 @@ class Terrified(RefreshableDurationUnitStatus):
 
 
 class Parasite(UnitStatus):
+    """
+    When this unit dies, an exhausted Horror Spawn (3 health, 2 speed, 1 sight, Small, 2 damage melee attack) controlled
+    by the owner of this debuff is spawned on the space this unit occupied. If the space is occupied by an attacker having
+    killed this unit with a melee attack, it is instead spawned on the space the attacker attacked from.
+    """
+
     default_intention = StatusIntention.DEBUFF
 
     # TODO ABC for this
@@ -110,7 +116,7 @@ class Parasite(UnitStatus):
 
 
 class BurstOfSpeed(UnitStatus):
-    """When this unit is activated, it gains +1 movement point, and this status is removed."""
+    """When this unit is activated, it gains 1 movement point, and this status is removed."""
 
     default_intention = StatusIntention.BUFF
 
@@ -122,6 +128,10 @@ class BurstOfSpeed(UnitStatus):
 
 
 class Stumbling(UnitStatus):
+    """
+    When this unit is activated, it loses 1 movement point, and this status is removed.
+    """
+
     default_intention = StatusIntention.DEBUFF
 
     def merge(self, incoming: Self) -> bool:
@@ -132,6 +142,11 @@ class Stumbling(UnitStatus):
 
 
 class TheyVeGotASteelChair(UnitStatus):
+    """
+    +2 attack power.
+    """
+    name = "They've Got A Steel Chair"
+
     default_intention = StatusIntention.BUFF
 
     def merge(self, incoming: Self) -> bool:
@@ -154,6 +169,10 @@ class Staggered(UnitStatus):
 
 
 class AllInJest(UnitStatus):
+    """
+    +1 attack power per stack.
+    """
+
     default_intention = StatusIntention.BUFF
 
     def merge(self, incoming: Self) -> bool:
@@ -169,6 +188,10 @@ class AllInJest(UnitStatus):
 
 
 class Rooted(RefreshableDurationUnitStatus):
+    """
+    This unit can't move or melee attack.
+    """
+
     default_intention = StatusIntention.DEBUFF
 
     def create_effects(self) -> None:
@@ -176,6 +199,10 @@ class Rooted(RefreshableDurationUnitStatus):
 
 
 class Fortified(RefreshableDurationUnitStatus):
+    """
+    +1 maximum health.
+    """
+
     default_intention = StatusIntention.BUFF
 
     def create_effects(self) -> None:
@@ -183,6 +210,10 @@ class Fortified(RefreshableDurationUnitStatus):
 
 
 class LuckyCharm(RefreshableDurationUnitStatus):
+    """
+    If this unit would suffer exactly one damage, instead remove this buff.
+    """
+
     default_intention = StatusIntention.BUFF
 
     def create_effects(self) -> None:
@@ -190,6 +221,11 @@ class LuckyCharm(RefreshableDurationUnitStatus):
 
 
 class BellStruck(RefreshableDurationUnitStatus):
+    """
+    When this unit receives 3 or more damage (after terrain reductions, before any
+    other modifiers), it is exhausted.
+    """
+
     default_intention = StatusIntention.DEBUFF
 
     def create_effects(self) -> None:
@@ -197,6 +233,10 @@ class BellStruck(RefreshableDurationUnitStatus):
 
 
 class MortallyWounded(UnitStatus):
+    """
+    When this status expires, this unit dies.
+    """
+
     default_intention = StatusIntention.DEBUFF
 
     def merge(self, incoming: Self) -> bool:
@@ -218,6 +258,10 @@ class Terror(RefreshableDurationUnitStatus):
 
 
 class DebilitatingVenom(RefreshableDurationUnitStatus):
+    """
+    -1 attack power, and -x speed, where x is this units speed, rounded down.
+    """
+
     default_intention = StatusIntention.DEBUFF
 
     def create_effects(self) -> None:
@@ -263,6 +307,10 @@ class Blinded(RefreshableDurationUnitStatus):
 
 
 class Silenced(RefreshableDurationUnitStatus):
+    """
+    This unit can't activate abilities.
+    """
+
     default_intention = StatusIntention.DEBUFF
 
     def create_effects(self) -> None:

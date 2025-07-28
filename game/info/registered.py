@@ -34,6 +34,7 @@ def get_registered_meta():
                     cls.description = description_from_docstring(cls.__doc__)
                 cls.related_statuses = list(cls.related_statuses)
                 if cls.description:
+                    # TODO
                     def _sub(match: re.Match) -> str:
                         if match.group(1) not in cls.related_statuses:
                             cls.related_statuses.append(match.group(1))

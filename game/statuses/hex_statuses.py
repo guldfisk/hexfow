@@ -21,6 +21,11 @@ from game.effects.triggers import (
 
 
 class Shrine(HexStatus):
+    """
+    Units on this hex has +1 energy regeneration.
+    When a unit moves into this space, it gains <fortified> for 4 rounds.
+    When a unit skips it's turn on this hex, it is healed 1.
+    """
 
     def merge(self, incoming: Self) -> bool:
         return True

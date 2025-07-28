@@ -18,7 +18,7 @@ from game.core import GameState, GS, Hex, Unit
 from game.events import SpawnUnit, Play
 from game.interface import Connection
 from game.player import Player
-from game_server.scenarios import get_playtest_scenario, get_test_scenario
+from game_server.scenarios import get_playtest_scenario, get_test_scenario, get_random_scenario
 from model.engine import SS
 from model.models import Seat, Game
 

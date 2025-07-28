@@ -202,7 +202,7 @@ class BatonPass(SingleTargetActivatedAbility):
 
 class SummonScarab(SingleHexTargetActivatedAbility):
     """
-    Target empty space within 3 range LoS. Summons an exhausted Scarab (2 health, 2 speed, 1 armor, 1 sight, S, 2 attack damange with -1 movement) with <ephemeral> for 3 rounds.
+    Target empty space within 3 range LoS. Summons an exhausted Scarab (2 health, 2 speed, 1 armor, 1 sight, S, 2 attack damage with -1 movement) with <ephemeral> for 3 rounds.
     """
 
     cost = MovementCost(2) | EnergyCost(3)
@@ -228,7 +228,7 @@ class SummonScarab(SingleHexTargetActivatedAbility):
 
 class Sweep(ActivatedAbilityFacet[list[Hex]]):
     """
-    Target length 4 adjacent arc. Deals 3 melee damage to units on hexes.
+    Target length 3 adjacent arc. Deals 4 melee damage to units on hexes.
     """
 
     cost = MovementCost(1)
@@ -392,6 +392,10 @@ class StimulatingInjection(SingleTargetActivatedAbility):
 
 
 class Suplex(SingleTargetActivatedAbility):
+    """
+    Target small or medium adjacent unit. Deals 3 melee damage, and moves the target to the other side of this unit.
+    """
+
     range = 1
     cost = MovementCost(2) | EnergyCost(3)
 
@@ -407,29 +411,11 @@ class Suplex(SingleTargetActivatedAbility):
             ES.resolve(MoveUnit(target, target_hex))
 
 
-# notorious outlaw
-# health 5, movement 3, sight 2, energy 3, M
-# twin revolvers
-#     2x repeatable ranged attack
-#     2 damage, 3 range, -1 movement
-# lasso
-#     combineable ability 3 energy
-#     target enemy unit 2 range LoS
-#     -2 movement
-#     applies rooted for 1 round
-# showdown
-#     ability 3 energy
-#     target enemy unit 3 range LoS
-#     no movement
-#     hits the targeted unit with primary ranged attack twice
-#     if it is still alive, it will first try to hit with it's primary ranged attack if it has one, if it doesn't or can't,
-#     it will try to hit with it's primary melee attack.
-#     if it hits this way, exhaust it
-# - dash
-#     when this unit ends it's turn, it may move one space (irregardless of movement points)
-
-
 class Lasso(SingleEnemyActivatedAbility):
+    """
+    Target enemy unit within 2 range. Applies <rooted> for 1 round.
+    """
+
     range = 2
     cost = MovementCost(2) | EnergyCost(3)
     combinable = True
@@ -439,6 +425,13 @@ class Lasso(SingleEnemyActivatedAbility):
 
 
 class Showdown(SingleEnemyActivatedAbility):
+    """
+    Target enemy unit within 3 range LoS. This unit hits the target with its primary ranged attack twice.
+    If the target isn't exhausted, and it has a primary ranged attack, and it can hit this unit with
+    that attack, it does and is exhausted. If it does not have a primary ranged attack, but it has
+    a primary melee attack that can hit this unit, it uses that instead.
+    """
+
     range = 3
     cost = ExclusiveCost() | EnergyCost(3)
 
@@ -465,6 +458,10 @@ class Showdown(SingleEnemyActivatedAbility):
 
 
 class RaiseShrine(SingleHexTargetActivatedAbility):
+    """
+    Target hex within 1 range. Applies status <shrine>.
+    """
+
     cost = MovementCost(2) | EnergyCost(3)
 
     def perform(self, target: Hex) -> None:
@@ -472,6 +469,10 @@ class RaiseShrine(SingleHexTargetActivatedAbility):
 
 
 class GrantCharm(SingleAllyActivatedAbility):
+    """
+    Target different allied unit within 1 range. Applies <lucky_charm> for 3 rounds.
+    """
+
     can_target_self = False
     cost = EnergyCost(1)
 
@@ -482,7 +483,7 @@ class GrantCharm(SingleAllyActivatedAbility):
 class ChokingSoot(ActivatedAbilityFacet[list[Hex]]):
     """
     Target hex circle size 2, center within 2 range NLoS.
-    Applies status <soot> to hexes for 2 rounds.
+    Applies <soot> to hexes for 2 rounds.
     """
 
     cost = MovementCost(1) | EnergyCost(4)
@@ -496,16 +497,21 @@ class ChokingSoot(ActivatedAbilityFacet[list[Hex]]):
             ES.resolve(ApplyHexStatus(_hex, HexStatusSignature(Soot, self, duration=2)))
 
 
-# TODO should be an aoe target
-class SmokeCanister(SingleHexTargetActivatedAbility):
-    range = 2
+class SmokeCanister(ActivatedAbilityFacet[list[Hex]]):
+    """
+    Target hex circle size 2, center within 2 range NLoS.
+    Applies <smoke> for 2 rounds.
+    """
+
     cost = EnergyCost(3)
-    requires_los = False
-    requires_vision = False
     combinable = True
 
-    def perform(self, target: Hex) -> None:
-        for _hex in GS.map.get_hexes_within_range_off(target, 1):
+    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
+        if hexes := [_hex for _hex in GS.map.get_hexes_within_range_off(self.owner, 2)]:
+            return HexHexes(hexes, 1)
+
+    def perform(self, target: list[Hex]) -> None:
+        for _hex in target:
             ES.resolve(
                 ApplyHexStatus(_hex, HexStatusSignature(Smoke, self, duration=2))
             )
@@ -684,7 +690,7 @@ class Poof(SingleHexTargetActivatedAbility):
 
 class VenomousSpine(SingleEnemyActivatedAbility):
     """
-    Target enemy unit 2 range LoS. Applies debilitating venom for 2 rounds and parasite.
+    Target enemy unit 2 range LoS. Applies <debilitating_venom> for 2 rounds and <parasite>.
     """
 
     cost = MovementCost(1) | EnergyCost(3)
@@ -803,6 +809,11 @@ class Translocate(ActivatedAbilityFacet):
 
 
 class InkRing(ActivatedAbilityFacet):
+    """
+    Target size hex ring size 2, center within 3 range NloS.
+    Applies <blinded> for 3 rounds.
+    """
+
     cost = EnergyCost(3)
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
@@ -819,6 +830,10 @@ class InkRing(ActivatedAbilityFacet):
 
 
 class MalevolentStare(SingleEnemyActivatedAbility):
+    """
+    Target enemy unit within 3 range LoS. Applies <silenced> for 2 rounds.
+    """
+
     cost = EnergyCost(3) | MovementCost(2)
     range = 3
 
