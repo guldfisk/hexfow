@@ -30,7 +30,12 @@ import {
 } from "./geometry.ts";
 import { textureMap } from "./textures.ts";
 import { range } from "./utils/range.ts";
-import { deactivateMenu, hoverDetail, store } from "./state/store.ts";
+import {
+  deactivateMenu,
+  hoverDetail,
+  setActionPreview,
+  store,
+} from "./state/store.ts";
 import { getBaseActionSpace } from "./actions/actionSpace.ts";
 import { MenuData, selectionIcon } from "./actions/interface.ts";
 import { menuActionSpacers } from "./actions/menues.ts";
@@ -83,6 +88,7 @@ export const renderMap = (
   gameState: GameState,
   gameObjectDetails: GameObjectDetails,
   menu: MenuData | null,
+  actionPreview: { [key: string]: selectionIcon[] } | null,
   highlightedCCs: string[] | null,
   gameConnection: WebSocket,
 ): Container => {
@@ -237,8 +243,10 @@ export const renderMap = (
         (body) => gameConnection.send(JSON.stringify(body)),
         menu,
       )
-    : getBaseActionSpace(gameState, (body) =>
-        gameConnection.send(JSON.stringify(body)),
+    : getBaseActionSpace(
+        gameState,
+        (body) => gameConnection.send(JSON.stringify(body)),
+        gameState.decision,
       );
 
   for (const hexData of gameState.map.hexes) {
@@ -275,27 +283,44 @@ export const renderMap = (
 
     const actionTriggerZones = [];
 
+    if (actionPreview) {
+      for (const [idx, icon] of actionPreview[ccToKey(hexData.cc)].entries()) {
+        const selectionSprite = new Sprite(textureMap[selectionIconMap[icon]]);
+        selectionSprite.anchor = 0.5;
+        selectionSprite.alpha = 0.5;
+        hexContainer.addChild(selectionSprite);
+        let mask = new Graphics(
+          dividerFrames[actionPreview[ccToKey(hexData.cc)].length - 1][idx],
+        );
+        hexContainer.addChild(mask);
+        selectionSprite.mask = mask;
+      }
+    }
+
     for (const [idx, action] of actionSpace[
       ccToKey(hexData.cc)
     ].actions.entries()) {
-      const selectionSprite = new Sprite(
-        textureMap[selectionIconMap[action.type]],
-      );
-      selectionSprite.anchor = 0.5;
-      selectionSprite.alpha = 0.75;
-      hexContainer.addChild(selectionSprite);
-      let mask = new Graphics(
-        dividerFrames[actionSpace[ccToKey(hexData.cc)].actions.length - 1][idx],
-      );
-      hexContainer.addChild(mask);
-      selectionSprite.mask = mask;
+      if (!actionPreview) {
+        const selectionSprite = new Sprite(
+          textureMap[selectionIconMap[action.type]],
+        );
+        selectionSprite.anchor = 0.5;
+        selectionSprite.alpha = 0.75;
+        hexContainer.addChild(selectionSprite);
+        let mask = new Graphics(
+          dividerFrames[actionSpace[ccToKey(hexData.cc)].actions.length - 1][
+            idx
+          ],
+        );
+        hexContainer.addChild(mask);
+        selectionSprite.mask = mask;
+      }
 
       let triggerZone = new Graphics(
         dividerFrames[actionSpace[ccToKey(hexData.cc)].actions.length - 1][idx],
       );
       triggerZone.eventMode = "static";
       triggerZone.on("pointerdown", (event) => {
-        console.log("click", event.button, hexData.cc);
         if (event.button == 0) {
           action.do();
         }
@@ -308,7 +333,6 @@ export const renderMap = (
       let triggerZone = new Graphics(dividerFrames[0][0]);
       triggerZone.eventMode = "static";
       triggerZone.on("pointerdown", (event) => {
-        console.log("click", event.button, hexData.cc);
         if (event.button == 0) {
           store.dispatch(deactivateMenu());
         }
@@ -660,6 +684,8 @@ export const renderMap = (
     }
   });
 
+  let previouslyHovered: string | null = null;
+
   map.eventMode = "static";
   map.on("globalpointermove", (event) => {
     // TODO ultra lmao, should just not render game beneath the sidebars instead...
@@ -671,14 +697,24 @@ export const renderMap = (
     const hexData = gameState.map.hexes.find((h) => ccEquals(h.cc, cc));
 
     if (hexData) {
+      if (ccToKey(cc) == previouslyHovered) {
+        return;
+      }
+      previouslyHovered = ccToKey(cc);
       const localPosition = subRCs(positionOnMap, ccToRC(cc));
       let detail: HoveredDetails = { type: "hex", hex: hexData };
 
       if (
         hexData.statuses.length &&
-        rcInBox(localPosition, -22, -hexHeight / 2, hexWidth / 2 + 22, (hexHeight - hexSize) / 2)
+        rcInBox(
+          localPosition,
+          -22,
+          -hexHeight / 2,
+          hexWidth / 2 + 22,
+          (hexHeight - hexSize) / 2,
+        )
       ) {
-        detail = {type: 'statuses', statuses: hexData.statuses}
+        detail = { type: "statuses", statuses: hexData.statuses };
       }
 
       if (hexData.unit) {
@@ -703,6 +739,19 @@ export const renderMap = (
       if (hoverTrigger) {
         hoverTrigger();
       }
+
+      const previewOptions = actionSpace[ccToKey(hexData.cc)].previewOptions;
+      store.dispatch(
+        setActionPreview(
+          previewOptions
+            ? getBaseActionSpace(gameState, () => null, {
+                type: "SelectOptionDecisionPoint",
+                explanation: "preview",
+                payload: { options: previewOptions },
+              })
+            : null,
+        ),
+      );
     }
   });
 
