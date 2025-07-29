@@ -6,7 +6,6 @@ import {
   NOfUnits,
   RadiatingLine,
   Tree,
-  UnitOption,
 } from "../interfaces/gameState.ts";
 import { CC } from "../interfaces/geometry.ts";
 
@@ -29,7 +28,6 @@ export interface HexActions {
   sideMenuItems?: Action[];
   highlighted?: boolean;
   hoverTrigger?: () => void;
-  previewOptions?: UnitOption[] | null;
 }
 
 export type ActionSpace = { [key: string]: HexActions };

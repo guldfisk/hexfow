@@ -1,7 +1,6 @@
 import {
   Cone,
   ConsecutiveAdjacentHexes,
-  Decision,
   GameState,
   Hex,
   HexHexes,
@@ -9,7 +8,6 @@ import {
   NOfUnits,
   RadiatingLine,
   Tree,
-  UnitOption,
 } from "../interfaces/gameState.ts";
 import { ccFromKey, ccToKey } from "../geometry.ts";
 import { Action, ActionSpace } from "./interface.ts";
@@ -25,7 +23,6 @@ export const getUnitsOfHexes = (gameState: GameState): { [key: string]: Hex } =>
 export const getBaseActions = (
   gameState: GameState,
   takeAction: (body: { [key: string]: any }) => void,
-  decision: Decision | null,
 ): { [key: string]: Action[] } => {
   const unitHexes: { [key: string]: Hex } = getUnitsOfHexes(gameState);
 
@@ -33,8 +30,11 @@ export const getBaseActions = (
     gameState.map.hexes.map((hex) => [ccToKey(hex.cc), []]),
   );
 
-  if (decision && decision["type"] == "SelectOptionDecisionPoint") {
-    for (const [idx, option] of decision.payload.options.entries()) {
+  if (
+    gameState.decision &&
+    gameState.decision["type"] == "SelectOptionDecisionPoint"
+  ) {
+    for (const [idx, option] of gameState.decision.payload.options.entries()) {
       if (option.targetProfile.type == "OneOfUnits") {
         for (const [
           targetIdx,
@@ -230,30 +230,8 @@ export const getBaseActions = (
 export const getBaseActionSpace = (
   gameState: GameState,
   takeAction: (body: { [key: string]: any }) => void,
-  decision: Decision | null,
 ): ActionSpace => {
-  const actions = getBaseActions(gameState, takeAction, decision);
-
-  const previewMap: { [key: string]: UnitOption[] } = {};
-
-  if (decision && decision.type == "SelectOptionDecisionPoint") {
-    const activationOption = decision.payload.options.find(
-      (option) => option.type == "ActivateUnitOption",
-    );
-    if (
-      activationOption &&
-      activationOption.targetProfile.type == "OneOfUnits"
-    ) {
-      const unitHexes: { [key: string]: Hex } = getUnitsOfHexes(gameState);
-      for (const unit of activationOption.targetProfile.values.units) {
-        previewMap[ccToKey(unitHexes[unit["id"]].cc)] =
-          activationOption.values.actionsPreview[unit["id"]];
-      }
-    }
-  }
-
-  // const isPreview = decision && decision.type == 'SelectOptionDecisionPoint' && decision.payload.options.some(option => option.type == 'ActivateUnitOption')
-
+  const actions = getBaseActions(gameState, takeAction);
   return Object.fromEntries(
     Object.entries(actions).map(([cc, _actions]) => [
       cc,
@@ -279,7 +257,6 @@ export const getBaseActionSpace = (
         : {
             actions: _actions,
             highlighted: false,
-            previewOptions: previewMap[cc],
           },
     ]),
   );

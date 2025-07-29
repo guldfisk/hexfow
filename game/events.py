@@ -185,6 +185,7 @@ class Hit(Event[None]):
         return self.attacker.on_map() and self.defender.on_map()
 
     def resolve(self) -> None:
+        # TODO facets should be log components
         with GS.log(
             LogLine([self.attacker, "hits", self.defender, "with", self.attack]),
             LogLine([self.defender, "is hit with", self.attack]),
@@ -209,9 +210,7 @@ class MeleeAttackAction(Event[None]):
     def resolve(self) -> None:
         defender_position = GS.map.hex_off(self.defender)
         attacker_position = GS.map.hex_off(self.attacker)
-        movement_cost = GS.map.hex_off(self.defender).get_move_in_cost_for(
-            self.attacker
-        )
+        movement_cost = GS.map.hex_off(self.defender).get_move_in_cost_for(self.attacker)
         move_out_penalty = MovePenalty(
             self.attacker,
             attacker_position,
@@ -235,6 +234,7 @@ class MeleeAttackAction(Event[None]):
         GS.active_unit_context.movement_points -= movement_cost
         ES.resolve(move_out_penalty)
         ES.resolve(move_in_penalty)
+        # GS2.active_unit_context.should_stop = True
 
 
 @dataclasses.dataclass
@@ -371,9 +371,9 @@ class MoveUnit(Event[Hex | None]):
 
     def resolve(self) -> Hex | None:
         if self.to_.can_move_into(self.unit):
+            # TODO hmm
             from_ = self.to_.map.hex_off(self.unit)
             self.to_.map.move_unit_to(self.unit, self.to_)
-            # TODO hmm
             GS.update_vision()
             with GS.log(
                 LogLine([self.unit, "moves into", self.to_]),
@@ -451,7 +451,6 @@ class ReadyUnit(Event[None]):
         return self.unit.exhausted
 
     def resolve(self) -> None:
-        # TODO log? but not if normal beginning of round?
         self.unit.exhausted = False
 
 
@@ -605,10 +604,8 @@ class Turn(Event[bool]):
                         ES.resolve(Rest(self.unit))
                     do_state_based_check()
                     break
-
                 elif isinstance(decision.option, MoveOption):
                     ES.resolve(MoveAction(self.unit, to_=decision.target))
-
                 elif isinstance(decision.option, EffortOption):
                     context.activated_facets[
                         decision.option.facet.__class__.__name__
@@ -685,7 +682,7 @@ class Round(Event[None]):
         gs = GS
         gs.round_counter += 1
         skipped_players: set[Player] = set()
-        # TODO asker's shit?
+        # TODO asker's shit
         round_skipped_players: set[Player] = set()
         all_players = set(gs.turn_order.players)
         last_action_timestamps: dict[Player, int] = {
@@ -718,7 +715,6 @@ class Round(Event[None]):
                         for unit in gs.activation_queued_units
                         if unit.can_be_activated(None)
                     ]:
-                        # TODO wtf is happening here?
                         while not (
                             activateable_units := [
                                 unit
@@ -730,32 +726,23 @@ class Round(Event[None]):
 
                     else:
                         gs.activation_queued_units.clear()
-
                 if activateable_units is None:
                     activateable_units = [
                         unit
                         for unit in gs.map.units_controlled_by(player)
                         if unit.can_be_activated(None)
                     ]
-
                 if not activateable_units:
                     skipped_players.add(player)
                     continue
-
                 skipped_players.discard(player)
-
-                action_previews = {
-                    unit: unit.get_legal_options(ActiveUnitContext(unit, 1))
-                    for unit in activateable_units
-                }
 
                 decision = GS.make_decision(
                     player,
                     SelectOptionDecisionPoint(
                         [
                             ActivateUnitOption(
-                                target_profile=OneOfUnits(activateable_units),
-                                actions_previews=action_previews,
+                                target_profile=OneOfUnits(activateable_units)
                             ),
                             *(
                                 ()
@@ -763,9 +750,12 @@ class Round(Event[None]):
                                 or not all(
                                     any(
                                         isinstance(option, SkipOption)
-                                        for option in options
+                                        for option in unit.get_legal_options(
+                                            # TODO, this is pretty ugly, but it sorta makes sense.
+                                            ActiveUnitContext(unit, -1)
+                                        )
                                     )
-                                    for options in action_previews.values()
+                                    for unit in activateable_units
                                 )
                                 else (SkipOption(target_profile=NoTarget()),)
                             ),
@@ -776,19 +766,15 @@ class Round(Event[None]):
                 if isinstance(decision.option, ActivateUnitOption):
                     if gs.activation_queued_units:
                         gs.activation_queued_units.discard(decision.target)
-
                     if any(
                         turn.result
                         for turn in ES.resolve(Turn(decision.target)).iter_type(Turn)
                     ):
                         last_action_timestamps[player] = timestamp
                         do_state_based_check()
-
                 elif isinstance(decision.option, SkipOption):
                     skipped_players.add(player)
                     round_skipped_players.add(player)
-
-                # TODO
                 else:
                     raise ValueError("AHLO")
 

@@ -1,7 +1,7 @@
 import { configureStore, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { GameState } from "../interfaces/gameState.ts";
 import { GameObjectDetails } from "../interfaces/gameObjectDetails.ts";
-import { ActionSpace, MenuData, selectionIcon } from "../actions/interface.ts";
+import { MenuData } from "../actions/interface.ts";
 import { HoveredDetails } from "../interfaces/details.ts";
 
 const mainSlice = createSlice({
@@ -12,7 +12,6 @@ const mainSlice = createSlice({
     gameObjectDetails: null,
     detailed: null,
     menuData: null,
-    actionPreview: null,
     highlightedCCs: null,
   } as {
     gameState: GameState | null;
@@ -20,14 +19,12 @@ const mainSlice = createSlice({
     gameObjectDetails: GameObjectDetails | null;
     detailed: HoveredDetails | null;
     menuData: MenuData | null;
-    actionPreview: { [key: string]: selectionIcon[] } | null;
     highlightedCCs: string[] | null;
   },
   reducers: {
     receiveGameState: (state, action: PayloadAction<GameState>) => {
       state.gameState = action.payload;
       state.menuData = null;
-      state.actionPreview = null;
       state.highlightedCCs = null;
       state.shouldRerender = true;
     },
@@ -67,17 +64,6 @@ const mainSlice = createSlice({
       state.highlightedCCs = null;
       state.shouldRerender = true;
     },
-    setActionPreview: (state, action: PayloadAction<ActionSpace | null>) => {
-      state.actionPreview = action.payload
-        ? Object.fromEntries(
-            Object.entries(action.payload).map(([cc, hexActions]) => [
-              cc,
-              hexActions.actions.map((action) => action.type),
-            ]),
-          )
-        : null;
-      state.shouldRerender = true;
-    },
   },
 });
 
@@ -91,7 +77,6 @@ export const {
   deactivateMenu,
   highlightCCs,
   removeCCHighlight,
-  setActionPreview,
 } = mainSlice.actions;
 
 export const store = configureStore({

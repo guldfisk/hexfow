@@ -436,7 +436,7 @@ const getListMenuActionSpace = (
   takeAction: (body: { [key: string]: any }) => void,
   menu: ListMenu,
 ): ActionSpace => {
-  const actions = getBaseActions(gameState, takeAction, gameState.decision);
+  const actions = getBaseActions(gameState, takeAction);
   return Object.fromEntries(
     gameState.map.hexes.map((hex) => [
       ccToKey(hex.cc),

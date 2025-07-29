@@ -118,7 +118,6 @@ async function main() {
         state.gameState,
         state.gameObjectDetails,
         state.menuData,
-        state.actionPreview,
         state.highlightedCCs,
         gameConnection,
       );

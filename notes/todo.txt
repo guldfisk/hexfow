@@ -1,8 +1,14 @@
 
 infrastructure
+    way for web server to communicate with game server
+    game server game management
+    either account system or other way to keep track of users for reconnects
+    multiple connections to same game
     lobby system
 
 game functionality
+    victory points/checking
+    round counter
     nice to have
         look over non elevation to other elevation?
         chess clock
@@ -21,8 +27,8 @@ code
 pre-commit
 game module structure
 
+map + army for playtesting
 production configuration
+deployment
 
 terror/terrified/panic debuff names
-
-logging of units should include information about where they where, if applicable
