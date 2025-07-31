@@ -931,6 +931,7 @@ class SingleEnemyActivatedAbility(SingleTargetActivatedAbility, ABC):
 class HexSpec:
     terrain_type: type[Terrain]
     is_objective: bool
+    statuses: list[HexStatusSignature] = dataclasses.field(default_factory=list)
 
 
 @dataclasses.dataclass

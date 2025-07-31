@@ -15,7 +15,7 @@ from sqlalchemy import select, Exists
 from events.eventsystem import ES, EventSystem, StateModifierEffect
 from events.exceptions import GameException
 from game.core import GameState, GS, Hex, Unit
-from game.events import SpawnUnit, Play
+from game.events import SpawnUnit, Play, ApplyHexStatus
 from game.interface import Connection
 from game.player import Player
 from game_server.scenarios import get_playtest_scenario, get_test_scenario, get_random_scenario
@@ -209,6 +209,10 @@ class GameRunner(Thread):
                             space=gs.map.hexes[cc],
                         )
                     )
+
+            for cc, spec in self._scenario.landscape.terrain_map.items():
+                for signature in spec.statuses:
+                    ES.resolve(ApplyHexStatus(gs.map.hexes[cc], signature))
 
             @dataclasses.dataclass(eq=False)
             class AllHexRevealedModifier(StateModifierEffect[Hex, Player, bool]):

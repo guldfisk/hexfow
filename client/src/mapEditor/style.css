@@ -18,3 +18,21 @@ body {
   right: 0;
   padding: 5px;
 }
+
+.unit-list {
+  width: 100%;
+  /*border: 1px solid #ccc;*/
+  overflow-y: scroll;
+  white-space: pre-wrap;
+  /*height: 500px;*/
+
+  height: 70%;
+}
+.statuses-list {
+  width: 100%;
+  /*border: 1px solid #ccc;*/
+  overflow-y: scroll;
+  white-space: pre-wrap;
+  /*height: 70%;*/
+  height: 30%;
+}

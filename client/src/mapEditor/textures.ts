@@ -48,11 +48,11 @@ export const loadGameTextures = async () => {
       );
     }
 
-    // for (const statusDetails of Object.values(jsonResponse.statuses)) {
-    //   textureMap[statusDetails.identifier] = await Assets.load(
-    //     getImageUrl("status", statusDetails.identifier),
-    //   );
-    // }
+    for (const statusDetails of Object.values(jsonResponse.statuses)) {
+      textureMap[statusDetails.identifier] = await Assets.load(
+        getImageUrl("status", statusDetails.identifier),
+      );
+    }
 
     store.dispatch(receivedGameObjectDetails(jsonResponse));
   });

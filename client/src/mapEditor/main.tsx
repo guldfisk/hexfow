@@ -5,6 +5,7 @@ import { renderMap } from "./rendering.ts";
 import {
   renderedGameState,
   setMapData,
+  setStatus,
   store,
   toggleIsObjective,
   updateTerrain,
@@ -55,6 +56,15 @@ async function main() {
         );
       } else if (event.key == "3") {
         store.dispatch(toggleIsObjective(state.hoveredHex.cc));
+      } else if (event.key == "4") {
+        store.dispatch(
+          setStatus({
+            cc: state.hoveredHex.cc,
+            status: state.selectedStatusIdentifier,
+          }),
+        );
+      } else if (event.key == "5") {
+        store.dispatch(setStatus({ cc: state.hoveredHex.cc, status: null }));
       } else if (event.key == "e") {
         console.log(state.mapData);
       }

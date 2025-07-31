@@ -51,7 +51,7 @@ from game.values import DamageType, StatusIntention
 
 
 class TriggerLayers(IntEnum):
-    ROUND_DEBUFFS_TICK = auto()
+    ROUND_STATUSES_TICK = auto()
     ROUND_APPLY_DEBUFFS = auto()
 
     READY = auto()
@@ -378,7 +378,7 @@ class BurnOnCleanup(TriggerEffect[RoundCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class BurnTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = TriggerLayers.ROUND_DEBUFFS_TICK
+    priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
 
     status: UnitStatus
 
@@ -387,6 +387,21 @@ class BurnTrigger(TriggerEffect[RoundCleanup]):
             Damage(self.status.parent, DamageSignature(self.status.stacks, self.status))
         )
         self.status.decrement_stacks()
+
+
+@dataclasses.dataclass(eq=False)
+class HexRoundHealTrigger(TriggerEffect[RoundCleanup]):
+    priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
+
+    hex: Hex
+    amount: int
+
+    def should_trigger(self, event: RoundCleanup) -> bool:
+        return GS.map.unit_on(self.hex) is not None
+
+    def resolve(self, event: RoundCleanup) -> None:
+        if unit := GS.map.unit_on(self.hex):
+            ES.resolve(Heal(unit, self.amount))
 
 
 @dataclasses.dataclass(eq=False)
@@ -443,7 +458,7 @@ class HexWalkInDamageTrigger(TriggerEffect[MoveUnit]):
 
 @dataclasses.dataclass(eq=False)
 class HexRoundDamageTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = TriggerLayers.ROUND_DEBUFFS_TICK
+    priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
 
     hex: Hex
     source: Source
@@ -474,7 +489,7 @@ class TurnExpiringStatusTrigger(TriggerEffect[Turn]):
 
 @dataclasses.dataclass(eq=False)
 class RoundDamageTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = TriggerLayers.ROUND_DEBUFFS_TICK
+    priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
 
     unit: Unit
     source: Source
@@ -495,7 +510,7 @@ class RoundDamageTrigger(TriggerEffect[RoundCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class PanickedTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = TriggerLayers.ROUND_DEBUFFS_TICK
+    priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
 
     status: UnitStatus
 

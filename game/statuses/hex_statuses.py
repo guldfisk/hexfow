@@ -17,6 +17,7 @@ from game.effects.triggers import (
     BurnOnCleanup,
     TurnExpiringStatusTrigger,
     WalkInDestroyStatusTrigger,
+    HexRoundHealTrigger,
 )
 
 
@@ -138,3 +139,27 @@ class DoombotScaffold(HexStatus):
 
     def create_effects(self) -> None:
         self.register_effects(WalkInDestroyStatusTrigger(self))
+
+
+class RuneOfHealing(HexStatus):
+    """
+    At the end of each round, units on this hex are healed 1.
+    """
+
+    def merge(self, incoming: Self) -> bool:
+        return True
+
+    def create_effects(self) -> None:
+        self.register_effects(HexRoundHealTrigger(self.parent, 1))
+
+
+class RuneOfClarity(HexStatus):
+    """
+    Units on this hex has +1 energy regeneration.
+    """
+
+    def merge(self, incoming: Self) -> bool:
+        return True
+
+    def create_effects(self) -> None:
+        self.register_effects(HexIncreasesEnergyRegenModifier(self.parent, 1))

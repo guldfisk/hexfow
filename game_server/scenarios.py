@@ -3,8 +3,14 @@ import json
 import random
 from pathlib import Path
 
-from debug_utils import dp
-from game.core import Landscape, HexSpec, Scenario, Terrain
+from game.core import (
+    Landscape,
+    HexSpec,
+    Scenario,
+    Terrain,
+    HexStatusSignature,
+    HexStatus,
+)
 from game.map.coordinates import CC
 from game.map.geometry import hex_circle
 from game.map.terrain import Plains, Forest, Hills, Water, Magma
@@ -84,6 +90,10 @@ def get_playtest_scenario() -> Scenario:
             CC(**hex_spec["cc"]): HexSpec(
                 Terrain.registry[hex_spec["terrainType"]],
                 hex_spec["isObjective"],
+                statuses=[
+                    HexStatusSignature(HexStatus.get(identifier), source=None)
+                    for identifier in hex_spec["statuses"]
+                ],
             )
             for hex_spec in spec.values()
         }

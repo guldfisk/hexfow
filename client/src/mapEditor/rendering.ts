@@ -11,7 +11,10 @@ import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
 import { MapEditorState, setHoveredHex, store } from "./state/store.ts";
 import {
   addRCs,
+  asUnitVector,
   ccToRC,
+  constMultRC,
+  getHexDimensions,
   getHexVerticeOffsets,
   hexSize,
   hexVerticeOffsets,
@@ -31,6 +34,31 @@ const colors = {
   noHealth: [22, 3, 1],
   fullEnergy: [47, 103, 248],
   noEnergy: [5, 17, 74],
+};
+
+const getHexMask = (color: FillInput, hexSize: number): GraphicsContext => {
+  const hexVerticeOffsets = getHexVerticeOffsets(hexSize);
+  let hexShape = new GraphicsContext().moveTo(...hexVerticeOffsets[0]);
+  hexVerticeOffsets.slice(1).forEach((vert) => hexShape.lineTo(...vert));
+  hexShape.closePath();
+  hexShape.fill(color);
+  return hexShape;
+};
+
+const hexStatusFrame = getHexMask({ alpha: 0 }, 22);
+
+const makeStatusIndicator = (status: string): Container => {
+  const statusContainer = new Container();
+  const statusSprite = new Sprite(textureMap[status]);
+
+  statusSprite.anchor = 0.5;
+  statusContainer.addChild(statusSprite);
+
+  const mask = new Graphics(hexStatusFrame);
+  statusContainer.addChild(mask);
+  statusSprite.mask = mask;
+
+  return statusContainer;
 };
 
 export const renderMap = (
@@ -127,6 +155,28 @@ export const renderMap = (
       const flagSprite = new Sprite(textureMap["flag_icon"]);
       flagSprite.anchor = 0.5;
       hexContainer.addChild(flagSprite);
+    }
+
+    for (const [idx, status] of spec.statuses.entries()) {
+      const statusContainer = makeStatusIndicator(status);
+
+      const smallerSize = hexSize - 30;
+      const [smallerWidth, smallerHeight] = getHexDimensions(smallerSize);
+
+      const firstPoint = { x: 0, y: -smallerHeight / 2 };
+      const lastPoint = { x: smallerWidth / 2, y: -smallerSize / 2 };
+
+      statusContainer.position = addRCs(
+        firstPoint,
+        constMultRC(
+          asUnitVector(subRCs(lastPoint, firstPoint)),
+          spec.statuses.length <= 4
+            ? idx * 43
+            : (hexSize / spec.statuses.length) * idx,
+        ),
+      );
+
+      hexContainer.addChild(statusContainer);
     }
   }
 

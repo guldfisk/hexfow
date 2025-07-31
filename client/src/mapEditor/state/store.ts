@@ -17,6 +17,7 @@ export interface HexSpec {
   terrainType: string;
   unit: UnitSpec | null;
   isObjective: boolean;
+  statuses: string[];
   cc: CC;
 }
 
@@ -27,12 +28,14 @@ const mainSlice = createSlice({
     shouldRerender: true,
     hoveredHex: null,
     selectedUnitIdentifier: null,
+    selectedStatusIdentifier: null,
     gameObjectDetails: null,
   } as {
     mapData: { [key: string]: HexSpec };
     shouldRerender: boolean;
     hoveredHex: HexSpec | null;
     selectedUnitIdentifier: string | null;
+    selectedStatusIdentifier: string | null;
     gameObjectDetails: GameObjectDetails | null;
   },
   reducers: {
@@ -87,6 +90,18 @@ const mainSlice = createSlice({
       }
       state.shouldRerender = true;
     },
+    setStatus: (
+      state,
+      action: PayloadAction<{ cc: CC; status: string | null }>,
+    ) => {
+      state.mapData[ccToKey(action.payload.cc)].statuses = action.payload.status
+        ? [action.payload.status]
+        : [];
+      state.mapData[
+        ccToKey({ r: -action.payload.cc.r, h: -action.payload.cc.h })
+      ].statuses = action.payload.status ? [action.payload.status] : [];
+      state.shouldRerender = true;
+    },
     renderedGameState: (state) => {
       state.shouldRerender = false;
     },
@@ -95,6 +110,9 @@ const mainSlice = createSlice({
     },
     setSelectedUnitIdentifier: (state, action: PayloadAction<string>) => {
       state.selectedUnitIdentifier = action.payload;
+    },
+    setSelectedStatusIdentifier: (state, action: PayloadAction<string>) => {
+      state.selectedStatusIdentifier = action.payload;
     },
   },
 });
@@ -108,6 +126,8 @@ export const {
   updateUnit,
   toggleIsObjective,
   setSelectedUnitIdentifier,
+  setSelectedStatusIdentifier,
+  setStatus,
 } = mainSlice.actions;
 
 export const store = configureStore({
