@@ -145,7 +145,7 @@ class Cleaner(Thread):
 class GameRunner(Thread):
     def __init__(self, game: Game):
         super().__init__()
-        self._scenario = get_test_scenario()
+        self._scenario = get_playtest_scenario()
         self._game = game
         self._lock = threading.Lock()
         self._is_running = False
@@ -237,7 +237,7 @@ class GameRunner(Thread):
             for player in gs.turn_order.players:
                 gs.serialize_for(gs._get_context_for(player), None)
 
-            ES.deregister_effects(*effects)
+            # ES.deregister_effects(*effects)
 
             for logs in gs._pending_player_logs.values():
                 logs[:] = []
