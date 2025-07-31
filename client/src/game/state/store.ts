@@ -76,7 +76,9 @@ const mainSlice = createSlice({
       state,
       action: PayloadAction<{ [key: string]: selectionIcon[] } | null>,
     ) => {
-      state.shouldRerender = !!action.payload || !!state.actionPreview;
+      if (!!action.payload || !!state.actionPreview) {
+        state.shouldRerender = true;
+      }
       state.actionPreview = action.payload;
     },
   },

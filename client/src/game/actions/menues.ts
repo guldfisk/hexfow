@@ -335,7 +335,6 @@ const getRadiatingLineActionSpace = (
         {
           type: "aoe",
           description: "select hexes",
-
           do: () => {
             // store.dispatch(deactivateMenu());
             takeAction({
