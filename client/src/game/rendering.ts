@@ -89,6 +89,8 @@ let maxX = window.innerWidth;
 let maxY = window.innerHeight;
 let center = { x: maxX / 2, y: maxY / 2 };
 
+let previouslyHovered: string | null = null;
+
 // TODO not here
 const getHexShape = (color: FillInput): GraphicsContext => {
   let hexShape = new GraphicsContext()
@@ -708,8 +710,6 @@ export const renderMap = (
     }
   });
 
-  let previouslyHovered: string | null = null;
-
   map.eventMode = "static";
   map.on("globalpointermove", (event) => {
     // TODO ultra lmao, should just not render game beneath the sidebars instead...
@@ -721,12 +721,9 @@ export const renderMap = (
     const hexData = gameState.map.hexes.find((h) => ccEquals(h.cc, cc));
 
     if (hexData) {
-      if (ccToKey(cc) == previouslyHovered) {
-        return;
-      }
-      previouslyHovered = ccToKey(cc);
       const localPosition = subRCs(positionOnMap, ccToRC(cc));
       let detail: HoveredDetails = { type: "hex", hex: hexData };
+      let hoverType = "hex";
 
       if (
         hexData.statuses.length &&
@@ -739,6 +736,7 @@ export const renderMap = (
         )
       ) {
         detail = { type: "statuses", statuses: hexData.statuses };
+        hoverType = "hex-statuses";
       }
 
       if (hexData.unit) {
@@ -748,13 +746,22 @@ export const renderMap = (
             : rcInBox(localPosition, -60 - 22, -74 - 22, 44, 148 + 22)
         ) {
           detail = { type: "statuses", statuses: hexData.unit.statuses };
+          hoverType = "unit-statuses";
         } else if (
           hexData.unit.exhausted
             ? rcInBox(localPosition, -74, -60, 148, 120)
             : rcInBox(localPosition, -60, -74, 120, 148)
         ) {
           detail = { type: "unit", unit: hexData.unit };
+          hoverType = "unit";
         }
+      }
+
+      const newKey = ccToKey(cc) + hoverType;
+      const oldKey = previouslyHovered;
+      previouslyHovered = newKey;
+      if (newKey == oldKey) {
+        return;
       }
 
       store.dispatch(hoverDetail(detail));
@@ -767,7 +774,7 @@ export const renderMap = (
       const previewOptions = actionSpace[ccToKey(hexData.cc)].previewOptions;
       store.dispatch(
         setActionPreview(
-          previewOptions
+          previewOptions && hoverType == "unit"
             ? Object.fromEntries(
                 Object.entries(
                   getBaseActionSpace(gameState, () => null, {
