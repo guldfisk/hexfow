@@ -37,6 +37,7 @@ def get_test_scenario() -> Scenario:
         (
             LEGENDARY_WRESTLER,
             LIGHT_ARCHER,
+            RHINO_BEAST
         ),
     )
 

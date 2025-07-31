@@ -501,7 +501,7 @@ VOID_SPRITE = UnitBlueprint(
     "Void Sprite",
     health=3,
     speed=1,
-    sight=2,
+    sight=1,
     energy=6,
     size=Size.SMALL,
     facets=[EtherealSting, Jaunt],

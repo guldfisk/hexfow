@@ -8,8 +8,7 @@ class Plains(Terrain): ...
 
 class Forest(Terrain):
     """
-    1/2/2 melee/ranged/aoe protection for small/medium units.
-    0/1/1 melee/ranged/aoe protection for large units.
+    1/2/2 melee/ranged/aoe protection for small and medium units.
     1 move in penalty.
     """
 
@@ -25,8 +24,8 @@ class Forest(Terrain):
             if request.damage_signature.type == DamageType.MELEE:
                 return 1
 
-        if request.damage_signature.type in (DamageType.RANGED, DamageType.AOE):
-            return 1
+        # if request.damage_signature.type in (DamageType.RANGED, DamageType.AOE):
+        #     return 1
         return 0
 
 
