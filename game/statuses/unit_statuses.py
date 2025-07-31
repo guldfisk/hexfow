@@ -22,6 +22,7 @@ from game.effects.triggers import (
     ParasiteTrigger,
     OneTimeModifyMovementPointsStatusTrigger,
     BellStruckTrigger,
+    HitchedTrigger,
 )
 from game.events import Kill, ExhaustUnit
 from game.values import StatusIntention
@@ -145,6 +146,7 @@ class TheyVeGotASteelChair(UnitStatus):
     """
     +2 attack power.
     """
+
     name = "They've Got A Steel Chair"
 
     default_intention = StatusIntention.BUFF
@@ -353,3 +355,21 @@ class Armored(RefreshableDurationUnitStatus):
 
     def create_effects(self) -> None:
         self.register_effects(UnitArmorFlatModifier(self.parent, 1))
+
+
+class Hitched(UnitStatus):
+    """
+    When the applying unit moves, this unit is moved into the space it previously occupied.
+    Expires at the end of the turn.
+    """
+
+    default_intention = StatusIntention.DEBUFF
+
+    def merge(self, incoming: Self) -> bool:
+        return True
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            HitchedTrigger(self.source.owner, self.parent),
+            TurnExpiringStatusTrigger(self),
+        )

@@ -30,14 +30,15 @@ def get_test_scenario() -> Scenario:
 
     player_units = (
         (
-            CAPRICIOUS_TRICKSTER,
-            NOTORIOUS_OUTLAW,
-            ZONE_MECH,
+            TRACTOR,
+            GIANT_TOAD,
+            RIFLE_INFANTRY,
         ),
         (
             LEGENDARY_WRESTLER,
             LIGHT_ARCHER,
-            RHINO_BEAST
+            RHINO_BEAST,
+            RIFLE_INFANTRY,
         ),
     )
 

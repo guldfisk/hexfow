@@ -476,13 +476,16 @@ class Status(
     def __init__(
         self,
         *,
+        # TODO this is redundante with the source
         controller: Player | None = None,
+        source: Source = None,
         duration: int | None = None,
         stacks: int | None = None,
         parent: H | None,
     ):
         super().__init__(parent=parent)
         self.controller = controller
+        self.source = source
         self.duration = duration
         self.stacks = stacks
 
@@ -803,13 +806,18 @@ class UnitStatus(Status[Unit], ABC):
         self,
         *,
         controller: Player | None = None,
+        source: Source = None,
         duration: int | None = None,
         stacks: int | None = None,
         parent: H | None,
         intention: StatusIntention,
     ):
         super().__init__(
-            controller=controller, duration=duration, stacks=stacks, parent=parent
+            controller=controller,
+            source=source,
+            duration=duration,
+            stacks=stacks,
+            parent=parent,
         )
         self.intention = intention
 

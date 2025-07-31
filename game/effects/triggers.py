@@ -2,7 +2,7 @@ import dataclasses
 from enum import IntEnum, auto
 from typing import ClassVar, Callable
 
-from events.eventsystem import TriggerEffect, ES, hook_on
+from events.eventsystem import TriggerEffect, ES, hook_on, E
 from game.core import (
     Unit,
     Hex,
@@ -73,6 +73,22 @@ class PricklyTrigger(TriggerEffect[Hit]):
 
     def resolve(self, event: Hit) -> None:
         ES.resolve(Damage(event.attacker, DamageSignature(self.amount, self.source)))
+
+
+@dataclasses.dataclass(eq=False)
+class DebuffOnMeleeAttackTrigger(TriggerEffect[Hit]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+    signature: StatusSignature
+
+    def should_trigger(self, event: Hit) -> bool:
+        return event.defender == self.unit and isinstance(
+            event.attack, MeleeAttackFacet
+        )
+
+    def resolve(self, event: Hit) -> None:
+        ES.resolve(ApplyStatus(event.attacker, self.signature))
 
 
 @dataclasses.dataclass(eq=False)
@@ -454,6 +470,22 @@ class HexWalkInDamageTrigger(TriggerEffect[MoveUnit]):
                 DamageSignature(self.amount, self.source, type=DamageType.PURE),
             )
         )
+
+
+@dataclasses.dataclass(eq=False)
+class HitchedTrigger(TriggerEffect[MoveUnit]):
+    priority: ClassVar[int] = 0
+
+    puller: Unit
+    pulled: Unit
+
+    def should_trigger(self, event: MoveUnit) -> bool:
+        print("HALO", event.unit, self.puller)
+        return event.unit == self.puller
+
+    def resolve(self, event: MoveUnit) -> None:
+        if event.result:
+            ES.resolve(MoveUnit(self.pulled, event.result))
 
 
 @dataclasses.dataclass(eq=False)

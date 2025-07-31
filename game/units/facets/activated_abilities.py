@@ -278,6 +278,19 @@ class Jaunt(ActivatedAbilityFacet[Hex]):
         ES.resolve(MoveUnit(self.owner, target))
 
 
+class Jump(ActivatedAbilityFacet[Hex]):
+    """Teleports to target hex within 2 range NLoS."""
+
+    cost = EnergyCost(2) | ExclusiveCost()
+
+    def get_target_profile(self) -> TargetProfile[Hex] | None:
+        if hexes := list(GS.map.get_hexes_within_range_off(self.owner, 2)):
+            return OneOfHexes(hexes)
+
+    def perform(self, target: Hex) -> None:
+        ES.resolve(MoveUnit(self.owner, target))
+
+
 # telepath {7pp} x1
 # health 5, movement 3, sight 0, energy 5, M
 # rouse
@@ -860,4 +873,20 @@ class IronBlessing(SingleAllyActivatedAbility):
             ApplyStatus(
                 target, StatusSignature(UnitStatus.get("armored"), self, duration=2)
             )
+        )
+
+
+class Hitch(SingleAllyActivatedAbility):
+    """
+    Target different adjacent allied unit. Applies <hitched>.
+    """
+
+    cost = EnergyCost(3)
+    range = 1
+    can_target_self = False
+    combinable = 1
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(target, StatusSignature(UnitStatus.get("hitched"), self))
         )

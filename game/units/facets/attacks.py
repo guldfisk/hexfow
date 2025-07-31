@@ -180,6 +180,23 @@ class APGun(RangedAttackFacet):
             return 1
 
 
+class Rifle(RangedAttackFacet):
+    cost = MovementCost(2)
+    range = 3
+    damage = 3
+
+
+class TongueLash(RangedAttackFacet):
+    """
+    Deals melee damage.
+    """
+
+    cost = ExclusiveCost()
+    range = 2
+    damage = 3
+    damage_type = DamageType.MELEE
+
+
 class HurlBoulder(RangedAttackFacet):
     cost = ExclusiveCost()
     range = 2

@@ -145,7 +145,7 @@ class Cleaner(Thread):
 class GameRunner(Thread):
     def __init__(self, game: Game):
         super().__init__()
-        self._scenario = get_playtest_scenario()
+        self._scenario = get_test_scenario()
         self._game = game
         self._lock = threading.Lock()
         self._is_running = False

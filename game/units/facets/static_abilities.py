@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from game.core import StaticAbilityFacet, Status
+from game.core import StaticAbilityFacet, Status, StatusSignature, UnitStatus
 from game.effects.modifiers import (
     RootedModifier,
     FarsightedModifier,
@@ -33,6 +33,7 @@ from game.effects.triggers import (
     ToxicPresenceTrigger,
     JukeAndJiveTrigger,
     InspirationTrigger,
+    DebuffOnMeleeAttackTrigger,
 )
 from game.map.terrain import Water
 from game.statuses.unit_statuses import Burn
@@ -42,6 +43,19 @@ from game.values import Resistance
 class Prickly(StaticAbilityFacet):
     def create_effects(self) -> None:
         self.register_effects(PricklyTrigger(self.owner, self, 2))
+
+
+class ToxicSkin(StaticAbilityFacet):
+    """
+    When this unit is melee attacked, the attacking unit suffers 1 stack of <poison>.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            DebuffOnMeleeAttackTrigger(
+                self.owner, StatusSignature(UnitStatus.get("poison"), self, stacks=1)
+            )
+        )
 
 
 class Immobile(StaticAbilityFacet):

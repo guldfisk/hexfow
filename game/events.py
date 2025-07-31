@@ -263,6 +263,7 @@ def realize_status_for_unit(unit: Unit, signature: StatusSignature) -> UnitStatu
                 else None
             )
         ),
+        source=signature.source,
         intention=signature.intention
         or signature.status_type.default_intention
         or (
@@ -336,6 +337,7 @@ class ApplyHexStatus(Event[None]):
                 if self.signature.source
                 else None
             ),
+            source=self.signature.source,
             duration=self.signature.duration,
             stacks=self.signature.stacks,
             parent=self.space,

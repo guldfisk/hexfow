@@ -38,6 +38,8 @@ from game.units.facets.activated_abilities import (
     InkRing,
     MalevolentStare,
     IronBlessing,
+    Hitch,
+    Jump,
 )
 from game.units.facets.attacks import (
     Peck,
@@ -80,6 +82,8 @@ from game.units.facets.attacks import (
     SolidMunition,
     HammerBlow,
     MightyBlow,
+    Rifle,
+    TongueLash,
 )
 from game.units.facets.static_abilities import (
     Prickly,
@@ -108,6 +112,7 @@ from game.units.facets.static_abilities import (
     ScurryInTheShadows,
     JukeAndJive,
     Inspiration,
+    ToxicSkin,
 )
 from game.values import Size
 
@@ -173,6 +178,10 @@ MARSHMALLOW_TITAN = UnitBlueprint(
 
 AP_GUNNER = UnitBlueprint(
     "AP Gunner", health=4, speed=2, sight=2, facets=[APGun], price=5, max_count=2
+)
+
+RIFLE_INFANTRY = UnitBlueprint(
+    "Rifle Infantry", health=5, speed=3, sight=2, facets=[Rifle], price=6, max_count=2
 )
 
 BUGLING = UnitBlueprint(
@@ -258,6 +267,17 @@ BULLDOZER = UnitBlueprint(
     armor=1,
     facets=[Pusher],
     price=8,
+)
+
+TRACTOR = UnitBlueprint(
+    "Tractor",
+    health=7,
+    speed=3,
+    sight=1,
+    size=Size.LARGE,
+    facets=[Hitch],
+    energy=4,
+    price=7,
 )
 
 HORROR_SPAWN = UnitBlueprint(
@@ -720,5 +740,15 @@ INK_WITCH = UnitBlueprint(
     sight=2,
     energy=5,
     facets=[BloodExpunge, InkRing, MalevolentStare],
+    price=9,
+)
+
+GIANT_TOAD = UnitBlueprint(
+    "Giant Toad",
+    health=8,
+    speed=2,
+    sight=2,
+    energy=2,
+    facets=[TongueLash, Jump, ToxicSkin],
     price=9,
 )
