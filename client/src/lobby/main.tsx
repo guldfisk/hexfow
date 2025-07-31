@@ -13,7 +13,7 @@ interface GameResponse {
 
 const SeatRow = ({ seat }: { seat: Seat }) => {
   const [copied, setCopied] = useState(false);
-  const link = `${window.location.protocol + "//" + window.location.hostname}:5173/play/?seat=${seat.id}`;
+  const link = `${window.location.protocol + "//" + window.location.host}/play/?seat=${seat.id}`;
 
   return (
     <tr>
