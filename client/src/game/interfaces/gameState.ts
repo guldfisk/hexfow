@@ -140,12 +140,31 @@ export interface OptionBase {
   targetProfile: TargetProfile;
 }
 
+export interface SkipOption extends OptionBase {
+  type: "SkipOption";
+  values: {};
+}
+
+export interface MoveOption extends OptionBase {
+  type: "MoveOption";
+  values: {};
+}
+
 export interface EffortOption extends OptionBase {
   type: "EffortOption";
   values: { facet: EffortFacetDetails };
 }
 
-export type Option = EffortOption;
+export type UnitOption = SkipOption | MoveOption | EffortOption;
+
+export interface ActivateUnitOption extends OptionBase {
+  type: "ActivateUnitOption";
+  values: {
+    actionsPreview: { [key: string]: UnitOption[] };
+  };
+}
+
+export type Option = UnitOption | ActivateUnitOption;
 
 export interface SelectOptionDecisionPoint extends BaseDecision {
   type: "SelectOptionDecisionPoint";

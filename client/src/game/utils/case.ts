@@ -9,7 +9,11 @@ export const recursiveCamelCase = <Type>(obj: Type): Type => {
   }
   if (typeof obj === "object") {
     return Object.fromEntries(
-      Object.entries(obj).map(([k, v]) => [camelcase(k), recursiveCamelCase(v)]),
+      Object.entries(obj).map(([k, v]) => [
+        //   TODO ultra yikes lmao
+        k.length == 36 ? k : camelcase(k),
+        recursiveCamelCase(v),
+      ]),
     );
   }
   return obj;

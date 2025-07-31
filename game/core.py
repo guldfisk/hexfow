@@ -83,8 +83,17 @@ class EffortOption(Option[O]):
 
 @dataclasses.dataclass
 class ActivateUnitOption(Option[O]):
+    actions_previews: dict[Unit, list[Option]]
+
     def serialize_values(self, context: SerializationContext) -> JSON:
-        return {}
+        return {
+            "actions_preview": {
+                context.id_map.get_id_for(unit): [
+                    option.serialize(context) for option in options
+                ]
+                for unit, options in self.actions_previews.items()
+            }
+        }
 
 
 class SkipOption(Option[None]):
@@ -730,7 +739,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             for facet in self.attacks:
                 if isinstance(
                     facet, (MeleeAttackFacet, RangedAttackFacet)
-                ) and facet.can_be_activated(GS.active_unit_context):
+                ) and facet.can_be_activated(context):
                     options.append(
                         EffortOption(
                             facet,
@@ -738,7 +747,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
                         )
                     )
             for facet in self.activated_abilities:
-                if facet.can_be_activated(GS.active_unit_context):
+                if facet.can_be_activated(context):
                     options.append(
                         EffortOption(facet, target_profile=facet.get_target_profile())
                     )
@@ -746,6 +755,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             options.append(SkipOption(target_profile=NoTarget()))
         return options
 
+    # TODO alive?
     def on_map(self) -> bool:
         return self in GS.map.unit_positions
 

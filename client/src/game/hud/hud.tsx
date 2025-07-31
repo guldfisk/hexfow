@@ -80,7 +80,6 @@ const LogLineComponentView = ({
               highlightCCs([ccToKey(unitMap[element.identifier][0].cc)]),
             );
           } else {
-            console.log("HUH??+", element.blueprint, element);
             store.dispatch(
               hoverDetail({ type: "blueprint", blueprint: element.blueprint }),
             );
