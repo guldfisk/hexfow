@@ -1,7 +1,12 @@
-import { configureStore, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import {
+  configureStore,
+  createSlice,
+  PayloadAction,
+  Tuple,
+} from "@reduxjs/toolkit";
 import { GameState } from "../interfaces/gameState.ts";
 import { GameObjectDetails } from "../interfaces/gameObjectDetails.ts";
-import { ActionSpace, MenuData, selectionIcon } from "../actions/interface.ts";
+import { MenuData, selectionIcon } from "../actions/interface.ts";
 import { HoveredDetails } from "../interfaces/details.ts";
 
 const mainSlice = createSlice({
@@ -67,16 +72,12 @@ const mainSlice = createSlice({
       state.highlightedCCs = null;
       state.shouldRerender = true;
     },
-    setActionPreview: (state, action: PayloadAction<ActionSpace | null>) => {
-      state.actionPreview = action.payload
-        ? Object.fromEntries(
-            Object.entries(action.payload).map(([cc, hexActions]) => [
-              cc,
-              hexActions.actions.map((action) => action.type),
-            ]),
-          )
-        : null;
-      state.shouldRerender = true;
+    setActionPreview: (
+      state,
+      action: PayloadAction<{ [key: string]: selectionIcon[] } | null>,
+    ) => {
+      state.shouldRerender = !!action.payload || !!state.actionPreview;
+      state.actionPreview = action.payload;
     },
   },
 });
@@ -96,6 +97,7 @@ export const {
 
 export const store = configureStore({
   reducer: mainSlice.reducer,
+  middleware: () => new Tuple(),
 });
 
 export type AppState = ReturnType<typeof store.getState>;

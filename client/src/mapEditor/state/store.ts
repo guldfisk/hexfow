@@ -1,4 +1,9 @@
-import { configureStore, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import {
+  configureStore,
+  createSlice,
+  PayloadAction,
+  Tuple,
+} from "@reduxjs/toolkit";
 import { CC } from "../../game/interfaces/geometry.ts";
 import { ccToKey } from "../../game/geometry.ts";
 import { GameObjectDetails } from "../../game/interfaces/gameObjectDetails.ts";
@@ -107,6 +112,7 @@ export const {
 
 export const store = configureStore({
   reducer: mainSlice.reducer,
+  middleware: () => new Tuple(),
 });
 
 export type MapEditorState = ReturnType<typeof store.getState>;

@@ -1,6 +1,6 @@
 import "./style.css";
 
-import { Application, Container } from "pixi.js";
+import {Application, Container, Graphics} from "pixi.js";
 import { recursiveCamelCase } from "./utils/case.ts";
 
 import { loadGameTextures } from "./textures.ts";
@@ -30,6 +30,7 @@ async function main() {
   document.body.appendChild(app.canvas);
 
   let map = new Container();
+  let previousGraphics: Graphics[] = [];
   app.stage.addChild(map);
 
   await loadGameTextures();
@@ -113,7 +114,7 @@ async function main() {
 
     if (state.shouldRerender && state.gameState && state.gameObjectDetails) {
       app.stage.removeChild(map);
-      map = renderMap(
+      const result = renderMap(
         app,
         state.gameState,
         state.gameObjectDetails,
@@ -122,7 +123,12 @@ async function main() {
         state.highlightedCCs,
         gameConnection,
       );
+      map = result.map
       app.stage.addChild(map);
+      for (const g of previousGraphics) {
+        g.destroy()
+      }
+      previousGraphics = result.graphics
       store.dispatch(renderedGameState());
     }
     map.position = worldTranslation;

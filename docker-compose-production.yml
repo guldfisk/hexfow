@@ -1,0 +1,9 @@
+services:
+  client: !reset null
+  nginx:
+    image: nginx:1.13
+    ports:
+      - "5173:80"
+    volumes:
+      - ./nginx/production.conf:/etc/nginx/nginx.conf
+      - .:/code

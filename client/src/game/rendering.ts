@@ -40,6 +40,8 @@ import { getBaseActionSpace } from "./actions/actionSpace.ts";
 import { MenuData, selectionIcon } from "./actions/interface.ts";
 import { menuActionSpacers } from "./actions/menues.ts";
 import { HoveredDetails } from "./interfaces/details.ts";
+import type { ColorSource } from "pixi.js/lib/color/Color";
+import moize from "moize";
 
 const sizeScales: { S: number; M: number; L: number } = {
   S: 0.9,
@@ -83,6 +85,185 @@ const colors = {
 //   noEnergy: [133, 10, 7],
 // };
 
+let maxX = window.innerWidth;
+let maxY = window.innerHeight;
+let center = { x: maxX / 2, y: maxY / 2 };
+
+// TODO not here
+const getHexShape = (color: FillInput): GraphicsContext => {
+  let hexShape = new GraphicsContext()
+    .setStrokeStyle({ color: "grey", pixelLine: true })
+    .moveTo(...hexVerticeOffsets[0]);
+  hexVerticeOffsets.slice(1).forEach((vert) => hexShape.lineTo(...vert));
+  hexShape.closePath().fill(color).stroke();
+  return hexShape;
+};
+const getHexMask = (color: FillInput, hexSize: number): GraphicsContext => {
+  const hexVerticeOffsets = getHexVerticeOffsets(hexSize);
+  let hexShape = new GraphicsContext().moveTo(...hexVerticeOffsets[0]);
+  hexVerticeOffsets.slice(1).forEach((vert) => hexShape.lineTo(...vert));
+  hexShape.closePath();
+  hexShape.fill(color);
+  return hexShape;
+};
+const getDividerFrame = (num: number): GraphicsContext => {
+  return new GraphicsContext()
+    .rect(
+      (-hexWidth + hexWidth * num) / 2,
+      -hexHeight / 2,
+      hexWidth / 2,
+      hexHeight,
+    )
+    .fill({ alpha: 0 });
+};
+
+const getThreePartDividerFrame = (num: number) => {
+  let hexShape = new GraphicsContext();
+  range(3).map((i) => hexShape.lineTo(...hexVerticeOffsets[(i + num * 2) % 6]));
+  hexShape.closePath().fill({ alpha: 0 });
+  return hexShape;
+};
+
+const visibleHexShape = getHexShape({ color: "447744", alpha: 0 });
+const invisibleHexShape = getHexShape({ color: "black", alpha: 100 });
+const hexMaskShape = getHexMask({ alpha: 0 }, hexSize);
+const highlightShape = getHexMask({ alpha: 0.5, color: "blue" }, hexSize);
+
+const dividerFrames = [
+  [hexMaskShape],
+  [0, 1].map(getDividerFrame),
+  [1, 0, 2].map(getThreePartDividerFrame),
+];
+
+const statusFrame = new GraphicsContext().circle(0, 0, 20).fill({ alpha: 0 });
+const diag = Math.sqrt(2) * 22;
+
+const debuffStatusBorder = new Graphics()
+  .circle(0, 0, 22)
+  .moveTo(-diag / 2, diag / 2)
+  .lineTo(0, diag)
+  .lineTo(diag / 2, diag / 2)
+  .closePath()
+  .fill(colors.debuff);
+const buffStatusBorder = new Graphics()
+  .circle(0, 0, 22)
+  .moveTo(-diag / 2, -diag / 2)
+  .lineTo(0, -diag)
+  .lineTo(diag / 2, -diag / 2)
+  .closePath()
+  .fill(colors.buff);
+const neutralStatusBorder = new Graphics()
+  .circle(0, 0, 22)
+  .fill(colors.neutralStatus);
+
+const intentionBorderMap = {
+  buff: buffStatusBorder,
+  neutral: neutralStatusBorder,
+  debuff: debuffStatusBorder,
+};
+
+const hexStatusFrame = getHexMask({ alpha: 0 }, 22);
+const hexStatusBorder = hexStatusFrame.stroke({
+  color: "grey",
+  pixelLine: true,
+});
+
+// TODO not here
+const smallTextStyle = new TextStyle({
+  fontFamily: "Arial",
+  fontSize: 12,
+  fill: 0xff1010,
+  align: "center",
+});
+const primaryHealthIndicatorTextStyle = new TextStyle({
+  fontFamily: "Arial",
+  fontSize: 26,
+  fill: "white",
+  stroke: { color: "black", width: 2 },
+  align: "center",
+});
+const secondaryHealthIndicatorTextStyle = new TextStyle({
+  fontFamily: "Arial",
+  fontSize: 22,
+  fill: "white",
+  stroke: { color: "black", width: 2 },
+  align: "center",
+});
+const largeTextStyle = new TextStyle({
+  fontFamily: "Arial",
+  fontSize: 80,
+  fill: "blue",
+  align: "center",
+  stroke: "white",
+});
+const durationStyle = new TextStyle({
+  fontFamily: "Arial",
+  fontSize: 25,
+  fill: "white",
+  align: "center",
+  stroke: { color: "black", width: 3 },
+});
+const stacksStyle = new TextStyle({
+  fontFamily: "Arial",
+  fontSize: 25,
+  fill: "black",
+  align: "center",
+  stroke: { color: "white", width: 3 },
+});
+const ghostStyle = new TextStyle({
+  fontFamily: "Arial",
+  fontSize: 20,
+  fill: "0x444444",
+  align: "center",
+});
+const menuStyle = new TextStyle({
+  fontFamily: "Arial",
+  fontSize: 40,
+  fill: "black",
+  align: "center",
+});
+
+const unitWidth = 120;
+const unitHeight = 148;
+const borderWith = 4;
+const arrowLength = 15;
+
+const getUnitBackgroundGraphicsContext = moize(
+  (color: ColorSource, size: keyof typeof sizeArrowPositions) => {
+    return new GraphicsContext()
+      .moveTo(-unitWidth / 2 - borderWith, -unitHeight / 2 - borderWith)
+      .lineTo(unitWidth / 2 + borderWith, -unitHeight / 2 - borderWith)
+      .lineTo(
+        unitWidth / 2 + borderWith + arrowLength,
+        (unitHeight / 2 + borderWith) * sizeArrowPositions[size],
+      )
+      .lineTo(unitWidth / 2 + borderWith, unitHeight / 2 + borderWith)
+      .lineTo(-unitWidth / 2 - borderWith, unitHeight / 2 + borderWith)
+      .closePath()
+      .fill(color);
+  },
+);
+
+const getIndicatorBg = moize(
+  (
+    currentValue: number,
+    maxValue: number,
+    width: number,
+    height: number,
+    fromColor: number[],
+    toColor: number[],
+  ) => {
+    const ratio = currentValue / maxValue;
+
+    return new GraphicsContext()
+      .roundRect(-width / 2, -height / 2, width, height, 6)
+      .fill(
+        fromColor.map((fv, i) => (fv * ratio + toColor[i] * (1 - ratio)) / 255),
+      )
+      .stroke({ color: "black", pixelLine: true });
+  },
+);
+
 export const renderMap = (
   app: Application,
   gameState: GameState,
@@ -91,147 +272,14 @@ export const renderMap = (
   actionPreview: { [key: string]: selectionIcon[] } | null,
   highlightedCCs: string[] | null,
   gameConnection: WebSocket,
-): Container => {
-  // TODO this shouldn't be here
-  let maxX = window.innerWidth;
-  let maxY = window.innerHeight;
-  let center = { x: maxX / 2, y: maxY / 2 };
+): { map: Container; graphics: Graphics[] } => {
+  const createdGraphics: Graphics[] = [];
 
-  // TODO not here
-  const getHexShape = (color: FillInput): GraphicsContext => {
-    let hexShape = new GraphicsContext()
-      .setStrokeStyle({ color: "grey", pixelLine: true })
-      .moveTo(...hexVerticeOffsets[0]);
-    hexVerticeOffsets.slice(1).forEach((vert) => hexShape.lineTo(...vert));
-    hexShape.closePath().fill(color).stroke();
-    return hexShape;
+  const newGraphic = (context: GraphicsContext) => {
+    const g = new Graphics(context);
+    createdGraphics.push(g);
+    return g;
   };
-  const getHexMask = (color: FillInput, hexSize: number): GraphicsContext => {
-    const hexVerticeOffsets = getHexVerticeOffsets(hexSize);
-    let hexShape = new GraphicsContext().moveTo(...hexVerticeOffsets[0]);
-    hexVerticeOffsets.slice(1).forEach((vert) => hexShape.lineTo(...vert));
-    hexShape.closePath();
-    hexShape.fill(color);
-    return hexShape;
-  };
-  const getDividerFrame = (num: number): GraphicsContext => {
-    return new GraphicsContext()
-      .rect(
-        (-hexWidth + hexWidth * num) / 2,
-        -hexHeight / 2,
-        hexWidth / 2,
-        hexHeight,
-      )
-      .fill({ alpha: 0 });
-  };
-
-  const getThreePartDividerFrame = (num: number) => {
-    let hexShape = new GraphicsContext();
-    range(3).map((i) =>
-      hexShape.lineTo(...hexVerticeOffsets[(i + num * 2) % 6]),
-    );
-    hexShape.closePath().fill({ alpha: 0 });
-    return hexShape;
-  };
-
-  const visibleHexShape = getHexShape({ color: "447744", alpha: 0 });
-  const invisibleHexShape = getHexShape({ color: "black", alpha: 100 });
-  const hexMaskShape = getHexMask({ alpha: 0 }, hexSize);
-  const highlightShape = getHexMask({ alpha: 0.5, color: "blue" }, hexSize);
-
-  const dividerFrames = [
-    [hexMaskShape],
-    [0, 1].map(getDividerFrame),
-    [1, 0, 2].map(getThreePartDividerFrame),
-  ];
-
-  const statusFrame = new GraphicsContext().circle(0, 0, 20).fill({ alpha: 0 });
-  const diag = Math.sqrt(2) * 22;
-
-  const debuffStatusBorder = new Graphics()
-    .circle(0, 0, 22)
-    .moveTo(-diag / 2, diag / 2)
-    .lineTo(0, diag)
-    .lineTo(diag / 2, diag / 2)
-    .closePath()
-    .fill(colors.debuff);
-  const buffStatusBorder = new Graphics()
-    .circle(0, 0, 22)
-    .moveTo(-diag / 2, -diag / 2)
-    .lineTo(0, -diag)
-    .lineTo(diag / 2, -diag / 2)
-    .closePath()
-    .fill(colors.buff);
-  const neutralStatusBorder = new Graphics()
-    .circle(0, 0, 22)
-    .fill(colors.neutralStatus);
-
-  const intentionBorderMap = {
-    buff: buffStatusBorder,
-    neutral: neutralStatusBorder,
-    debuff: debuffStatusBorder,
-  };
-
-  const hexStatusFrame = getHexMask({ alpha: 0 }, 22);
-  const hexStatusBorder = hexStatusFrame.stroke({
-    color: "grey",
-    pixelLine: true,
-  });
-
-  // TODO not here
-  const smallTextStyle = new TextStyle({
-    fontFamily: "Arial",
-    fontSize: 12,
-    fill: 0xff1010,
-    align: "center",
-  });
-  const primaryHealthIndicatorTextStyle = new TextStyle({
-    fontFamily: "Arial",
-    fontSize: 26,
-    fill: "white",
-    stroke: { color: "black", width: 2 },
-    align: "center",
-  });
-  const secondaryHealthIndicatorTextStyle = new TextStyle({
-    fontFamily: "Arial",
-    fontSize: 22,
-    fill: "white",
-    stroke: { color: "black", width: 2 },
-    align: "center",
-  });
-  const largeTextStyle = new TextStyle({
-    fontFamily: "Arial",
-    fontSize: 80,
-    fill: "blue",
-    align: "center",
-    stroke: "white",
-  });
-  const durationStyle = new TextStyle({
-    fontFamily: "Arial",
-    fontSize: 25,
-    fill: "white",
-    align: "center",
-    stroke: { color: "black", width: 3 },
-  });
-  const stacksStyle = new TextStyle({
-    fontFamily: "Arial",
-    fontSize: 25,
-    fill: "black",
-    align: "center",
-    stroke: { color: "white", width: 3 },
-  });
-  const ghostStyle = new TextStyle({
-    fontFamily: "Arial",
-    fontSize: 20,
-    fill: "0x444444",
-    align: "center",
-  });
-  const menuStyle = new TextStyle({
-    fontFamily: "Arial",
-    fontSize: 40,
-    fill: "black",
-    align: "center",
-  });
 
   const map = new Container();
 
@@ -258,12 +306,10 @@ export const renderMap = (
     const terrainSprite = new Sprite(textureMap[hexData.terrain]);
     terrainSprite.anchor = 0.5;
 
-    let hex = new Graphics(
-      hexData.visible ? visibleHexShape : invisibleHexShape,
-    );
+    let hex = newGraphic(hexData.visible ? visibleHexShape : invisibleHexShape);
     hexContainer.position = realHexPosition;
 
-    let hexMask = new Graphics(hexMaskShape);
+    let hexMask = newGraphic(hexMaskShape);
 
     hexContainer.addChild(hexMask);
 
@@ -289,7 +335,7 @@ export const renderMap = (
         selectionSprite.anchor = 0.5;
         selectionSprite.alpha = 0.5;
         hexContainer.addChild(selectionSprite);
-        let mask = new Graphics(
+        let mask = newGraphic(
           dividerFrames[actionPreview[ccToKey(hexData.cc)].length - 1][idx],
         );
         hexContainer.addChild(mask);
@@ -307,7 +353,7 @@ export const renderMap = (
         selectionSprite.anchor = 0.5;
         selectionSprite.alpha = 0.75;
         hexContainer.addChild(selectionSprite);
-        let mask = new Graphics(
+        let mask = newGraphic(
           dividerFrames[actionSpace[ccToKey(hexData.cc)].actions.length - 1][
             idx
           ],
@@ -316,7 +362,7 @@ export const renderMap = (
         selectionSprite.mask = mask;
       }
 
-      let triggerZone = new Graphics(
+      let triggerZone = newGraphic(
         dividerFrames[actionSpace[ccToKey(hexData.cc)].actions.length - 1][idx],
       );
       triggerZone.eventMode = "static";
@@ -330,7 +376,7 @@ export const renderMap = (
 
     // TODO common trigger zone
     if (menu && !actionSpace[ccToKey(hexData.cc)].actions.length) {
-      let triggerZone = new Graphics(dividerFrames[0][0]);
+      let triggerZone = newGraphic(dividerFrames[0][0]);
       triggerZone.eventMode = "static";
       triggerZone.on("pointerdown", (event) => {
         if (event.button == 0) {
@@ -348,19 +394,19 @@ export const renderMap = (
       const statusSprite = new Sprite(textureMap[status.type]);
 
       if (intention) {
-        const frame = new Graphics(intentionBorderMap[intention]);
+        const frame = intentionBorderMap[intention];
         statusContainer.addChild(frame);
       }
 
       statusSprite.anchor = 0.5;
       statusContainer.addChild(statusSprite);
 
-      const mask = new Graphics(!intention ? hexStatusFrame : statusFrame);
+      const mask = newGraphic(!intention ? hexStatusFrame : statusFrame);
       statusContainer.addChild(mask);
       statusSprite.mask = mask;
 
       if (!intention) {
-        const border = new Graphics(hexStatusBorder);
+        const border = newGraphic(hexStatusBorder);
         statusContainer.addChild(border);
       }
 
@@ -400,37 +446,14 @@ export const renderMap = (
         baseUnitContainer.scale.x = -baseUnitContainer.scale.x;
       }
 
-      const borderWith = 4;
-      const arrowLength = 15;
-
-      let graphics = new Graphics()
-        .moveTo(
-          -unitSprite.width / 2 - borderWith,
-          -unitSprite.height / 2 - borderWith,
-        )
-        .lineTo(
-          unitSprite.width / 2 + borderWith,
-          -unitSprite.height / 2 - borderWith,
-        )
-        .lineTo(
-          unitSprite.width / 2 + borderWith + arrowLength,
-          (unitSprite.height / 2 + borderWith) *
-            sizeArrowPositions[hexData.unit.size],
-        )
-        .lineTo(
-          unitSprite.width / 2 + borderWith,
-          unitSprite.height / 2 + borderWith,
-        )
-        .lineTo(
-          -unitSprite.width / 2 - borderWith,
-          unitSprite.height / 2 + borderWith,
-        )
-        .closePath()
-        .fill(
+      let graphics = newGraphic(
+        getUnitBackgroundGraphicsContext(
           hexData.unit.controller != gameState.player
             ? colors.enemy
             : colors.ally,
-        );
+          hexData.unit.size,
+        ),
+      );
 
       baseUnitContainer.addChild(graphics);
       baseUnitContainer.addChild(unitSprite);
@@ -475,16 +498,16 @@ export const renderMap = (
         const width = currentValue > 9 || maxValue > 9 ? 70 : 50;
         const height = 30;
 
-        const ratio = currentValue / maxValue;
-
-        const bg = new Graphics()
-          .roundRect(-width / 2, -height / 2, width, height, 6)
-          .fill(
-            fromColor.map(
-              (fv, i) => (fv * ratio + toColor[i] * (1 - ratio)) / 255,
-            ),
-          )
-          .stroke({ color: "black", pixelLine: true });
+        const bg = newGraphic(
+          getIndicatorBg(
+            currentValue,
+            maxValue,
+            width,
+            height,
+            fromColor,
+            toColor,
+          ),
+        );
 
         container.addChild(bg);
 
@@ -625,7 +648,7 @@ export const renderMap = (
       actionSpace[ccToKey(hexData.cc)].highlighted ||
       (highlightedCCs && highlightedCCs.includes(ccToKey(hexData.cc)))
     ) {
-      let highlight = new Graphics(highlightShape);
+      let highlight = newGraphic(highlightShape);
       hexContainer.addChild(highlight);
     }
 
@@ -652,6 +675,7 @@ export const renderMap = (
           text: `${menuItem.description}`,
           style: menuStyle,
         });
+        // TODO
         const box = new Graphics()
           .roundRect(0, 0, itemText.width + buttonHeight + 5, buttonHeight, 5)
           .fill("0x666666");
@@ -744,16 +768,23 @@ export const renderMap = (
       store.dispatch(
         setActionPreview(
           previewOptions
-            ? getBaseActionSpace(gameState, () => null, {
-                type: "SelectOptionDecisionPoint",
-                explanation: "preview",
-                payload: { options: previewOptions },
-              })
+            ? Object.fromEntries(
+                Object.entries(
+                  getBaseActionSpace(gameState, () => null, {
+                    type: "SelectOptionDecisionPoint",
+                    explanation: "preview",
+                    payload: { options: previewOptions },
+                  }),
+                ).map(([cc, hexActions]) => [
+                  cc,
+                  hexActions.actions.map((action) => action.type),
+                ]),
+              )
             : null,
         ),
       );
     }
   });
 
-  return map;
+  return { map, graphics: createdGraphics };
 };
