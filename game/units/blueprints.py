@@ -40,6 +40,7 @@ from game.units.facets.activated_abilities import (
     IronBlessing,
     Hitch,
     Jump,
+    CoordinatedManeuver,
 )
 from game.units.facets.attacks import (
     Peck,
@@ -84,6 +85,7 @@ from game.units.facets.attacks import (
     MightyBlow,
     Rifle,
     TongueLash,
+    CommandersPistol,
 )
 from game.units.facets.static_abilities import (
     Prickly,
@@ -113,6 +115,7 @@ from game.units.facets.static_abilities import (
     JukeAndJive,
     Inspiration,
     ToxicSkin,
+    InspiringPresence,
 )
 from game.values import Size
 
@@ -697,6 +700,16 @@ BLOOD_CONDUIT = UnitBlueprint(
     energy=3,
     facets=[VitalityTransfer],
     price=3,
+)
+
+FRONTLINE_TACTICIAN = UnitBlueprint(
+    "Frontline Tactician",
+    health=6,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[CommandersPistol, CoordinatedManeuver, InspiringPresence],
+    price=9,
 )
 
 RAT_SCOUT = UnitBlueprint(

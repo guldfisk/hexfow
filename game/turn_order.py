@@ -14,6 +14,13 @@ class TurnOrder:
     def active_player(self) -> Player:
         return self.players[self._active_player_index]
 
+    @property
+    def all_players(self) -> list[Player]:
+        return [
+            self.players[(i + self._active_player_index) % len(self.players)]
+            for i in range(len(self.players))
+        ]
+
     def advance(self) -> Player:
         self._active_player_index = (self._active_player_index + 1) % len(self.players)
         return self.active_player

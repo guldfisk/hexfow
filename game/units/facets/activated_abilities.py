@@ -883,9 +883,36 @@ class Hitch(SingleAllyActivatedAbility):
     cost = EnergyCost(3)
     range = 1
     can_target_self = False
-    combinable = 1
+    combinable = True
 
     def perform(self, target: Unit) -> None:
         ES.resolve(
             ApplyStatus(target, StatusSignature(UnitStatus.get("hitched"), self))
         )
+
+
+class CoordinatedManeuver(ActivatedAbilityFacet[list[Unit]]):
+    """
+    Target 1 or 2 other ready allied units within 2 range LoS. Activates them.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+
+    def get_target_profile(self) -> TargetProfile[list[Unit]] | None:
+        if units := [
+            unit
+            for unit in GS.map.get_units_within_range_off(self.owner, 2)
+            if unit.controller == self.owner.controller
+            and unit != self.owner
+            and not unit.exhausted
+            and not line_of_sight_obstructed_for_unit(
+                self.owner,
+                GS.map.position_off(self.owner),
+                GS.map.position_off(unit),
+            )
+        ]:
+            return NOfUnits(units, 2, ["select target", "select target"], min_count=1)
+
+    def perform(self, target: list[Unit]) -> None:
+        for unit in target:
+            ES.resolve(QueueUnitForActivation(unit))

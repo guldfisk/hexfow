@@ -857,19 +857,21 @@ class NOfUnits(TargetProfile[list[Unit]]):
     units: list[Unit]
     select_count: int
     labels: list[str]
+    min_count: int | None = None
 
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {
             "units": [{"id": context.id_map.get_id_for(unit)} for unit in self.units],
             "select_count": self.select_count,
+            "min_count": self.min_count,
             "labels": self.labels,
         }
 
     def parse_response(self, v: Any) -> list[Unit]:
         indexes = v["indexes"]
         # TODO nice validation LMAO
-        assert len(indexes) == self.select_count
-        assert len(indexes) == len(set(indexes))
+        # assert len(indexes) == self.select_count
+        # assert len(indexes) == len(set(indexes))
         return [self.units[idx] for idx in indexes]
 
 

@@ -287,17 +287,19 @@ export const renderMap = (
 
   app.stage.addChild(map);
 
-  const actionSpace = menu
-    ? menuActionSpacers[menu.type](
-        gameState,
-        (body) => gameConnection.send(JSON.stringify(body)),
-        menu,
-      )
-    : getBaseActionSpace(
-        gameState,
-        (body) => gameConnection.send(JSON.stringify(body)),
-        gameState.decision,
-      );
+  const actionSpace = (
+    menu
+      ? menuActionSpacers[menu.type](
+          gameState,
+          (body) => gameConnection.send(JSON.stringify(body)),
+          menu,
+        )
+      : getBaseActionSpace(
+          gameState,
+          (body) => gameConnection.send(JSON.stringify(body)),
+          gameState.decision,
+        )
+  ).hexActions;
 
   for (const hexData of gameState.map.hexes) {
     let realHexPosition = addRCs(ccToRC(hexData.cc), center);

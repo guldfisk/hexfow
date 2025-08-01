@@ -12,6 +12,7 @@ from game.effects.modifiers import (
     SourceTypeResistance,
     TerrainProtectionModifier,
     ScurryInTheShadowsModifier,
+    IncreaseSpeedAuraModifier,
 )
 from game.effects.replacements import (
     CrushableReplacement,
@@ -282,3 +283,12 @@ class Inspiration(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(InspirationTrigger(self.owner))
+
+
+class InspiringPresence(StaticAbilityFacet):
+    """
+    Adjacent allied units have +1 speed.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(IncreaseSpeedAuraModifier(self.owner, 1))

@@ -262,6 +262,24 @@ class ScurryInTheShadowsModifier(StateModifierEffect[Unit, None, int]):
 
 
 @dataclasses.dataclass(eq=False)
+class IncreaseSpeedAuraModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = SpeedLayer.FLAT
+    target: ClassVar[object] = Unit.speed
+
+    unit: Unit
+    amount: int
+
+    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+        return (
+            obj.controller == self.unit.controller
+            and GS.map.distance_between(obj, self.unit) == 1
+        )
+
+    def modify(self, obj: Unit, request: None, value: int) -> int:
+        return value + self.amount
+
+
+@dataclasses.dataclass(eq=False)
 class UnitProportionalSpeedModifier(StateModifierEffect[Unit, None, int]):
     priority: ClassVar[int] = SpeedLayer.PROPORTIONAL
     target: ClassVar[object] = Unit.speed

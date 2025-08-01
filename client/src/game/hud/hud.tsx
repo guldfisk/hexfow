@@ -20,7 +20,7 @@ import {
 } from "../interfaces/gameObjectDetails.ts";
 import { getImageUrl } from "../images.ts";
 import { MenuData } from "../actions/interface.ts";
-import { menuDescribers } from "../actions/menues.ts";
+import { menuActionSpacers, menuDescribers } from "../actions/menues.ts";
 import { ccToKey } from "../geometry.ts";
 import {
   highlightCCs,
@@ -28,6 +28,7 @@ import {
   removeCCHighlight,
   store,
 } from "../state/store.ts";
+import { getBaseActionSpace } from "../actions/actionSpace.ts";
 
 const LogLineComponentView = ({
   element,
@@ -539,7 +540,26 @@ const DecisionDetailView = ({
 
   let button = null;
 
-  if (gameState.decision.type == "SelectOptionDecisionPoint") {
+  // TODO common
+  const actionSpace = menu
+    ? menuActionSpacers[menu.type](
+        gameState,
+        (body) => connection.send(JSON.stringify(body)),
+        menu,
+      )
+    : getBaseActionSpace(
+        gameState,
+        (body) => connection.send(JSON.stringify(body)),
+        gameState.decision,
+      );
+
+  if (actionSpace.buttonAction) {
+    button = (
+      <button onClick={actionSpace.buttonAction.do}>
+        {actionSpace.buttonAction.description}
+      </button>
+    );
+  } else if (gameState.decision.type == "SelectOptionDecisionPoint") {
     const skipIndexes = gameState.decision.payload.options
       .map((option, idx) => [option, idx] as [OptionBase, number])
       .filter(([option]) => option.type == "SkipOption")

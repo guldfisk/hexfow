@@ -29,6 +29,7 @@ from game.core import (
 )
 from game.decisions import SelectOptionDecisionPoint, NoTarget, O, OptionDecision
 from game.player import Player
+from game.turn_order import TurnOrder
 from game.values import DamageType, StatusIntention, Resistance
 
 
@@ -706,9 +707,6 @@ class Round(Event[None]):
             while skipped_players != all_players:
                 timestamp += 1
                 player = gs.turn_order.active_player
-                gs.turn_order.advance()
-                if player in round_skipped_players:
-                    continue
 
                 GS.update_vision()
 
@@ -720,6 +718,7 @@ class Round(Event[None]):
                         for unit in gs.activation_queued_units
                         if unit.can_be_activated(None)
                     ]:
+                        queued_turn_order = TurnOrder(gs.turn_order.all_players)
                         # TODO wtf is happening here?
                         while not (
                             activateable_units := [
@@ -728,12 +727,15 @@ class Round(Event[None]):
                                 if unit.controller == player
                             ]
                         ):
-                            player = gs.turn_order.advance()
+                            player = queued_turn_order.advance()
 
                     else:
                         gs.activation_queued_units.clear()
 
                 if activateable_units is None:
+                    gs.turn_order.advance()
+                    if player in round_skipped_players:
+                        continue
                     activateable_units = [
                         unit
                         for unit in gs.map.units_controlled_by(player)

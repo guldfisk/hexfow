@@ -252,35 +252,36 @@ export const getBaseActionSpace = (
     }
   }
 
-  // const isPreview = decision && decision.type == 'SelectOptionDecisionPoint' && decision.payload.options.some(option => option.type == 'ActivateUnitOption')
-
-  return Object.fromEntries(
-    Object.entries(actions).map(([cc, _actions]) => [
-      cc,
-      _actions.length > 2 ||
-      (_actions.length == 2 && _actions.some((a) => a.type == "menu")) ||
-      new Set(_actions.map((a) => a.type)).size != _actions.length
-        ? {
-            actions: [
-              {
-                type: "menu",
-                description: "open menu",
-                do: () => {
-                  store.dispatch(
-                    activateMenu({
-                      type: "ListMenu",
-                      cc: ccFromKey(cc),
-                    }),
-                  );
+  return {
+    hexActions: Object.fromEntries(
+      Object.entries(actions).map(([cc, _actions]) => [
+        cc,
+        _actions.length > 2 ||
+        (_actions.length == 2 && _actions.some((a) => a.type == "menu")) ||
+        new Set(_actions.map((a) => a.type)).size != _actions.length
+          ? {
+              actions: [
+                {
+                  type: "menu",
+                  description: "open menu",
+                  do: () => {
+                    store.dispatch(
+                      activateMenu({
+                        type: "ListMenu",
+                        cc: ccFromKey(cc),
+                      }),
+                    );
+                  },
                 },
-              },
-            ],
-          }
-        : {
-            actions: _actions,
-            highlighted: false,
-            previewOptions: previewMap[cc],
-          },
-    ]),
-  );
+              ],
+            }
+          : {
+              actions: _actions,
+              highlighted: false,
+              previewOptions: previewMap[cc],
+            },
+      ]),
+    ),
+    buttonAction: null,
+  };
 };

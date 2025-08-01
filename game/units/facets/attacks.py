@@ -197,10 +197,15 @@ class TongueLash(RangedAttackFacet):
     damage_type = DamageType.MELEE
 
 
+class CommandersPistol(RangedAttackFacet):
+    cost = MovementCost(1)
+    range = 2
+    damage = 2
+
+
 class HurlBoulder(RangedAttackFacet):
     cost = ExclusiveCost()
     range = 2
-    #     +1 damage on rock terrain
     damage = 5
 
 

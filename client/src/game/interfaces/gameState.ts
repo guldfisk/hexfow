@@ -82,7 +82,12 @@ export interface NoTarget extends TargetProfileBase {
 
 export interface NOfUnits extends TargetProfileBase {
   type: "NOfUnits";
-  values: { units: { id: string }[]; selectCount: number; labels: string[] };
+  values: {
+    units: { id: string }[];
+    selectCount: number;
+    minCount: number | null;
+    labels: string[];
+  };
 }
 
 export interface ConsecutiveAdjacentHexes extends TargetProfileBase {

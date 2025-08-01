@@ -32,7 +32,15 @@ export interface HexActions {
   previewOptions?: UnitOption[] | null;
 }
 
-export type ActionSpace = { [key: string]: HexActions };
+export interface ButtonAction {
+  description: string;
+  do: () => void;
+}
+
+export interface ActionSpace {
+  hexActions: { [key: string]: HexActions };
+  buttonAction: ButtonAction | null;
+}
 
 export interface BaseMenuData {
   type: string;

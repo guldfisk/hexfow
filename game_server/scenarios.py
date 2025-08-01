@@ -39,7 +39,8 @@ def get_test_scenario() -> Scenario:
             TRACTOR,
             GIANT_TOAD,
             SHRINE_KEEPER,
-            CHAINSAW_SADIST,
+            FRONTLINE_TACTICIAN,
+            # CHAINSAW_SADIST,
             # RIFLE_INFANTRY,
         ),
         (
