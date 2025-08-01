@@ -654,7 +654,7 @@ INFERNO_TANK = UnitBlueprint(
     speed=2,
     sight=1,
     armor=1,
-    energy=5,
+    energy=6,
     size=Size.LARGE,
     facets=[
         Scorch,

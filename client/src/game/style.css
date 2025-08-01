@@ -124,3 +124,10 @@ button {
 .terrain-image {
   clip-path: polygon(93% 29%, 50% 9%, 6% 29%, 6% 70%, 50% 90%, 93% 70%);
 }
+
+.increased-modified {
+  color: #2f71e7;
+}
+.decreased-modified {
+  color: #9b1711;
+}

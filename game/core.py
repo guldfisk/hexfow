@@ -779,6 +779,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             # TODO
             "size": self.size.g().name[0],
             "armor": self.armor.g(),
+            "attack_power": self.attack_power.g(),
             "exhausted": self.exhausted,
             "is_ghost": False,
             "statuses": [
@@ -1634,6 +1635,7 @@ class GameState:
             "active_unit_context": (
                 self.active_unit_context.serialize(context)
                 if self.active_unit_context
+                and self.active_unit_context.unit.is_visible_to(context.player)
                 else None
             ),
             "logs": self._pending_player_logs[context.player],

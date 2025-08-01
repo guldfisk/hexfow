@@ -52,6 +52,7 @@ from game.values import DamageType, StatusIntention
 
 class TriggerLayers(IntEnum):
     ROUND_STATUSES_TICK = auto()
+    PANIC = auto()
     ROUND_APPLY_DEBUFFS = auto()
 
     READY = auto()
@@ -542,7 +543,7 @@ class RoundDamageTrigger(TriggerEffect[RoundCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class PanickedTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
+    priority: ClassVar[int] = TriggerLayers.PANIC
 
     status: UnitStatus
 

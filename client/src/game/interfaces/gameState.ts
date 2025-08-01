@@ -28,6 +28,7 @@ export interface Unit {
   maxEnergy: number;
   energy: number;
   armor: number;
+  attackPower: number;
   size: Size;
   exhausted: boolean;
   isGhost: boolean;

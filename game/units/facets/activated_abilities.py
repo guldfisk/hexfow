@@ -134,7 +134,7 @@ class InducePanic(SingleEnemyActivatedAbility):
     """
 
     range = 2
-    cost = MovementCost(1) | EnergyCost(4)
+    cost = MovementCost(2) | EnergyCost(4)
 
     def perform(self, target: Unit) -> None:
         ES.resolve(ApplyStatus(target, StatusSignature(Panicked, self, duration=2)))
@@ -542,13 +542,12 @@ class Terrorize(SingleEnemyActivatedAbility):
         ES.resolve(ApplyStatus(target, StatusSignature(Terror, self, duration=2)))
 
 
-# TODO should be an attack
 class Scorch(ActivatedAbilityFacet[list[Hex]]):
     """
     Target length 3 adjacent arc. Deals 3 ranged damage and applies 2 stacks of <burn> to units on hexes.
     """
 
-    cost = MovementCost(1)
+    cost = MovementCost(1) | EnergyCost(3)
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
         return ConsecutiveAdjacentHexes(GS.map.hex_off(self.owner), 1)

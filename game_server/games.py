@@ -237,7 +237,7 @@ class GameRunner(Thread):
             for player in gs.turn_order.players:
                 gs.serialize_for(gs._get_context_for(player), None)
 
-            # ES.deregister_effects(*effects)
+            ES.deregister_effects(*effects)
 
             for logs in gs._pending_player_logs.values():
                 logs[:] = []

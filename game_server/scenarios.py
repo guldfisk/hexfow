@@ -21,7 +21,13 @@ def get_test_scenario() -> Scenario:
     landscape = Landscape(
         {
             cc: HexSpec(
-                random.choice([Plains, Forest, Hills]),
+                random.choice(
+                    [
+                        Plains,
+                        # Forest,
+                        # Hills,
+                    ]
+                ),
                 cc.distance_to(CC(0, 0)) <= 1,
             )
             for cc in hex_circle(4)
@@ -32,12 +38,15 @@ def get_test_scenario() -> Scenario:
         (
             TRACTOR,
             GIANT_TOAD,
-            RIFLE_INFANTRY,
+            SHRINE_KEEPER,
+            CHAINSAW_SADIST,
+            # RIFLE_INFANTRY,
         ),
         (
-            LEGENDARY_WRESTLER,
-            LIGHT_ARCHER,
-            RHINO_BEAST,
+            # LEGENDARY_WRESTLER,
+            # LIGHT_ARCHER,
+            # RHINO_BEAST,
+            RAT_SCOUT,
             RIFLE_INFANTRY,
         ),
     )
