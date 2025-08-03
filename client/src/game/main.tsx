@@ -1,6 +1,6 @@
 import "./style.css";
 
-import {Application, Container, Graphics} from "pixi.js";
+import { Application, Container, Graphics } from "pixi.js";
 import { recursiveCamelCase } from "./utils/case.ts";
 
 import { loadGameTextures } from "./textures.ts";
@@ -11,7 +11,9 @@ import { HUD } from "./hud/hud.tsx";
 import { Provider } from "react-redux";
 import { receiveGameState, renderedGameState, store } from "./state/store.ts";
 
-const gameConnection = new WebSocket(`ws://${window.location.hostname}:8765/ws`);
+const gameConnection = new WebSocket(
+  `ws://${window.location.hostname}:8765/ws`,
+);
 gameConnection.onmessage = (event) => {
   console.log(recursiveCamelCase(JSON.parse(event.data)));
   store.dispatch(receiveGameState(recursiveCamelCase(JSON.parse(event.data))));
@@ -90,10 +92,12 @@ async function main() {
   const keyHandler = (event: KeyboardEvent) => {
     const state = store.getState();
     if (
-      event.key == "s" &&
+      event.code == "KeyS" &&
       state.gameState &&
       state.gameState.decision &&
-      state.gameState.decision["type"] == "SelectOptionDecisionPoint"
+      state.gameState.decision["type"] == "SelectOptionDecisionPoint" &&
+      (state.gameState.decision.explanation != "activate unit?" ||
+        event.key == "S")
     ) {
       {
         for (const [idx, option] of state.gameState.decision["payload"][
@@ -123,12 +127,12 @@ async function main() {
         state.highlightedCCs,
         gameConnection,
       );
-      map = result.map
+      map = result.map;
       app.stage.addChild(map);
       for (const g of previousGraphics) {
-        g.destroy()
+        g.destroy();
       }
-      previousGraphics = result.graphics
+      previousGraphics = result.graphics;
       store.dispatch(renderedGameState());
     }
     map.position = worldTranslation;

@@ -131,3 +131,8 @@ button {
 .decreased-modified {
   color: #9b1711;
 }
+
+.alert-button {
+  background-color: #9b1711;
+  color: #111111;
+}

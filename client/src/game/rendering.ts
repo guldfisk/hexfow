@@ -783,7 +783,7 @@ export const renderMap = (
                     type: "SelectOptionDecisionPoint",
                     explanation: "preview",
                     payload: { options: previewOptions },
-                  }),
+                  }).hexActions,
                 ).map(([cc, hexActions]) => [
                   cc,
                   hexActions.actions.map((action) => action.type),

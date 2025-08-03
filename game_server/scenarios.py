@@ -161,7 +161,7 @@ def get_random_scenario() -> Scenario:
         cc
         for cc in [
             CC(-6, 7),
-            CC(-6, 8),
+            # CC(-6, 8),
             CC(-5, 6),
             CC(-5, 7),
             CC(-4, 6),
@@ -185,7 +185,18 @@ def get_random_scenario() -> Scenario:
             CC(5, 1),
             CC(5, 2),
             CC(6, 1),
-            CC(6, 2),
+            # CC(6, 2),
+            CC(-6, 6),
+            CC(-5, 6),
+            CC(-4, 5),
+            CC(-3, 4),
+            CC(-2, 4),
+            CC(-1, 3),
+            CC(0, 3),
+            CC(2, 2),
+            CC(4, 1),
+            CC(5, 0),
+            CC(6, 0),
         ]
         if landscape.terrain_map[cc].terrain_type != Water
     ]

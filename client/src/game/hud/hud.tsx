@@ -568,13 +568,20 @@ const DecisionDetailView = ({
     if (skipIndexes.length) {
       button = (
         <button
+          className={
+            gameState.decision.explanation == "activate unit?"
+              ? "alert-button"
+              : ""
+          }
           onClick={() => {
             connection.send(
               JSON.stringify({ index: skipIndexes[0], target: null }),
             );
           }}
         >
-          Skip
+          {gameState.decision.explanation == "activate unit?"
+            ? "Skip ROUND"
+            : "Skip rest of unit turn"}
         </button>
       );
     }
