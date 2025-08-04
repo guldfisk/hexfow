@@ -36,10 +36,14 @@ def get_test_scenario() -> Scenario:
 
     player_units = (
         (
-            TRACTOR,
-            GIANT_TOAD,
-            SHRINE_KEEPER,
-            FRONTLINE_TACTICIAN,
+            # TRACTOR,
+            INFERNO_TANK,
+            PESTILENCE_PRIEST,
+            # CYCLOPS,
+            # LIGHT_ARCHER,
+            # GIANT_TOAD,
+            # SHRINE_KEEPER,
+            # FRONTLINE_TACTICIAN,
             # CHAINSAW_SADIST,
             # RIFLE_INFANTRY,
         ),
@@ -47,7 +51,8 @@ def get_test_scenario() -> Scenario:
             # LEGENDARY_WRESTLER,
             # LIGHT_ARCHER,
             # RHINO_BEAST,
-            RAT_SCOUT,
+            CHICKEN,
+            # LUMBERING_PILLAR,
             RIFLE_INFANTRY,
         ),
     )

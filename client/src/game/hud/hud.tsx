@@ -514,7 +514,7 @@ const StatusesDetailView = ({
 const GameInfoView = ({ gameState }: { gameState: GameState }) => (
   <div>
     {gameState.players.map((player) => (
-      <div>{`${player.name}${player.name == gameState.player ? " (you)" : ""}: ${player.points}/21 points`}</div>
+      <div>{`${player.name}${player.name == gameState.player ? " (you)" : ""}: ${player.points}/${gameState.targetPoints} points`}</div>
     ))}
     {`round: ${gameState.round}/10`}
   </div>

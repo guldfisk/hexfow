@@ -404,7 +404,7 @@ def is_vision_obstructed_for_unit_at(unit: Unit, cc: CC) -> bool:
     match GS.vision_obstruction_map[unit.controller].get(cc):
         case VisionObstruction.FULL:
             return True
-        case VisionObstruction.HIGH_GROUND:
+        case VisionObstruction.FOR_LOW_GROUND:
             return not GS.map.hex_off(unit).terrain.is_high_ground
         case _:
             return False
@@ -1035,11 +1035,15 @@ class Hex(Modifiable, HasStatuses, Serializable):
     @modifiable
     def blocks_vision_for(self, player: Player) -> VisionObstruction:
         if self.terrain.blocks_vision:
-            return VisionObstruction.FULL
+            if self.terrain.is_high_ground:
+                return VisionObstruction.FULL
+            return VisionObstruction.FOR_LOW_GROUND
         if (unit := self.map.unit_on(self)) and unit.blocks_vision_for(player):
-            return VisionObstruction.FULL
+            if self.terrain.is_high_ground:
+                return VisionObstruction.FULL
+            return VisionObstruction.FOR_LOW_GROUND
         if self.terrain.is_high_ground:
-            return VisionObstruction.HIGH_GROUND
+            return VisionObstruction.FOR_LOW_GROUND
         return VisionObstruction.NONE
 
     @modifiable
@@ -1546,7 +1550,6 @@ class GameState:
     def __init__(
         self,
         player_count: int,
-        # interface_class: type[Interface],
         connection_class: type[Connection],
         landscape: Landscape,
     ):
@@ -1557,12 +1560,10 @@ class GameState:
         self.connections = {
             player: connection_class(player) for player in self.turn_order.players
         }
-        # self.map = HexMap(settings.map_spec.generate_landscape())
         self.map = HexMap(landscape)
         self.active_unit_context: ActiveUnitContext | None = None
         self.activation_queued_units: set[Unit] = set()
-        # self.points: dict[Player]
-        self.target_points = 21
+        self.target_points = 23
         self.round_counter = 0
 
         # TODO move to player
@@ -1583,10 +1584,6 @@ class GameState:
         self._pending_player_logs: dict[
             Player, list[tuple[int, list[dict[str, Any]]]]
         ] = {player: [] for player in self.turn_order.players}
-
-        # TODO for debugging
-        # self._event_log: list[str] = []
-        # ES.register_event_callback(EventLogger(self._event_log.append))
 
     @contextlib.contextmanager
     def log(self, *line_options: LogLine) -> Iterator[None]:
@@ -1630,6 +1627,7 @@ class GameState:
     ) -> Mapping[str, Any]:
         serialized_game_state = {
             "player": context.player.name,
+            "target_points": self.target_points,
             "players": [player.serialize() for player in self.turn_order.players],
             "round": self.round_counter,
             "map": self.map.serialize(context),
@@ -1641,8 +1639,6 @@ class GameState:
                 else None
             ),
             "logs": self._pending_player_logs[context.player],
-            # TODO for debugging
-            # "event_log": self._event_log,
         }
         # TODO yikes
         self.previous_hex_states[context.player] = {
@@ -1665,6 +1661,12 @@ class GameState:
             },
         )
 
+    def send_to_players(self) -> None:
+        for _player in self.turn_order.players:
+            self.connections[_player].send(
+                self.serialize_for(self._get_context_for(_player), None)
+            )
+
     def make_decision(self, player: Player, decision_point: DecisionPoint[O]) -> O:
         for _player in self.turn_order.players:
             if _player != player:
@@ -1674,8 +1676,6 @@ class GameState:
         response = self.connections[player].get_response(
             self.serialize_for(self._get_context_for(player), decision_point)
         )
-        # TODO
-        print("response in game state", response)
         return decision_point.parse_response(response)
 
 
@@ -1683,7 +1683,6 @@ class ScopedGameState:
 
     # TODO protocol/interface?
     def __init__(self):
-        # self._gs: GameState | None = None
         self._store = threading.local()
 
     def bind(self, gs: GameState) -> None:
@@ -1758,6 +1757,9 @@ class ScopedGameState:
         self, context: SerializationContext, decision_point: DecisionPoint | None
     ) -> Mapping[str, Any]:
         return self._gs.serialize_for(context, decision_point)
+
+    def send_to_players(self) -> None:
+        self._gs.send_to_players()
 
     def make_decision(self, player: Player, decision_point: DecisionPoint[O]) -> O:
         return self._gs.make_decision(player, decision_point)

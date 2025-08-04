@@ -27,7 +27,7 @@ class Resistance(IntEnum):
 
 class VisionObstruction(IntEnum):
     NONE = auto()
-    HIGH_GROUND = auto()
+    FOR_LOW_GROUND = auto()
     FULL = auto()
 
 

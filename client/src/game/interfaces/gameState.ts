@@ -232,6 +232,7 @@ export interface Player {
 
 export interface GameState {
   player: string;
+  targetPoints: number;
   players: Player[];
   round: number;
   map: Map;

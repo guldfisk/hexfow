@@ -322,9 +322,7 @@
       "identifier": "goblin_assassin",
       "allied": false
     },
-    "statuses": [
-      "rune_of_healing"
-    ]
+    "statuses": []
   },
   "5,-7": {
     "cc": {
@@ -342,9 +340,7 @@
     },
     "terrainType": "plains",
     "isObjective": false,
-    "statuses": [
-      "rune_of_clarity"
-    ]
+    "statuses": []
   },
   "4,3": {
     "cc": {
@@ -384,9 +380,7 @@
       "identifier": "goblin_assassin",
       "allied": true
     },
-    "statuses": [
-      "rune_of_healing"
-    ]
+    "statuses": []
   },
   "-4,7": {
     "cc": {
@@ -431,9 +425,7 @@
     },
     "terrainType": "plains",
     "isObjective": false,
-    "statuses": [
-      "rune_of_clarity"
-    ]
+    "statuses": []
   },
   "-5,-2": {
     "cc": {
@@ -757,7 +749,9 @@
     },
     "terrainType": "plains",
     "isObjective": false,
-    "statuses": []
+    "statuses": [
+      "rune_of_healing"
+    ]
   },
   "3,-4": {
     "cc": {
@@ -1042,7 +1036,9 @@
     },
     "terrainType": "plains",
     "isObjective": false,
-    "statuses": []
+    "statuses": [
+      "rune_of_healing"
+    ]
   },
   "-4,4": {
     "cc": {
@@ -1271,7 +1267,9 @@
     },
     "terrainType": "plains",
     "isObjective": false,
-    "statuses": []
+    "statuses": [
+      "rune_of_clarity"
+    ]
   },
   "-2,2": {
     "cc": {
@@ -1311,7 +1309,9 @@
     },
     "terrainType": "plains",
     "isObjective": false,
-    "statuses": []
+    "statuses": [
+      "rune_of_clarity"
+    ]
   },
   "3,-1": {
     "cc": {

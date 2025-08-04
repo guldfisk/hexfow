@@ -31,6 +31,7 @@ from game.core import (
     HexRing,
     GS,
     ActiveUnitContext,
+    is_vision_obstructed_for_unit_at,
 )
 from game.decisions import TargetProfile, O
 from game.effects.hooks import AdjacencyHook
@@ -60,7 +61,7 @@ from game.statuses.unit_statuses import (
     Terror,
     Burn,
 )
-from game.values import DamageType, Size, VisionObstruction
+from game.values import DamageType, Size
 
 
 class Bloom(NoTargetActivatedAbility):
@@ -259,8 +260,7 @@ class Stare(ActivatedAbilityFacet[list[Hex]]):
     def perform(self, target: list[Hex]) -> None:
         for h in target:
             ES.resolve(ApplyHexStatus(h, HexStatusSignature(Glimpse, self)))
-            # TODO handle highground
-            if h.blocks_vision_for(self.owner.controller) != VisionObstruction.NONE:
+            if is_vision_obstructed_for_unit_at(self.owner, h.position):
                 break
 
 
@@ -727,7 +727,7 @@ class Scry(SingleHexTargetActivatedAbility):
     Target hex within 6 range NLoS. Applies <revealed> for 1 round.
     """
 
-    cost = ExclusiveCost() | EnergyCost(2)
+    cost = EnergyCost(2)
     range = 6
     requires_los = False
     requires_vision = False
