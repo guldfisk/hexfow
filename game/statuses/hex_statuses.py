@@ -18,6 +18,7 @@ from game.effects.triggers import (
     TurnExpiringStatusTrigger,
     WalkInDestroyStatusTrigger,
     HexRoundHealTrigger,
+    MineTrigger,
 )
 
 
@@ -163,3 +164,19 @@ class RuneOfClarity(HexStatus):
 
     def create_effects(self) -> None:
         self.register_effects(HexIncreasesEnergyRegenModifier(self.parent, 1))
+
+
+class Mine(HexStatus):
+    """
+    When a unit moves into this hex, it suffers 2 damage and this status is removed.
+    This status is hidden for opponents.
+    """
+
+    def merge(self, incoming: Self) -> bool:
+        return True
+
+    def is_hidden_for(self, player: Player) -> bool:
+        return player != self.controller
+
+    def create_effects(self) -> None:
+        self.register_effects(MineTrigger(self))

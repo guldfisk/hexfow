@@ -341,6 +341,20 @@ class JukeAndJiveTrigger(TriggerEffect[ActionCleanup]):
 
 
 @dataclasses.dataclass(eq=False)
+class MineTrigger(TriggerEffect[MoveUnit]):
+    priority: ClassVar[int] = 0
+
+    status: HexStatus
+
+    def should_trigger(self, event: MoveUnit) -> bool:
+        return event.to_ == self.status.parent and event.result
+
+    def resolve(self, event: MoveUnit) -> None:
+        ES.resolve(Damage(event.unit, DamageSignature(2, self.status)))
+        self.status.remove()
+
+
+@dataclasses.dataclass(eq=False)
 class BurnOnWalkIn(TriggerEffect[MoveUnit]):
     priority: ClassVar[int] = 0
 

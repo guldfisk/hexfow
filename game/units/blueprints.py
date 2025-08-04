@@ -41,6 +41,8 @@ from game.units.facets.activated_abilities import (
     Hitch,
     Jump,
     CoordinatedManeuver,
+    LayMine,
+    Vomit,
 )
 from game.units.facets.attacks import (
     Peck,
@@ -86,6 +88,7 @@ from game.units.facets.attacks import (
     Rifle,
     TongueLash,
     CommandersPistol,
+    Slice,
 )
 from game.units.facets.static_abilities import (
     Prickly,
@@ -283,6 +286,17 @@ TRACTOR = UnitBlueprint(
     price=7,
 )
 
+
+MINE_LAYER_BEETLE = UnitBlueprint(
+    "Mine Layer Beetle",
+    health=6,
+    speed=3,
+    sight=1,
+    energy=3,
+    facets=[Slice, LayMine],
+    price=7,
+)
+
 HORROR_SPAWN = UnitBlueprint(
     "Horror Spawn",
     health=3,
@@ -291,6 +305,17 @@ HORROR_SPAWN = UnitBlueprint(
     size=Size.SMALL,
     facets=[SerratedBeak],
     price=None,
+)
+
+
+BLIND_ABOMINATION = UnitBlueprint(
+    "Blind Abomination",
+    health=11,
+    speed=3,
+    sight=0,
+    size=Size.LARGE,
+    facets=[Vomit],
+    price=9,
 )
 
 HORROR = UnitBlueprint(

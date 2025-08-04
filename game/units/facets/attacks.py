@@ -197,6 +197,11 @@ class TongueLash(RangedAttackFacet):
     damage_type = DamageType.MELEE
 
 
+class Slice(MeleeAttackFacet):
+    cost = MovementCost(1)
+    damage = 3
+
+
 class CommandersPistol(RangedAttackFacet):
     cost = MovementCost(1)
     range = 2

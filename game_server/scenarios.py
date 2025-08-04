@@ -37,8 +37,10 @@ def get_test_scenario() -> Scenario:
     player_units = (
         (
             # TRACTOR,
-            INFERNO_TANK,
-            PESTILENCE_PRIEST,
+            # INFERNO_TANK,
+            # PESTILENCE_PRIEST,
+            MINE_LAYER_BEETLE,
+            BLIND_ABOMINATION
             # CYCLOPS,
             # LIGHT_ARCHER,
             # GIANT_TOAD,
@@ -48,6 +50,7 @@ def get_test_scenario() -> Scenario:
             # RIFLE_INFANTRY,
         ),
         (
+            MINE_LAYER_BEETLE,
             # LEGENDARY_WRESTLER,
             # LIGHT_ARCHER,
             # RHINO_BEAST,

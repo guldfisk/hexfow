@@ -916,3 +916,37 @@ class CoordinatedManeuver(ActivatedAbilityFacet[list[Unit]]):
     def perform(self, target: list[Unit]) -> None:
         for unit in target:
             ES.resolve(QueueUnitForActivation(unit))
+
+
+class LayMine(SingleHexTargetActivatedAbility):
+    """
+    Target unoccupied hex within 2 range. Applies <mine>.
+    """
+
+    cost = EnergyCost(2) | MovementCost(1)
+    combinable = True
+
+    def can_target_hex(self, hex_: Hex) -> bool:
+        return not GS.map.unit_on(hex_)
+
+    def perform(self, target: Hex) -> None:
+        ES.resolve(
+            ApplyHexStatus(target, HexStatusSignature(HexStatus.get("mine"), self))
+        )
+
+
+class Vomit(SingleHexTargetActivatedAbility):
+    """
+    Target adjacent hex. Deals 5 damage.
+    """
+
+    cost = MovementCost(2)
+
+    requires_vision = False
+
+    def can_target_hex(self, hex_: Hex) -> bool:
+        return hex_ != GS.map.hex_off(self.parent)
+
+    def perform(self, target: Hex) -> None:
+        if unit := GS.map.unit_on(target):
+            ES.resolve(Damage(unit, DamageSignature(5, self)))
