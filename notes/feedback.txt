@@ -1,0 +1,24 @@
+sucks ikke kunne se hvad en unit kan gøre inden man aktivere den
+    måske slight delay på action preview hover for mindre flicker?
+bug unit flytted ghost duplication
+status indicator på unit detail
+mere visible det din tur
+    bjælke i topped med current turn player eller ramme om viewport eller farved cirkel ved action detail view
+
+line of sight test ikke blokked når på hill
+    online
+unit sizes stadig ikke intuitivt
+    måske hak i finden?
+
+performance er pretty ass på min computer i hvert fald
+
+hvordan virker movement costs på melee attacks som første action?
+
+aura effect indicators?
+
+debuffs explain stacking
+aoe arc target outside map
+
+gets points with units dying to debuffs?
+
+idea: ready unit only allow movement

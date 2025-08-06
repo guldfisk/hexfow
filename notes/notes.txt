@@ -1,7 +1,6 @@
 reveal target
 stop movement wall
 allied teleporter
-movement speed buff
 flag planter
 reactive armor
 exhaust a unit
@@ -22,7 +21,6 @@ resistance to (damage to). half damage rounded up after reductions
 	blur - resistance to ranged
 	hardened carapace - resistance to aoe
 	ethereal - resistance to melee / ranged
-spider sense, like slark
 compulsive impatience, aoe debuff - when player takes action with unit that is not this unit while this unit is ready, this units suffers 1 pure damage, removed when this unit is activated.
 soul tether - debuff two targets, keeps track of maximum seen distance between units, both suffer a pure damage for each distance max seen distance is extended.
 corpse explosion - aoe - multiple corpses same square combined into single damage instance - corpses of dead units explode recursively
@@ -49,8 +47,6 @@ unit price resources?
 		This prob makes sense as "pure fighting ability", i.e. "damage per turn" * "effective health", so small maps isn't just all the slowest units standing in a clump and hitting each other.
 		- purple (p) - support/spells/high synergy
 	maybe also a vision one?
-code for points is v
-	cost writen like 10uu or 7rpp
 buildings?
 	immovable
 	no terrain protection
@@ -89,20 +85,7 @@ map ideas:
 	cauldron
 		middle capture area surrounded by unpassable mountain ring, with a few gaps. medium elevation, sparse vegetation, except for the middle.
 
-dragon
-	2 movement - 9 health - 2 vision
-	toggleable flying - +2 movement and flying, take off/land free combinable ability. use energy to fly? starts grounded.
-	breath attack - 2 hex line - 3 damage aoe + 3 burn - 1 move cost - physical propagation when grounded
-	melee attack - 5 damage - 1 move cost
-	big expensive
-unready targeted unit ability/attack
-ground stakes - hex status - move in damage scaled equal to distance to position at the beginning of turn
-movement cost attack ability. can always be used if unit has not moved. when used unit looses that many movement points. if unit has moved, it must have the movement points to spend.
-	action can have a move cost of zero, which then means the unit must not have negative movement points left if it has moved.
 "bat" sight, can only see presence of unit, nothing else.
-cyclops - burly - 4 vision line reveal physical propagation single attack combinable free ability
-ap riffle squad - 3 range 3 damage +1 against large 2 ap no move
-elemental summoner - summons time limited duration elemental based on terrain on target hex (this really want to have biome types be a thing)
 firefly summoner
 orbital strike
 	aoe ability 4 energy
@@ -111,24 +94,10 @@ orbital strike
 		hidden
 		after 2 rounds remove status and deal 6 aoe damage to any unit on hex
 ability remove energy and apply energy regen preventing debuff 2 rounds
-imbue allie with poison
 raise dead - corpse as generic skeleton - merge multiple corpses into more powerful creature?
-owl
-artillery walker
 energy overcharge
-damage on energy use aura
-multi action griffon
-plant monster
 aquatic only creature
-nuke tank
-tactical nuke launcher
-bee summoner
-mummy
-jaguar
 ambush trapdoor spider
-min damage debuff
-plant spawning plant monster
-terraforming mage
 storm summoner - AA
 day/night cycle?
 	night -1 sight (min 1)
@@ -143,15 +112,6 @@ weather (bloat, this time for real). but maybe these can just be like global sta
 	windy
 		-1 movement air units
 like hot/cold as just debuffs also	
-debuff min damage (1-2 damage -> 3 or whatever)
-giant slayer
-leader
-heroic hoplite
-frost devil
-giant toad
-wolf - pack hunt
-boar
-einherjar
 identities?
 	could have resource bonuses, like:
 		all units below n points -1 point cost
@@ -161,15 +121,7 @@ identities?
 		discount units costing certain resources
 	opponents hero is visible while deploying
 worm - nordic mythology
-hydra
-ghost!
 bog witch
-ageing/wither - halfs target max hp. or reduce by one third?
-stasis
-lurker
-firebomb
-phoenix
-hellion
 not really sure what to do with this:
 	warp entity
 	movement 2, health 5, sight 2, S
@@ -204,10 +156,7 @@ this one's dumb, like the shrivel idea, though:
 			stackable
 			-1 max health
 debuff share vision with target
-readied on attacked
 combinable melee attack only
-cost related abilities
-	- bulk discount
 not sure how to make this make sense:
 	immolation orb
 	health 8, movement 2, sight 1, S
@@ -218,17 +167,12 @@ meteor strike jump
 heal to minimum threshold
 greater cleric
 frost archmage
-vigor stacks - prevent next debuff
 combat medic
-plague ghoul
 big turtle
 timed/remote explosives
 illusion
 clone unit
 become copy of unit
-radiation maybe remove half rounded up and deal as damage? - dumb interaction with armor then
-bear - hibernate - heals when skips
-how to make "at end of action" terrain status triggers work with stunned units? i.e., if you are stunned in a fire wall, you should be burned.
 
 debuff - takes damage when debuff dispelled
 buff - healed when damaged over threshold / debuffed
@@ -237,7 +181,6 @@ corpse explosion
 effect removes stacks/duration of all debuffs
 exhaustion - debuff stack n - when unit ends non skip action, takes n damage. when ends skip action, remove stack of exhaustion
 tough skin - greater resistance to damage from statuses. debuffs with duration applies with half duration, rounded up.
-tough - 1/3 rounded down damage reduction
 werewolf
 
 cult warlock {5p} x2
@@ -351,15 +294,6 @@ physical propagation is a meme
 must attack / can't skip ability / status
 same but for spells
 
-shrink ray
-
-witch engine
-	choking soot
-	toxic presence
-	terrify
-	into the gears
-	aura of paranoia
-
 unit that moves up to 2 spaces with normal moves
 
 tractor
@@ -372,11 +306,5 @@ unicorn
     heroic quest
     great shame
     non lethal horn applies path of peace
-
-mad scientist
-    shrink ray
-    assemble the doombot 3000
-    combineable displacer
-    inspiration
 
 babushka

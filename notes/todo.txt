@@ -1,28 +1,35 @@
 
 infrastructure
+    scenario select
+    store maps from editor in db
     lobby system
 
-game functionality
-    nice to have
-        look over non elevation to other elevation?
-        chess clock
-        dispells
-        well-defined effects order
-        well-defined order of iterating units on map
-        kill source
+game
+    look over non elevation to other elevation?
+    chess clock
+    dispells
+    well-defined effects order
+    well-defined order of iterating units on map
+    kill source
+    "+2 attack power to melee attacks"
+    terror/terrified/panic debuff names
+    logging of units should include information about where they were, if applicable
+    logging damage source? (relevant for mines and such)
+    handle reveal effects at end of unit turn
+    status linking
+    alternate capture points
+        keeps captured state for player when unit walks off
+        linked group with points to player with max presence
 
 code
     common status merge mixins
-    don't eager load images during development
-        hmm this doesn't seem easy, maybe some way to only load images relevant for the stuff currently getting tested
+    lazy load images
     check negative sight
-    only fire detail hover if changed
+    response validation
+    message ids
+    don't send no change game state updates
 
 pre-commit
-game module structure
 
 production configuration
-
-terror/terrified/panic debuff names
-
-logging of units should include information about where they where, if applicable
+    web server behind nginx
