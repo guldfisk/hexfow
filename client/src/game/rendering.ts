@@ -28,7 +28,7 @@ import {
   rcToCC,
   subRCs,
 } from "./geometry.ts";
-import { textureMap } from "./textures.ts";
+import { getTexture, textureMap } from "./textures.ts";
 import { range } from "./utils/range.ts";
 import {
   deactivateMenu,
@@ -395,7 +395,7 @@ export const renderMap = (
       intention: Intention | null,
     ): Container => {
       const statusContainer = new Container();
-      const statusSprite = new Sprite(textureMap[status.type]);
+      const statusSprite = new Sprite(getTexture("status", status.type));
 
       if (intention) {
         const frame = intentionBorderMap[intention];
@@ -443,7 +443,7 @@ export const renderMap = (
       const unitContainer = new Container();
       const baseUnitContainer = new Container();
       unitContainer.addChild(baseUnitContainer);
-      const unitSprite = new Sprite(textureMap[hexData.unit.blueprint]);
+      const unitSprite = new Sprite(getTexture("unit", hexData.unit.blueprint));
       unitSprite.anchor = 0.5;
       baseUnitContainer.scale = sizeScales[hexData.unit.size];
       if (hexData.unit.controller == gameState.players[0].name) {

@@ -1,13 +1,51 @@
 import { Assets, Texture } from "pixi.js";
 
 import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
-import { receivedGameObjectDetails, store } from "./state/store.ts";
-import { getImageUrl } from "./images.ts";
+import {
+  loadedImage,
+  receivedGameObjectDetails,
+  store,
+} from "./state/store.ts";
+import { getImageUrl, ResourceType } from "./images.ts";
 
 // TODO don't export?
 export const textureMap: { [key: string]: Texture } = {};
 
+const unitFallback = "unit_fallback";
+const unitFallbackUrl = "/src/images/units/fallback.png";
+const statusFallback = "status_fallback";
+const statusFallbackUrl = "/src/images/statuses/fallback.png";
+
+export const lazyLoadTexture = (identifier: string, url: string) =>
+  Assets.load(url).then((texture) => {
+    textureMap[identifier] = texture;
+    store.dispatch(loadedImage());
+  });
+
+export const getTexture = (
+  resourceType: ResourceType,
+  resourceIdentifier: string,
+): Texture => {
+  if (resourceIdentifier in textureMap) {
+    return textureMap[resourceIdentifier];
+  }
+  lazyLoadTexture(
+    resourceIdentifier,
+    getImageUrl(resourceType, resourceIdentifier),
+  );
+  if (resourceType == "unit") {
+    return textureMap[unitFallback];
+  }
+  return textureMap[statusFallback];
+};
+
 export const loadGameTextures = async () => {
+  const promises: Promise<Texture>[] = [];
+  const load = (identifier: string, url: string) =>
+    promises.push(
+      Assets.load(url).then((texture) => (textureMap[identifier] = texture)),
+    );
+
   for (const uiIdentifier of [
     "hex_selection",
     "hex_selection_melee",
@@ -16,9 +54,7 @@ export const loadGameTextures = async () => {
     "hex_selection_ability",
     "hex_selection_aoe",
   ]) {
-    textureMap[uiIdentifier] = await Assets.load(
-      `/src/images/ui/${uiIdentifier}.png`,
-    );
+    load(uiIdentifier, `/src/images/ui/${uiIdentifier}.png`);
   }
   for (const iconIdentifier of [
     "shield_icon",
@@ -26,34 +62,25 @@ export const loadGameTextures = async () => {
     "flag_icon",
     "closed_eye_icon",
   ]) {
-    textureMap[iconIdentifier] = await Assets.load(
-      `/src/images/icons/${iconIdentifier}.png`,
-    );
+    load(iconIdentifier, `/src/images/icons/${iconIdentifier}.png`);
   }
+
+  load(unitFallback, unitFallbackUrl);
+  load(statusFallback, statusFallbackUrl);
 
   fetch(
     `${window.location.protocol + "//" + window.location.hostname}:8000/game-object-details`,
   ).then(async (response) => {
     let jsonResponse: GameObjectDetails = await response.json();
 
-    for (const unitDetails of Object.values(jsonResponse.units)) {
-      textureMap[unitDetails.identifier] = await Assets.load(
-        getImageUrl("unit", unitDetails.identifier),
-      );
-    }
-
     for (const terrainDetails of Object.values(jsonResponse.terrain)) {
-      textureMap[terrainDetails.identifier] = await Assets.load(
+      load(
+        terrainDetails.identifier,
         getImageUrl("terrain", terrainDetails.identifier),
       );
     }
 
-    for (const statusDetails of Object.values(jsonResponse.statuses)) {
-      textureMap[statusDetails.identifier] = await Assets.load(
-        getImageUrl("status", statusDetails.identifier),
-      );
-    }
-
+    await Promise.all(promises);
     store.dispatch(receivedGameObjectDetails(jsonResponse));
   });
 };

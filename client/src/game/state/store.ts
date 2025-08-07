@@ -39,6 +39,9 @@ const mainSlice = createSlice({
     renderedGameState: (state) => {
       state.shouldRerender = false;
     },
+    loadedImage: (state) => {
+      state.shouldRerender = true;
+    },
     receivedGameObjectDetails: (
       state,
       action: PayloadAction<GameObjectDetails>,
@@ -87,6 +90,7 @@ const mainSlice = createSlice({
 export const {
   receiveGameState,
   renderedGameState,
+  loadedImage,
   receivedGameObjectDetails,
   hoverDetail,
   activateMenu,
