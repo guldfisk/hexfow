@@ -588,7 +588,11 @@ const DecisionDetailView = ({
   }
 
   return (
-    <div className="info-window decision-details" id="decision-description">
+    <div
+      className="info-window decision-details"
+      id="decision-description"
+      style={{ borderColor: "#2f71e7" }}
+    >
       <div>
         {menu
           ? menuDescribers[menu.type](gameState, menu)
@@ -596,7 +600,6 @@ const DecisionDetailView = ({
       </div>
       {button}
       {gameState ? <GameInfoView gameState={gameState} /> : null}
-      {/*{JSON.stringify(gameState.decision, null, 4)}*/}
     </div>
   );
 };

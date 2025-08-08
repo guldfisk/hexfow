@@ -1,7 +1,5 @@
 
 infrastructure
-    scenario select
-    store maps from editor in db
     lobby system
 
 game
@@ -23,7 +21,6 @@ game
 
 code
     common status merge mixins
-    lazy load images
     check negative sight
     response validation
     message ids

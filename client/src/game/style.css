@@ -117,8 +117,14 @@ button {
 .enemy-highlighted-log-component {
   background: #9b1711;
 }
+
 .decision-details {
-  height: 30%;
+  height: 25%;
+  width: 90%;
+  border-width: 2px;
+  border-style: solid;
+  border-color: grey;
+  padding: 10px;
 }
 
 .terrain-image {
