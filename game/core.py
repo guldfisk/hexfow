@@ -17,6 +17,7 @@ from typing import (
     Self,
     Iterable,
     TypeAlias,
+    Callable,
 )
 from typing import Mapping
 
@@ -1550,7 +1551,7 @@ class GameState:
     def __init__(
         self,
         player_count: int,
-        connection_class: type[Connection],
+        connection_factory: Callable[[Player], Connection],
         landscape: Landscape,
     ):
         # TODO handle names
@@ -1558,7 +1559,8 @@ class GameState:
             [Player(f"player {i+1}") for i in range(player_count)]
         )
         self.connections = {
-            player: connection_class(player) for player in self.turn_order.players
+            player: connection_factory(player)
+            for player in self.turn_order.players
         }
         self.map = HexMap(landscape)
         self.active_unit_context: ActiveUnitContext | None = None

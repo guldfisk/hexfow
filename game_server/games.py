@@ -1,24 +1,23 @@
 from __future__ import annotations
 
-import dataclasses
 import json
 import threading
 import time
 import traceback
 from queue import Empty, SimpleQueue
 from threading import Thread
-from typing import Mapping, Any, Callable, ClassVar
+from typing import Mapping, Any, Callable
 from uuid import UUID
 
 from sqlalchemy import select, Exists
 
-from events.eventsystem import ES, EventSystem, StateModifierEffect
+from events.eventsystem import ES
 from events.exceptions import GameException
-from game.core import GameState, GS, Hex, Unit
-from game.events import SpawnUnit, Play, ApplyHexStatus
+from game.events import Play
 from game.interface import Connection
 from game.player import Player
-from game_server.scenarios import get_playtest_scenario, get_test_scenario, get_random_scenario
+from game_server.scenarios import get_playtest_scenario
+from game_server.setup import setup_scenario
 from model.engine import SS
 from model.models import Seat, Game
 
@@ -80,9 +79,9 @@ GM = GameManager()
 
 
 class SeatInterface(Connection):
-    def __init__(self, player: Player, game: GameRunner):
+    def __init__(self, player: Player, game_runner: GameRunner):
         super().__init__(player)
-        self.game_runner = game
+        self.game_runner = game_runner
         self._latest_frame = None
         self._lock = threading.Lock()
         self.in_queue = SimpleQueue()
@@ -181,12 +180,8 @@ class GameRunner(Thread):
         try:
             self.is_running = True
 
-            ES.bind(EventSystem())
-
-            gs = GameState(
-                2,
-                lambda *args, **kwargs: SeatInterface(*args, **kwargs, game=self),
-                self._scenario.landscape,
+            gs = setup_scenario(
+                self._scenario, lambda player: SeatInterface(player, game_runner=self)
             )
 
             self.seat_map: dict[UUID, SeatInterface] = {
@@ -195,52 +190,7 @@ class GameRunner(Thread):
                     gs.connections.items(), self._game.seats
                 )
             }
-
-            GS.bind(gs)
-
             GM.register(self)
-
-            for player, units in zip(gs.turn_order.players, self._scenario.units):
-                for cc, blueprint in units.items():
-                    ES.resolve(
-                        SpawnUnit(
-                            blueprint=blueprint,
-                            controller=player,
-                            space=gs.map.hexes[cc],
-                        )
-                    )
-
-            for cc, spec in self._scenario.landscape.terrain_map.items():
-                for signature in spec.statuses:
-                    ES.resolve(ApplyHexStatus(gs.map.hexes[cc], signature))
-
-            @dataclasses.dataclass(eq=False)
-            class AllHexRevealedModifier(StateModifierEffect[Hex, Player, bool]):
-                priority: ClassVar[int] = 100
-                target: ClassVar[object] = Hex.is_visible_to
-
-                def modify(self, obj: Hex, request: Player, value: bool) -> bool:
-                    return True
-
-            @dataclasses.dataclass(eq=False)
-            class AllUnitsRevealedModifier(StateModifierEffect[Hex, Player, bool]):
-                priority: ClassVar[int] = 100
-                target: ClassVar[object] = Unit.is_hidden_for
-
-                def modify(self, obj: Unit, request: Player, value: bool) -> bool:
-                    return False
-
-            effects = [AllHexRevealedModifier(), AllUnitsRevealedModifier()]
-
-            ES.register_effects(*effects)
-
-            for player in gs.turn_order.players:
-                gs.serialize_for(gs._get_context_for(player), None)
-
-            ES.deregister_effects(*effects)
-
-            for logs in gs._pending_player_logs.values():
-                logs[:] = []
 
             ES.resolve(Play())
         except GameClosed:

@@ -40,8 +40,8 @@ def get_test_scenario() -> Scenario:
             # INFERNO_TANK,
             # PESTILENCE_PRIEST,
             MINE_LAYER_BEETLE,
-            BLIND_ABOMINATION
-            # CYCLOPS,
+            BLIND_ABOMINATION,
+            CYCLOPS,
             # LIGHT_ARCHER,
             # GIANT_TOAD,
             # SHRINE_KEEPER,
