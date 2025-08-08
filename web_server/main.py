@@ -3,14 +3,16 @@ from typing import Any, Iterator
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, APIRouter, Depends
+from sqlalchemy import select
 from starlette.middleware.cors import CORSMiddleware
 
 from game.core import UnitBlueprint, Terrain, Status, Facet
 from game.map import terrain  # noqa F401
 from game.units import blueprints  # noqa F401
 from model.engine import SS
-from model.models import Game, Seat
-from web_server.schemas import CreateGameSchema
+from model.models import Game, Seat, Map
+from web_server.schemas import CreateGameSchema, CreateMapSchema
+
 
 load_dotenv()
 
@@ -87,6 +89,8 @@ async def get_game_object_details() -> dict[str, Any]:
 def create_game(body: CreateGameSchema) -> dict[str, Any]:
     game = Game(
         game_type=body.game_type,
+        with_fow=body.with_fow,
+        settings=body.settings,
         seats=[Seat(position=i, player_name=f"player {i}") for i in range(1, 3)],
     )
     SS.add(game)
@@ -97,6 +101,33 @@ def create_game(body: CreateGameSchema) -> dict[str, Any]:
             for seat in game.seats
         ]
     }
+
+
+@top_router.get("/maps")
+def get_maps() -> list[dict[str, Any]]:
+    return list(
+        map(
+            dict,
+            SS.execute(select(Map.name).order_by(Map.created_at.desc())).mappings(),
+        )
+    )
+
+
+@top_router.get("/maps/{map_name}")
+def get_map(map_name: str) -> dict[str, Any]:
+    return dict(
+        SS.execute(select(Map.name, Map.scenario).where(Map.name == map_name))
+        .mappings()
+        .one()
+    )
+
+
+@top_router.post("/maps")
+def create_map(body: CreateMapSchema) -> dict[str, Any]:
+    _map = SS.scalar(select(Map).where(Map.name == body.name)) or Map(name=body.name)
+    _map.scenario = body.scenario.model_dump()
+    SS.add(_map)
+    return {"status": "ok"}
 
 
 app.include_router(top_router)

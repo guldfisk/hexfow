@@ -13,7 +13,7 @@ from events.eventsystem import ES, EventSystem
 from game.events import Play
 from game.interface import Connection
 from game.player import Player
-from game_server.scenarios import get_test_scenario
+from game_server.game_types import TestGameType
 from game_server.setup import setup_scenario
 
 
@@ -64,7 +64,7 @@ class TestGameRunner(Thread):
                     raise ValueError("game closed")
 
             setup_scenario(
-                get_test_scenario(), lambda player: WebsocketConnection(player)
+                TestGameType().get_scenario(), lambda player: WebsocketConnection(player)
             )
 
             ES.resolve(Play())

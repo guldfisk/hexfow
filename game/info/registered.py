@@ -1,9 +1,18 @@
+from __future__ import annotations
+
+import dataclasses
 import re
 from abc import ABC
-from typing import ClassVar, Any
+from typing import ClassVar, Any, Self
 
 from events.eventsystem import ModifiableMeta
 from game.descriptions import description_from_docstring
+
+
+@dataclasses.dataclass
+class UnknownIdentifierError(Exception):
+    registered_type: type
+    identifier: str
 
 
 def get_registered_meta():
@@ -55,3 +64,10 @@ class Registered(ABC):
     category: ClassVar[str]
     description: ClassVar[str | None] = None
     related_statuses: ClassVar[list[str]] = []
+
+    @classmethod
+    def get_class(cls, identifier: str) -> type[Self]:
+        try:
+            return cls.registry[identifier]
+        except KeyError:
+            raise UnknownIdentifierError(cls, identifier)

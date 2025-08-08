@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import ForeignKey, MetaData, UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from model.values import GameStatus
@@ -38,11 +40,20 @@ class IntPKMixin:
     id: Mapped[int] = mapped_column(primary_key=True)
 
 
+class Map(Base, CreatedMixin, IntPKMixin):
+    __tablename__ = "map"
+
+    name: Mapped[str] = mapped_column(unique=True)
+    scenario: Mapped[dict[str, Any]] = mapped_column(JSONB)
+
+
 class Game(Base, CreatedMixin, IntPKMixin):
     __tablename__ = "game"
 
     status: Mapped[str] = mapped_column(default=GameStatus.PENDING)
     game_type: Mapped[str]
+    with_fow: Mapped[bool]
+    settings: Mapped[dict[str, Any]] = mapped_column(JSONB)
 
     seats: Mapped[list[Seat]] = relationship(back_populates="game")
 

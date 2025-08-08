@@ -1,15 +1,18 @@
 import "./style.css";
 import { createRoot } from "react-dom/client";
-import { useState } from "react";
-
-interface Seat {
-  id: string;
-  position: number;
-  player_name: string;
-}
-interface GameResponse {
-  seats: Seat[];
-}
+import { StrictMode, useEffect, useState } from "react";
+import { useLobbyDispatch, useLobbyState } from "./state/hooks.ts";
+import { Provider } from "react-redux";
+import {
+  GameType,
+  Seat,
+  setGameResponse,
+  setMapNames,
+  setSelectedGameType,
+  setSettings,
+  setWithFow,
+  store,
+} from "./state/store.ts";
 
 const SeatRow = ({ seat }: { seat: Seat }) => {
   const [copied, setCopied] = useState(false);
@@ -35,15 +38,72 @@ const SeatRow = ({ seat }: { seat: Seat }) => {
   );
 };
 
+const GameTypeSelector = ({}) => {
+  const gameType = useLobbyState((state) => state.selectedGameType);
+  const dispatch = useLobbyDispatch();
+  return (
+    <div>
+      <label>Game type</label>
+      <select
+        value={gameType}
+        onChange={(value) =>
+          dispatch(setSelectedGameType(value.target.value as GameType))
+        }
+      >
+        {["random", "map"].map((name) => (
+          <option value={name}>{name}</option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+const SettingsSelector = ({}) => {
+  const gameType = useLobbyState((state) => state.selectedGameType);
+  const settings = useLobbyState((state) => state.settings);
+  const mapNames = useLobbyState((state) => state.mapNames);
+  const dispatch = useLobbyDispatch();
+
+  if (gameType == "map" && settings.map_name) {
+    return (
+      <div>
+        <label>Map</label>
+        <select
+          value={settings.map_name}
+          onChange={(value) =>
+            dispatch(setSettings({ map_name: value.target.value }))
+          }
+        >
+          {mapNames.map((name) => (
+            <option value={name}>{name}</option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+};
+
 const GameCreator = ({}: {}) => {
   const [loading, setLoading] = useState(false);
-  const [game, setGame] = useState<GameResponse | null>(null);
+  const gameType = useLobbyState((state) => state.selectedGameType);
+  const withFow = useLobbyState((state) => state.withFow);
+  const settings = useLobbyState((state) => state.settings);
+  const gameResponse = useLobbyState((state) => state.gameResponse);
+  const dispatch = useLobbyDispatch();
+  useEffect(() => {
+    fetch(
+      `${window.location.protocol + "//" + window.location.hostname}:8000/maps`,
+    ).then(async (response) => {
+      dispatch(setMapNames((await response.json()).map((map) => map.name)));
+    });
+    return () => {};
+  }, []);
 
-  if (game) {
+  if (gameResponse) {
     return (
       <div className={"game-result"}>
         <table>
-          {game.seats.map((seat) => (
+          {gameResponse.seats.map((seat) => (
             <SeatRow seat={seat} />
           ))}
         </table>
@@ -52,7 +112,7 @@ const GameCreator = ({}: {}) => {
   }
 
   return (
-    <div>
+    <div className={"creation-menu"}>
       <button
         className={"big-button"}
         onClick={() => {
@@ -61,21 +121,41 @@ const GameCreator = ({}: {}) => {
             `${window.location.protocol + "//" + window.location.hostname}:8000/create-game`,
             {
               method: "POST",
-              body: JSON.stringify({ game_type: "tutorial" }),
+              body: JSON.stringify({
+                game_type: gameType,
+                settings: settings,
+                with_fow: withFow,
+              }),
               headers: {
                 "Content-type": "application/json",
               },
             },
           )
             .then((response) => response.json())
-            .then(setGame);
+            .then((response) => dispatch(setGameResponse(response)));
         }}
         disabled={loading}
       >
         Create game
       </button>
+      <div>
+        <label>With FOW</label>
+        <input
+          type={"checkbox"}
+          checked={withFow}
+          onChange={() => dispatch(setWithFow(!withFow))}
+        />
+      </div>
+      <GameTypeSelector />
+      <SettingsSelector />
     </div>
   );
 };
 
-createRoot(document.getElementById("root")!).render(<GameCreator />);
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <Provider store={store}>
+      <GameCreator />
+    </Provider>
+  </StrictMode>,
+);

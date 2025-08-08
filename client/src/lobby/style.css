@@ -14,6 +14,20 @@ button {
   border-radius: 8px;
 }
 
+select {
+  border: 0;
+  background: #666;
+  box-shadow: none;
+  border-radius: 8px;
+  font-size: 2em;
+}
+
+label {
+  color: #666;
+  font-size: 2em;
+  margin-right: 10px;
+}
+
 button:hover {
   background: #99acb3;
 }
@@ -25,6 +39,15 @@ button:disabled {
 .big-button {
   font-size: 4em;
   padding-bottom: 10px;
+}
+
+.creation-menu {
+  display: flex;
+  flex-direction: column;
+}
+
+.creation-menu > * {
+  margin: 5px;
 }
 
 .game-result {

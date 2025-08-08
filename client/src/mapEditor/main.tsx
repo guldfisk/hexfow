@@ -4,7 +4,6 @@ import { Application, Container } from "pixi.js";
 import { renderMap } from "./rendering.ts";
 import {
   renderedGameState,
-  setMapData,
   setStatus,
   store,
   toggleIsObjective,
@@ -16,7 +15,6 @@ import { StrictMode } from "react";
 import { Provider } from "react-redux";
 import { HUD } from "./hud.tsx";
 import { loadGameTextures } from "./textures.ts";
-import * as baseData from "./base.json";
 
 const terrainMapping: { [key: string]: string } = {
   f: "forest",
@@ -65,15 +63,11 @@ async function main() {
         );
       } else if (event.key == "5") {
         store.dispatch(setStatus({ cc: state.hoveredHex.cc, status: null }));
-      } else if (event.key == "e") {
-        console.log(state.mapData);
       }
     }
   };
 
   document.addEventListener("keydown", keyHandler);
-
-  store.dispatch(setMapData(Object.values(baseData.default)));
 
   let map = new Container();
   app.stage.addChild(map);

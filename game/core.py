@@ -40,7 +40,7 @@ from game.decisions import (
     IDMap,
 )
 from game.has_effects import HasEffects
-from game.info.registered import Registered, get_registered_meta
+from game.info.registered import Registered, get_registered_meta, UnknownIdentifierError
 from game.interface import Connection
 from game.map.coordinates import CC, line_of_sight_obstructed
 from game.map.geometry import hex_circle, hex_ring, hex_arc
@@ -581,6 +581,13 @@ class UnitBlueprint:
 
         self.price = price
         self.max_count = max_count
+
+    @classmethod
+    def get_class(cls, identifier: str) -> Self:
+        try:
+            return cls.registry[identifier]
+        except KeyError:
+            raise UnknownIdentifierError(cls, identifier)
 
     def __repr__(self):
         return f"{type(self).__name__}({self.name})"
@@ -1154,6 +1161,7 @@ class DamageSignature:
 class HexStatus(Status[Hex], ABC):
     category: ClassVar[str] = "hex"
 
+    # TODO obsolete?
     @classmethod
     def get(cls, identifier: str) -> type[HexStatus]:
         return cls.registry[identifier]
@@ -1559,8 +1567,7 @@ class GameState:
             [Player(f"player {i+1}") for i in range(player_count)]
         )
         self.connections = {
-            player: connection_factory(player)
-            for player in self.turn_order.players
+            player: connection_factory(player) for player in self.turn_order.players
         }
         self.map = HexMap(landscape)
         self.active_unit_context: ActiveUnitContext | None = None

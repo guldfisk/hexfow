@@ -1,20 +1,16 @@
 import { Assets, Texture } from "pixi.js";
 
 import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
-import {
-  loadedImage,
-  receivedGameObjectDetails,
-  store,
-} from "./state/store.ts";
 import { getImageUrl, ResourceType } from "./images.ts";
+import {loadedImage, receivedGameObjectDetails, store} from "./state/store.ts";
 
 // TODO don't export?
 export const textureMap: { [key: string]: Texture } = {};
 
-const unitFallback = "unit_fallback";
-const unitFallbackUrl = "/src/images/units/fallback.png";
-const statusFallback = "status_fallback";
-const statusFallbackUrl = "/src/images/statuses/fallback.png";
+export const unitFallback = "unit_fallback";
+export const unitFallbackUrl = "/src/images/units/fallback.png";
+export const statusFallback = "status_fallback";
+export const statusFallbackUrl = "/src/images/statuses/fallback.png";
 
 export const lazyLoadTexture = (identifier: string, url: string) =>
   Assets.load(url).then((texture) => {

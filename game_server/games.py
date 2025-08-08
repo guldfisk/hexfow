@@ -16,7 +16,7 @@ from events.exceptions import GameException
 from game.events import Play
 from game.interface import Connection
 from game.player import Player
-from game_server.scenarios import get_playtest_scenario
+from game_server.game_types import GameType
 from game_server.setup import setup_scenario
 from model.engine import SS
 from model.models import Seat, Game
@@ -144,7 +144,11 @@ class Cleaner(Thread):
 class GameRunner(Thread):
     def __init__(self, game: Game):
         super().__init__()
-        self._scenario = get_playtest_scenario()
+        self._scenario = (
+            GameType.registry[game.game_type]
+            .model_validate(game.settings)
+            .get_scenario()
+        )
         self._game = game
         self._lock = threading.Lock()
         self._is_running = False
@@ -181,7 +185,9 @@ class GameRunner(Thread):
             self.is_running = True
 
             gs = setup_scenario(
-                self._scenario, lambda player: SeatInterface(player, game_runner=self)
+                self._scenario,
+                lambda player: SeatInterface(player, game_runner=self),
+                with_fow=self._game.with_fow,
             )
 
             self.seat_map: dict[UUID, SeatInterface] = {

@@ -21,8 +21,8 @@ import {
   rcToCC,
   subRCs,
 } from "../game/geometry.ts";
-import { textureMap } from "./textures.ts";
 import type { ColorSource } from "pixi.js/lib/color/Color";
+import {getTexture, textureMap} from "./textures.ts";
 
 const colors = {
   enemy: "0x9b1711",
@@ -49,7 +49,7 @@ const hexStatusFrame = getHexMask({ alpha: 0 }, 22);
 
 const makeStatusIndicator = (status: string): Container => {
   const statusContainer = new Container();
-  const statusSprite = new Sprite(textureMap[status]);
+  const statusSprite = new Sprite(getTexture('status', status));
 
   statusSprite.anchor = 0.5;
   statusContainer.addChild(statusSprite);
@@ -133,7 +133,7 @@ export const renderMap = (
     hexContainer.addChild(label);
 
     if (spec.unit) {
-      const unitSprite = new Sprite(textureMap[spec.unit.identifier]);
+      const unitSprite = new Sprite(getTexture('unit', spec.unit.identifier));
       unitSprite.anchor = 0.5;
 
       const borderWith = 4;

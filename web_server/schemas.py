@@ -1,12 +1,16 @@
-from pydantic import BaseModel
+from typing import Any, Self
+
+from pydantic import BaseModel, model_validator, ValidationError
 from pydantic import AfterValidator
 from typing_extensions import Annotated
 
-from model.values import GameType
+from game.info.registered import UnknownIdentifierError
+from game_server.game_types import GameType
+from model.schemas import ScenarioSchema
 
 
 def is_valid_game_type(v: str) -> str:
-    assert any(gt.value == v for gt in GameType)
+    assert v in GameType.registry.keys()
     return v
 
 
@@ -15,3 +19,27 @@ GameTypeValue = Annotated[str, AfterValidator(is_valid_game_type)]
 
 class CreateGameSchema(BaseModel):
     game_type: GameTypeValue
+    with_fow: bool
+    settings: dict[str, Any]
+
+    @model_validator(mode="after")
+    def make_query(self) -> Self:
+        GameType.registry[self.game_type].model_validate(self.settings)
+
+        return self
+
+
+class CreateMapSchema(BaseModel):
+    name: str
+    scenario: ScenarioSchema
+
+    @model_validator(mode="after")
+    def make_query(self) -> Self:
+        try:
+            self.scenario.get_scenario()
+        except UnknownIdentifierError as e:
+            raise ValidationError(
+                f"invalid identifier {e.identifier} for {e.registered_type.__name__}"
+            )
+
+        return self

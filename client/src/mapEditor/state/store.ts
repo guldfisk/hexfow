@@ -21,10 +21,18 @@ export interface HexSpec {
   cc: CC;
 }
 
+interface MapLoaderData {
+  show: boolean;
+  selected: string | null;
+  options: string[];
+}
+
 const mainSlice = createSlice({
   name: "mapEditor",
   initialState: {
     mapData: {},
+    mapName: "no name",
+    loaderData: { show: false, selected: null, options: [] },
     shouldRerender: true,
     hoveredHex: null,
     selectedUnitIdentifier: null,
@@ -32,6 +40,8 @@ const mainSlice = createSlice({
     gameObjectDetails: null,
   } as {
     mapData: { [key: string]: HexSpec };
+    mapName: string;
+    loaderData: MapLoaderData;
     shouldRerender: boolean;
     hoveredHex: HexSpec | null;
     selectedUnitIdentifier: string | null;
@@ -44,6 +54,52 @@ const mainSlice = createSlice({
         action.payload.map((spec) => [ccToKey(spec.cc), spec]),
       );
       state.shouldRerender = true;
+    },
+    loadedImage: (state) => {
+      state.shouldRerender = true;
+    },
+    loadMap: (
+      state,
+      action: PayloadAction<{
+        name: string;
+        scenario: {
+          hexes: {
+            cc: CC;
+            unit: { allied: boolean; identifier: string } | null;
+            statuses: string[];
+            is_objective: boolean;
+            terrain_type: string;
+          }[];
+        };
+      }>,
+    ) => {
+      state.mapData = Object.fromEntries(
+        action.payload.scenario.hexes.map((spec) => [
+          ccToKey(spec.cc),
+          {
+            cc: spec.cc,
+            unit: spec.unit,
+            statuses: spec.statuses,
+            isObjective: spec.is_objective,
+            terrainType: spec.terrain_type,
+          },
+        ]),
+      );
+      state.shouldRerender = true;
+      state.mapName = action.payload.name;
+      state.loaderData.show = false;
+    },
+    setMapName: (state, action: PayloadAction<string>) => {
+      state.mapName = action.payload;
+    },
+    setShowLoader: (state, action: PayloadAction<boolean>) => {
+      state.loaderData.show = action.payload;
+    },
+    setLoaderSelected: (state, action: PayloadAction<string | null>) => {
+      state.loaderData.selected = action.payload;
+    },
+    setLoaderOptions: (state, action: PayloadAction<string[]>) => {
+      state.loaderData.options = action.payload;
     },
     receivedGameObjectDetails: (
       state,
@@ -119,6 +175,12 @@ const mainSlice = createSlice({
 
 export const {
   setMapData,
+    loadMap,
+  setMapName,
+  setShowLoader,
+  setLoaderSelected,
+  setLoaderOptions,
+  loadedImage,
   receivedGameObjectDetails,
   renderedGameState,
   setHoveredHex,
