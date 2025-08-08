@@ -721,7 +721,6 @@ class VenomousSpine(SingleEnemyActivatedAbility):
         )
 
 
-# TODO this has the same problem as glimpse with round ending.
 class Scry(SingleHexTargetActivatedAbility):
     """
     Target hex within 6 range NLoS. Applies <revealed> for 1 round.

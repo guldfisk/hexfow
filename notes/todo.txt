@@ -13,7 +13,6 @@ game
     terror/terrified/panic debuff names
     logging of units should include information about where they were, if applicable
     logging damage source? (relevant for mines and such)
-    handle reveal effects at end of unit turn
     status linking
     alternate capture points
         keeps captured state for player when unit walks off

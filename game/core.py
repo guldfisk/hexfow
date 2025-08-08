@@ -1670,6 +1670,10 @@ class GameState:
             },
         )
 
+    def update_ghosts(self) -> None:
+        for player in self.turn_order.players:
+            self.serialize_for(self._get_context_for(player), None)
+
     def send_to_players(self) -> None:
         for _player in self.turn_order.players:
             self.connections[_player].send(
@@ -1766,6 +1770,9 @@ class ScopedGameState:
         self, context: SerializationContext, decision_point: DecisionPoint | None
     ) -> Mapping[str, Any]:
         return self._gs.serialize_for(context, decision_point)
+
+    def update_ghosts(self) -> None:
+        self._gs.update_ghosts()
 
     def send_to_players(self) -> None:
         self._gs.send_to_players()

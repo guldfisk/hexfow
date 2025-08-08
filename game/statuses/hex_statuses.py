@@ -111,7 +111,6 @@ class Revealed(HexStatus):
         self.register_effects(HexRevealedModifier(self.parent, self.controller))
 
 
-# TODO how should this work with the turn immediately ending?
 class Glimpse(HexStatus):
     """
     This hex is visible to the controller of this status. Expires at the end of the turn.

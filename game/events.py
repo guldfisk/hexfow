@@ -658,6 +658,7 @@ class Turn(Event[bool]):
                 do_state_based_check()
                 context.has_acted = True
 
+            GS.update_ghosts()
             ES.resolve(TurnCleanup(unit=self.unit))
             do_state_based_check()
 

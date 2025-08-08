@@ -436,12 +436,6 @@ CAPRICIOUS_TRICKSTER = UnitBlueprint(
 #         hidden
 #         when L ground unit moves in, it suffers 3 damage with 2 ap, and remove this status.
 
-# blind oracle {2p} x1
-# health 2, movement 2, sight 0, energy 2/3, M
-# vision
-#     aoe ability 2 energy
-#     aot type hex, 6 range, NLoS, no movement
-#     applies revealed to hex for 1 round
 
 BLIND_ORACLE = UnitBlueprint(
     "Blind Oracle", health=2, speed=2, sight=0, energy=2, facets=[Scry], price=2
