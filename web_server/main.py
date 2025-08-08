@@ -68,7 +68,10 @@ async def get_game_object_details() -> dict[str, Any]:
     return {
         "units": {
             unit.identifier: unit.serialize()
-            for unit in UnitBlueprint.registry.values()
+            for unit in sorted(
+                UnitBlueprint.registry.values(),
+                key=lambda u: 1 - 1 / u.price if u.price is not None else 1,
+            )
         },
         "terrain": {
             _terrain.identifier: _terrain.serialize_type()
