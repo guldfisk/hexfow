@@ -280,6 +280,21 @@ class IncreaseSpeedAuraModifier(StateModifierEffect[Unit, None, int]):
 
 
 @dataclasses.dataclass(eq=False)
+class UnitSpeedModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = SpeedLayer.FLAT
+    target: ClassVar[object] = Unit.speed
+
+    unit: Unit
+    amount: int
+
+    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+        return obj == self.unit
+
+    def modify(self, obj: Unit, request: None, value: int) -> int:
+        return value + self.amount
+
+
+@dataclasses.dataclass(eq=False)
 class UnitProportionalSpeedModifier(StateModifierEffect[Unit, None, int]):
     priority: ClassVar[int] = SpeedLayer.PROPORTIONAL
     target: ClassVar[object] = Unit.speed
@@ -507,3 +522,18 @@ class SilencedModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]
                 and isinstance(option.facet, ActivatedAbilityFacet)
             )
         ]
+
+
+@dataclasses.dataclass(eq=False)
+class HexMoveOutPenaltyModifier(StateModifierEffect[Hex, Unit, int]):
+    priority: ClassVar[int] = 0
+    target: ClassVar[object] = Hex.get_move_out_penalty_for
+
+    hex: Hex
+    amount: int
+
+    def should_modify(self, obj: Hex, request: Unit, value: int) -> bool:
+        return obj == self.hex
+
+    def modify(self, obj: Hex, request: Unit, value: int) -> int:
+        return value + self.amount

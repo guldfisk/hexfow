@@ -372,7 +372,7 @@ export const renderMap = (
       triggerZone.eventMode = "static";
       triggerZone.on("pointerdown", (event) => {
         if (event.button == 0) {
-          action.do();
+          action.do(event.getLocalPosition(hexContainer));
         }
       });
       actionTriggerZones.push(triggerZone);
@@ -705,7 +705,7 @@ export const renderMap = (
         itemsContainer.eventMode = "static";
         itemsContainer.on("pointerdown", (event) => {
           if (event.button == 0) {
-            menuItem.do();
+            menuItem.do({ x: 0, y: 0 });
           }
         });
       }
@@ -759,6 +759,11 @@ export const renderMap = (
         }
       }
 
+      const hoverTrigger = actionSpace[ccToKey(hexData.cc)].hoverTrigger;
+      if (hoverTrigger) {
+        hoverTrigger(localPosition);
+      }
+
       const newKey = ccToKey(cc) + hoverType;
       const oldKey = previouslyHovered;
       previouslyHovered = newKey;
@@ -767,11 +772,6 @@ export const renderMap = (
       }
 
       store.dispatch(hoverDetail(detail));
-
-      const hoverTrigger = actionSpace[ccToKey(hexData.cc)].hoverTrigger;
-      if (hoverTrigger) {
-        hoverTrigger();
-      }
 
       const previewOptions = actionSpace[ccToKey(hexData.cc)].previewOptions;
       store.dispatch(

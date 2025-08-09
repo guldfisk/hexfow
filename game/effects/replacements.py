@@ -112,6 +112,35 @@ class PerTurnMovePenaltyIgnoreReplacement(ReplacementEffect[MovePenalty]):
 
 
 @dataclasses.dataclass(eq=False)
+class IgnoresMoveOutPenaltyReplacement(ReplacementEffect[MovePenalty]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def can_replace(self, event: MovePenalty) -> bool:
+        return event.unit == self.unit and not event.in_
+
+    def resolve(self, event: MovePenalty) -> None:
+        pass
+
+
+@dataclasses.dataclass(eq=False)
+class UnitImmuneToStatusReplacement(ReplacementEffect[ApplyStatus]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+    status_type: type[UnitStatus]
+
+    def can_replace(self, event: ApplyStatus) -> bool:
+        return (
+            event.unit == self.unit and event.signature.status_type == self.status_type
+        )
+
+    def resolve(self, event: ApplyStatus) -> None:
+        pass
+
+
+@dataclasses.dataclass(eq=False)
 class LastStandReplacement(ReplacementEffect[Kill]):
     priority: ClassVar[int] = 0
 

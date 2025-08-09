@@ -1,4 +1,4 @@
-import { CC } from "./geometry.ts";
+import { CC, Corner } from "./geometry.ts";
 import { EffortFacetDetails } from "./gameObjectDetails.ts";
 
 // TODO refactor this shit
@@ -128,6 +128,11 @@ export interface Tree extends TargetProfileBase {
   values: { rootNode: TreeNode };
 }
 
+export interface TriHex extends TargetProfileBase {
+  type: "TriHex";
+  values: { corners: Corner[] };
+}
+
 export type TargetProfile =
   | OneOfUnits
   | NOfUnits
@@ -138,7 +143,8 @@ export type TargetProfile =
   | HexRing
   | RadiatingLine
   | Cone
-  | Tree;
+  | Tree
+  | TriHex;
 
 export interface OptionBase {
   type: string;

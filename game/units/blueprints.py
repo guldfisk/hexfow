@@ -43,6 +43,7 @@ from game.units.facets.activated_abilities import (
     CoordinatedManeuver,
     LayMine,
     Vomit,
+    SludgeBelch,
 )
 from game.units.facets.attacks import (
     Peck,
@@ -89,6 +90,7 @@ from game.units.facets.attacks import (
     TongueLash,
     CommandersPistol,
     Slice,
+    Spew,
 )
 from game.units.facets.static_abilities import (
     Prickly,
@@ -119,6 +121,9 @@ from game.units.facets.static_abilities import (
     Inspiration,
     ToxicSkin,
     InspiringPresence,
+    SludgeTrail,
+    SlimyLocomotion,
+    SlimySkin,
 )
 from game.values import Size
 
@@ -307,6 +312,16 @@ HORROR_SPAWN = UnitBlueprint(
     price=None,
 )
 
+SLUDGE_SLUG = UnitBlueprint(
+    "Sludge Slug",
+    health=10,
+    speed=1,
+    sight=1,
+    size=Size.LARGE,
+    energy=3,
+    facets=[Spew, SludgeBelch, SludgeTrail, SlimyLocomotion, SlimySkin],
+    price=9,
+)
 
 BLIND_ABOMINATION = UnitBlueprint(
     "Blind Abomination",

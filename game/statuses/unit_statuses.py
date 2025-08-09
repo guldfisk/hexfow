@@ -12,6 +12,7 @@ from game.effects.modifiers import (
     UnitSightFlatModifier,
     SilencedModifier,
     UnitArmorFlatModifier,
+    UnitSpeedModifier,
 )
 from game.effects.replacements import LuckyCharmReplacement, StunnedReplacement
 from game.effects.triggers import (
@@ -373,3 +374,14 @@ class Hitched(UnitStatus):
             HitchedTrigger(self.source.owner, self.parent),
             TurnExpiringStatusTrigger(self),
         )
+
+
+class Slimed(RefreshableDurationUnitStatus):
+    """
+    -1 speed.
+    """
+
+    default_intention = StatusIntention.DEBUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(UnitSpeedModifier(self.parent, -1))

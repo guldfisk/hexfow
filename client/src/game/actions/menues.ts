@@ -12,6 +12,7 @@ import {
   NOfUnitsMenu,
   RadiatingLineMenu,
   TreeMenu,
+  TriHexMenu,
 } from "./interface.ts";
 import {
   addCCs,
@@ -19,13 +20,18 @@ import {
   ccEquals,
   ccToKey,
   constMultCC,
+  cornerToKey,
+  getCornerCCNeighbors,
   getNeighborsOffCC,
   hexArc,
+  hexVerticeOffsetsRcs,
+  rcDistance,
   subCCs,
 } from "../geometry.ts";
 import { advanceMenu, store } from "../state/store.ts";
 import { range } from "../utils/range.ts";
-import { CC } from "../interfaces/geometry.ts";
+import { CC, Corner, RC } from "../interfaces/geometry.ts";
+import { min } from "../utils/min.ts";
 
 // TODO some common logic in this mess
 
@@ -244,7 +250,6 @@ const getHexHexesActionSpace = (
           type: "aoe",
           description: "select hexes",
           do: () => {
-            // store.dispatch(deactivateMenu());
             takeAction({
               index: menu.optionIndex,
               target: {
@@ -264,6 +269,89 @@ const getHexHexesActionSpace = (
 };
 
 const getHexHexesDescription = (
+  gameState: GameState,
+  menu: HexHexesMenu,
+): string => {
+  return "select aoe";
+};
+
+interface CornerOption {
+  cornerIdx: number;
+  direction: number;
+  corner: Corner;
+}
+
+const getTriHexActionSpace = (
+  gameState: GameState,
+  takeAction: (body: { [key: string]: any }) => void,
+  menu: TriHexMenu,
+): ActionSpace => {
+  const cornerOptions: { [key: string]: CornerOption[] } = Object.fromEntries(
+    gameState.map.hexes.map((hex) => [ccToKey(hex.cc), []]),
+  );
+
+  for (const [
+    cornerIdx,
+    corner,
+  ] of menu.targetProfile.values.corners.entries()) {
+    for (const [cc, direction] of getCornerCCNeighbors(corner)) {
+      cornerOptions[ccToKey(cc)].push({ cornerIdx, direction, corner });
+    }
+  }
+
+  const hoveredKey = menu.hovering ? cornerToKey(menu.hovering) : null;
+
+  return {
+    hexActions: Object.fromEntries(
+      Object.entries(cornerOptions).map(
+        ([ccKey, cornerOptions]): [string, HexActions] => {
+          if (!cornerOptions.length) {
+            return [ccKey, { actions: [] }];
+          }
+          const getClosestOption = (locationPosition: RC) =>
+            min(cornerOptions, (option) =>
+              rcDistance(
+                hexVerticeOffsetsRcs[option.direction],
+                locationPosition,
+              ),
+            );
+          return [
+            ccKey,
+            {
+              actions: [
+                {
+                  type: "aoe",
+                  description: "select hexes",
+                  do: (localPosition) =>
+                    takeAction({
+                      index: menu.optionIndex,
+                      target: {
+                        index: getClosestOption(localPosition).cornerIdx,
+                      },
+                    }),
+                },
+              ],
+              highlighted: cornerOptions.some(
+                (option) => cornerToKey(option.corner) == hoveredKey,
+              ),
+              hoverTrigger: (localPosition) => {
+                store.dispatch(
+                  advanceMenu({
+                    ...menu,
+                    hovering: getClosestOption(localPosition).corner,
+                  }),
+                );
+              },
+            },
+          ];
+        },
+      ),
+    ),
+    buttonAction: null,
+  };
+};
+
+const getTriHexDescription = (
   gameState: GameState,
   menu: HexHexesMenu,
 ): string => {
@@ -496,6 +584,7 @@ export const menuActionSpacers: {
   HexRing: getHexRingActionSpace,
   Cone: getConeActionSpace,
   Tree: getTreeActionSpace,
+  TriHex: getTriHexActionSpace,
 };
 
 export const menuDescribers: {
@@ -509,4 +598,5 @@ export const menuDescribers: {
   HexRing: getHexRingDescription,
   Cone: getConeDescription,
   Tree: getTreeDescription,
+  TriHex: getTriHexDescription,
 };

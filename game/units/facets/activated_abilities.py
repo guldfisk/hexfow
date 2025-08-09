@@ -32,6 +32,7 @@ from game.core import (
     GS,
     ActiveUnitContext,
     is_vision_obstructed_for_unit_at,
+    TriHex,
 )
 from game.decisions import TargetProfile, O
 from game.effects.hooks import AdjacencyHook
@@ -949,3 +950,24 @@ class Vomit(SingleHexTargetActivatedAbility):
     def perform(self, target: Hex) -> None:
         if unit := GS.map.unit_on(target):
             ES.resolve(Damage(unit, DamageSignature(5, self)))
+
+
+class SludgeBelch(ActivatedAbilityFacet[list[Hex]]):
+    """
+    Target tri hex within 2 range NLoS.
+    Applies <sludge> for 2 rounds.
+    """
+
+    cost = EnergyCost(3)
+
+    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
+        if corners := list(GS.map.get_corners_within_range_off(self.owner, 2)):
+            return TriHex(corners)
+
+    def perform(self, target: list[Hex]) -> None:
+        for _hex in target:
+            ES.resolve(
+                ApplyHexStatus(
+                    _hex, HexStatusSignature(HexStatus.get("sludge"), self, duration=2)
+                )
+            )

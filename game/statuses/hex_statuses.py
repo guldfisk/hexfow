@@ -7,6 +7,7 @@ from game.effects.modifiers import (
     HexDecreaseSightCappedModifier,
     HexBlocksVisionModifier,
     HexRevealedModifier,
+    HexMoveOutPenaltyModifier,
 )
 from game.effects.triggers import (
     ShrineWalkInTrigger,
@@ -19,6 +20,7 @@ from game.effects.triggers import (
     WalkInDestroyStatusTrigger,
     HexRoundHealTrigger,
     MineTrigger,
+    SludgeTrigger,
 )
 
 
@@ -179,3 +181,22 @@ class Mine(HexStatus):
 
     def create_effects(self) -> None:
         self.register_effects(MineTrigger(self))
+
+
+class Sludge(HexStatus):
+    """
+    +1 move out penalty. At the end of each round, applies <slimed> to unit on this hex for 2 rounds.
+    """
+
+    def merge(self, incoming: Self) -> bool:
+        # TODO common logic?
+        if not self.duration is None and (
+            incoming.duration is None or (incoming.duration > self.duration)
+        ):
+            self.duration = incoming.duration
+        return True
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            HexMoveOutPenaltyModifier(self.parent, 1), SludgeTrigger(self)
+        )

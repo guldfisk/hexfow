@@ -8,6 +8,7 @@ import { GameState } from "../interfaces/gameState.ts";
 import { GameObjectDetails } from "../interfaces/gameObjectDetails.ts";
 import { MenuData, selectionIcon } from "../actions/interface.ts";
 import { HoveredDetails } from "../interfaces/details.ts";
+import { deepEquals } from "../utils/equals.ts";
 
 const mainSlice = createSlice({
   name: "application",
@@ -57,7 +58,7 @@ const mainSlice = createSlice({
       state.shouldRerender = true;
     },
     advanceMenu: (state, action: PayloadAction<MenuData>) => {
-      if (state.menuData) {
+      if (state.menuData && !deepEquals(state.menuData, action.payload)) {
         state.menuData = action.payload;
         state.highlightedCCs = null;
         state.shouldRerender = true;

@@ -42,7 +42,7 @@ from game.decisions import (
 from game.has_effects import HasEffects
 from game.info.registered import Registered, get_registered_meta, UnknownIdentifierError
 from game.interface import Connection
-from game.map.coordinates import CC, line_of_sight_obstructed
+from game.map.coordinates import CC, line_of_sight_obstructed, Corner, CornerPosition
 from game.map.geometry import hex_circle, hex_ring, hex_arc
 from game.player import Player
 from game.turn_order import TurnOrder
@@ -1257,6 +1257,23 @@ class HexHexes(TargetProfile[list[Hex]]):
 
 
 @dataclasses.dataclass
+class TriHex(TargetProfile[list[Hex]]):
+    corners: list[Corner]
+
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        return {
+            "corners": [corner.serialize() for corner in self.corners],
+        }
+
+    def parse_response(self, v: Any) -> list[Hex]:
+        return list(
+            GS.map.get_hexes_of_positions(
+                self.corners[v["index"]].get_adjacent_positions()
+            )
+        )
+
+
+@dataclasses.dataclass
 class HexRing(TargetProfile[list[Hex]]):
     centers: list[Hex]
     radius: int
@@ -1467,6 +1484,18 @@ class HexMap:
         for cc in hex_circle(distance, center=self._to_cc(off)):
             if cc in self.hexes:
                 yield self.hexes[cc]
+
+    def get_corners_within_range_off(
+        self, off: CCArg, distance: int
+    ) -> Iterator[Corner]:
+        for cc in hex_circle(distance, center=(center := self._to_cc(off))):
+            for position in CornerPosition:
+                corner = Corner(cc, position)
+                if all(
+                    cc in self.hexes and cc.distance_to(center) <= distance
+                    for cc in corner.get_adjacent_positions()
+                ):
+                    yield corner
 
     def get_units_within_range_off(self, off: CCArg, distance: int) -> Iterator[Unit]:
         for _hex in self.get_hexes_within_range_off(off, distance):

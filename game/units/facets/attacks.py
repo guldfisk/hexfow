@@ -202,6 +202,23 @@ class Slice(MeleeAttackFacet):
     damage = 3
 
 
+class Spew(RangedAttackFacet):
+    """
+    Applies <slimed> for 2 rounds.
+    """
+
+    cost = ExclusiveCost()
+    range = 1
+    damage = 4
+
+    def resolve_post_damage_effects(self, defender: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                defender, StatusSignature(UnitStatus.get("slimed"), self, duration=2)
+            )
+        )
+
+
 class CommandersPistol(RangedAttackFacet):
     cost = MovementCost(1)
     range = 2
