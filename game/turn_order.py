@@ -26,5 +26,6 @@ class TurnOrder:
         return self.active_player
 
     def set_player_order(self, players: Sequence[Player]) -> None:
+        # TODO original order
         self.players = players
         self._active_player_index = 0

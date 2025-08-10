@@ -3,17 +3,17 @@ infrastructure
     lobby system
 
 game
-    look over non elevation to other elevation?
     chess clock
-    dispells
     well-defined effects order
     well-defined order of iterating units on map
     kill source
     "+2 attack power to melee attacks"
     terror/terrified/panic debuff names
-    logging of units should include information about where they were, if applicable
+    logging of units should include information about where they were, if applicable (?)
     logging damage source? (relevant for mines and such)
     status linking
+    fix fin direction
+    fix point/debuff order
     alternate capture points
         keeps captured state for player when unit walks off
         linked group with points to player with max presence
