@@ -47,6 +47,7 @@ from game.units.facets.activated_abilities import (
     HandGrenade,
     FlashBang,
     SmokeGrenade,
+    SanctifyGrounds,
 )
 from game.units.facets.attacks import (
     Peck,
@@ -693,7 +694,7 @@ SHRINE_KEEPER = UnitBlueprint(
     sight=2,
     energy=4,
     size=Size.SMALL,
-    facets=[RaiseShrine, GrantCharm],
+    facets=[RaiseShrine, GrantCharm, SanctifyGrounds],
     price=4,
 )
 

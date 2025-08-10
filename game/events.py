@@ -26,6 +26,7 @@ from game.core import (
     LogLine,
     Status,
     GS,
+    HasStatuses,
 )
 from game.decisions import SelectOptionDecisionPoint, NoTarget, O, OptionDecision
 from game.player import Player
@@ -346,6 +347,24 @@ class ApplyHexStatus(Event[None]):
 
         with GS.log(make_status_log_line(status, self.space)):
             self.space.add_status(status)
+
+
+@dataclasses.dataclass
+class DispelStatus(Event[None]):
+    owner: HasStatuses
+    status: Status
+
+    def is_valid(self) -> bool:
+        return self.status.dispelable and any(
+            s == self.status for s in self.owner.statuses
+        )
+
+    def resolve(self) -> None:
+        for status in self.owner.statuses:
+            if status == self.status:
+                with GS.log(LogLine([status, "is dispelled from", self.owner])):
+                    status.remove()
+                break
 
 
 @dataclasses.dataclass

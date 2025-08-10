@@ -1,15 +1,16 @@
 import {
-    Cone,
-    ConsecutiveAdjacentHexes,
-    Decision,
-    GameState,
-    Hex,
-    HexHexes,
-    HexRing,
-    NOfUnits,
-    RadiatingLine,
-    Tree, TriHex,
-    UnitOption,
+  Cone,
+  ConsecutiveAdjacentHexes,
+  Decision,
+  GameState,
+  Hex,
+  HexHexes,
+  HexRing,
+  NOfUnits,
+  RadiatingLine,
+  Tree,
+  TriHex,
+  UnitOption,
 } from "../interfaces/gameState.ts";
 import { ccFromKey, ccToKey } from "../geometry.ts";
 import { Action, ActionSpace } from "./interface.ts";
@@ -60,7 +61,10 @@ export const getBaseActions = (
         ] of option.targetProfile.values.options.entries()) {
           actions[ccToKey(cc)].push({
             type: option.values?.facet?.category || "generic",
-            description: option.values?.facet?.name || "select hex",
+            description:
+              option.type == "MoveOption"
+                ? "move"
+                : option.values?.facet?.name || "select hex",
             do: () =>
               takeAction({
                 index: idx,
@@ -157,7 +161,7 @@ export const getBaseActions = (
         option.targetProfile.type == "TriHex" &&
         gameState.activeUnitContext
       ) {
-          actions[
+        actions[
           ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
         ].push({
           type: "menu",

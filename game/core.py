@@ -473,6 +473,8 @@ class Status(
     Registered, HasEffects[H], Serializable, ABC, metaclass=get_registered_meta()
 ):
     registry: ClassVar[dict[str, Status]]
+    # TODO should prob be modifiable, and also something something dispel costs.
+    dispelable: ClassVar[bool] = True
 
     def __init__(
         self,

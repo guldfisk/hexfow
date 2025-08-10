@@ -244,7 +244,7 @@ class FlameResistant(StaticAbilityFacet):
 class LastStand(StaticAbilityFacet):
     """
     If this unit would die, and it isn't mortally wounded, instead set its health to
-    1, and it gains <mortally_wounded> for 1 round.
+    1, dispel all debuffs from it, and it gains <mortally_wounded> for 1 round.
     """
 
     def create_effects(self) -> None:

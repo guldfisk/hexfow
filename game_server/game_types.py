@@ -58,31 +58,17 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                # TRACTOR,
-                # INFERNO_TANK,
-                # PESTILENCE_PRIEST,
-                # MINE_LAYER_BEETLE,
-                SLUDGE_SLUG,
-                ELITE_COMMANDO,
-                # BLIND_ABOMINATION,
-                # CYCLOPS,
+                # STAUNCH_IRON_HEART,
                 # LIGHT_ARCHER,
-                # GIANT_TOAD,
-                # SHRINE_KEEPER,
-                # FRONTLINE_TACTICIAN,
-                # CHAINSAW_SADIST,
-                # RIFLE_INFANTRY,
+                # INFERNO_TANK,
+                MAD_SCIENTIST,
             ),
             (
-                # MINE_LAYER_BEETLE,
-                # LEGENDARY_WRESTLER,
-                # LIGHT_ARCHER,
-                # RHINO_BEAST,
-                # CHICKEN,
-                # LUMBERING_PILLAR,
+                INK_WITCH,
+                SHRINE_KEEPER,
+                # SHRINE_KEEPER,
+                # GIANT_SLAYER_MOUSE,
                 # RIFLE_INFANTRY,
-                RIFLE_INFANTRY,
-                RIFLE_INFANTRY,
             ),
         )
 

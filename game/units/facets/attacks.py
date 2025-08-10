@@ -317,6 +317,10 @@ class DiamondFist(MeleeAttackFacet):
 
 
 class Slay(MeleeAttackFacet):
+    """
+    +2 damage against large units.
+    """
+
     damage = 3
 
     def get_damage_modifier_against(self, unit: Unit) -> int | None:
