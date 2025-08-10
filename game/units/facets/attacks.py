@@ -186,6 +186,12 @@ class Rifle(RangedAttackFacet):
     damage = 3
 
 
+class RifleSalvo(RangedAttackFacet):
+    cost = MovementCost(1)
+    range = 3
+    damage = 3
+
+
 class TongueLash(RangedAttackFacet):
     """
     Deals melee damage.

@@ -1202,6 +1202,14 @@ class SingleHexTargetActivatedAbility(ActivatedAbilityFacet[Hex], ABC):
             return OneOfHexes(hexes)
 
 
+class TriHexTargetActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
+    range: ClassVar[int]
+
+    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
+        if corners := list(GS.map.get_corners_within_range_off(self.owner, self.range)):
+            return TriHex(corners)
+
+
 @dataclasses.dataclass
 class OneOfHexes(TargetProfile[Hex]):
     hexes: list[Hex]

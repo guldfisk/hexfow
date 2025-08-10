@@ -22,9 +22,12 @@ from game.core import (
     Terrain,
     ActivatedAbilityFacet,
     GS,
+    AttackFacet,
+    Facet,
 )
 from game.decisions import Option
-from game.values import Resistance, VisionObstruction, Size
+from game.map.terrain import Water
+from game.values import Resistance, VisionObstruction, Size, DamageType
 
 
 class SpeedLayer(IntEnum):
@@ -240,6 +243,30 @@ class TerrainProtectionModifier(
 
     def modify(self, obj: Unit, request: TerrainProtectionRequest, value: int) -> int:
         return value + self.amount
+
+
+@dataclasses.dataclass(eq=False)
+class CamouflageModifier(StateModifierEffect[Unit, TerrainProtectionRequest, int]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.get_terrain_protection_for
+
+    unit: Unit
+
+    def should_modify(
+        self, obj: Unit, request: TerrainProtectionRequest, value: int
+    ) -> bool:
+        return (
+            obj == self.unit
+            and request.damage_signature.type == DamageType.RANGED
+            and isinstance(request.damage_signature.source, Facet)
+            and GS.map.distance_between(
+                self.unit, request.damage_signature.source.owner
+            )
+            > 1
+        )
+
+    def modify(self, obj: Unit, request: TerrainProtectionRequest, value: int) -> int:
+        return value + 1
 
 
 # TODO should be a trigger instead
@@ -520,6 +547,58 @@ class SilencedModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]
             if not (
                 isinstance(option, EffortOption)
                 and isinstance(option.facet, ActivatedAbilityFacet)
+            )
+        ]
+
+
+@dataclasses.dataclass(eq=False)
+class DisarmedModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.get_legal_options
+
+    unit: Unit
+
+    def should_modify(
+        self, obj: Unit, request: ActiveUnitContext, value: list[Option]
+    ) -> bool:
+        return obj == self.unit
+
+    def modify(
+        self, obj: Unit, request: ActiveUnitContext, value: list[Option]
+    ) -> list[Option]:
+        return [
+            option
+            for option in value
+            if not (
+                isinstance(option, EffortOption)
+                and isinstance(option.facet, AttackFacet)
+            )
+        ]
+
+
+@dataclasses.dataclass(eq=False)
+class UnwieldySwimmerModifier(
+    StateModifierEffect[Unit, ActiveUnitContext, list[Option]]
+):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.get_legal_options
+
+    unit: Unit
+
+    def should_modify(
+        self, obj: Unit, request: ActiveUnitContext, value: list[Option]
+    ) -> bool:
+        return obj == self.unit and isinstance(GS.map.hex_off(self.unit).terrain, Water)
+
+    def modify(
+        self, obj: Unit, request: ActiveUnitContext, value: list[Option]
+    ) -> list[Option]:
+        return [
+            option
+            for option in value
+            if not (
+                isinstance(option, EffortOption)
+                and isinstance(option.facet, (ActivatedAbilityFacet, AttackFacet))
             )
         ]
 

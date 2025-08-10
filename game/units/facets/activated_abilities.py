@@ -32,7 +32,7 @@ from game.core import (
     GS,
     ActiveUnitContext,
     is_vision_obstructed_for_unit_at,
-    TriHex,
+    TriHexTargetActivatedAbility,
 )
 from game.decisions import TargetProfile, O
 from game.effects.hooks import AdjacencyHook
@@ -952,22 +952,72 @@ class Vomit(SingleHexTargetActivatedAbility):
             ES.resolve(Damage(unit, DamageSignature(5, self)))
 
 
-class SludgeBelch(ActivatedAbilityFacet[list[Hex]]):
+class SludgeBelch(TriHexTargetActivatedAbility):
     """
     Target tri hex within 2 range NLoS.
     Applies <sludge> for 2 rounds.
     """
 
     cost = EnergyCost(3)
-
-    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        if corners := list(GS.map.get_corners_within_range_off(self.owner, 2)):
-            return TriHex(corners)
+    range = 2
 
     def perform(self, target: list[Hex]) -> None:
         for _hex in target:
             ES.resolve(
                 ApplyHexStatus(
                     _hex, HexStatusSignature(HexStatus.get("sludge"), self, duration=2)
+                )
+            )
+
+
+class HandGrenade(TriHexTargetActivatedAbility):
+    """
+    Target tri hex within 2 range NLoS.
+    Deals 3 aoe damage.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 2
+
+    def perform(self, target: list[Hex]) -> None:
+        for _hex in target:
+            if unit := GS.map.unit_on(_hex):
+                ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.AOE)))
+
+
+class FlashBang(TriHexTargetActivatedAbility):
+    """
+    Target tri hex within 2 range NLoS.
+    Applies <blinded> for 2 rounds.
+    """
+
+    cost = EnergyCost(3)
+    range = 2
+
+    def perform(self, target: list[Hex]) -> None:
+        for _hex in target:
+            if unit := GS.map.unit_on(_hex):
+                ES.resolve(
+                    ApplyStatus(
+                        unit,
+                        StatusSignature(UnitStatus.get("blinded"), self, duration=2),
+                    )
+                )
+
+
+class SmokeGrenade(TriHexTargetActivatedAbility):
+    """
+    Target tri hex within 2 range NLoS.
+    Applies <smoke> for 2 rounds.
+    """
+
+    cost = EnergyCost(3)
+    range = 2
+
+    def perform(self, target: list[Hex]) -> None:
+        for _hex in target:
+            ES.resolve(
+                ApplyHexStatus(
+                    _hex, HexStatusSignature(HexStatus.get("smoke"), self, duration=2)
                 )
             )

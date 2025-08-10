@@ -44,6 +44,9 @@ from game.units.facets.activated_abilities import (
     LayMine,
     Vomit,
     SludgeBelch,
+    HandGrenade,
+    FlashBang,
+    SmokeGrenade,
 )
 from game.units.facets.attacks import (
     Peck,
@@ -91,6 +94,7 @@ from game.units.facets.attacks import (
     CommandersPistol,
     Slice,
     Spew,
+    RifleSalvo,
 )
 from game.units.facets.static_abilities import (
     Prickly,
@@ -124,6 +128,8 @@ from game.units.facets.static_abilities import (
     SludgeTrail,
     SlimyLocomotion,
     SlimySkin,
+    UnwieldySwimmer,
+    Camouflage,
 )
 from game.values import Size
 
@@ -321,6 +327,26 @@ SLUDGE_SLUG = UnitBlueprint(
     energy=3,
     facets=[Spew, SludgeBelch, SludgeTrail, SlimyLocomotion, SlimySkin],
     price=9,
+)
+
+
+ELITE_COMMANDO = UnitBlueprint(
+    "Elite Commando",
+    health=6,
+    speed=3,
+    sight=2,
+    energy=5,
+    aquatic=True,
+    facets=[
+        RifleSalvo,
+        HandGrenade,
+        FlashBang,
+        SmokeGrenade,
+        TerrainSavvy,
+        UnwieldySwimmer,
+        Camouflage,
+    ],
+    price=11,
 )
 
 BLIND_ABOMINATION = UnitBlueprint(

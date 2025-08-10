@@ -20,6 +20,8 @@ from game.effects.modifiers import (
     TerrainProtectionModifier,
     ScurryInTheShadowsModifier,
     IncreaseSpeedAuraModifier,
+    UnwieldySwimmerModifier,
+    CamouflageModifier,
 )
 from game.effects.replacements import (
     CrushableReplacement,
@@ -265,6 +267,24 @@ class Diver(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(TerrainProtectionModifier(self.owner, Water, 1))
+
+
+class Camouflage(StaticAbilityFacet):
+    """
+    +1 ranged terrain protection against non-adjacent units.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(CamouflageModifier(self.owner))
+
+
+class UnwieldySwimmer(StaticAbilityFacet):
+    """
+    Disarmed and silenced while on water.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(UnwieldySwimmerModifier(self.owner))
 
 
 class ScurryInTheShadows(StaticAbilityFacet):
