@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from game.core import StaticAbilityFacet, Status, StatusSignature, UnitStatus
+from game.core import (
+    StaticAbilityFacet,
+    Status,
+    StatusSignature,
+    UnitStatus,
+    HexStatusSignature,
+    HexStatus,
+)
 from game.effects.modifiers import (
     RootedModifier,
     FarsightedModifier,
@@ -13,12 +20,16 @@ from game.effects.modifiers import (
     TerrainProtectionModifier,
     ScurryInTheShadowsModifier,
     IncreaseSpeedAuraModifier,
+    UnwieldySwimmerModifier,
+    CamouflageModifier,
 )
 from game.effects.replacements import (
     CrushableReplacement,
     PusherReplacement,
     PerTurnMovePenaltyIgnoreReplacement,
     LastStandReplacement,
+    IgnoresMoveOutPenaltyReplacement,
+    UnitImmuneToStatusReplacement,
 )
 from game.effects.triggers import (
     PricklyTrigger,
@@ -35,6 +46,7 @@ from game.effects.triggers import (
     JukeAndJiveTrigger,
     InspirationTrigger,
     DebuffOnMeleeAttackTrigger,
+    UnitAppliesStatusOnMoveTrigger,
 )
 from game.map.terrain import Water
 from game.statuses.unit_statuses import Burn
@@ -232,7 +244,7 @@ class FlameResistant(StaticAbilityFacet):
 class LastStand(StaticAbilityFacet):
     """
     If this unit would die, and it isn't mortally wounded, instead set its health to
-    1, and it gains <mortally_wounded> for 1 round.
+    1, dispel all debuffs from it, and it gains <mortally_wounded> for 1 round.
     """
 
     def create_effects(self) -> None:
@@ -255,6 +267,24 @@ class Diver(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(TerrainProtectionModifier(self.owner, Water, 1))
+
+
+class Camouflage(StaticAbilityFacet):
+    """
+    +1 ranged terrain protection against non-adjacent units.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(CamouflageModifier(self.owner))
+
+
+class UnwieldySwimmer(StaticAbilityFacet):
+    """
+    Disarmed and silenced while on water.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(UnwieldySwimmerModifier(self.owner))
 
 
 class ScurryInTheShadows(StaticAbilityFacet):
@@ -292,3 +322,37 @@ class InspiringPresence(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(IncreaseSpeedAuraModifier(self.owner, 1))
+
+
+class SlimyLocomotion(StaticAbilityFacet):
+    """
+    Ignores move out penalties.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(IgnoresMoveOutPenaltyReplacement(self.owner))
+
+
+class SlimySkin(StaticAbilityFacet):
+    """
+    Immune to <slimed>.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            UnitImmuneToStatusReplacement(self.owner, UnitStatus.get("slimed"))
+        )
+
+
+class SludgeTrail(StaticAbilityFacet):
+    """
+    When this unit moves into a space, it applies <sludge> to it for 2 rounds.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            UnitAppliesStatusOnMoveTrigger(
+                self.owner,
+                HexStatusSignature(HexStatus.get("sludge"), self, duration=2),
+            )
+        )

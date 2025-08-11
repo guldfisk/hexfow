@@ -19,6 +19,7 @@ from game.core import (
     EnergyCost,
     HexStatus,
     GS,
+    HexStatusSignature,
 )
 from game.decisions import NoTarget, SelectOptionDecisionPoint
 from game.events import (
@@ -46,6 +47,7 @@ from game.events import (
     ExhaustUnit,
     ActivateAbilityAction,
     ReadyUnit,
+    ApplyHexStatus,
 )
 from game.values import DamageType, StatusIntention
 
@@ -380,6 +382,20 @@ class BurnOnWalkIn(TriggerEffect[MoveUnit]):
 
 
 @dataclasses.dataclass(eq=False)
+class UnitAppliesStatusOnMoveTrigger(TriggerEffect[MoveUnit]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+    signature: HexStatusSignature
+
+    def should_trigger(self, event: MoveUnit) -> bool:
+        return event.unit == self.unit and event.result
+
+    def resolve(self, event: MoveUnit) -> None:
+        ES.resolve(ApplyHexStatus(event.to_, self.signature))
+
+
+@dataclasses.dataclass(eq=False)
 class BurnOnCleanup(TriggerEffect[RoundCleanup]):
     priority: ClassVar[int] = TriggerLayers.ROUND_APPLY_DEBUFFS
 
@@ -418,6 +434,25 @@ class BurnTrigger(TriggerEffect[RoundCleanup]):
             Damage(self.status.parent, DamageSignature(self.status.stacks, self.status))
         )
         self.status.decrement_stacks()
+
+
+@dataclasses.dataclass(eq=False)
+class SludgeTrigger(TriggerEffect[RoundCleanup]):
+    priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
+
+    status: HexStatus
+
+    def should_trigger(self, event: RoundCleanup) -> bool:
+        return GS.map.unit_on(self.status.parent) is not None
+
+    def resolve(self, event: RoundCleanup) -> None:
+        if unit := GS.map.unit_on(self.status.parent):
+            ES.resolve(
+                ApplyStatus(
+                    unit,
+                    StatusSignature(UnitStatus.get("slimed"), self.status, duration=2),
+                )
+            )
 
 
 @dataclasses.dataclass(eq=False)

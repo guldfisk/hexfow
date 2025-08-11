@@ -1,4 +1,4 @@
-import { CC, RC } from "./interfaces/geometry.ts";
+import { CC, Corner, RC } from "./interfaces/geometry.ts";
 import { mod, range } from "./utils/range.ts";
 
 export const hexSize = 160;
@@ -23,6 +23,11 @@ export const getHexVerticeOffsets = (hexSize: number): [number, number][] => {
 };
 
 export const hexVerticeOffsets = getHexVerticeOffsets(hexSize);
+// TODO dumb
+export const hexVerticeOffsetsRcs = hexVerticeOffsets.map(([x, y]) => ({
+  x,
+  y,
+}));
 
 export const ccNeighborOffsets: CC[] = [
   { r: 1, h: 0 },
@@ -65,6 +70,9 @@ export const ccToRC = (hexCoord: CC): RC => ({
 
 export const ccToKey = (cc: CC): string => `${cc.r},${cc.h}`;
 
+export const cornerToKey = (corner: Corner): string =>
+  `${ccToKey(corner.cc)}:${corner.position}`;
+
 export const ccFromKey = (key: string): CC => {
   const [r, h] = key.split(",");
   return { r: parseInt(r), h: parseInt(h) };
@@ -98,6 +106,11 @@ export const ccDistance = (a: CC, b: CC): number => {
       Math.abs(difference.h)) /
     2
   );
+};
+
+export const rcDistance = (a: RC, b: RC): number => {
+  const diff = subRCs(a, b);
+  return Math.sqrt(diff.x ** 2 + diff.y ** 2);
 };
 
 export const ccEquals = (a: CC, b: CC): boolean => a.r == b.r && a.h == b.h;
@@ -187,3 +200,16 @@ export const rcInBox = (
   rc.x <= boxX + boxWidth &&
   rc.y >= boxY &&
   rc.y <= boxY + boxHeight;
+
+export const getCornerCCNeighbors = (corner: Corner): [CC, number][] =>
+  corner.position == 0
+    ? [
+        [corner.cc, 1],
+        [addCCs(ccNeighborOffsets[3], corner.cc), 5],
+        [addCCs(ccNeighborOffsets[4], corner.cc), 3],
+      ]
+    : [
+        [corner.cc, 4],
+        [addCCs(ccNeighborOffsets[0], corner.cc), 2],
+        [addCCs(ccNeighborOffsets[1], corner.cc), 0],
+      ];

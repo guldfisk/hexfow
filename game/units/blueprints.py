@@ -43,6 +43,11 @@ from game.units.facets.activated_abilities import (
     CoordinatedManeuver,
     LayMine,
     Vomit,
+    SludgeBelch,
+    HandGrenade,
+    FlashBang,
+    SmokeGrenade,
+    SanctifyGrounds,
 )
 from game.units.facets.attacks import (
     Peck,
@@ -89,6 +94,8 @@ from game.units.facets.attacks import (
     TongueLash,
     CommandersPistol,
     Slice,
+    Spew,
+    RifleSalvo,
 )
 from game.units.facets.static_abilities import (
     Prickly,
@@ -119,6 +126,11 @@ from game.units.facets.static_abilities import (
     Inspiration,
     ToxicSkin,
     InspiringPresence,
+    SludgeTrail,
+    SlimyLocomotion,
+    SlimySkin,
+    UnwieldySwimmer,
+    Camouflage,
 )
 from game.values import Size
 
@@ -307,6 +319,36 @@ HORROR_SPAWN = UnitBlueprint(
     price=None,
 )
 
+SLUDGE_SLUG = UnitBlueprint(
+    "Sludge Slug",
+    health=10,
+    speed=1,
+    sight=1,
+    size=Size.LARGE,
+    energy=3,
+    facets=[Spew, SludgeBelch, SludgeTrail, SlimyLocomotion, SlimySkin],
+    price=9,
+)
+
+
+ELITE_COMMANDO = UnitBlueprint(
+    "Elite Commando",
+    health=6,
+    speed=3,
+    sight=2,
+    energy=5,
+    aquatic=True,
+    facets=[
+        RifleSalvo,
+        HandGrenade,
+        FlashBang,
+        SmokeGrenade,
+        TerrainSavvy,
+        UnwieldySwimmer,
+        Camouflage,
+    ],
+    price=11,
+)
 
 BLIND_ABOMINATION = UnitBlueprint(
     "Blind Abomination",
@@ -652,7 +694,7 @@ SHRINE_KEEPER = UnitBlueprint(
     sight=2,
     energy=4,
     size=Size.SMALL,
-    facets=[RaiseShrine, GrantCharm],
+    facets=[RaiseShrine, GrantCharm, SanctifyGrounds],
     price=4,
 )
 

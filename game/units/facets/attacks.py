@@ -186,6 +186,12 @@ class Rifle(RangedAttackFacet):
     damage = 3
 
 
+class RifleSalvo(RangedAttackFacet):
+    cost = MovementCost(1)
+    range = 3
+    damage = 3
+
+
 class TongueLash(RangedAttackFacet):
     """
     Deals melee damage.
@@ -200,6 +206,23 @@ class TongueLash(RangedAttackFacet):
 class Slice(MeleeAttackFacet):
     cost = MovementCost(1)
     damage = 3
+
+
+class Spew(RangedAttackFacet):
+    """
+    Applies <slimed> for 2 rounds.
+    """
+
+    cost = ExclusiveCost()
+    range = 1
+    damage = 4
+
+    def resolve_post_damage_effects(self, defender: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                defender, StatusSignature(UnitStatus.get("slimed"), self, duration=2)
+            )
+        )
 
 
 class CommandersPistol(RangedAttackFacet):
@@ -294,6 +317,10 @@ class DiamondFist(MeleeAttackFacet):
 
 
 class Slay(MeleeAttackFacet):
+    """
+    +2 damage against large units.
+    """
+
     damage = 3
 
     def get_damage_modifier_against(self, unit: Unit) -> int | None:

@@ -47,6 +47,7 @@ class TestGameType(GameType):
                             Plains,
                             # Forest,
                             # Hills,
+                            # Water,
                         ]
                     ),
                     cc.distance_to(CC(0, 0)) <= 1,
@@ -57,27 +58,17 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                # TRACTOR,
-                # INFERNO_TANK,
-                # PESTILENCE_PRIEST,
-                MINE_LAYER_BEETLE,
-                BLIND_ABOMINATION,
-                CYCLOPS,
+                # STAUNCH_IRON_HEART,
                 # LIGHT_ARCHER,
-                # GIANT_TOAD,
-                # SHRINE_KEEPER,
-                # FRONTLINE_TACTICIAN,
-                # CHAINSAW_SADIST,
-                # RIFLE_INFANTRY,
+                # INFERNO_TANK,
+                MAD_SCIENTIST,
             ),
             (
-                MINE_LAYER_BEETLE,
-                # LEGENDARY_WRESTLER,
-                # LIGHT_ARCHER,
-                # RHINO_BEAST,
-                CHICKEN,
-                # LUMBERING_PILLAR,
-                RIFLE_INFANTRY,
+                INK_WITCH,
+                SHRINE_KEEPER,
+                # SHRINE_KEEPER,
+                # GIANT_SLAYER_MOUSE,
+                # RIFLE_INFANTRY,
             ),
         )
 
@@ -95,14 +86,149 @@ class TestGameType(GameType):
 class RandomGameType(GameType):
 
     def get_scenario(self) -> Scenario:
-        with open(Path(__file__).parent.resolve() / "scenario_spec.json", "r") as f:
-            spec = json.load(f)
+        specs = [
+            (CC(0, -1), True),
+            (CC(0, 0), True),
+            (CC(0, 1), True),
+            (CC(0, -2), False),
+            (CC(0, -3), False),
+            (CC(0, 2), False),
+            (CC(0, 3), False),
+            (CC(-1, 0), True),
+            (CC(-1, 1), True),
+            (CC(1, 0), True),
+            (CC(1, -1), True),
+            (CC(-2, 1), False),
+            (CC(2, -1), False),
+            (CC(0, 4), False),
+            (CC(0, -4), False),
+            (CC(0, 5), False),
+            (CC(0, -5), False),
+            (CC(-1, -4), False),
+            (CC(-2, -4), False),
+            (CC(1, -5), False),
+            (CC(2, -5), False),
+            (CC(3, -6), False),
+            (CC(-1, 5), False),
+            (CC(-2, 6), False),
+            (CC(1, 4), False),
+            (CC(3, 3), False),
+            (CC(2, 3), False),
+            (CC(2, -6), False),
+            (CC(2, 4), False),
+            (CC(-2, -3), False),
+            (CC(-2, 5), False),
+            (CC(4, -7), False),
+            (CC(4, -6), False),
+            (CC(5, -7), False),
+            (CC(4, 2), False),
+            (CC(4, 3), False),
+            (CC(5, 2), False),
+            (CC(-3, 6), False),
+            (CC(-4, 6), False),
+            (CC(-4, 7), False),
+            (CC(-5, 7), False),
+            (CC(-3, -3), False),
+            (CC(-4, -3), False),
+            (CC(-4, -2), False),
+            (CC(-5, -2), False),
+            (CC(6, 2), False),
+            (CC(6, 1), False),
+            (CC(6, -7), False),
+            (CC(6, -8), False),
+            (CC(-6, -1), False),
+            (CC(-6, -2), False),
+            (CC(-6, 7), False),
+            (CC(-6, 8), False),
+            (CC(6, -1), False),
+            (CC(6, -2), False),
+            (CC(6, -3), False),
+            (CC(6, -4), False),
+            (CC(6, -5), False),
+            (CC(6, -6), False),
+            (CC(5, -6), False),
+            (CC(5, -5), False),
+            (CC(5, -3), False),
+            (CC(5, -2), False),
+            (CC(5, -1), False),
+            (CC(5, 0), False),
+            (CC(5, 1), False),
+            (CC(6, 0), False),
+            (CC(5, -4), False),
+            (CC(4, -5), False),
+            (CC(4, -4), False),
+            (CC(4, -2), False),
+            (CC(4, -1), True),
+            (CC(4, 0), False),
+            (CC(4, 1), False),
+            (CC(3, 2), False),
+            (CC(3, 1), False),
+            (CC(3, -2), False),
+            (CC(3, -3), False),
+            (CC(3, -4), False),
+            (CC(3, -5), False),
+            (CC(2, -4), False),
+            (CC(2, -3), False),
+            (CC(2, -2), False),
+            (CC(2, 0), False),
+            (CC(2, 1), False),
+            (CC(2, 2), False),
+            (CC(1, 3), False),
+            (CC(1, 2), False),
+            (CC(1, 1), False),
+            (CC(1, -2), False),
+            (CC(1, -3), False),
+            (CC(1, -4), False),
+            (CC(-1, -3), False),
+            (CC(-1, -1), False),
+            (CC(-1, 2), False),
+            (CC(-1, 3), False),
+            (CC(-2, 4), False),
+            (CC(-2, 3), False),
+            (CC(-2, 0), False),
+            (CC(-2, -1), False),
+            (CC(-3, -1), False),
+            (CC(-2, -2), False),
+            (CC(-3, -2), False),
+            (CC(-3, 1), False),
+            (CC(-4, 3), True),
+            (CC(-3, 3), False),
+            (CC(-4, 4), False),
+            (CC(-3, 2), False),
+            (CC(-3, 5), False),
+            (CC(-4, 5), False),
+            (CC(-4, 2), False),
+            (CC(-4, 1), True),
+            (CC(-5, 4), False),
+            (CC(-5, 2), False),
+            (CC(-5, 1), False),
+            (CC(-5, 3), False),
+            (CC(-5, 0), False),
+            (CC(-5, 5), False),
+            (CC(-5, 6), False),
+            (CC(-6, 6), False),
+            (CC(-6, 5), False),
+            (CC(-6, 3), False),
+            (CC(-6, 2), False),
+            (CC(-6, 4), False),
+            (CC(-6, 1), False),
+            (CC(-6, 0), False),
+            (CC(-5, -1), False),
+            (CC(-4, -1), False),
+            (CC(-4, 0), False),
+            (CC(-3, 0), False),
+            (CC(-2, 2), False),
+            (CC(-3, 4), False),
+            (CC(-1, 4), False),
+            (CC(3, 0), False),
+            (CC(3, -1), False),
+            (CC(4, -3), True),
+            (CC(-1, -2), False),
+        ]
 
         pairs: dict[frozenset[CC] : bool] = {
-            frozenset(
-                (CC(**hex_spec["cc"]), CC(**{k: -v for k, v in hex_spec["cc"].items()}))
-            ): hex_spec["isObjective"]
-            for hex_spec in spec.values()
+            frozenset((cc, CC(*(-v for v in cc)))): is_objective
+            for cc, is_objective in specs
         }
 
         terrain_pool = (
@@ -121,8 +247,6 @@ class RandomGameType(GameType):
                 )
             )
         )
-
-        print(len(pairs))
 
         spawn_area = [
             cc
@@ -168,9 +292,9 @@ class RandomGameType(GameType):
             if landscape.terrain_map[cc].terrain_type != Water
         ]
 
-        min_random_unit_quantity = 7
+        min_random_unit_quantity = 9
         random_unt_quantity_threshold = 12
-        point_threshold = random_unt_quantity_threshold * 5
+        point_threshold = random_unt_quantity_threshold * 7
         banned_units = {LOTUS_BUD, CACTUS, DIAMOND_GOLEM}
 
         unit_pool = [

@@ -9,6 +9,7 @@ import {
   NOfUnits,
   RadiatingLine,
   Tree,
+  TriHex,
   UnitOption,
 } from "../interfaces/gameState.ts";
 import { ccFromKey, ccToKey } from "../geometry.ts";
@@ -25,6 +26,7 @@ export const getUnitsOfHexes = (gameState: GameState): { [key: string]: Hex } =>
 export const getBaseActions = (
   gameState: GameState,
   takeAction: (body: { [key: string]: any }) => void,
+  // TODO
   decision: Decision | null,
 ): { [key: string]: Action[] } => {
   const unitHexes: { [key: string]: Hex } = getUnitsOfHexes(gameState);
@@ -59,7 +61,10 @@ export const getBaseActions = (
         ] of option.targetProfile.values.options.entries()) {
           actions[ccToKey(cc)].push({
             type: option.values?.facet?.category || "generic",
-            description: option.values?.facet?.name || "select hex",
+            description:
+              option.type == "MoveOption"
+                ? "move"
+                : option.values?.facet?.name || "select hex",
             do: () =>
               takeAction({
                 index: idx,
@@ -148,6 +153,25 @@ export const getBaseActions = (
                 type: "HexHexes",
                 optionIndex: idx,
                 targetProfile: option.targetProfile as HexHexes,
+                hovering: null,
+              }),
+            ),
+        });
+      } else if (
+        option.targetProfile.type == "TriHex" &&
+        gameState.activeUnitContext
+      ) {
+        actions[
+          ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
+        ].push({
+          type: "menu",
+          description: option.values?.facet?.name || "select hexes",
+          do: () =>
+            store.dispatch(
+              activateMenu({
+                type: "TriHex",
+                optionIndex: idx,
+                targetProfile: option.targetProfile as TriHex,
                 hovering: null,
               }),
             ),

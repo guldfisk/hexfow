@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 import math
+from enum import IntEnum
 from typing import NamedTuple, Iterator, Mapping, Any, Iterable, Callable
 
 
@@ -48,6 +49,32 @@ class CC(NamedTuple):
         return (
             abs(difference.r) + abs(difference.r + difference.h) + abs(difference.h)
         ) // 2
+
+
+class CornerPosition(IntEnum):
+    TOP = 0
+    BOTTOM = 1
+
+
+class Corner(NamedTuple):
+    cc: CC
+    position: CornerPosition
+
+    def get_adjacent_positions(self) -> list[CC]:
+        return [
+            self.cc,
+            *(
+                self.cc + offset
+                for offset in (
+                    NEIGHBOR_OFFSETS[:2]
+                    if self.position == CornerPosition.BOTTOM
+                    else NEIGHBOR_OFFSETS[3:5]
+                )
+            ),
+        ]
+
+    def serialize(self) -> Mapping[str, Any]:
+        return {"cc": self.cc.serialize(), "position": self.position}
 
 
 NEIGHBOR_OFFSETS = [

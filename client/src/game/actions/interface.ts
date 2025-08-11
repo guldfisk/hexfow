@@ -6,9 +6,10 @@ import {
   NOfUnits,
   RadiatingLine,
   Tree,
+  TriHex,
   UnitOption,
 } from "../interfaces/gameState.ts";
-import { CC } from "../interfaces/geometry.ts";
+import { CC, Corner, RC } from "../interfaces/geometry.ts";
 
 export type selectionIcon =
   | "ranged_attack"
@@ -21,14 +22,14 @@ export type selectionIcon =
 export interface Action {
   type: selectionIcon;
   description: string;
-  do: () => void;
+  do: (localPosition: RC) => void;
 }
 
 export interface HexActions {
   actions: Action[];
   sideMenuItems?: Action[];
   highlighted?: boolean;
-  hoverTrigger?: () => void;
+  hoverTrigger?: (localPosition: RC) => void;
   previewOptions?: UnitOption[] | null;
 }
 
@@ -100,6 +101,13 @@ export interface ListMenu extends BaseMenuData {
   cc: CC;
 }
 
+export interface TriHexMenu extends BaseMenuData {
+  type: "TriHex";
+  optionIndex: number;
+  targetProfile: TriHex;
+  hovering: Corner | null;
+}
+
 export type MenuData =
   | NOfUnitsMenu
   | TreeMenu
@@ -108,4 +116,5 @@ export type MenuData =
   | HexRingMenu
   | RadiatingLineMenu
   | ConeMenu
-  | ListMenu;
+  | ListMenu
+  | TriHexMenu;

@@ -32,6 +32,7 @@ from game.core import (
     GS,
     ActiveUnitContext,
     is_vision_obstructed_for_unit_at,
+    TriHexTargetActivatedAbility,
 )
 from game.decisions import TargetProfile, O
 from game.effects.hooks import AdjacencyHook
@@ -49,7 +50,9 @@ from game.events import (
     ModifyMovementPoints,
     ReadyUnit,
     ExhaustUnit,
+    DispelStatus,
 )
+from game.statuses.dispel import dispel_from_unit, dispel_all
 from game.statuses.hex_statuses import Shrine, Soot, BurningTerrain, Smoke, Glimpse
 from game.statuses.unit_statuses import (
     Panicked,
@@ -61,7 +64,7 @@ from game.statuses.unit_statuses import (
     Terror,
     Burn,
 )
-from game.values import DamageType, Size
+from game.values import DamageType, Size, StatusIntention
 
 
 class Bloom(NoTargetActivatedAbility):
@@ -487,7 +490,7 @@ class GrantCharm(SingleAllyActivatedAbility):
     """
 
     can_target_self = False
-    cost = EnergyCost(1)
+    cost = EnergyCost(2)
 
     def perform(self, target: Unit) -> None:
         ES.resolve(ApplyStatus(target, StatusSignature(LuckyCharm, self, duration=3)))
@@ -760,7 +763,7 @@ class ShrinkRay(SingleTargetActivatedAbility):
 class AssembleTheDoombot(SingleHexTargetActivatedAbility):
     """
     Target adjacent visible empty hex. Applies <doombot_scaffold> to hex.
-    If it already has <doombot_scaffold>, instead remove it, and spawn an exhausted Doombot 3000 with <ephemeral> for 4 rounds.
+    If it already has <doombot_scaffold>, instead dispel it, and spawn an exhausted Doombot 3000 with <ephemeral> for 4 rounds.
     """
 
     cost = ExclusiveCost() | EnergyCost(4)
@@ -771,9 +774,8 @@ class AssembleTheDoombot(SingleHexTargetActivatedAbility):
 
     def perform(self, target: Hex) -> None:
         if statuses := target.get_statuses(HexStatus.get("doombot_scaffold")):
-            # TODO dispell etc
             for status in statuses:
-                status.remove()
+                ES.resolve(DispelStatus(target, status))
             ES.resolve(
                 SpawnUnit(
                     UnitBlueprint.registry["doombot_3000"],
@@ -842,14 +844,14 @@ class InkRing(ActivatedAbilityFacet):
 
 class MalevolentStare(SingleEnemyActivatedAbility):
     """
-    Target enemy unit within 3 range LoS. Applies <silenced> for 2 rounds.
+    Target enemy unit within 3 range LoS. Dispels all buffs and applies <silenced> for 2 rounds.
     """
 
     cost = EnergyCost(3) | MovementCost(2)
     range = 3
 
     def perform(self, target: Unit) -> None:
-        # TODO should also dispell buffs
+        dispel_from_unit(target, StatusIntention.BUFF)
         ES.resolve(
             ApplyStatus(
                 target, StatusSignature(UnitStatus.get("silenced"), self, duration=2)
@@ -934,6 +936,15 @@ class LayMine(SingleHexTargetActivatedAbility):
         )
 
 
+class SanctifyGrounds(SingleHexTargetActivatedAbility):
+    """Target hex within 1 range. Dispels hex statuses."""
+
+    cost = EnergyCost(2)
+
+    def perform(self, target: Hex) -> None:
+        dispel_all(target)
+
+
 class Vomit(SingleHexTargetActivatedAbility):
     """
     Target adjacent hex. Deals 5 damage.
@@ -949,3 +960,74 @@ class Vomit(SingleHexTargetActivatedAbility):
     def perform(self, target: Hex) -> None:
         if unit := GS.map.unit_on(target):
             ES.resolve(Damage(unit, DamageSignature(5, self)))
+
+
+class SludgeBelch(TriHexTargetActivatedAbility):
+    """
+    Target tri hex within 2 range NLoS.
+    Applies <sludge> for 2 rounds.
+    """
+
+    cost = EnergyCost(3)
+    range = 2
+
+    def perform(self, target: list[Hex]) -> None:
+        for _hex in target:
+            ES.resolve(
+                ApplyHexStatus(
+                    _hex, HexStatusSignature(HexStatus.get("sludge"), self, duration=2)
+                )
+            )
+
+
+class HandGrenade(TriHexTargetActivatedAbility):
+    """
+    Target tri hex within 2 range NLoS.
+    Deals 3 aoe damage.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 2
+
+    def perform(self, target: list[Hex]) -> None:
+        for _hex in target:
+            if unit := GS.map.unit_on(_hex):
+                ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.AOE)))
+
+
+class FlashBang(TriHexTargetActivatedAbility):
+    """
+    Target tri hex within 2 range NLoS.
+    Applies <blinded> for 2 rounds.
+    """
+
+    cost = EnergyCost(3)
+    range = 2
+
+    def perform(self, target: list[Hex]) -> None:
+        for _hex in target:
+            if unit := GS.map.unit_on(_hex):
+                ES.resolve(
+                    ApplyStatus(
+                        unit,
+                        StatusSignature(UnitStatus.get("blinded"), self, duration=2),
+                    )
+                )
+
+
+class SmokeGrenade(TriHexTargetActivatedAbility):
+    """
+    Target tri hex within 2 range NLoS.
+    Applies <smoke> for 2 rounds.
+    """
+
+    cost = EnergyCost(3)
+    range = 2
+
+    def perform(self, target: list[Hex]) -> None:
+        for _hex in target:
+            ES.resolve(
+                ApplyHexStatus(
+                    _hex, HexStatusSignature(HexStatus.get("smoke"), self, duration=2)
+                )
+            )
