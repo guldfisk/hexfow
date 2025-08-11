@@ -6,6 +6,7 @@ import {
   Sprite,
   Text,
   TextStyle,
+  Texture,
 } from "pixi.js";
 import { GameState, Intention, Status } from "./interfaces/gameState.ts";
 import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
@@ -41,6 +42,8 @@ import { menuActionSpacers } from "./actions/menues.ts";
 import { HoveredDetails } from "./interfaces/details.ts";
 import type { ColorSource } from "pixi.js/lib/color/Color";
 import moize from "moize";
+import { ViewContainer } from "pixi.js/lib/scene/view/ViewContainer";
+import { CanvasTextOptions } from "pixi.js/lib/scene/text/Text";
 
 const sizeScales: { S: number; M: number; L: number } = {
   S: 0.9,
@@ -270,13 +273,25 @@ export const renderMap = (
   state: AppState,
   gameState: GameState,
   gameConnection: WebSocket,
-): { map: Container; graphics: Graphics[] } => {
-  const createdGraphics: Graphics[] = [];
+): { map: Container; graphics: ViewContainer[] } => {
+  const createdObjects: ViewContainer[] = [];
 
   const newGraphic = (context: GraphicsContext) => {
     const g = new Graphics(context);
-    createdGraphics.push(g);
+    createdObjects.push(g);
     return g;
+  };
+
+  const newSprite = (texture: Texture) => {
+    const sprite = new Sprite(texture);
+    createdObjects.push(sprite);
+    return sprite;
+  };
+
+  const newText = (options?: CanvasTextOptions) => {
+    const text = new Text(options);
+    createdObjects.push(text);
+    return text;
   };
 
   const map = new Container();
@@ -303,7 +318,7 @@ export const renderMap = (
     const hexContainer = new Container();
     map.addChild(hexContainer);
 
-    const terrainSprite = new Sprite(textureMap[hexData.terrain]);
+    const terrainSprite = newSprite(textureMap[hexData.terrain]);
     terrainSprite.anchor = 0.5;
 
     let hex = newGraphic(hexData.visible ? visibleHexShape : invisibleHexShape);
@@ -320,7 +335,7 @@ export const renderMap = (
     hexContainer.addChild(hex);
 
     if (state.showCoordinates) {
-      const coordinateLabel = new Text({
+      const coordinateLabel = newText({
         text: `${hexData.cc.r},${hexData.cc.h}`,
         style: smallTextStyle,
       });
@@ -335,7 +350,7 @@ export const renderMap = (
       for (const [idx, icon] of state.actionPreview[
         ccToKey(hexData.cc)
       ].entries()) {
-        const selectionSprite = new Sprite(textureMap[selectionIconMap[icon]]);
+        const selectionSprite = newSprite(textureMap[selectionIconMap[icon]]);
         selectionSprite.anchor = 0.5;
         selectionSprite.alpha = 0.5;
         hexContainer.addChild(selectionSprite);
@@ -353,7 +368,7 @@ export const renderMap = (
       ccToKey(hexData.cc)
     ].actions.entries()) {
       if (!state.actionPreview) {
-        const selectionSprite = new Sprite(
+        const selectionSprite = newSprite(
           textureMap[selectionIconMap[action.type]],
         );
         selectionSprite.anchor = 0.5;
@@ -397,7 +412,7 @@ export const renderMap = (
       intention: Intention | null,
     ): Container => {
       const statusContainer = new Container();
-      const statusSprite = new Sprite(getTexture("status", status.type));
+      const statusSprite = newSprite(getTexture("status", status.type));
 
       if (intention) {
         const frame = intentionBorderMap[intention];
@@ -417,7 +432,7 @@ export const renderMap = (
       }
 
       if (status.stacks) {
-        const durationText = new Text({
+        const durationText = newText({
           text: `${status.stacks}`,
           style: stacksStyle,
         });
@@ -428,7 +443,7 @@ export const renderMap = (
       }
 
       if (status.duration) {
-        const durationText = new Text({
+        const durationText = newText({
           text: `${status.duration}`,
           style: durationStyle,
         });
@@ -445,7 +460,7 @@ export const renderMap = (
       const unitContainer = new Container();
       const baseUnitContainer = new Container();
       unitContainer.addChild(baseUnitContainer);
-      const unitSprite = new Sprite(getTexture("unit", hexData.unit.blueprint));
+      const unitSprite = newSprite(getTexture("unit", hexData.unit.blueprint));
       unitSprite.anchor = 0.5;
       baseUnitContainer.scale = sizeScales[hexData.unit.size];
       if (hexData.unit.controller == gameState.players[0].name) {
@@ -468,7 +483,7 @@ export const renderMap = (
         gameState.activeUnitContext &&
         gameState.activeUnitContext.unit.id == hexData.unit.id
       ) {
-        const movementPoints = new Text({
+        const movementPoints = newText({
           text: `${gameState.activeUnitContext.movementPoints}`,
           style: largeTextStyle,
         });
@@ -517,7 +532,7 @@ export const renderMap = (
 
         container.addChild(bg);
 
-        const primaryText = new Text({
+        const primaryText = newText({
           text: `${currentValue}/${maxValue}`,
           style: primaryHealthIndicatorTextStyle,
         });
@@ -563,13 +578,13 @@ export const renderMap = (
 
       if (hexData.unit.armor != 0) {
         const shieldContainer = new Container();
-        const shieldSprite = new Sprite(
+        const shieldSprite = newSprite(
           textureMap[
             hexData.unit.armor > 0 ? "shield_icon" : "shield_broken_icon"
           ],
         );
         shieldSprite.anchor = 0.5;
-        const shieldText = new Text({
+        const shieldText = newText({
           text: `${hexData.unit.armor}`,
           style: secondaryHealthIndicatorTextStyle,
         });
@@ -585,7 +600,7 @@ export const renderMap = (
       }
 
       if (hexData.unit.isGhost) {
-        const unitSprite = new Sprite(
+        const unitSprite = newSprite(
           app.renderer.generateTexture(unitContainer),
         );
         unitSprite.alpha = 0.5;
@@ -597,7 +612,7 @@ export const renderMap = (
     }
 
     if (hexData.isObjective) {
-      const flagSprite = new Sprite(textureMap["flag_icon"]);
+      const flagSprite = newSprite(textureMap["flag_icon"]);
       flagSprite.x = -hexWidth / 2 + 10;
       flagSprite.y = -hexSize / 2;
       hexContainer.addChild(flagSprite);
@@ -627,14 +642,14 @@ export const renderMap = (
 
     if (!hexData.visible) {
       const eyeContainer = new Container();
-      const eyeIcon = new Sprite(textureMap["closed_eye_icon"]);
+      const eyeIcon = newSprite(textureMap["closed_eye_icon"]);
       eyeIcon.anchor = 0.5;
 
       if (
         hexData.lastVisibleRound !== null &&
         gameState.round - hexData.lastVisibleRound > 0
       ) {
-        const eyeText = new Text({
+        const eyeText = newText({
           text: `${gameState.round - hexData.lastVisibleRound}`,
           style: ghostStyle,
         });
@@ -678,7 +693,7 @@ export const renderMap = (
       for (const [idx, menuItem] of menuItems.entries()) {
         const itemsContainer = new Container();
         hexContainer.addChild(itemsContainer);
-        const itemText = new Text({
+        const itemText = newText({
           text: `${menuItem.description}`,
           style: menuStyle,
         });
@@ -693,7 +708,7 @@ export const renderMap = (
           totalSpaceNeeded / 2 -
           buttonHeight / 2;
 
-        const selectionSprite = new Sprite(
+        const selectionSprite = newSprite(
           textureMap[selectionIconMap[menuItem.type]],
         );
         selectionSprite.scale = 0.15;
@@ -798,5 +813,5 @@ export const renderMap = (
     }
   });
 
-  return { map, graphics: createdGraphics };
+  return { map, graphics: createdObjects };
 };
