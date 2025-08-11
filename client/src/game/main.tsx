@@ -9,7 +9,12 @@ import { createRoot } from "react-dom/client";
 import { StrictMode } from "react";
 import { HUD } from "./hud/hud.tsx";
 import { Provider } from "react-redux";
-import { receiveGameState, renderedGameState, store } from "./state/store.ts";
+import {
+  receiveGameState,
+  renderedGameState,
+  toggleShowCoordinates,
+  store,
+} from "./state/store.ts";
 
 const gameConnection = new WebSocket(
   `ws://${window.location.hostname}:8765/ws`,
@@ -108,6 +113,8 @@ async function main() {
           }
         }
       }
+    } else if (event.key == "c") {
+      store.dispatch(toggleShowCoordinates());
     }
   };
 
@@ -120,11 +127,8 @@ async function main() {
       app.stage.removeChild(map);
       const result = renderMap(
         app,
+        state,
         state.gameState,
-        state.gameObjectDetails,
-        state.menuData,
-        state.actionPreview,
-        state.highlightedCCs,
         gameConnection,
       );
       map = result.map;

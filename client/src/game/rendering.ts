@@ -9,8 +9,6 @@ import {
 } from "pixi.js";
 import { GameState, Intention, Status } from "./interfaces/gameState.ts";
 import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
-
-import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
 import {
   addRCs,
   asUnitVector,
@@ -31,13 +29,14 @@ import {
 import { getTexture, textureMap } from "./textures.ts";
 import { range } from "./utils/range.ts";
 import {
+  AppState,
   deactivateMenu,
   hoverDetail,
   setActionPreview,
   store,
 } from "./state/store.ts";
 import { getBaseActionSpace } from "./actions/actionSpace.ts";
-import { MenuData, selectionIcon } from "./actions/interface.ts";
+import { selectionIcon } from "./actions/interface.ts";
 import { menuActionSpacers } from "./actions/menues.ts";
 import { HoveredDetails } from "./interfaces/details.ts";
 import type { ColorSource } from "pixi.js/lib/color/Color";
@@ -268,11 +267,8 @@ const getIndicatorBg = moize(
 
 export const renderMap = (
   app: Application,
+  state: AppState,
   gameState: GameState,
-  gameObjectDetails: GameObjectDetails,
-  menu: MenuData | null,
-  actionPreview: { [key: string]: selectionIcon[] } | null,
-  highlightedCCs: string[] | null,
   gameConnection: WebSocket,
 ): { map: Container; graphics: Graphics[] } => {
   const createdGraphics: Graphics[] = [];
@@ -288,11 +284,11 @@ export const renderMap = (
   app.stage.addChild(map);
 
   const actionSpace = (
-    menu
-      ? menuActionSpacers[menu.type](
+    state.menuData
+      ? menuActionSpacers[state.menuData.type](
           gameState,
           (body) => gameConnection.send(JSON.stringify(body)),
-          menu,
+          state.menuData,
         )
       : getBaseActionSpace(
           gameState,
@@ -323,24 +319,30 @@ export const renderMap = (
 
     hexContainer.addChild(hex);
 
-    const label = new Text({
-      text: `${hexData.cc.r},${hexData.cc.h}`,
-      style: smallTextStyle,
-    });
-    label.anchor = 0.5;
-    label.y = hexSize / 2 + 25;
-    hexContainer.addChild(label);
+    if (state.showCoordinates) {
+      const coordinateLabel = new Text({
+        text: `${hexData.cc.r},${hexData.cc.h}`,
+        style: smallTextStyle,
+      });
+      coordinateLabel.anchor = 0.5;
+      coordinateLabel.y = hexSize / 2 + 25;
+      hexContainer.addChild(coordinateLabel);
+    }
 
     const actionTriggerZones = [];
 
-    if (actionPreview) {
-      for (const [idx, icon] of actionPreview[ccToKey(hexData.cc)].entries()) {
+    if (state.actionPreview) {
+      for (const [idx, icon] of state.actionPreview[
+        ccToKey(hexData.cc)
+      ].entries()) {
         const selectionSprite = new Sprite(textureMap[selectionIconMap[icon]]);
         selectionSprite.anchor = 0.5;
         selectionSprite.alpha = 0.5;
         hexContainer.addChild(selectionSprite);
         let mask = newGraphic(
-          dividerFrames[actionPreview[ccToKey(hexData.cc)].length - 1][idx],
+          dividerFrames[state.actionPreview[ccToKey(hexData.cc)].length - 1][
+            idx
+          ],
         );
         hexContainer.addChild(mask);
         selectionSprite.mask = mask;
@@ -350,7 +352,7 @@ export const renderMap = (
     for (const [idx, action] of actionSpace[
       ccToKey(hexData.cc)
     ].actions.entries()) {
-      if (!actionPreview) {
+      if (!state.actionPreview) {
         const selectionSprite = new Sprite(
           textureMap[selectionIconMap[action.type]],
         );
@@ -379,7 +381,7 @@ export const renderMap = (
     }
 
     // TODO common trigger zone
-    if (menu && !actionSpace[ccToKey(hexData.cc)].actions.length) {
+    if (state.menuData && !actionSpace[ccToKey(hexData.cc)].actions.length) {
       let triggerZone = newGraphic(dividerFrames[0][0]);
       triggerZone.eventMode = "static";
       triggerZone.on("pointerdown", (event) => {
@@ -650,7 +652,8 @@ export const renderMap = (
 
     if (
       actionSpace[ccToKey(hexData.cc)].highlighted ||
-      (highlightedCCs && highlightedCCs.includes(ccToKey(hexData.cc)))
+      (state.highlightedCCs &&
+        state.highlightedCCs.includes(ccToKey(hexData.cc)))
     ) {
       let highlight = newGraphic(highlightShape);
       hexContainer.addChild(highlight);

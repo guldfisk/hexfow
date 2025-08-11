@@ -20,6 +20,7 @@ const mainSlice = createSlice({
     menuData: null,
     actionPreview: null,
     highlightedCCs: null,
+    showCoordinates: false,
   } as {
     gameState: GameState | null;
     shouldRerender: boolean;
@@ -28,6 +29,7 @@ const mainSlice = createSlice({
     menuData: MenuData | null;
     actionPreview: { [key: string]: selectionIcon[] } | null;
     highlightedCCs: string[] | null;
+    showCoordinates: boolean;
   },
   reducers: {
     receiveGameState: (state, action: PayloadAction<GameState>) => {
@@ -85,6 +87,10 @@ const mainSlice = createSlice({
       }
       state.actionPreview = action.payload;
     },
+    toggleShowCoordinates: (state) => {
+      state.showCoordinates = !state.showCoordinates;
+      state.shouldRerender = true;
+    },
   },
 });
 
@@ -100,6 +106,7 @@ export const {
   highlightCCs,
   removeCCHighlight,
   setActionPreview,
+  toggleShowCoordinates,
 } = mainSlice.actions;
 
 export const store = configureStore({

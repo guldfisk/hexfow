@@ -12,6 +12,7 @@ game
     logging of units should include information about where they were, if applicable (?)
     logging damage source? (relevant for mines and such)
     status linking
+    don't merge movement option in menu (shrine keeper)
     fix fin direction
     fix point/debuff order
     alternate capture points
