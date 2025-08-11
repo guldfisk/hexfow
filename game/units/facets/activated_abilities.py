@@ -206,7 +206,8 @@ class BatonPass(SingleTargetActivatedAbility):
 
 class SummonScarab(SingleHexTargetActivatedAbility):
     """
-    Target empty space within 3 range LoS. Summons an exhausted Scarab (2 health, 2 speed, 1 armor, 1 sight, S, 2 attack damage with -1 movement) with <ephemeral> for 3 rounds.
+    Target visible empty space within 3 range LoS. Summons an exhausted Scarab
+    (2 health, 2 speed, 1 armor, 1 sight, S, 2 attack damage with 1 movement cost) with <ephemeral> for 3 rounds.
     """
 
     cost = MovementCost(2) | EnergyCost(3)

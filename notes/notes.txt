@@ -1,4 +1,3 @@
-reveal target
 stop movement wall
 allied teleporter
 flag planter
@@ -13,86 +12,80 @@ delayed long range tp
 anti tp aura
 corpses, like homm, cool design space + confirmation things died in fow
 transportation
-	can contain n units
-	contained units die with transport by default
-	by default unit can walk into transport, ending turn
-	by default, units can start their turn in transport. only legal action is move out.
-resistance to (damage to). half damage rounded up after reductions
-	blur - resistance to ranged
-	hardened carapace - resistance to aoe
-	ethereal - resistance to melee / ranged
+    can contain n units
+    contained units die with transport by default
+    by default unit can walk into transport, ending turn
+    by default, units can start their turn in transport. only legal action is move out.
 compulsive impatience, aoe debuff - when player takes action with unit that is not this unit while this unit is ready, this units suffers 1 pure damage, removed when this unit is activated.
 soul tether - debuff two targets, keeps track of maximum seen distance between units, both suffer a pure damage for each distance max seen distance is extended.
 corpse explosion - aoe - multiple corpses same square combined into single damage instance - corpses of dead units explode recursively
 star shaped aoe
 full invisibility - removed on attack until next action - removed when blocking opponent unit?
-additional turns (within round only prob)
 OPPONENT OUT OF ACTIONS IN ROUND NOTIFICATION? - prob is, even if opponent has to do a noop pass, this will give them info instead, so maybe just embrace? cool inventive for canon fodder or dumb arms race?
 thoughts about "standard play"
-	an army is build for a map pool (prob 5)
-	a map is a procedure for generating a symmetrical set of hexes to play on
-	map decides both the size/shape of the board (although generally this will prob be pretty standardized), the capture/deployment zones (prob also pretty standardized) and the terrain (should vary a lot)
-	the map also defines the size of the deployment (how many points worth of units you get from your army). prob also a max amount of units?
-	a game first involves one player being presented with a random subset of the pool (prob 4) and banning some about (prob 2). then the other player selects the map from the remaining ones (prob 2 remaining).
-	then each player simultaneously decides their deployment and places it in their deployment zone, then plays the "actual" game.
-	map is also responsible for defining point win threshold, and max number of rounds (normally this should be a standardized safety valve, but there is design space in "who can get more points in 3 rounds or whatever").
-	this way you can easily have a "rotating" format, and different unit strengths can be more and less relevant. building an army for a map pool should be a cool balancing act.
+    an army is build for a map pool (prob 5)
+    a map is a procedure for generating a symmetrical set of hexes to play on
+    map decides both the size/shape of the board (although generally this will prob be pretty standardized), the capture/deployment zones (prob also pretty standardized) and the terrain (should vary a lot)
+    the map also defines the size of the deployment (how many points worth of units you get from your army). prob also a max amount of units?
+    a game first involves one player being presented with a random subset of the pool (prob 4) and banning some about (prob 2). then the other player selects the map from the remaining ones (prob 2 remaining).
+    then each player simultaneously decides their deployment and places it in their deployment zone, then plays the "actual" game.
+    map is also responsible for defining point win threshold, and max number of rounds (normally this should be a standardized safety valve, but there is design space in "who can get more points in 3 rounds or whatever").
+    this way you can easily have a "rotating" format, and different unit strengths can be more and less relevant. building an army for a map pool should be a cool balancing act.
 unit price resources?
-	units have a generic point value that describes how much they are worth, but maybe there should also be other resources, associated with specific mechanics/specializations/roles? this way maps get to fine tune how much "value" worth of flyers a player gets for example. this allows for more extreme map variety, where for example a map with a lot of obstacles doesn't just become all flyers.
-	something like:
-		- white (w) - mobility
-		- blue (u) - flyer
-		- red (r) - ranged
-		- green (g) - high value units (if this can't be limited, then you might end up in a situation where the correct thing is to get very few units on a very small map, for very boring gameplay. alternatively a map can just ban units costing>n?)
-		This prob makes sense as "pure fighting ability", i.e. "damage per turn" * "effective health", so small maps isn't just all the slowest units standing in a clump and hitting each other.
-		- purple (p) - support/spells/high synergy
-	maybe also a vision one?
+    units have a generic point value that describes how much they are worth, but maybe there should also be other resources, associated with specific mechanics/specializations/roles? this way maps get to fine tune how much "value" worth of flyers a player gets for example. this allows for more extreme map variety, where for example a map with a lot of obstacles doesn't just become all flyers.
+    something like:
+        - white (w) - mobility
+        - blue (u) - flyer
+        - red (r) - ranged
+        - green (g) - high value units (if this can't be limited, then you might end up in a situation where the correct thing is to get very few units on a very small map, for very boring gameplay. alternatively a map can just ban units costing>n?)
+        This prob makes sense as "pure fighting ability", i.e. "damage per turn" * "effective health", so small maps isn't just all the slowest units standing in a clump and hitting each other.
+        - purple (p) - support/spells/high synergy
+    maybe also a vision one?
 buildings?
-	immovable
-	no terrain protection
+    immovable
+    no terrain protection
 power runes on map
-	move over +1 movement point
-	single vp pickup
-		only for specific player on other side of map?
+    move over +1 movement point
+    single vp pickup
+        only for specific player on other side of map?
 stealth while not moving
 map ideas:
 
-	note about directions (P1, P2 are starting areas):
+    note about directions (P1, P2 are starting areas):
 
-		N
-	W P1 P2 E 
-		S
+        N
+    W P1 P2 E 
+        S
 
-	jungle brawl
-		small map, dense forest / jungle terrain. maybe clearing in the center? low flyer resource.
-	river
-		map divided by (not unbroken river) W-E. medium terrain
-	jotunheim
-		bunch of ice, with a lava crag in the middle. close to lave water is ice instead etc.
-	frosty peaks
-		large maps with sporadic wood clusters and jagged mountain lines. mountains are snow in the center of the clusters
-	trench war
-		mostly flat with low vegetation. Two crack lines divide the map N-S.
-	arid mesa
-		large platou in the middle surrounded by mostly flat desert.
-	oasis
-		lake in the middle, surrounded desert/shrub/dunes. middle capture zone is a ring surrounding lake
-	in medias res
-		starting areas very close to each other. one time player specific point pickups behind opponent for each player
-		hilly landscape, medium vegetation
-	swamp mix-up
-		medium-sized map with thick jungle/swamp, multiple small scattered deployment zones
-	cauldron
-		middle capture area surrounded by unpassable mountain ring, with a few gaps. medium elevation, sparse vegetation, except for the middle.
+    jungle brawl
+        small map, dense forest / jungle terrain. maybe clearing in the center? low flyer resource.
+    river
+        map divided by (not unbroken river) W-E. medium terrain
+    jotunheim
+        bunch of ice, with a lava crag in the middle. close to lave water is ice instead etc.
+    frosty peaks
+        large maps with sporadic wood clusters and jagged mountain lines. mountains are snow in the center of the clusters
+    trench war
+        mostly flat with low vegetation. Two crack lines divide the map N-S.
+    arid mesa
+        large platou in the middle surrounded by mostly flat desert.
+    oasis
+        lake in the middle, surrounded desert/shrub/dunes. middle capture zone is a ring surrounding lake
+    in medias res
+        starting areas very close to each other. one time player specific point pickups behind opponent for each player
+        hilly landscape, medium vegetation
+    swamp mix-up
+        medium-sized map with thick jungle/swamp, multiple small scattered deployment zones
+    cauldron
+        middle capture area surrounded by unpassable mountain ring, with a few gaps. medium elevation, sparse vegetation, except for the middle.
 
 "bat" sight, can only see presence of unit, nothing else.
-firefly summoner
 orbital strike
-	aoe ability 4 energy
-	aoe type hex range 8 NLoS
-	applies status incoming strike to terrain
-		hidden
-		after 2 rounds remove status and deal 6 aoe damage to any unit on hex
+    aoe ability 4 energy
+    aoe type hex range 8 NLoS
+    applies status incoming strike to terrain
+        hidden
+        after 2 rounds remove status and deal 6 aoe damage to any unit on hex
 ability remove energy and apply energy regen preventing debuff 2 rounds
 raise dead - corpse as generic skeleton - merge multiple corpses into more powerful creature?
 energy overcharge
@@ -100,69 +93,67 @@ aquatic only creature
 ambush trapdoor spider
 storm summoner - AA
 day/night cycle?
-	night -1 sight (min 1)
-	amount of rounds of day/night in a cycle, and where in the cycle the game starts can vary depending on map
+    night -1 sight (min 1)
+    amount of rounds of day/night in a cycle, and where in the cycle the game starts can vary depending on map
 weather (bloat, this time for real). but maybe these can just be like global statuses on certain maps?
-	hot
-		units ending turn with no unspent movement points suffer 1 damage
-	cold
-		units ending round with no adjacent allied units suffer 1 damage
-	rain
-		-1 sight (min 1)
-	windy
-		-1 movement air units
-like hot/cold as just debuffs also	
+    hot
+        units ending turn with no unspent movement points suffer 1 damage
+    cold
+        units ending round with no adjacent allied units suffer 1 damage
+    rain
+        -1 sight (min 1)
+    windy
+        -1 movement air units
+like hot/cold as just debuffs also    
 identities?
-	could have resource bonuses, like:
-		all units below n points -1 point cost
-		all units above n points -2 points cost
-		+n points/resource
-		bonus for unit duplicates / uniques
-		discount units costing certain resources
-	opponents hero is visible while deploying
-worm - nordic mythology
+    could have resource bonuses, like:
+        all units below n points -1 point cost
+        all units above n points -2 points cost
+        +n points/resource
+        bonus for unit duplicates / uniques
+        discount units costing certain resources
+    opponents hero is visible while deploying
 bog witch
 not really sure what to do with this:
-	warp entity
-	movement 2, health 5, sight 2, S
-	open gate
-		ability
-		target two hexes range 4
-		-1 movement
-		cooldown 4 rounds
-		each hex gets linked status gate for 2 rounds
-			independently stackable
-			when a unit enters, teleport it to linked hex
-	force wall
-		aoe ability
-		aoe type line length 3 range 3
-		cooldown 2 rounds
-		each hex gets force blocked for 2 rounds
-			unstackable, refreshable
-			a unit moving into this hex loses all remaining movement points
-	gate ability makes a lot more sense on the date demon thingy. force wall is cool, but together with what?
+    warp entity
+    movement 2, health 5, sight 2, S
+    open gate
+        ability
+        target two hexes range 4
+        -1 movement
+        cooldown 4 rounds
+        each hex gets linked status gate for 2 rounds
+            independently stackable
+            when a unit enters, teleport it to linked hex
+    force wall
+        aoe ability
+        aoe type line length 3 range 3
+        cooldown 2 rounds
+        each hex gets force blocked for 2 rounds
+            unstackable, refreshable
+            a unit moving into this hex loses all remaining movement points
+    gate ability makes a lot more sense on the date demon thingy. force wall is cool, but together with what?
 this one's dumb, like the shrivel idea, though:
-	depressor
-	movement 3, health 5, sight 2, S
-	entropic ray
-		ranged attack
-		2 damage, 2 range
-		-1 movement
-	shrivel
-		aoe ability
-		aoe type hex size 1 range 4
-		-2 movement
-		apply shriveled to all units in aoe until they skip
-			stackable
-			-1 max health
-debuff share vision with target
+    depressor
+    movement 3, health 5, sight 2, S
+    entropic ray
+        ranged attack
+        2 damage, 2 range
+        -1 movement
+    shrivel
+        aoe ability
+        aoe type hex size 1 range 4
+        -2 movement
+        apply shriveled to all units in aoe until they skip
+            stackable
+            -1 max health
 combinable melee attack only
 not sure how to make this make sense:
-	immolation orb
-	health 8, movement 2, sight 1, S
-	- flying
-	- whenever a unit engages this unit, or ends it movement adjacent to this unit, apply 1 burn to that unit.
-	- at the end of round, apply 2 burn to all adjacent units
+    immolation orb
+    health 8, movement 2, sight 1, S
+    - flying
+    - whenever a unit engages this unit, or ends it movement adjacent to this unit, apply 1 burn to that unit.
+    - at the end of round, apply 2 burn to all adjacent units
 meteor strike jump
 heal to minimum threshold
 greater cleric
@@ -186,13 +177,13 @@ werewolf
 cult warlock {5p} x2
 health 5, movement 3, sight 2, energy 3, M
 smite
-	ranked attack
-	2 damage, 2 range, -2 movement
+    ranked attack
+    2 damage, 2 range, -2 movement
 entangle fate
-	ability 2 energy
-	target unit 3 range LoS
-	-1 movement
-	applies entangled doom
+    ability 2 energy
+    target unit 3 range LoS
+    -1 movement
+    applies entangled doom
 
 cult master
 health 6, movement 3, sight 2, energy 6, M
@@ -203,72 +194,24 @@ how reconcile cool use of entangled doom on allied units, if entangled doom is a
 conqueror gnome {6p} x2
 health 5, movement 3, sight 2, S
 plant flag
-	ability
-	target hex 1 range
-	applies status flagged to hex
-		unstackable
-		hex counts as occupied by allied unit for purposes of capturing points.
-
-hover dart {6wwp} x2
-health 4, movement 5, sight 1, M
-- enterable exitable transport 2
-- ignores 1 move in/out penalty of terrain
-- aquatic
-
-troop crawler {8wwp} x1
-health 6, movement 4, sight 1, L
-- enterable exitable transport 3
-	cannot carry large units
+    ability
+    target hex 1 range
+    applies status flagged to hex
+        unstackable
+        hex counts as occupied by allied unit for purposes of capturing points.
 
 force psychic {8rrpp} x1
 health 5, movement 2, sight 2, energy 4, S
 force lance
-	ranged attack
-	3 damage, 3 range, no movement
+    ranged attack
+    3 damage, 3 range, no movement
 shield bubble
-	aoe ability 3 energy
-	aoe type hex size 1 unblocked propagation range 3
-	applies shield bubble status to terrain
-		2 round duration
-		unstackable, unrefreshable
-		+2 ranged / aoe protection against attacks made from outside bubble
-
-mobile fortress {9gp} x1
-health 10, movement 2, armor 1, sight 1, L
-canon
-	ranged attack
-	4 damage, 3 range
-	no movement
-- enterable exitable transport 2
-
-
-hercules chopper {9wwup} x2
-health 6, movement 0, sight 1, L
-take off
-	combinable ability
-	-1 movement
-	gains flying and +4 movement
-land
-	ability
-	loses flying buff
-- transport 4
-	enterable and exitable while not flying
-
-super lifter {9wwupp} x2
-health 4, movement 4, sight 1, M
-pick up
-	combinable ability
-	target allied unit 1 range
-	-0/1/2 movement depending on target size
-	targeted unit enters
-drop of
-	combinable ability
-	target empty hex 1 range
-	-0/1/2 movement depending on target size
-	carried unit exits on targeted hex
-- transport
-	can carry any single unit of max size large
-- flying
+    aoe ability 3 energy
+    aoe type hex size 1 unblocked propagation range 3
+    applies shield bubble status to terrain
+        2 round duration
+        unstackable, unrefreshable
+        +2 ranged / aoe protection against attacks made from outside bubble
 
 civilian {4p} x3
 health 3, movement 3, sight 1, M
@@ -287,16 +230,14 @@ force field
 physical propagation is a meme
 
 "paranoia" debuff - unit does not provide vision when activated, and when it is is no other units does.
-	bit awkward in current implementation, since you need to have vision of a unit to activate it, so when it's not activated you still
-	need to have vision of the units hex, while you shouldn't have vision of even just the spaces allied units are on when it is activated.
-	maybe this should just be fixed so you can always activate your unit without vision...
+    bit awkward in current implementation, since you need to have vision of a unit to activate it, so when it's not activated you still
+    need to have vision of the units hex, while you shouldn't have vision of even just the spaces allied units are on when it is activated.
+    maybe this should just be fixed so you can always activate your unit without vision...
 
 must attack / can't skip ability / status
 same but for spells
 
 unit that moves up to 2 spaces with normal moves
-
-tractor
 
 crawling cactus
     use energy to move?
@@ -308,3 +249,4 @@ unicorn
     non lethal horn applies path of peace
 
 babushka
+ready unit only allow movement

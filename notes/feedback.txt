@@ -24,22 +24,14 @@ aoe arc target outside map
 
 gets points with units dying to debuffs?
 
-idea: ready unit only allow movement
-
 finner måske gone?
 
 log på points gained
 
 ingen negative coordinater
-LoS ability kræver vision ikke obvious
--1 movement text på summon scarab lmao
 ikke intuitivt burn ikke er pure damage
 pusher beskriv squished unit gir plads
 push should deal damage to all units when unit is squished
-
-bulldozer for meget liv
-
-lumbering pillar for immortal
 
 allow melee attack without move in remaining then no follow up
 

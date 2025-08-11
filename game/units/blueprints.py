@@ -167,7 +167,7 @@ LUMBERING_PILLAR = UnitBlueprint(
     health=7,
     speed=1,
     sight=0,
-    armor=2,
+    armor=1,
     size=Size.LARGE,
     price=2,
 )
@@ -278,7 +278,7 @@ DIRE_WOLF = UnitBlueprint(
 
 BULLDOZER = UnitBlueprint(
     "Bulldozer",
-    health=11,
+    health=9,
     speed=2,
     sight=1,
     size=Size.LARGE,
