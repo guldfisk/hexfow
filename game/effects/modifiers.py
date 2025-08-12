@@ -35,6 +35,7 @@ class SpeedLayer(IntEnum):
     PROPORTIONAL = auto()
 
 
+# TODO melee attack etc
 @dataclasses.dataclass(eq=False)
 class RootedModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]]):
     priority: ClassVar[int] = 1

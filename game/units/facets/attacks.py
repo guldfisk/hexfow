@@ -143,7 +143,7 @@ class Bayonet(MeleeAttackFacet):
 
 class Pinch(MeleeAttackFacet):
     damage = 2
-    cost = MovementCost(1)
+    cost = ExclusiveCost()
 
 
 class SnappingBeak(MeleeAttackFacet):
@@ -156,7 +156,7 @@ class Chainsaw(MeleeAttackFacet):
     +2 damage against unarmored units.
     """
 
-    cost = MovementCost(1)
+    cost = MovementCost(2)
     damage = 3
 
     def get_damage_modifier_against(self, unit: Unit) -> int | None:
@@ -276,6 +276,7 @@ class SerratedClaws(MeleeAttackFacet):
 class EtherealSting(MeleeAttackFacet):
     """Deals pure damage."""
 
+    cost = MovementCost(1)
     damage = 2
     damage_type = DamageType.PURE
 

@@ -480,6 +480,7 @@ def test_fight(
         MeleeAttackSelector(OneOfUnitsSelector(evil_chicken)),
         ActivateSelector(OneOfUnitsSelector(chicken)),
         MeleeAttackSelector(OneOfUnitsSelector(evil_chicken)),
+        MoveOptionSelector(OneOfHexesSelector(CC(1, -1)))
     )
     player2_connection.queue_responses(
         ActivateSelector(OneOfUnitsSelector(evil_chicken)),
@@ -497,7 +498,7 @@ def test_fight(
     assert GS.map.unit_positions[chicken].position == CC(1, -1)
     assert GS.map.unit_positions.get(evil_chicken) is None
 
-    assert len(player1_connection.history) == 6
+    assert len(player1_connection.history) == 7
 
 
 def test_ranged_attack(

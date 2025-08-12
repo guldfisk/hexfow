@@ -378,6 +378,7 @@ class MeleeAttackFacet(SingleTargetAttackFacet, ABC):
     category = "melee_attack"
     damage_type = DamageType.MELEE
 
+    # TODO wrap in get_legal_targets to align with activated ability
     @modifiable
     def get_legal_targets(self, context: ActiveUnitContext) -> list[Unit]:
         return [
@@ -386,13 +387,14 @@ class MeleeAttackFacet(SingleTargetAttackFacet, ABC):
             if unit.controller != self.owner.controller
             and unit.is_visible_to(self.owner.controller)
             and unit.can_be_attacked_by(self)
-            and GS.map.hex_off(unit).is_passable_to(self.owner)
-            and (
-                not context.has_acted
-                or GS.map.hex_off(unit).get_move_in_cost_for(self.owner)
-                + (self.get_cost().get(MovementCost) or MovementCost(0)).amount
-                <= context.movement_points
-            )
+            # TODO testing
+            # and GS.map.hex_off(unit).is_passable_to(self.owner)
+            # and (
+            #     not context.has_acted
+            #     or GS.map.hex_off(unit).get_move_in_cost_for(self.owner)
+            #     + (self.get_cost().get(MovementCost) or MovementCost(0)).amount
+            #     <= context.movement_points
+            # )
         ]
 
     # TODO should prob be modifiable.

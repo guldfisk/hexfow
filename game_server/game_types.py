@@ -58,14 +58,25 @@ class TestGameType(GameType):
 
         player_units = (
             (
+                # OTTER_SCOUT,
+                # OTTER_SCOUT,
+                # EFFORTLESS_ATHLETE,
+                CHAINSAW_SADIST,
+                CHAINSAW_SADIST,
                 # STAUNCH_IRON_HEART,
                 # LIGHT_ARCHER,
                 # INFERNO_TANK,
-                MAD_SCIENTIST,
+                # MAD_SCIENTIST,
             ),
             (
-                INK_WITCH,
-                SHRINE_KEEPER,
+                # CHAINSAW_SADIST,
+                # CHAINSAW_SADIST,
+                CHICKEN,
+                CHICKEN,
+                # GNOME_COMMANDO,
+                # BUGLING,
+                # EFFORTLESS_ATHLETE,
+                # CHAINSAW_SADIST,
                 # SHRINE_KEEPER,
                 # GIANT_SLAYER_MOUSE,
                 # RIFLE_INFANTRY,

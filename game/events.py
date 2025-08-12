@@ -27,6 +27,7 @@ from game.core import (
     Status,
     GS,
     HasStatuses,
+    OneOfHexes,
 )
 from game.decisions import SelectOptionDecisionPoint, NoTarget, O, OptionDecision
 from game.player import Player
@@ -228,11 +229,34 @@ class MeleeAttackAction(Event[None]):
         )
         ES.resolve(self.branch(Hit))
         ES.resolve(CheckAlive(self.defender))
+        # TODO testing
         if (
             defender_position.can_move_into(self.attacker)
-            and self.attack.should_follow_up()
+            and GS.active_unit_context.movement_points >= movement_cost
+            and (
+                decision := GS.make_decision(
+                    self.attacker.controller,
+                    SelectOptionDecisionPoint(
+                        [
+                            SkipOption(target_profile=NoTarget()),
+                            MoveOption(
+                                target_profile=OneOfHexes(
+                                    [defender_position, attacker_position]
+                                )
+                            ),
+                        ],
+                        explanation="follow up?",
+                    ),
+                )
+            )
+            and isinstance(decision.option, MoveOption)
+            and decision.target == defender_position
+            # TODO with new rules this should be "can_follow_up" or something
+            # and self.attack.should_follow_up()
         ):
             ES.resolve(MoveUnit(self.attacker, defender_position))
+        # TODO even if keeping new melee movement rules, where should this be before
+        #   or after?
         self.attack.get_cost().pay(GS.active_unit_context)
         GS.active_unit_context.movement_points -= movement_cost
         ES.resolve(move_out_penalty)
