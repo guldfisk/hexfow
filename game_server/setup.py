@@ -19,7 +19,7 @@ def setup_scenario(
 
     GS.bind(gs)
 
-    for player, units in zip(gs.turn_order.players, scenario.units):
+    for player, units in zip(gs.turn_order, scenario.units):
         for cc, blueprint in units.items():
             ES.resolve(
                 SpawnUnit(
@@ -53,7 +53,7 @@ def setup_scenario(
 
     ES.register_effects(*effects)
 
-    for player in gs.turn_order.players:
+    for player in gs.turn_order:
         gs.serialize_for(gs._get_context_for(player), None)
 
     if with_fow:

@@ -1608,7 +1608,7 @@ class GameState:
             [Player(f"player {i+1}") for i in range(player_count)]
         )
         self.connections = {
-            player: connection_factory(player) for player in self.turn_order.players
+            player: connection_factory(player) for player in self.turn_order
         }
         self.map = HexMap(landscape)
         self.active_unit_context: ActiveUnitContext | None = None
@@ -1618,10 +1618,10 @@ class GameState:
 
         # TODO move to player
         self.id_maps: dict[Player, IDMap] = {
-            player: IDMap() for player in self.turn_order.players
+            player: IDMap() for player in self.turn_order
         }
         self.previous_hex_states: dict[Player, dict[CC, dict[str, Any]] | None] = {
-            player: None for player in self.turn_order.players
+            player: None for player in self.turn_order
         }
 
         self.vision_obstruction_map: dict[Player, dict[CC, VisionObstruction]] = {}
@@ -1629,16 +1629,16 @@ class GameState:
 
         # TODO move to player
         self._player_log_levels: dict[Player, int] = {
-            player: 0 for player in self.turn_order.players
+            player: 0 for player in self.turn_order
         }
         self._pending_player_logs: dict[
             Player, list[tuple[int, list[dict[str, Any]]]]
-        ] = {player: [] for player in self.turn_order.players}
+        ] = {player: [] for player in self.turn_order}
 
     @contextlib.contextmanager
     def log(self, *line_options: LogLine) -> Iterator[None]:
         incremented_players = []
-        for player in self.turn_order.players:
+        for player in self.turn_order:
             for line in line_options:
                 if line.is_visible_to(player):
                     incremented_players.append(player)
@@ -1660,13 +1660,13 @@ class GameState:
             for player in unit.provides_vision_for(None):
                 unit_vision_map[player].append(unit)
 
-        for player in self.turn_order.players:
+        for player in self.turn_order:
             self.vision_obstruction_map[player] = {
                 position: _hex.blocks_vision_for(player)
                 for position, _hex in self.map.hexes.items()
             }
 
-        for player in self.turn_order.players:
+        for player in self.turn_order:
             self.vision_map[player] = {
                 position: any(unit.can_see(_hex) for unit in unit_vision_map[player])
                 for position, _hex in self.map.hexes.items()
@@ -1678,7 +1678,7 @@ class GameState:
         serialized_game_state = {
             "player": context.player.name,
             "target_points": self.target_points,
-            "players": [player.serialize() for player in self.turn_order.players],
+            "players": [player.serialize() for player in self.turn_order.original_order],
             "round": self.round_counter,
             "map": self.map.serialize(context),
             "decision": decision_point.serialize(context) if decision_point else None,
@@ -1712,17 +1712,17 @@ class GameState:
         )
 
     def update_ghosts(self) -> None:
-        for player in self.turn_order.players:
+        for player in self.turn_order:
             self.serialize_for(self._get_context_for(player), None)
 
     def send_to_players(self) -> None:
-        for _player in self.turn_order.players:
+        for _player in self.turn_order:
             self.connections[_player].send(
                 self.serialize_for(self._get_context_for(_player), None)
             )
 
     def make_decision(self, player: Player, decision_point: DecisionPoint[O]) -> O:
-        for _player in self.turn_order.players:
+        for _player in self.turn_order:
             if _player != player:
                 self.connections[_player].send(
                     self.serialize_for(self._get_context_for(_player), None)

@@ -761,9 +761,9 @@ class Round(Event[None]):
         skipped_players: set[Player] = set()
         # TODO asker's shit?
         round_skipped_players: set[Player] = set()
-        all_players = set(gs.turn_order.players)
+        all_players = set(gs.turn_order)
         last_action_timestamps: dict[Player, int] = {
-            player: 0 for player in gs.turn_order.players
+            player: 0 for player in gs.turn_order
         }
         timestamp = 0
 
@@ -873,7 +873,7 @@ class Round(Event[None]):
             do_state_based_check()
 
             gs.turn_order.set_player_order(
-                sorted(gs.turn_order.players, key=lambda p: last_action_timestamps[p])
+                sorted(gs.turn_order, key=lambda p: last_action_timestamps[p])
             )
 
 
@@ -881,17 +881,16 @@ class Round(Event[None]):
 class Play(Event[None]):
     def resolve(self) -> None:
         gs = GS
-        first_player = gs.turn_order.players[0]
         while (
             not (
-                any(p.points >= gs.target_points for p in gs.turn_order.players)
-                and len({p.points for p in gs.turn_order.players}) != 1
+                any(p.points >= gs.target_points for p in gs.turn_order)
+                and len({p.points for p in gs.turn_order}) != 1
             )
             and gs.round_counter < 10
         ):
             ES.resolve(Round())
 
-        winner = max(gs.turn_order.players, key=lambda p: (p.points, p == first_player))
+        winner = max(gs.turn_order, key=lambda p: (p.points, p == gs.turn_order.original_order[0]))
         with gs.log(LogLine([winner.name, "wins"])):
             pass
         gs.send_to_players()

@@ -282,7 +282,7 @@ class ScurryInTheShadowsModifier(StateModifierEffect[Unit, None, int]):
     def should_modify(self, obj: Unit, request: None, value: int) -> bool:
         return obj == self.unit and not any(
             player != self.unit.controller and self.unit.is_visible_to(player)
-            for player in GS.turn_order.players
+            for player in GS.turn_order
         )
 
     def modify(self, obj: Unit, request: None, value: int) -> int:

@@ -357,7 +357,7 @@ def game_state(ground_landscape: Landscape) -> Iterator[GameState]:
 
 @pytest.fixture
 def player1(game_state: GameState) -> Player:
-    return game_state.turn_order.players[0]
+    return game_state.turn_order.original_order[0]
 
 
 @pytest.fixture
@@ -367,7 +367,7 @@ def player1_connection(game_state: GameState, player1: Player) -> MockConnection
 
 @pytest.fixture
 def player2(game_state: GameState) -> Player:
-    return game_state.turn_order.players[1]
+    return game_state.turn_order.original_order[1]
 
 
 @pytest.fixture

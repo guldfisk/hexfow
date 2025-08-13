@@ -320,7 +320,7 @@ class JukeAndJiveTrigger(TriggerEffect[ActionCleanup]):
         if event.unit == self.unit:
             self._visible = any(
                 player != self.unit.controller and self.unit.is_visible_to(player)
-                for player in GS.turn_order.players
+                for player in GS.turn_order
             )
 
     def should_trigger(self, event: ActionCleanup) -> bool:
@@ -328,7 +328,7 @@ class JukeAndJiveTrigger(TriggerEffect[ActionCleanup]):
             event.unit == self.unit
             and any(
                 player != self.unit.controller and self.unit.is_visible_to(player)
-                for player in GS.turn_order.players
+                for player in GS.turn_order
             )
             != self._visible
         )
