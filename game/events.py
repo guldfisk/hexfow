@@ -1,5 +1,6 @@
 import dataclasses
 import math
+from collections import defaultdict
 from typing import Iterable
 
 from events.eventsystem import Event, ES, V
@@ -722,9 +723,35 @@ class RoundUpkeep(Event[None]):
                 status.decrement_duration()
 
 
+@dataclasses.dataclass
+class GainPoints(Event[None]):
+    player: Player
+    amount: int
+
+    def is_valid(self) -> bool:
+        return self.amount > 0
+
+    def resolve(self) -> None:
+        # TODO player should be log line element?
+        with GS.log(LogLine([f"{self.player.name} gains {self.amount} points"])):
+            self.player.points += self.amount
+
+
+class AwardPoints(Event[None]):
+
+    def resolve(self) -> None:
+        player_values: dict[Player, int] = defaultdict(int)
+        for unit, _hex in GS.map.unit_positions.items():
+            if _hex.is_objective:
+                player_values[unit.controller] += 1
+
+        for player, amount in player_values.items():
+            ES.resolve(GainPoints(player, amount))
+
+
 class RoundCleanup(Event[None]):
     def resolve(self) -> None:
-        return None
+        ES.resolve(AwardPoints())
 
 
 class Round(Event[None]):
@@ -863,9 +890,6 @@ class Play(Event[None]):
             and gs.round_counter < 10
         ):
             ES.resolve(Round())
-            for unit, _hex in gs.map.unit_positions.items():
-                if _hex.is_objective:
-                    unit.controller.points += 1
 
         winner = max(gs.turn_order.players, key=lambda p: (p.points, p == first_player))
         with gs.log(LogLine([winner.name, "wins"])):

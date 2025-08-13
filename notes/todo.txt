@@ -24,7 +24,6 @@ game
     status linking
     don't merge movement option in menu (shrine keeper)
     fix fin direction
-    fix point/debuff order
     exclude killed units from ghosts
     fade ghosts over time
     corpses
