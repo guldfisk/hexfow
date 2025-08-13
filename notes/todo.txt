@@ -2,6 +2,16 @@
 infrastructure
     lobby system
 
+map editor
+    unit details
+    add/remove hexes
+
+army editor
+    browse units
+    add/remove
+    save
+    load
+
 game
     chess clock
     well-defined effects order
@@ -15,6 +25,13 @@ game
     don't merge movement option in menu (shrine keeper)
     fix fin direction
     fix point/debuff order
+    exclude killed units from ghosts
+    fade ghosts over time
+    corpses
+    countable size indicator
+    status merge explanations
+    small units stealth on forest
+    move "last visible" hex information to hex detail view
     alternate capture points
         keeps captured state for player when unit walks off
         linked group with points to player with max presence
@@ -25,6 +42,8 @@ code
     response validation
     message ids
     don't send no change game state updates
+
+replays
 
 pre-commit
 

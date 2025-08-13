@@ -9,8 +9,6 @@ line of sight test ikke blokked når på hill
 unit sizes stadig ikke intuitivt
     måske hak i finden? I TOPPEN
 
-performance er pretty ass på min computer i hvert fald
-
 asker skip
 alternativer til "last acted" based initiativ. måske baseret på point?
 
@@ -28,12 +26,9 @@ finner måske gone?
 
 log på points gained
 
-ingen negative coordinater
 ikke intuitivt burn ikke er pure damage
 pusher beskriv squished unit gir plads
 push should deal damage to all units when unit is squished
-
-allow melee attack without move in remaining then no follow up
 
 test capture end of round keep catpure only get points if already captured
 remove runes

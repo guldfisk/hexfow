@@ -681,11 +681,6 @@ NOTORIOUS_OUTLAW = UnitBlueprint(
     price=12,
 )
 
-# TODO
-# clean up
-#     combinable ability 2 energy, -2 movement
-#     target hex 1 range
-#     removes all statuses from hex
 
 SHRINE_KEEPER = UnitBlueprint(
     "Shrine Keeper",
