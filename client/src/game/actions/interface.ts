@@ -4,6 +4,7 @@ import {
   HexHexes,
   HexRing,
   NOfUnits,
+  Option,
   RadiatingLine,
   Tree,
   TriHex,
@@ -21,6 +22,7 @@ export type selectionIcon =
 
 export interface Action {
   type: selectionIcon;
+  sourceOption?: Option;
   description: string;
   do: (localPosition: RC) => void;
 }

@@ -21,7 +21,6 @@ game
     terror/terrified/panic debuff names
     logging damage source? (relevant for mines and such)
     status linking
-    don't merge movement option in menu (shrine keeper)
     corpses
     status merge explanations
     small units stealth on forest

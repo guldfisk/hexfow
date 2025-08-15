@@ -59,6 +59,7 @@ class TestGameType(GameType):
                 # OTTER_SCOUT,
                 EFFORTLESS_ATHLETE,
                 # CHAINSAW_SADIST,
+                SHRINE_KEEPER,
                 INFERNO_TANK,
                 # CHAINSAW_SADIST,
                 # STAUNCH_IRON_HEART,

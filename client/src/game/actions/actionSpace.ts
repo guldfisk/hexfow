@@ -61,6 +61,7 @@ export const getBaseActions = (
         ] of option.targetProfile.values.options.entries()) {
           actions[ccToKey(cc)].push({
             type: option.values?.facet?.category || "generic",
+            sourceOption: option,
             description:
               option.type == "MoveOption"
                 ? "move"
@@ -285,6 +286,11 @@ export const getBaseActionSpace = (
         new Set(_actions.map((a) => a.type)).size != _actions.length
           ? {
               actions: [
+                ..._actions.filter(
+                  (action) =>
+                    action.sourceOption &&
+                    action.sourceOption.type == "MoveOption",
+                ),
                 {
                   type: "menu",
                   description: "open menu",
