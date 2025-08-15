@@ -57,7 +57,7 @@ class TestGameType(GameType):
             (
                 # OTTER_SCOUT,
                 # OTTER_SCOUT,
-                EFFORTLESS_ATHLETE,
+                # EFFORTLESS_ATHLETE,
                 # CHAINSAW_SADIST,
                 SHRINE_KEEPER,
                 INFERNO_TANK,
@@ -72,7 +72,7 @@ class TestGameType(GameType):
                 # CHAINSAW_SADIST,
                 # CHICKEN,
                 # CHICKEN,
-                GNOME_COMMANDO,
+                # GNOME_COMMANDO,
                 GNOME_COMMANDO,
                 # BUGLING,
                 # EFFORTLESS_ATHLETE,

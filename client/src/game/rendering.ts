@@ -226,12 +226,6 @@ const stacksStyle = new TextStyle({
   align: "center",
   stroke: { color: "white", width: 3 },
 });
-const ghostStyle = new TextStyle({
-  fontFamily: "Arial",
-  fontSize: 20,
-  fill: "0x444444",
-  align: "center",
-});
 const menuStyle = new TextStyle({
   fontFamily: "Arial",
   fontSize: 40,
@@ -626,7 +620,7 @@ export const renderMap = (
           app.renderer.generateTexture(unitContainer),
         );
         unitSprite.alpha =
-          0.6 -
+          (hexData.visible ? 0.5 : 0.6) -
           Math.min(
             hexData.lastVisibleRound === null
               ? 0
