@@ -22,6 +22,7 @@ game
     logging damage source? (relevant for mines and such)
     status linking
     corpses
+    ability target descriptions, prob something like for status stacking
     alternate capture points
         keeps captured state for player when unit walks off
         linked group with points to player with max presence
@@ -33,6 +34,7 @@ code
     don't send no change game state updates
     update test framework
     unit tests on core logic
+    move aquatic to ability
 
 replays
 

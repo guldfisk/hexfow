@@ -149,6 +149,10 @@ CACTUS = UnitBlueprint(
     price=1,
 )
 
+CHICKEN = UnitBlueprint(
+    name="Chicken", health=2, speed=1, sight=1, size=Size.SMALL, facets=[Peck], price=1
+)
+
 LOTUS_BUD = UnitBlueprint(
     name="Lotus Bud",
     health=3,
@@ -161,8 +165,8 @@ LOTUS_BUD = UnitBlueprint(
     price=1,
 )
 
-CHICKEN = UnitBlueprint(
-    name="Chicken", health=2, speed=1, sight=1, size=Size.SMALL, facets=[Peck], price=1
+BLIND_ORACLE = UnitBlueprint(
+    "Blind Oracle", health=2, speed=2, sight=0, energy=2, facets=[Scry], price=2
 )
 
 LUMBERING_PILLAR = UnitBlueprint(
@@ -173,6 +177,39 @@ LUMBERING_PILLAR = UnitBlueprint(
     armor=1,
     size=Size.LARGE,
     price=2,
+)
+
+SNAPPING_TURTLE = UnitBlueprint(
+    "Snapping Turtle",
+    health=2,
+    speed=2,
+    armor=1,
+    sight=1,
+    size=Size.SMALL,
+    aquatic=True,
+    facets=[SnappingBeak],
+    price=2,
+)
+
+BLOOD_CONDUIT = UnitBlueprint(
+    "Blood Conduit",
+    health=3,
+    speed=3,
+    sight=2,
+    energy=3,
+    facets=[VitalityTransfer],
+    price=3,
+)
+
+GNOME_COMMANDO = UnitBlueprint(
+    "Gnome Commando",
+    health=4,
+    speed=3,
+    sight=1,
+    size=Size.SMALL,
+    facets=[GnomeSpear, TerrainSavvy],
+    price=3,
+    max_count=2,
 )
 
 LIGHT_ARCHER = UnitBlueprint(
@@ -197,12 +234,64 @@ MARSHMALLOW_TITAN = UnitBlueprint(
     max_count=2,
 )
 
-AP_GUNNER = UnitBlueprint(
-    "AP Gunner", health=4, speed=2, sight=2, facets=[APGun], price=5, max_count=2
+GOBLIN_ASSASSIN = UnitBlueprint(
+    "Goblin Assassin",
+    health=3,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    facets=[HiddenBlade, Stealth],
+    price=4,
+    max_count=2,
 )
 
-RIFLE_INFANTRY = UnitBlueprint(
-    "Rifle Infantry", health=5, speed=3, sight=2, facets=[Rifle], price=6, max_count=2
+# TODO # - ignores move penalties on wet terrain
+OTTER_SCOUT = UnitBlueprint(
+    "Otter Scout",
+    health=5,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    aquatic=True,
+    facets=[OtterBite, Diver],
+    price=4,
+)
+
+RAT_SCOUT = UnitBlueprint(
+    "Rat Scout",
+    health=4,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    facets=[ScratchAndBite, ScurryInTheShadows],
+    price=4,
+    max_count=2,
+)
+
+SHRINE_KEEPER = UnitBlueprint(
+    "Shrine Keeper",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=4,
+    size=Size.SMALL,
+    facets=[RaiseShrine, GrantCharm, SanctifyGrounds],
+    price=4,
+)
+
+STIM_DRONE = UnitBlueprint(
+    "Stim Drone",
+    health=3,
+    speed=2,
+    sight=1,
+    energy=3,
+    size=Size.SMALL,
+    facets=[StimulatingInjection],
+    price=4,
+)
+
+AP_GUNNER = UnitBlueprint(
+    "AP Gunner", health=4, speed=2, sight=2, facets=[APGun], price=5, max_count=2
 )
 
 BUGLING = UnitBlueprint(
@@ -216,18 +305,207 @@ BUGLING = UnitBlueprint(
     max_count=3,
 )
 
-CYCLOPS = UnitBlueprint(
-    "Cyclops",
-    health=11,
+GLASS_GOLEM = UnitBlueprint(
+    "Glass Golem",
+    health=1,
     speed=3,
-    size=Size.LARGE,
-    sight=1,
-    facets=[GiantClub, Sweep, Stare],
-    price=15,
+    armor=2,
+    sight=2,
+    facets=[GlassFist, GlassSkin],
+    price=5,
 )
 
-RHINO_BEAST = UnitBlueprint(
-    "Rhino", health=10, speed=4, sight=2, size=Size.LARGE, facets=[Gore], price=15
+MEDIC = UnitBlueprint(
+    "Medic", health=3, speed=3, sight=2, energy=5, facets=[HealBeam], price=5
+)
+
+BOMBARD_CANON = UnitBlueprint(
+    "Bombard Canon", health=4, speed=1, sight=1, facets=[SolidMunition], price=6
+)
+
+BOMB_TRUCK = UnitBlueprint(
+    "Bomb Truck",
+    health=5,
+    speed=3,
+    sight=1,
+    facets=[NothingStopsTheMail, Explosive],
+    price=6,
+)
+
+RIFLE_INFANTRY = UnitBlueprint(
+    "Rifle Infantry", health=5, speed=3, sight=2, facets=[Rifle], price=6, max_count=2
+)
+
+VOID_SPRITE = UnitBlueprint(
+    "Void Sprite",
+    health=3,
+    speed=1,
+    sight=1,
+    energy=6,
+    size=Size.SMALL,
+    facets=[EtherealSting, Jaunt],
+    price=6,
+)
+
+GIANT_SLAYER_MOUSE = UnitBlueprint(
+    "Giant Slayer Mouse",
+    health=5,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    facets=[Slay, LastStand],
+    price=7,
+)
+
+MINE_LAYER_BEETLE = UnitBlueprint(
+    "Mine Layer Beetle",
+    health=6,
+    speed=3,
+    sight=1,
+    energy=3,
+    facets=[Slice, LayMine],
+    price=7,
+)
+
+TRACTOR = UnitBlueprint(
+    "Tractor",
+    health=7,
+    speed=3,
+    sight=1,
+    size=Size.LARGE,
+    facets=[Hitch],
+    energy=4,
+    price=7,
+)
+
+ZONE_SKIRMISHER = UnitBlueprint(
+    "ZONE Skirmisher",
+    health=6,
+    speed=3,
+    sight=2,
+    facets=[Blaster, Bayonet],
+    price=7,
+    max_count=2,
+)
+
+BULLDOZER = UnitBlueprint(
+    "Bulldozer",
+    health=9,
+    speed=2,
+    sight=1,
+    size=Size.LARGE,
+    armor=1,
+    facets=[Pusher],
+    price=8,
+)
+
+EFFORTLESS_ATHLETE = UnitBlueprint(
+    "Effortless Athlete",
+    health=6,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[RoundhouseKick, Vault, BatonPass],
+    price=8,
+)
+
+BLIND_ABOMINATION = UnitBlueprint(
+    "Blind Abomination",
+    health=11,
+    speed=3,
+    sight=0,
+    size=Size.LARGE,
+    facets=[Vomit],
+    price=9,
+)
+
+BLOOD_FEUD_WARLOCK = UnitBlueprint(
+    "Blood Feud Warlock",
+    health=6,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[SowDiscord, Scorn, SpurIntoRage],
+    price=9,
+)
+
+DIAMOND_GOLEM = UnitBlueprint(
+    "Diamond Golem",
+    health=1,
+    speed=3,
+    armor=3,
+    sight=2,
+    facets=[DiamondFist, DiamondSkin],
+    price=9,
+)
+
+DIRE_WOLF = UnitBlueprint(
+    "Dire Wolf", health=7, speed=4, sight=2, facets=[Bite, PackHunter], price=9
+)
+
+FRONTLINE_TACTICIAN = UnitBlueprint(
+    "Frontline Tactician",
+    health=6,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[CommandersPistol, CoordinatedManeuver, InspiringPresence],
+    price=9,
+)
+
+GIANT_TOAD = UnitBlueprint(
+    "Giant Toad",
+    health=8,
+    speed=2,
+    sight=2,
+    energy=2,
+    facets=[TongueLash, Jump, ToxicSkin],
+    price=9,
+)
+
+INK_WITCH = UnitBlueprint(
+    "Ink Witch",
+    health=6,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[BloodExpunge, InkRing, MalevolentStare],
+    price=9,
+)
+
+LEGENDARY_WRESTLER = UnitBlueprint(
+    "Legendary Wrestler",
+    health=7,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[
+        Tackle,
+        FromTheTopRope,
+        Suplex,
+        CaughtInTheMatch,
+        HeelTurn,
+    ],
+    price=9,
+)
+
+SLUDGE_SLUG = UnitBlueprint(
+    "Sludge Slug",
+    health=10,
+    speed=1,
+    sight=1,
+    size=Size.LARGE,
+    energy=3,
+    facets=[Spew, SludgeBelch, SludgeTrail, SlimyLocomotion, SlimySkin],
+    price=9,
+)
+
+BELL_STRIKER_BRUTE = UnitBlueprint(
+    "Bell-Striker Brute", health=8, speed=3, sight=2, facets=[BellHammer], price=10
+)
+
+BLITZ_TROOPER = UnitBlueprint(
+    "Blitz Trooper", health=6, speed=3, sight=2, facets=[LightBlaster, Strafe], price=10
 )
 
 BOULDER_HURLER_OAF = UnitBlueprint(
@@ -243,96 +521,15 @@ BOULDER_HURLER_OAF = UnitBlueprint(
     price=10,
 )
 
-GNOME_COMMANDO = UnitBlueprint(
-    "Gnome Commando",
-    health=4,
-    speed=3,
-    sight=1,
-    size=Size.SMALL,
-    facets=[GnomeSpear, TerrainSavvy],
-    price=3,
-    max_count=2,
-)
-
-ZONE_SKIRMISHER = UnitBlueprint(
-    "ZONE Skirmisher",
+CAPRICIOUS_TRICKSTER = UnitBlueprint(
+    "Capricious Trickster",
     health=6,
     speed=3,
     sight=2,
-    facets=[Blaster, Bayonet],
-    price=7,
-    max_count=2,
+    energy=5,
+    facets=[Shiv, Vault, Shove, Poof, JukeAndJive],
+    price=11,
 )
-
-GOBLIN_ASSASSIN = UnitBlueprint(
-    "Goblin Assassin",
-    health=3,
-    speed=3,
-    sight=2,
-    size=Size.SMALL,
-    facets=[HiddenBlade, Stealth],
-    price=4,
-    max_count=2,
-)
-
-DIRE_WOLF = UnitBlueprint(
-    "Dire Wolf", health=7, speed=4, sight=2, facets=[Bite, PackHunter], price=9
-)
-
-BULLDOZER = UnitBlueprint(
-    "Bulldozer",
-    health=9,
-    speed=2,
-    sight=1,
-    size=Size.LARGE,
-    armor=1,
-    facets=[Pusher],
-    price=8,
-)
-
-TRACTOR = UnitBlueprint(
-    "Tractor",
-    health=7,
-    speed=3,
-    sight=1,
-    size=Size.LARGE,
-    facets=[Hitch],
-    energy=4,
-    price=7,
-)
-
-
-MINE_LAYER_BEETLE = UnitBlueprint(
-    "Mine Layer Beetle",
-    health=6,
-    speed=3,
-    sight=1,
-    energy=3,
-    facets=[Slice, LayMine],
-    price=7,
-)
-
-HORROR_SPAWN = UnitBlueprint(
-    "Horror Spawn",
-    health=3,
-    speed=2,
-    sight=1,
-    size=Size.SMALL,
-    facets=[SerratedBeak],
-    price=None,
-)
-
-SLUDGE_SLUG = UnitBlueprint(
-    "Sludge Slug",
-    health=10,
-    speed=1,
-    sight=1,
-    size=Size.LARGE,
-    energy=3,
-    facets=[Spew, SludgeBelch, SludgeTrail, SlimyLocomotion, SlimySkin],
-    price=9,
-)
-
 
 ELITE_COMMANDO = UnitBlueprint(
     "Elite Commando",
@@ -353,16 +550,6 @@ ELITE_COMMANDO = UnitBlueprint(
     price=11,
 )
 
-BLIND_ABOMINATION = UnitBlueprint(
-    "Blind Abomination",
-    health=11,
-    speed=3,
-    sight=0,
-    size=Size.LARGE,
-    facets=[Vomit],
-    price=9,
-)
-
 HORROR = UnitBlueprint(
     "Horror",
     health=7,
@@ -373,37 +560,6 @@ HORROR = UnitBlueprint(
     price=11,
 )
 
-WAR_HOG = UnitBlueprint(
-    "War Hog", health=8, speed=3, sight=2, facets=[RazorTusk, Furious], price=11
-)
-
-MEDIC = UnitBlueprint(
-    "Medic", health=3, speed=3, sight=2, energy=5, facets=[HealBeam], price=5
-)
-
-
-BOMBARD_CANON = UnitBlueprint(
-    "Bombard Canon", health=4, speed=1, sight=1, facets=[SolidMunition], price=6
-)
-
-BOMB_TRUCK = UnitBlueprint(
-    "Bomb Truck",
-    health=5,
-    speed=3,
-    sight=1,
-    facets=[NothingStopsTheMail, Explosive],
-    price=6,
-)
-
-CHAINSAW_SADIST = UnitBlueprint(
-    "Chainsaw Sadist",
-    health=7,
-    speed=3,
-    sight=2,
-    facets=[Chainsaw, FightFlightFreeze, GrizzlyMurderer],
-    price=13,
-)
-
 PESTILENCE_PRIEST = UnitBlueprint(
     "Pestilence Priest",
     health=5,
@@ -412,260 +568,6 @@ PESTILENCE_PRIEST = UnitBlueprint(
     energy=6,
     facets=[SummonScarab, InducePanic, Schadenfreude],
     price=11,
-)
-
-SCARAB = UnitBlueprint(
-    "Scarab",
-    health=2,
-    speed=2,
-    armor=1,
-    sight=1,
-    size=Size.SMALL,
-    facets=[Pinch],
-    price=None,
-)
-
-BLOOD_FEUD_WARLOCK = UnitBlueprint(
-    "Blood Feud Warlock",
-    health=6,
-    speed=3,
-    sight=2,
-    energy=6,
-    facets=[SowDiscord, Scorn, SpurIntoRage],
-    price=9,
-)
-
-SNAPPING_TURTLE = UnitBlueprint(
-    "Snapping Turtle",
-    health=2,
-    speed=2,
-    armor=1,
-    sight=1,
-    size=Size.SMALL,
-    aquatic=True,
-    facets=[SnappingBeak],
-    price=2,
-)
-
-# TODO # - ignores move penalties on wet terrain
-OTTER_SCOUT = UnitBlueprint(
-    "Otter Scout",
-    health=5,
-    speed=3,
-    sight=2,
-    size=Size.SMALL,
-    aquatic=True,
-    facets=[OtterBite, Diver],
-    price=4,
-)
-
-BLITZ_TROOPER = UnitBlueprint(
-    "Blitz Trooper", health=6, speed=3, sight=2, facets=[LightBlaster, Strafe], price=10
-)
-
-EFFORTLESS_ATHLETE = UnitBlueprint(
-    "Effortless Athlete",
-    health=6,
-    speed=3,
-    sight=2,
-    energy=4,
-    facets=[RoundhouseKick, Vault, BatonPass],
-    price=8,
-)
-
-CAPRICIOUS_TRICKSTER = UnitBlueprint(
-    "Capricious Trickster",
-    health=6,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[Shiv, Vault, Shove, Poof, JukeAndJive],
-    price=11,
-)
-
-# anti-tank mine {1p} x2
-# health 1, movement 1, sight 0, S
-# deploy
-#     ability
-#     this unit dies leaving no corpse. apply status anti-tank mined to terrain
-#         hidden
-#         when L ground unit moves in, it suffers 3 damage with 2 ap, and remove this status.
-
-
-BLIND_ORACLE = UnitBlueprint(
-    "Blind Oracle", health=2, speed=2, sight=0, energy=2, facets=[Scry], price=2
-)
-
-# psy-synced null {4p} x2
-# health 4, movement 3, sight 2, energy 3, M
-# psionic synchronization
-#     ability 2 energy
-#     target allied unit 2 range NLoS
-#     activates target
-
-STIM_DRONE = UnitBlueprint(
-    "Stim Drone",
-    health=3,
-    speed=2,
-    sight=1,
-    energy=3,
-    size=Size.SMALL,
-    facets=[StimulatingInjection],
-    price=4,
-)
-
-GLASS_GOLEM = UnitBlueprint(
-    "Glass Golem",
-    health=1,
-    speed=3,
-    armor=2,
-    sight=2,
-    facets=[GlassFist, GlassSkin],
-    price=5,
-)
-
-DIAMOND_GOLEM = UnitBlueprint(
-    "Diamond Golem",
-    health=1,
-    speed=3,
-    armor=3,
-    sight=2,
-    facets=[DiamondFist, DiamondSkin],
-    price=9,
-)
-
-# TODO look at this as well for damage changes
-# inferno trooper {5} x2
-# health 6, movement 3, sight 2, M
-# flamethrower
-#     ranged attack
-#     3 damage, 1 range, -1 movement
-#     armor piercing
-#     ground only
-#     deals damage in the form of burning
-
-# TODO terrain statuses
-# desolation trooper {6} x2
-# health 6, movement 3, sight 2, energy 4, M
-# beam
-#     ranged attack
-#     3 damage, 2 range, -1 movement
-#     armor piercing
-#     deals damage in the form of radiated
-# desecrate ground
-#     aoe ability 3 energy, -2 movement
-#     aoe type hex size 1 centered on this unit
-#     applies 2 radiated and radiation 1 to terrain
-# - greater resistance to damage from radiated
-
-# TODO dispells
-# witch doctor {6pp} x1
-# health 3, movement 3, sight 2, energy 5, M
-# restore
-#      ability 3 energy
-#      target allied unit 3 range LoS
-#      -1 movement
-#      heals 3 health and dispel latest debuff
-# evil eye
-#     ability 2 energy
-#     target enemy unit 3 range LoS
-#     -2 movement
-#     apply 1 poison
-
-
-GIANT_SLAYER_MOUSE = UnitBlueprint(
-    "Giant Slayer Mouse",
-    health=5,
-    speed=3,
-    sight=2,
-    size=Size.SMALL,
-    facets=[Slay, LastStand],
-    price=7,
-)
-
-# TODO how works in multiples/different controllers?
-# cult brute {7wp} x1
-# health 7, movement 3, sight 2, M
-# ritual dagger
-#     melee attack
-#     3 damage
-#     before damage, apply entangled doom to target
-#         whenever this unit suffers damage not from entangled doom, each other allied unit with the entangled doom debuff suffers 1 pure damage
-# - whenever an enemy unit with entangled doom dies, heals this unit 1 health
-
-
-VOID_SPRITE = UnitBlueprint(
-    "Void Sprite",
-    health=3,
-    speed=1,
-    sight=1,
-    energy=6,
-    size=Size.SMALL,
-    facets=[EtherealSting, Jaunt],
-    price=6,
-)
-
-BEE_SWARM = UnitBlueprint(
-    "Bee Swarm",
-    health=2,
-    speed=3,
-    sight=1,
-    size=Size.SMALL,
-    facets=[Stinger],
-    price=None,
-)
-
-BEE_SHAMAN = UnitBlueprint(
-    "Bee Shaman", health=4, speed=3, sight=2, energy=3, facets=[SummonBees], price=None
-)
-
-# telepath {7pp} x1
-# health 5, movement 3, sight 0, energy 5, M
-# rouse
-#     ability 3 energy
-#     target other unit 3 range NLoS
-#     -1 movement
-#     activates target
-# pacify
-#     ability 3 energy
-#     target other unit 3 range NLoS
-#     -2 movement
-#     applies pacified for 1 round
-#         disarmed
-#         +1 energy regen
-# turn outwards
-#     ability 3 energy
-#     target other unit 2 range NLoS
-#     -1 movement
-#     applies far gazing for 2 rounds
-#         +1 sight
-#         cannot see adjacent hexes
-# - adjacent enemy units also provide vision for this units controller
-
-TELEPATH = UnitBlueprint(
-    "Telepath",
-    health=5,
-    speed=3,
-    sight=0,
-    energy=5,
-    facets=[TelepathicSpy, Rouse],
-    price=None,
-)
-
-LEGENDARY_WRESTLER = UnitBlueprint(
-    "Legendary Wrestler",
-    health=7,
-    speed=3,
-    sight=2,
-    energy=4,
-    facets=[
-        Tackle,
-        FromTheTopRope,
-        Suplex,
-        CaughtInTheMatch,
-        HeelTurn,
-    ],
-    price=9,
 )
 
 STAUNCH_IRON_HEART = UnitBlueprint(
@@ -679,45 +581,8 @@ STAUNCH_IRON_HEART = UnitBlueprint(
     price=11,
 )
 
-NOTORIOUS_OUTLAW = UnitBlueprint(
-    "Notorious Outlaw",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=3,
-    facets=[
-        TwinRevolvers,
-        Lasso,
-        Showdown,
-        Quick,
-    ],
-    price=12,
-)
-
-
-SHRINE_KEEPER = UnitBlueprint(
-    "Shrine Keeper",
-    health=4,
-    speed=3,
-    sight=2,
-    energy=4,
-    size=Size.SMALL,
-    facets=[RaiseShrine, GrantCharm, SanctifyGrounds],
-    price=4,
-)
-
-BELL_STRIKER_BRUTE = UnitBlueprint(
-    "Bell-Striker Brute", health=8, speed=3, sight=2, facets=[BellHammer], price=10
-)
-
-WITCH_ENGINE = UnitBlueprint(
-    "Witch Engine",
-    health=7,
-    speed=2,
-    sight=2,
-    energy=8,
-    facets=[ChokingSoot, Terrorize, GreaseTheGears, ToxicPresence],
-    price=13,
+WAR_HOG = UnitBlueprint(
+    "War Hog", health=8, speed=3, sight=2, facets=[RazorTusk, Furious], price=11
 )
 
 INFERNO_TANK = UnitBlueprint(
@@ -736,6 +601,64 @@ INFERNO_TANK = UnitBlueprint(
     price=12,
 )
 
+NOTORIOUS_OUTLAW = UnitBlueprint(
+    "Notorious Outlaw",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=3,
+    facets=[
+        TwinRevolvers,
+        Lasso,
+        Showdown,
+        Quick,
+    ],
+    price=12,
+)
+
+CHAINSAW_SADIST = UnitBlueprint(
+    "Chainsaw Sadist",
+    health=7,
+    speed=3,
+    sight=2,
+    facets=[Chainsaw, FightFlightFreeze, GrizzlyMurderer],
+    price=13,
+)
+
+MAD_SCIENTIST = UnitBlueprint(
+    "Mad Scientist",
+    health=6,
+    speed=3,
+    sight=2,
+    energy=8,
+    facets=[ShrinkRay, Translocate, AssembleTheDoombot, Inspiration],
+    price=13,
+)
+
+WITCH_ENGINE = UnitBlueprint(
+    "Witch Engine",
+    health=7,
+    speed=2,
+    sight=2,
+    energy=8,
+    facets=[ChokingSoot, Terrorize, GreaseTheGears, ToxicPresence],
+    price=13,
+)
+
+CYCLOPS = UnitBlueprint(
+    "Cyclops",
+    health=11,
+    speed=3,
+    size=Size.LARGE,
+    sight=1,
+    facets=[GiantClub, Sweep, Stare],
+    price=15,
+)
+
+RHINO_BEAST = UnitBlueprint(
+    "Rhino", health=10, speed=4, sight=2, size=Size.LARGE, facets=[Gore], price=15
+)
+
 ZONE_MECH = UnitBlueprint(
     "Zone Mech",
     health=8,
@@ -748,58 +671,18 @@ ZONE_MECH = UnitBlueprint(
     price=15,
 )
 
-# gate fiend {15wwwgpp} x1
-# health 8, movement 2, sight 2, energy 4, M
-# infernal blade
-#     melee attack
-#     4 damage
-#     applies 2 burning
-# open gate
-#     ability 4 energy
-#     two target hexes 4 range NLoS
-#     no movement
-#     applies linked status gate to both hexes for 3 rounds
-#         units on this hex can move to linked hex as normal move action
-
-BLOOD_CONDUIT = UnitBlueprint(
-    "Blood Conduit",
-    health=3,
-    speed=3,
-    sight=2,
-    energy=3,
-    facets=[VitalityTransfer],
-    price=3,
+BEE_SHAMAN = UnitBlueprint(
+    "Bee Shaman", health=4, speed=3, sight=2, energy=3, facets=[SummonBees], price=None
 )
 
-FRONTLINE_TACTICIAN = UnitBlueprint(
-    "Frontline Tactician",
-    health=6,
+BEE_SWARM = UnitBlueprint(
+    "Bee Swarm",
+    health=2,
     speed=3,
-    sight=2,
-    energy=4,
-    facets=[CommandersPistol, CoordinatedManeuver, InspiringPresence],
-    price=9,
-)
-
-RAT_SCOUT = UnitBlueprint(
-    "Rat Scout",
-    health=4,
-    speed=3,
-    sight=2,
+    sight=1,
     size=Size.SMALL,
-    facets=[ScratchAndBite, ScurryInTheShadows],
-    price=4,
-    max_count=2,
-)
-
-MAD_SCIENTIST = UnitBlueprint(
-    "Mad Scientist",
-    health=6,
-    speed=3,
-    sight=2,
-    energy=8,
-    facets=[ShrinkRay, Translocate, AssembleTheDoombot, Inspiration],
-    price=13,
+    facets=[Stinger],
+    price=None,
 )
 
 DOOMBOT_3000 = UnitBlueprint(
@@ -815,22 +698,33 @@ DOOMBOT_3000 = UnitBlueprint(
     price=None,
 )
 
-INK_WITCH = UnitBlueprint(
-    "Ink Witch",
-    health=6,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[BloodExpunge, InkRing, MalevolentStare],
-    price=9,
+HORROR_SPAWN = UnitBlueprint(
+    "Horror Spawn",
+    health=3,
+    speed=2,
+    sight=1,
+    size=Size.SMALL,
+    facets=[SerratedBeak],
+    price=None,
 )
 
-GIANT_TOAD = UnitBlueprint(
-    "Giant Toad",
-    health=8,
+SCARAB = UnitBlueprint(
+    "Scarab",
+    health=2,
     speed=2,
-    sight=2,
-    energy=2,
-    facets=[TongueLash, Jump, ToxicSkin],
-    price=9,
+    armor=1,
+    sight=1,
+    size=Size.SMALL,
+    facets=[Pinch],
+    price=None,
+)
+
+TELEPATH = UnitBlueprint(
+    "Telepath",
+    health=5,
+    speed=3,
+    sight=0,
+    energy=5,
+    facets=[TelepathicSpy, Rouse],
+    price=None,
 )
