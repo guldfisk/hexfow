@@ -790,8 +790,13 @@ class Unit(HasStatuses, Modifiable, VisionBound):
 
     @modifiable
     def can_see(self, space: Hex) -> bool:
-        if space.map.distance_between(self, space) > self.sight.g():
+        distance = space.map.distance_between(self, space)
+        if distance == 0:
+            return True
+        if distance > self.sight.g():
             return False
+        if distance == 1:
+            return True
         return not line_of_sight_obstructed_for_unit(
             self, space.map.position_off(self), space.position
         )

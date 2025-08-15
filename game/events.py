@@ -613,7 +613,7 @@ class Turn(Event[bool]):
 
     def resolve(self) -> bool:
         GS.active_unit_context = context = ActiveUnitContext(
-            self.unit, self.unit.speed.g()
+            self.unit, max(self.unit.speed.g(), 0)
         )
 
         # TODO this prob shouldn't be here. For now it is to make sure we have a

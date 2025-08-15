@@ -22,6 +22,7 @@ game
     logging damage source? (relevant for mines and such)
     status linking
     corpses
+    player log component
     status merge explanations
     alternate capture points
         keeps captured state for player when unit walks off
@@ -30,7 +31,6 @@ game
 code
     refactor game.core somehow
     common status merge mixins
-    check negative sight
     response validation
     message ids
     don't send no change game state updates
