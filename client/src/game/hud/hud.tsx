@@ -149,6 +149,15 @@ const LogLineComponentView = ({
       <LogLineComponentView element={item} unitMap={unitMap} />
     ));
   }
+  if (element.type == "player") {
+    return (
+      <div
+        className={`log-component highlighted-log-component ${player == element.name ? "allied" : "enemy"}-highlighted-log-component`}
+      >
+        {element.name}
+      </div>
+    );
+  }
 };
 
 const LogLineView = ({ line: [indent, content] }: { line: LogLine }) => {

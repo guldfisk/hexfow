@@ -222,13 +222,19 @@ export interface ListLogLineComponent extends LogLineComponentBase {
   items: (UnitLogLineComponent | HexLogLineComponent)[];
 }
 
+export interface PlayerLogLineComponent extends LogLineComponentBase {
+  type: "player";
+  name: string;
+}
+
 export type LogLineComponent =
   | UnitLogLineComponent
   | HexLogLineComponent
   | FacetLogLineComponent
   | StatusLogLineComponent
   | ListLogLineComponent
-  | StringLogLineComponent;
+  | StringLogLineComponent
+  | PlayerLogLineComponent;
 
 export type LogLine = [number, LogLineComponent[]];
 

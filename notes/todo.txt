@@ -22,7 +22,6 @@ game
     logging damage source? (relevant for mines and such)
     status linking
     corpses
-    player log component
     alternate capture points
         keeps captured state for player when unit walks off
         linked group with points to player with max presence

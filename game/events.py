@@ -738,8 +738,7 @@ class GainPoints(Event[None]):
         return self.amount > 0
 
     def resolve(self) -> None:
-        # TODO player should be log line element?
-        with GS.log(LogLine([f"{self.player.name} gains {self.amount} points"])):
+        with GS.log(LogLine([self.player, f"gains {self.amount} points"])):
             self.player.points += self.amount
 
 
