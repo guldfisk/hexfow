@@ -1,13 +1,13 @@
 from pydantic import BaseModel
 
 from game.core import (
-    Scenario,
     HexSpec,
-    Terrain,
-    HexStatusSignature,
     HexStatus,
-    UnitBlueprint,
+    HexStatusSignature,
     Landscape,
+    Scenario,
+    Terrain,
+    UnitBlueprint,
 )
 from game.map.coordinates import CC
 

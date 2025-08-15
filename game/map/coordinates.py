@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools
 import math
 from enum import IntEnum
-from typing import NamedTuple, Iterator, Mapping, Any, Iterable, Callable
+from typing import Any, Callable, Iterable, Iterator, Mapping, NamedTuple
 
 
 class RC(NamedTuple):
@@ -25,7 +25,7 @@ class CC(NamedTuple):
     h: int
 
     @property
-    def l(self) -> int:
+    def l(self) -> int:  # noqa: E743
         return -sum(self)
 
     def __add__(self, other: CC) -> CC:

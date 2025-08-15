@@ -3,7 +3,7 @@ from typing import Any, Callable
 
 import pytest
 
-from events.eventsystem import EventSystem, ES, Event
+from events.eventsystem import ES, Event, EventSystem
 
 
 class TestScope:
@@ -12,7 +12,6 @@ class TestScope:
 
 
 class EventLogger:
-
     def __init__(self, callback: Callable[[str], ...] = print):
         self._stack_depth = 0
         self._callback = callback

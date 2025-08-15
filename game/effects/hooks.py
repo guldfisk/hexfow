@@ -1,7 +1,7 @@
 import dataclasses
 
-from events.eventsystem import HookEffect, Event
-from game.core import Unit, GS
+from events.eventsystem import Event, HookEffect
+from game.core import GS, Unit
 from game.events import TurnUpkeep
 
 

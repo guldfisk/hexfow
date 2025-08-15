@@ -1,31 +1,31 @@
 from typing import Self
 
 from events.eventsystem import ES
-from game.core import UnitStatus, RefreshableDurationUnitStatus, Unit, GS
+from game.core import GS, RefreshableDurationUnitStatus, Unit, UnitStatus
 from game.effects.modifiers import (
     RootedModifier,
+    SilencedModifier,
+    TerrorModifier,
+    UnitArmorFlatModifier,
     UnitAttackPowerFlatModifier,
     UnitMaxHealthFlatModifier,
-    TerrorModifier,
     UnitProportionalSpeedModifier,
-    UnitSizeFlatModifier,
     UnitSightFlatModifier,
-    SilencedModifier,
-    UnitArmorFlatModifier,
+    UnitSizeFlatModifier,
     UnitSpeedModifier,
 )
 from game.effects.replacements import LuckyCharmReplacement, StunnedReplacement
 from game.effects.triggers import (
+    BellStruckTrigger,
     BurnTrigger,
-    TurnExpiringStatusTrigger,
-    RoundDamageTrigger,
+    HitchedTrigger,
+    OneTimeModifyMovementPointsStatusTrigger,
     PanickedTrigger,
     ParasiteTrigger,
-    OneTimeModifyMovementPointsStatusTrigger,
-    BellStruckTrigger,
-    HitchedTrigger,
+    RoundDamageTrigger,
+    TurnExpiringStatusTrigger,
 )
-from game.events import Kill, ExhaustUnit
+from game.events import ExhaustUnit, Kill
 from game.values import StatusIntention
 
 
@@ -280,7 +280,7 @@ class Shrunk(UnitStatus):
     """
 
     def merge(self, incoming: Self) -> bool:
-        if not self.duration is None and (
+        if self.duration is not None and (
             incoming.duration is None or (incoming.duration > self.duration)
         ):
             self.duration = incoming.duration

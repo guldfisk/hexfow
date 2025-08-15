@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import TypeVar, Generic
+from typing import Generic, TypeVar
 
-from events.eventsystem import Effect, ES
+from events.eventsystem import ES, Effect
 
 
 @dataclasses.dataclass(kw_only=True)

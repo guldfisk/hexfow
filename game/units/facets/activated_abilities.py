@@ -1,69 +1,69 @@
 from events.eventsystem import ES
 from game.core import (
-    NoTargetActivatedAbility,
-    Unit,
-    SingleAllyActivatedAbility,
-    SingleEnemyActivatedAbility,
-    SingleTargetActivatedAbility,
+    GS,
     ActivatedAbilityFacet,
-    Hex,
-    OneOfHexes,
-    UnitBlueprint,
+    ActiveUnitContext,
+    Cone,
     ConsecutiveAdjacentHexes,
-    RadiatingLine,
-    RangedAttackFacet,
-    MeleeAttackFacet,
-    StatusSignature,
-    MovementCost,
+    DamageSignature,
     EnergyCost,
     ExclusiveCost,
-    SingleHexTargetActivatedAbility,
-    HexStatusSignature,
-    DamageSignature,
-    line_of_sight_obstructed_for_unit,
-    NOfUnits,
+    Hex,
     HexHexes,
-    UnitStatus,
-    HexStatus,
-    Cone,
-    TreeNode,
-    Tree,
     HexRing,
-    GS,
-    ActiveUnitContext,
-    is_vision_obstructed_for_unit_at,
-    TriHexTargetActivatedAbility,
-    TargetProfile,
+    HexStatus,
+    HexStatusSignature,
+    MeleeAttackFacet,
+    MovementCost,
+    NOfUnits,
+    NoTargetActivatedAbility,
     O,
+    OneOfHexes,
+    RadiatingLine,
+    RangedAttackFacet,
+    SingleAllyActivatedAbility,
+    SingleEnemyActivatedAbility,
+    SingleHexTargetActivatedAbility,
+    SingleTargetActivatedAbility,
+    StatusSignature,
+    TargetProfile,
+    Tree,
+    TreeNode,
+    TriHexTargetActivatedAbility,
+    Unit,
+    UnitBlueprint,
+    UnitStatus,
+    is_vision_obstructed_for_unit_at,
+    line_of_sight_obstructed_for_unit,
 )
 from game.effects.hooks import AdjacencyHook
 from game.events import (
-    Kill,
-    Heal,
-    ApplyStatus,
-    MoveUnit,
-    SpawnUnit,
-    Damage,
-    QueueUnitForActivation,
-    Hit,
     ApplyHexStatus,
-    GainEnergy,
-    ModifyMovementPoints,
-    ReadyUnit,
-    ExhaustUnit,
+    ApplyStatus,
+    Damage,
     DispelStatus,
+    ExhaustUnit,
+    GainEnergy,
+    Heal,
+    Hit,
+    Kill,
+    ModifyMovementPoints,
+    MoveUnit,
+    QueueUnitForActivation,
+    ReadyUnit,
+    SpawnUnit,
 )
-from game.statuses.dispel import dispel_from_unit, dispel_all
-from game.statuses.hex_statuses import Shrine, Soot, BurningTerrain, Smoke, Glimpse
+from game.statuses.dispel import dispel_all, dispel_from_unit
+from game.statuses.hex_statuses import BurningTerrain, Glimpse, Shrine, Smoke, Soot
 from game.statuses.unit_statuses import (
-    Panicked,
-    BurstOfSpeed,
-    Staggered,
-    Ephemeral,
-    Rooted,
-    LuckyCharm,
-    Terror,
     Burn,
+    BurstOfSpeed,
+    Ephemeral,
+    LuckyCharm,
+    Panicked,
+    Rooted,
+    Staggered,
+    Terror,
 )
 from game.values import DamageType, Size, StatusIntention
 
@@ -462,7 +462,8 @@ class Showdown(SingleEnemyActivatedAbility):
             for attack_type in (RangedAttackFacet, MeleeAttackFacet):
                 if (
                     (defender_attack := target.get_primary_attack(attack_type))
-                    and self.owner in
+                    and self.owner
+                    in
                     # TODO yikes
                     defender_attack.get_legal_targets(ActiveUnitContext(target, 1))
                 ):

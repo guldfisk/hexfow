@@ -1,21 +1,19 @@
 import dataclasses
 
-from events.eventsystem import Event, ES
+from events.eventsystem import ES, Event
 from events.tests.game_objects.dummy import (
     DamageDummy,
-    DummyLossHealth,
     Dummy,
-    MoveDummy,
+    DummyLossHealth,
     HitDummy,
+    MoveDummy,
 )
 from events.tests.utils import check_history
 
 
 def test_single_event():
     assert (
-        sum(
-            e.value for e in ES.resolve(DummyLossHealth(1)).iter_type(DummyLossHealth)
-        )
+        sum(e.value for e in ES.resolve(DummyLossHealth(1)).iter_type(DummyLossHealth))
         == 1
     )
     assert Dummy.damage == 1
@@ -51,9 +49,9 @@ def test_event_using_result_of_other_event():
                 MoveDummy(
                     sum(
                         e.result
-                        for e in ES
-                        .resolve(HitDummy(self.strength))
-                        .iter_type(DamageDummy)
+                        for e in ES.resolve(HitDummy(self.strength)).iter_type(
+                            DamageDummy
+                        )
                     )
                 )
             )

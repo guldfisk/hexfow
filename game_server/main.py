@@ -5,7 +5,7 @@ import traceback
 from uuid import UUID
 
 from websockets import ConnectionClosed
-from websockets.sync.server import serve, ServerConnection
+from websockets.sync.server import ServerConnection, serve
 
 from game_server.games import GM
 from game_server.testing import TestGameRunner

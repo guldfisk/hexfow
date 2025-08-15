@@ -3,40 +3,40 @@ import math
 from collections import defaultdict
 from typing import Iterable
 
-from events.eventsystem import Event, ES, V
+from events.eventsystem import ES, Event, V
 from game.core import (
-    Unit,
-    Hex,
-    UnitBlueprint,
-    ActiveUnitContext,
-    MoveOption,
-    EffortOption,
-    SkipOption,
-    RangedAttackFacet,
-    ActivateUnitOption,
-    OneOfUnits,
-    TerrainProtectionRequest,
-    MeleeAttackFacet,
-    SingleTargetAttackFacet,
-    ActivatedAbilityFacet,
-    StatusSignature,
-    HexStatusSignature,
-    DamageSignature,
-    Facet,
-    UnitStatus,
-    LogLine,
-    Status,
     GS,
+    ActivatedAbilityFacet,
+    ActivateUnitOption,
+    ActiveUnitContext,
+    DamageSignature,
+    EffortOption,
+    Facet,
     HasStatuses,
-    OneOfHexes,
-    SelectOptionDecisionPoint,
+    Hex,
+    HexStatusSignature,
+    LogLine,
+    MeleeAttackFacet,
+    MoveOption,
     NoTarget,
     O,
+    OneOfHexes,
+    OneOfUnits,
     OptionDecision,
+    Player,
+    RangedAttackFacet,
+    SelectOptionDecisionPoint,
+    SingleTargetAttackFacet,
+    SkipOption,
+    Status,
+    StatusSignature,
+    TerrainProtectionRequest,
     TurnOrder,
+    Unit,
+    UnitBlueprint,
+    UnitStatus,
 )
-from game.core import Player
-from game.values import DamageType, StatusIntention, Resistance
+from game.values import DamageType, Resistance, StatusIntention
 
 
 # TODO yikes (have this rn so we can do stuff on kill before unit has it's effect
@@ -744,7 +744,6 @@ class GainPoints(Event[None]):
 
 
 class AwardPoints(Event[None]):
-
     def resolve(self) -> None:
         player_values: dict[Player, int] = defaultdict(int)
         for unit, _hex in GS.map.unit_positions.items():

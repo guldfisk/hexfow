@@ -2,15 +2,15 @@ import os
 from typing import Any, Iterator
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, APIRouter, Depends
+from fastapi import APIRouter, Depends, FastAPI
 from sqlalchemy import select
 from starlette.middleware.cors import CORSMiddleware
 
-from game.core import UnitBlueprint, Terrain, Status, Facet
+from game.core import Facet, Status, Terrain, UnitBlueprint
 from game.map import terrain  # noqa F401
 from game.units import blueprints  # noqa F401
 from model.engine import SS
-from model.models import Game, Seat, Map
+from model.models import Game, Map, Seat
 from web_server.schemas import CreateGameSchema, CreateMapSchema
 
 

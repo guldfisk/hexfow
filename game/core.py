@@ -8,35 +8,34 @@ import threading
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import (
-    ClassVar,
-    Literal,
     Any,
-    TypeVar,
-    Iterator,
-    Generic,
-    Self,
-    Iterable,
-    TypeAlias,
     Callable,
+    ClassVar,
+    Generic,
+    Iterable,
+    Iterator,
+    Literal,
+    Mapping,
+    Self,
     Sequence,
+    TypeAlias,
+    TypeVar,
 )
-from typing import Mapping
 from uuid import uuid4
 
 from bidict import bidict
 
 from events.eventsystem import Modifiable, ModifiableAttribute, modifiable
-
 from game.has_effects import HasEffects
-from game.info.registered import Registered, get_registered_meta, UnknownIdentifierError
-from game.map.coordinates import CC, line_of_sight_obstructed, Corner, CornerPosition
-from game.map.geometry import hex_circle, hex_ring, hex_arc
-from game.values import Size, DamageType, VisionObstruction, StatusIntention, Resistance
+from game.info.registered import Registered, UnknownIdentifierError, get_registered_meta
+from game.map.coordinates import CC, Corner, CornerPosition, line_of_sight_obstructed
+from game.map.geometry import hex_arc, hex_circle, hex_ring
+from game.values import DamageType, Resistance, Size, StatusIntention, VisionObstruction
 
 
 T = TypeVar("T")
 S = TypeVar("S")
-O = TypeVar("O")
+O = TypeVar("O")  # noqa: E741
 
 JSON: TypeAlias = Mapping[str, Any]
 
@@ -213,7 +212,7 @@ class HasStatuses(HasEffects, Generic[S]):
             return status
         # TODO should prob set parent
         for existing_status in self.statuses:
-            if type(existing_status) == type(status) and existing_status.merge(status):
+            if type(existing_status) is type(status) and existing_status.merge(status):
                 return existing_status
         self.statuses.append(status)
         status.create_effects()

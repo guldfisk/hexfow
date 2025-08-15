@@ -1,18 +1,18 @@
 from events.eventsystem import ES
 from game.core import (
-    MeleeAttackFacet,
-    RangedAttackFacet,
-    Unit,
-    StatusSignature,
-    MovementCost,
-    ExclusiveCost,
     DamageSignature,
+    ExclusiveCost,
+    MeleeAttackFacet,
+    MovementCost,
+    RangedAttackFacet,
+    StatusSignature,
+    Unit,
     UnitStatus,
 )
 from game.effects.hooks import AdjacencyHook
-from game.events import Damage, ApplyStatus
-from game.statuses.unit_statuses import Staggered, Stumbling, BellStruck
-from game.values import Size, DamageType, StatusIntention
+from game.events import ApplyStatus, Damage
+from game.statuses.unit_statuses import BellStruck, Staggered, Stumbling
+from game.values import DamageType, Size, StatusIntention
 
 
 class Peck(MeleeAttackFacet):
@@ -45,7 +45,7 @@ class Gore(MeleeAttackFacet):
         self.register_effects(self.adjacency_hook)
 
     def get_damage_modifier_against(self, unit: Unit) -> int:
-        if not unit in self.adjacency_hook.adjacent_units:
+        if unit not in self.adjacency_hook.adjacent_units:
             return 2
 
 

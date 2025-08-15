@@ -1,33 +1,33 @@
 import dataclasses
 import math
 from enum import IntEnum, auto
-from typing import ClassVar, Callable
+from typing import Callable, ClassVar
 
 from events.eventsystem import StateModifierEffect
 from events.tests.game_objects.advanced_units import Player
 from game.core import (
-    Unit,
-    ActiveUnitContext,
-    MoveOption,
-    DamageSignature,
-    OneOfHexes,
-    SkipOption,
-    EffortOption,
-    MeleeAttackFacet,
-    Hex,
-    SingleTargetAttackFacet,
-    OneOfUnits,
-    Source,
-    TerrainProtectionRequest,
-    Terrain,
-    ActivatedAbilityFacet,
     GS,
+    ActivatedAbilityFacet,
+    ActiveUnitContext,
     AttackFacet,
+    DamageSignature,
+    EffortOption,
     Facet,
+    Hex,
+    MeleeAttackFacet,
+    MoveOption,
+    OneOfHexes,
+    OneOfUnits,
     Option,
+    SingleTargetAttackFacet,
+    SkipOption,
+    Source,
+    Terrain,
+    TerrainProtectionRequest,
+    Unit,
 )
 from game.map.terrain import Water
-from game.values import Resistance, VisionObstruction, Size, DamageType
+from game.values import DamageType, Resistance, Size, VisionObstruction
 
 
 class SpeedLayer(IntEnum):

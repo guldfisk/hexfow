@@ -6,19 +6,19 @@ import time
 import traceback
 from queue import Empty, SimpleQueue
 from threading import Thread
-from typing import Mapping, Any, Callable
+from typing import Any, Callable, Mapping
 from uuid import UUID
 
-from sqlalchemy import select, Exists
+from sqlalchemy import Exists, select
 
 from events.eventsystem import ES
 from events.exceptions import GameException
+from game.core import Connection, Player
 from game.events import Play
-from game.core import Player, Connection
 from game_server.game_types import GameType
 from game_server.setup import setup_scenario
 from model.engine import SS
-from model.models import Seat, Game
+from model.models import Game, Seat
 
 
 class GameClosed(GameException):
@@ -121,7 +121,6 @@ class SeatInterface(Connection):
 
 
 class Cleaner(Thread):
-
     def __init__(self, game_runner: GameRunner, delay: int):
         super().__init__()
         self._runner = game_runner

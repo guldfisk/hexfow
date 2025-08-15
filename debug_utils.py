@@ -5,7 +5,7 @@ import inspect
 import linecache
 import math
 from collections.abc import Iterable
-from typing import Any, Self, Mapping, ClassVar
+from typing import Any, ClassVar, Mapping, Self
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -98,7 +98,7 @@ def obj_to_string(
         )
     if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
         if id(obj) in seen_objects:
-            return idn+"..."
+            return idn + "..."
             # return idn+type(obj).__name__
         seen_objects |= frozenset((id(obj),))
         return (

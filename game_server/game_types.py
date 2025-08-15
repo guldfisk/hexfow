@@ -1,20 +1,18 @@
 from __future__ import annotations
 
 import itertools
-import json
 import random
 from abc import ABC, abstractmethod
-from pathlib import Path
 from typing import ClassVar
 
 from pydantic import BaseModel
 from pydantic._internal._model_construction import ModelMetaclass
 from sqlalchemy import select
 
-from game.core import Scenario, Landscape, HexSpec
+from game.core import HexSpec, Landscape, Scenario
 from game.map.coordinates import CC
 from game.map.geometry import hex_circle
-from game.map.terrain import Water, Magma, Plains, Forest, Hills
+from game.map.terrain import Forest, Hills, Magma, Plains, Water
 from game.units.blueprints import *
 from model.engine import SS
 from model.grouping import get_grouping_meta, get_suffix_remover
@@ -37,7 +35,6 @@ class GameType(
 
 
 class TestGameType(GameType):
-
     def get_scenario(self) -> Scenario:
         landscape = Landscape(
             {
@@ -96,7 +93,6 @@ class TestGameType(GameType):
 
 
 class RandomGameType(GameType):
-
     def get_scenario(self) -> Scenario:
         specs = [
             (CC(0, -1), True),
@@ -313,7 +309,7 @@ class RandomGameType(GameType):
             blueprint
             for blueprint in UnitBlueprint.registry.values()
             for _ in range(blueprint.max_count)
-            if blueprint.price is not None and not blueprint in banned_units
+            if blueprint.price is not None and blueprint not in banned_units
         ]
         random.shuffle(unit_pool)
 

@@ -6,10 +6,10 @@ from typing import ClassVar
 
 from events.eventsystem import (
     Event,
-    V,
-    ModifiableAttribute,
     Modifiable,
+    ModifiableAttribute,
     StateModifierEffect,
+    V,
     modifiable,
 )
 

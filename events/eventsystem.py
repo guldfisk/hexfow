@@ -5,20 +5,20 @@ import functools
 import inspect
 import re
 import threading
-from abc import ABC, abstractmethod, ABCMeta
+from abc import ABC, ABCMeta, abstractmethod
 from collections import defaultdict
 from collections.abc import Iterable
 from typing import (
-    TypeVar,
+    Any,
+    Callable,
     ClassVar,
+    Generic,
+    Iterator,
+    Mapping,
     MutableMapping,
     Self,
-    Any,
-    Generic,
+    TypeVar,
     get_args,
-    Iterator,
-    Callable,
-    Mapping,
 )
 
 from events.exceptions import GameException
@@ -47,7 +47,6 @@ class TriggerLoopError(GameException): ...
 
 
 class EffectSet:
-
     def __init__(self, effects: Iterable[Effect] | None = None):
         # TODO ordered set?
         self.effects: MutableMapping[str, MutableMapping[Any, dict[Effect, None]]] = (
@@ -254,7 +253,6 @@ class EventSystem:
 
 
 class ScopedEventSystem(EventSystem):
-
     # TODO protocol/interface?
     def __init__(self):
         # self._es: EventSystem | None = None
@@ -579,7 +577,6 @@ def _wrap_method(f: A) -> A:
 
 
 class ModifiableMeta(ABCMeta):
-
     def __new__(
         metacls,
         name: str,

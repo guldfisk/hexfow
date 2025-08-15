@@ -1,12 +1,11 @@
-from events.eventsystem import HookEffect, Event, ES, ReplacementEffect, E, hook_on
-from events.tests.game_objects.units import Unit, Damage, Move
+from events.eventsystem import ES, HookEffect, ReplacementEffect, hook_on
+from events.tests.game_objects.units import Damage, Move, Unit
 
 
 def test_standalone_hook():
     unit = Unit()
 
     class PositionOnDamageTracker(HookEffect[Damage]):
-
         def __init__(self, unit: Unit):
             self.unit = unit
             self.last_position = self.unit.position

@@ -1,6 +1,6 @@
 import dataclasses
 
-from events.eventsystem import EventSystem, Event
+from events.eventsystem import Event, EventSystem
 
 
 def check_history(es: EventSystem, target: list[Event]):

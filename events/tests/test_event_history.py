@@ -1,16 +1,15 @@
-from events.eventsystem import Event, ES
+from events.eventsystem import ES, Event
 from events.tests.game_objects.dummy import (
-    HitDummy,
+    DamageAlsoMoves,
     Dummy,
     DummyLossHealth,
-    DamageAlsoMoves,
+    HitDummy,
     MoveToDamage,
 )
 
 
 def test_event_searches_history():
     class EchoAttack(Event[None]):
-
         def resolve(self) -> None:
             if previous_hit := ES.last_event_of_type(HitDummy):
                 ES.resolve(HitDummy(previous_hit.value))
@@ -34,7 +33,6 @@ def test_event_searches_history():
 
 def test_event_searches_historic_event_children():
     class EchoPainAttack(Event[None]):
-
         def resolve(self) -> None:
             if previous_hit := ES.last_event_of_type(HitDummy):
                 ES.resolve(

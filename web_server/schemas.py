@@ -1,7 +1,6 @@
 from typing import Any, Self
 
-from pydantic import BaseModel, model_validator, ValidationError
-from pydantic import AfterValidator
+from pydantic import AfterValidator, BaseModel, ValidationError, model_validator
 from typing_extensions import Annotated
 
 from game.info.registered import UnknownIdentifierError

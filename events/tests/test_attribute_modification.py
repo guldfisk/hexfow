@@ -1,12 +1,12 @@
 from events.eventsystem import ES
 from events.tests.game_objects.units import (
-    Unit,
-    DoublePower,
     AddPowerIfEven,
-    CapPower,
-    ToughnessAtLeastPower,
     AddPowerToToughness,
     AddToughnessToPower,
+    CapPower,
+    DoublePower,
+    ToughnessAtLeastPower,
+    Unit,
 )
 
 

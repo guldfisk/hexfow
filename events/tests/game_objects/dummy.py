@@ -1,6 +1,6 @@
 import dataclasses
 
-from events.eventsystem import Event, ReplacementEffect, E, TriggerEffect, ES
+from events.eventsystem import ES, E, Event, ReplacementEffect, TriggerEffect
 
 
 class Dummy:

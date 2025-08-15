@@ -1,6 +1,6 @@
 import pytest
 
-from events.eventsystem import EventSystem, ES
+from events.eventsystem import ES, EventSystem
 from events.tests.game_objects.dummy import Dummy
 
 

@@ -5,12 +5,12 @@ import threading
 import traceback
 from queue import Empty, SimpleQueue
 from threading import Thread
-from typing import Mapping, Any
+from typing import Any, Mapping
 
 from websockets import ServerConnection
 
 from events.eventsystem import ES, EventSystem
-from game.core import Player, Connection
+from game.core import Connection, Player
 from game.events import Play
 from game_server.game_types import TestGameType
 from game_server.setup import setup_scenario
@@ -63,7 +63,8 @@ class TestGameRunner(Thread):
                     raise ValueError("game closed")
 
             setup_scenario(
-                TestGameType().get_scenario(), lambda player: WebsocketConnection(player)
+                TestGameType().get_scenario(),
+                lambda player: WebsocketConnection(player),
             )
 
             ES.resolve(Play())

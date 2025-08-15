@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import dataclasses
-import functools
 import re
 from typing import Iterator
 
@@ -15,7 +14,7 @@ class Price:
 
     @property
     def compare_value(self) -> tuple[float, int]:
-        return -1/self.value if self.payable else 0, len(self.additional)
+        return -1 / self.value if self.payable else 0, len(self.additional)
 
     # def __gt__(self, other) -> bool:
     #     if isinstance(other, Price):
@@ -38,9 +37,7 @@ class Creature:
             Price(int(match.group(1)), match.group(2))
             if (match := re.match(r"^[^{]*\{(\d+)([a-z]*)}", s))
             else Price(0, "", False),
-            match.group().strip()
-            if (match := re.match(r'[^{\n]+', s))
-            else ''
+            match.group().strip() if (match := re.match(r"[^{\n]+", s)) else "",
         )
 
     def serialize(self) -> str:
@@ -57,7 +54,8 @@ def sort_creatures():
     # for v in sorted((c.cost.compare_value, c.name) for c in load_creatures()):
     #     print(v)
     result = "\n\n".join(
-        c.serialize() for c in sorted(load_creatures(), key=lambda c: (c.cost.compare_value, c.name))
+        c.serialize()
+        for c in sorted(load_creatures(), key=lambda c: (c.cost.compare_value, c.name))
     )
     with open("notes/creatures.txt", "w") as f:
         f.write(result)

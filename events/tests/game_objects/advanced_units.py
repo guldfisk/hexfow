@@ -5,13 +5,13 @@ from abc import ABC
 from enum import Enum, auto
 
 from events.eventsystem import (
-    Event,
-    ModifiableAttribute,
-    Modifiable,
-    modifiable,
     ES,
+    Event,
+    Modifiable,
+    ModifiableAttribute,
     StateModifierEffect,
     V,
+    modifiable,
 )
 
 
@@ -56,7 +56,6 @@ class Unit(Modifiable):
 
 
 class Hex(Modifiable):
-
     def __init__(self, terrain_type: TerrainType = TerrainType.GROUND):
         self.terrain_type = terrain_type
         self.unit: Unit | None = None
@@ -75,7 +74,6 @@ class Hex(Modifiable):
 
 
 class Map:
-
     def __init__(self, hexes: list[Hex]):
         self.hexes = hexes
 

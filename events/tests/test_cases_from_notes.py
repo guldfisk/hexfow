@@ -6,29 +6,26 @@ from typing import ClassVar
 import pytest
 
 from events.eventsystem import (
-    ReplacementEffect,
-    StateModifierEffect,
     ES,
-    TriggerEffect,
     EffectSet,
     Event,
-    hook_on,
-    T,
-    C,
+    ReplacementEffect,
+    StateModifierEffect,
+    TriggerEffect,
     V,
-    E,
+    hook_on,
 )
 from events.tests.game_objects.advanced_units import (
-    Map,
-    Hex,
-    Unit,
-    Move,
-    Kill,
-    Heal,
-    Damage,
     Charge,
-    PowerModifier,
+    Damage,
+    Heal,
+    Hex,
+    Kill,
     LoseHealth,
+    Map,
+    Move,
+    PowerModifier,
+    Unit,
 )
 
 
@@ -200,7 +197,6 @@ def test_attribute_modifier_suppressed():
 
 
 def test_trigger_dependent_on_result_of_event():
-
     @dataclasses.dataclass(eq=False)
     class SharedPain(TriggerEffect[Damage]):
         priority: ClassVar[int] = 0
@@ -235,7 +231,6 @@ def test_trigger_dependent_on_result_of_event():
 
 
 def test_trigger_condition_dependent_on_result_of_event():
-
     @dataclasses.dataclass(eq=False)
     class HealFromExcessDamage(TriggerEffect[Damage]):
         priority: ClassVar[int] = 0

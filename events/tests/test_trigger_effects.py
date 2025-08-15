@@ -4,27 +4,27 @@ from abc import ABC
 import pytest
 
 from events.eventsystem import (
-    TriggerLoopError,
+    ES,
+    E,
     Event,
     ReplacementEffect,
     TriggerEffect,
-    E,
-    ES,
+    TriggerLoopError,
 )
 from events.tests.game_objects.dummy import (
-    StaggerTrigger,
-    HitDummy,
-    Dummy,
-    DoubleDamage,
-    DynamoChargeTrigger,
-    PreventDamage,
     DamageToMove,
+    DoubleDamage,
     DropBatteriesTrigger,
+    Dummy,
+    DynamoChargeTrigger,
+    HitDummy,
+    HitOnDamageTrigger,
     MoveDummy,
     OverheatTrigger,
-    HitOnDamageTrigger,
+    PreventDamage,
+    StaggerTrigger,
 )
-from events.tests.game_objects.units import Unit, Damage, Move
+from events.tests.game_objects.units import Damage, Move, Unit
 
 
 def test_trigger_effect():

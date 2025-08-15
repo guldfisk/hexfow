@@ -1,25 +1,22 @@
 from events.eventsystem import ES
 from events.tests.game_objects.dummy import (
-    DoubleDamage,
-    DamageDummy,
-    Dummy,
-    PreventDamage,
-    DamageToMove,
-    MoveDummy,
-    MoveToDamage,
-    DummyLossHealth,
     AdditionalDamage,
     DamageAlsoMoves,
+    DamageDummy,
+    DamageToMove,
+    DoubleDamage,
+    Dummy,
+    DummyLossHealth,
+    MoveDummy,
+    MoveToDamage,
+    PreventDamage,
 )
 
 
 def test_replace():
     ES.register_effects(DoubleDamage())
     assert (
-        sum(
-            e.value
-            for e in ES.resolve(DamageDummy(value=2)).iter_type(DamageDummy)
-        )
+        sum(e.value for e in ES.resolve(DamageDummy(value=2)).iter_type(DamageDummy))
         == 4
     )
     assert Dummy.damage == 4

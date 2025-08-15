@@ -2,8 +2,8 @@ import dataclasses
 from typing import Callable, ClassVar
 
 from events.eventsystem import ES, EventSystem, StateModifierEffect
-from game.core import GameState, GS, Hex, Unit, Scenario, Player, Connection
-from game.events import SpawnUnit, ApplyHexStatus
+from game.core import GS, Connection, GameState, Hex, Player, Scenario, Unit
+from game.events import ApplyHexStatus, SpawnUnit
 
 
 def setup_scenario(

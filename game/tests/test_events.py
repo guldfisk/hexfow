@@ -1,16 +1,16 @@
 import dataclasses
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from typing import (
-    TypeVar,
-    Mapping,
     Any,
     Callable,
-    Iterator,
-    cast,
-    TypeAlias,
-    Iterable,
-    Collection,
     ClassVar,
+    Collection,
+    Iterable,
+    Iterator,
+    Mapping,
+    TypeAlias,
+    TypeVar,
+    cast,
 )
 
 import pytest
@@ -19,33 +19,33 @@ from frozendict import frozendict
 from debug_utils import dp
 from events.eventsystem import ES, StateModifierEffect
 from game.core import (
-    Terrain,
-    HexMap,
-    Landscape,
-    GameState,
-    UnitBlueprint,
-    Unit,
-    MoveOption,
-    EffortOption,
-    MeleeAttackFacet,
-    SkipOption,
-    RangedAttackFacet,
-    ActivateUnitOption,
-    Hex,
-    HexSpec,
     GS,
+    ActivateUnitOption,
     Connection,
+    EffortOption,
+    GameState,
+    Hex,
+    HexMap,
+    HexSpec,
+    Landscape,
+    MeleeAttackFacet,
+    MoveOption,
+    Player,
+    RangedAttackFacet,
+    SkipOption,
+    Terrain,
+    Unit,
+    UnitBlueprint,
 )
-from game.events import SpawnUnit, Hit, Turn, Round
+from game.events import Hit, Round, SpawnUnit, Turn
 from game.map.coordinates import CC
 from game.map.geometry import hex_circle
-from game.map.terrain import Water, Plains
-from game.core import Player
+from game.map.terrain import Plains, Water
 from game.tests.conftest import TestScope
 from game.tests.test_terrain import InstantDamageMagma
 from game.units.blueprints import (
-    CHICKEN,
     CACTUS,
+    CHICKEN,
     LIGHT_ARCHER,
     LUMBERING_PILLAR,
     MARSHMALLOW_TITAN,

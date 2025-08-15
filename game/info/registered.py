@@ -3,7 +3,7 @@ from __future__ import annotations
 import dataclasses
 import re
 from abc import ABC
-from typing import ClassVar, Any, Self
+from typing import Any, ClassVar, Self
 
 from events.eventsystem import ModifiableMeta
 from game.descriptions import description_from_docstring

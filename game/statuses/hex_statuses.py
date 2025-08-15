@@ -1,26 +1,26 @@
 from typing import Self
 
 from events.tests.game_objects.advanced_units import Player
-from game.core import HexStatus, DurationStatusMixin
+from game.core import DurationStatusMixin, HexStatus
 from game.effects.modifiers import (
-    HexIncreasesEnergyRegenModifier,
-    HexDecreaseSightCappedModifier,
     HexBlocksVisionModifier,
-    HexRevealedModifier,
+    HexDecreaseSightCappedModifier,
+    HexIncreasesEnergyRegenModifier,
     HexMoveOutPenaltyModifier,
+    HexRevealedModifier,
 )
 from game.effects.triggers import (
-    ShrineWalkInTrigger,
-    ShrineSkipTrigger,
-    HexWalkInDamageTrigger,
-    HexRoundDamageTrigger,
-    BurnOnWalkIn,
     BurnOnCleanup,
+    BurnOnWalkIn,
+    HexRoundDamageTrigger,
+    HexRoundHealTrigger,
+    HexWalkInDamageTrigger,
+    MineTrigger,
+    ShrineSkipTrigger,
+    ShrineWalkInTrigger,
+    SludgeTrigger,
     TurnExpiringStatusTrigger,
     WalkInDestroyStatusTrigger,
-    HexRoundHealTrigger,
-    MineTrigger,
-    SludgeTrigger,
 )
 
 
@@ -76,7 +76,7 @@ class BurningTerrain(HexStatus):
 
     def merge(self, incoming: Self) -> bool:
         # TODO common logic?
-        if not self.duration is None and (
+        if self.duration is not None and (
             incoming.duration is None or (incoming.duration > self.duration)
         ):
             self.duration = incoming.duration
@@ -99,7 +99,7 @@ class Revealed(HexStatus):
     def merge(self, incoming: Self) -> bool:
         # TODO common logic?
         if incoming.controller == self.controller:
-            if not self.duration is None and (
+            if self.duration is not None and (
                 incoming.duration is None or (incoming.duration > self.duration)
             ):
                 self.duration = incoming.duration
@@ -190,7 +190,7 @@ class Sludge(HexStatus):
 
     def merge(self, incoming: Self) -> bool:
         # TODO common logic?
-        if not self.duration is None and (
+        if self.duration is not None and (
             incoming.duration is None or (incoming.duration > self.duration)
         ):
             self.duration = incoming.duration

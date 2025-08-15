@@ -3,25 +3,25 @@ from typing import ClassVar
 
 from events.eventsystem import ES, ReplacementEffect, hook_on
 from game.core import (
-    Unit,
-    Hex,
-    StatusSignature,
-    DamageSignature,
-    Source,
-    UnitStatus,
     GS,
+    DamageSignature,
+    Hex,
+    Source,
+    StatusSignature,
+    Unit,
+    UnitStatus,
 )
 from game.events import (
-    Damage,
-    MoveUnit,
-    Kill,
-    Heal,
-    CheckAlive,
-    MovePenalty,
-    Turn,
     ApplyStatus,
-    SufferDamage,
+    CheckAlive,
+    Damage,
+    Heal,
+    Kill,
+    MovePenalty,
+    MoveUnit,
     ReadyUnit,
+    SufferDamage,
+    Turn,
 )
 from game.statuses.dispel import dispel_from_unit
 from game.values import StatusIntention

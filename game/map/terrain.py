@@ -1,6 +1,6 @@
-from game.core import Terrain, Hex, Unit, TerrainProtectionRequest
-from game.effects.triggers import BurnOnWalkIn, BurnOnCleanup
-from game.values import Size, DamageType
+from game.core import Hex, Terrain, TerrainProtectionRequest, Unit
+from game.effects.triggers import BurnOnCleanup, BurnOnWalkIn
+from game.values import DamageType, Size
 
 
 class Plains(Terrain): ...

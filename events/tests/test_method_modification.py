@@ -1,5 +1,5 @@
-from events.eventsystem import StateModifierEffect, ES
-from events.tests.game_objects.units import Unit, AttackShield, AttackShieldPenetrator
+from events.eventsystem import ES, StateModifierEffect
+from events.tests.game_objects.units import AttackShield, AttackShieldPenetrator, Unit
 
 
 def test_method_modified():
