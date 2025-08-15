@@ -29,10 +29,13 @@ from game.core import (
     GS,
     HasStatuses,
     OneOfHexes,
+    SelectOptionDecisionPoint,
+    NoTarget,
+    O,
+    OptionDecision,
+    TurnOrder,
 )
-from game.decisions import SelectOptionDecisionPoint, NoTarget, O, OptionDecision
-from game.player import Player
-from game.turn_order import TurnOrder
+from game.core import Player
 from game.values import DamageType, StatusIntention, Resistance
 
 
@@ -51,6 +54,9 @@ class Kill(Event[None]):
 
     def resolve(self) -> None:
         with GS.log(LogLine([self.unit, "dies"])):
+            for player in GS.turn_order:
+                if self.unit.is_visible_to(player):
+                    pass
             ES.resolve(self.branch(KillUpkeep))
             GS.map.remove_unit(self.unit)
             self.unit.deregister()
@@ -890,7 +896,10 @@ class Play(Event[None]):
         ):
             ES.resolve(Round())
 
-        winner = max(gs.turn_order, key=lambda p: (p.points, p == gs.turn_order.original_order[0]))
+        winner = max(
+            gs.turn_order,
+            key=lambda p: (p.points, p == gs.turn_order.original_order[0]),
+        )
         with gs.log(LogLine([winner.name, "wins"])):
             pass
         gs.send_to_players()

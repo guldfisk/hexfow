@@ -2,7 +2,7 @@ import dataclasses
 from enum import IntEnum, auto
 from typing import ClassVar, Callable
 
-from events.eventsystem import TriggerEffect, ES, hook_on, E
+from events.eventsystem import TriggerEffect, ES, hook_on
 from game.core import (
     Unit,
     Hex,
@@ -20,8 +20,9 @@ from game.core import (
     HexStatus,
     GS,
     HexStatusSignature,
+    NoTarget,
+    SelectOptionDecisionPoint,
 )
-from game.decisions import NoTarget, SelectOptionDecisionPoint
 from game.events import (
     Hit,
     Damage,

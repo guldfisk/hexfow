@@ -10,9 +10,8 @@ from typing import Mapping, Any
 from websockets import ServerConnection
 
 from events.eventsystem import ES, EventSystem
+from game.core import Player, Connection
 from game.events import Play
-from game.interface import Connection
-from game.player import Player
 from game_server.game_types import TestGameType
 from game_server.setup import setup_scenario
 

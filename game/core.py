@@ -18,46 +18,147 @@ from typing import (
     Iterable,
     TypeAlias,
     Callable,
+    Sequence,
 )
 from typing import Mapping
+from uuid import uuid4
 
 from bidict import bidict
 
-from events.eventsystem import (
-    Modifiable,
-    ModifiableAttribute,
-    modifiable,
-)
-from game.decisions import (
-    DecisionPoint,
-    Option,
-    TargetProfile,
-    O,
-    JSON,
-    NoTarget,
-    Serializable,
-    SerializationContext,
-    IDMap,
-)
+from events.eventsystem import Modifiable, ModifiableAttribute, modifiable
+
 from game.has_effects import HasEffects
 from game.info.registered import Registered, get_registered_meta, UnknownIdentifierError
-from game.interface import Connection
 from game.map.coordinates import CC, line_of_sight_obstructed, Corner, CornerPosition
 from game.map.geometry import hex_circle, hex_ring, hex_arc
-from game.player import Player
-from game.turn_order import TurnOrder
-from game.values import (
-    Size,
-    DamageType,
-    VisionObstruction,
-    StatusIntention,
-    Resistance,
-)
+from game.values import Size, DamageType, VisionObstruction, StatusIntention, Resistance
+
+
+T = TypeVar("T")
+S = TypeVar("S")
+O = TypeVar("O")
+
+JSON: TypeAlias = Mapping[str, Any]
+
+
+# TODO where this shit?
+class IDMap:
+    def __init__(self):
+        self._ids: bidict[int, str] = bidict()
+        self._objects: dict[int, object] = {}
+        self._accessed: set[int] = set()
+
+    def has_id(self, id_: str) -> bool:
+        return id_ in self._ids.inverse
+
+    def get_id_for(self, obj: Any) -> str:
+        _id = id(obj)
+        if _id not in self._ids:
+            self._ids[_id] = str(uuid4())
+            # TODO this is just for debugging
+            self._objects[_id] = obj
+        self._accessed.add(_id)
+        return self._ids[_id]
+
+    def get_object_for(self, id_: str) -> object:
+        return self._objects[self._ids.inverse[id_]]
+
+    def prune(self) -> None:
+        self._ids = bidict({k: v for k, v in self._ids.items() if k in self._accessed})
+        self._accessed = set()
+
+
+@dataclasses.dataclass
+class SerializationContext:
+    player: Player
+    id_map: IDMap
+    last_hex_states: dict[CC : dict[str, Any]] | None
+    visible_unit_ids: set[str]
+
+
+# TODO this should just be a protocol?
+class Serializable(ABC):
+    @abstractmethod
+    def serialize(self, context: SerializationContext) -> JSON: ...
+
+
+class DecisionPoint(Serializable, Generic[O]):
+    @abstractmethod
+    def get_explanation(self) -> str: ...
+
+    @abstractmethod
+    def serialize_payload(self, context: SerializationContext) -> JSON: ...
+
+    def serialize(self, context: SerializationContext) -> JSON:
+        return {
+            "explanation": self.get_explanation(),
+            "type": self.__class__.__name__,
+            "payload": self.serialize_payload(context),
+        }
+
+    @abstractmethod
+    def parse_response(self, v: Any) -> O: ...
 
 
 A = TypeVar("A", bound=DecisionPoint)
-T = TypeVar("T")
-S = TypeVar("S")
+
+
+class TargetProfile(ABC, Generic[O]):
+    @abstractmethod
+    def serialize_values(self, context: SerializationContext) -> JSON: ...
+
+    def serialize(self, context: SerializationContext) -> JSON:
+        return {"type": type(self).__name__, "values": self.serialize_values(context)}
+
+    @abstractmethod
+    def parse_response(self, v: Any) -> O: ...
+
+
+class NoTarget(TargetProfile[None]):
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        return {}
+
+    def parse_response(self, v: Any) -> None:
+        return None
+
+
+@dataclasses.dataclass(kw_only=True)
+class Option(ABC, Generic[O]):
+    target_profile: TargetProfile[O]
+
+    @abstractmethod
+    def serialize_values(self, context: SerializationContext) -> JSON: ...
+
+    def serialize(self, context: SerializationContext) -> JSON:
+        return {
+            "type": type(self).__name__,
+            "values": self.serialize_values(context),
+            "target_profile": self.target_profile.serialize(context),
+        }
+
+
+@dataclasses.dataclass
+class OptionDecision(Generic[O]):
+    option: Option[O]
+    target: O
+
+
+@dataclasses.dataclass
+class SelectOptionDecisionPoint(DecisionPoint[OptionDecision]):
+    options: list[Option]
+    explanation: str
+
+    def get_explanation(self) -> str:
+        return self.explanation
+
+    def serialize_payload(self, context: SerializationContext) -> JSON:
+        return {"options": [option.serialize(context) for option in self.options]}
+
+    def parse_response(self, v: Any) -> OptionDecision:
+        option = self.options[v["index"]]
+        return OptionDecision(
+            option=option, target=option.target_profile.parse_response(v["target"])
+        )
 
 
 # TODO wtf if this
@@ -166,7 +267,6 @@ class Facet(HasStatuses, Modifiable, Registered, ABC, metaclass=get_registered_m
 
 
 class EffortCost(ABC):
-
     @abstractmethod
     def can_be_paid(self, context: ActiveUnitContext) -> bool:
         pass
@@ -197,7 +297,6 @@ Co = TypeVar("Co", bound=EffortCost)
 
 
 class EffortCostSet:
-
     def __init__(self, costs: Iterable[EffortCost] = ()):
         grouped: dict[type[EffortCost], list[EffortCost]] = defaultdict(list)
         for cost in costs:
@@ -256,7 +355,6 @@ class MovementCost(EffortCost):
 
 
 class ExclusiveCost(EffortCost):
-
     def can_be_paid(self, context: ActiveUnitContext) -> bool:
         return not context.has_acted
 
@@ -945,7 +1043,6 @@ class SingleAllyActivatedAbility(SingleTargetActivatedAbility, ABC):
 
 
 class SingleEnemyActivatedAbility(SingleTargetActivatedAbility, ABC):
-
     def can_target_unit(self, unit: Unit) -> bool:
         return unit.controller != self.owner.controller
 
@@ -1594,6 +1691,62 @@ class LogLine:
         ]
 
 
+class Player:
+    def __init__(self, name: str):
+        self.name = name
+        self.points: int = 0
+        self.recently_witnessed_kills: set[Unit] = set()
+
+    def witness_kill(self, unit: Unit) -> None:
+        self.recently_witnessed_kills.add(unit)
+
+    def clear_witnessed_kills(self) -> None:
+        self.recently_witnessed_kills.clear()
+
+    def serialize(self) -> dict[str, Any]:
+        return {"name": self.name, "points": self.points}
+
+
+class TurnOrder:
+    def __init__(self, players: Sequence[Player]):
+        self.original_order = players
+        self._players = players
+        self._active_player_index = 0
+
+    @property
+    def active_player(self) -> Player:
+        return self._players[self._active_player_index]
+
+    @property
+    def all_players(self) -> list[Player]:
+        return [
+            self._players[(i + self._active_player_index) % len(self._players)]
+            for i in range(len(self._players))
+        ]
+
+    def advance(self) -> Player:
+        self._active_player_index = (self._active_player_index + 1) % len(self._players)
+        return self.active_player
+
+    def set_player_order(self, players: Sequence[Player]) -> None:
+        self._players = players
+        self._active_player_index = 0
+
+    def __iter__(self) -> Iterator[Player]:
+        yield from self.all_players
+
+
+class Connection(ABC):
+    def __init__(self, player: Player):
+        self.player = player
+
+    @abstractmethod
+    def send(self, values: Mapping[str, Any]) -> None: ...
+
+    @abstractmethod
+    def get_response(self, values: Mapping[str, Any]) -> Mapping[str, Any]: ...
+
+
 class GameState:
     instance: GameState | None = None
 
@@ -1605,7 +1758,7 @@ class GameState:
     ):
         # TODO handle names
         self.turn_order = TurnOrder(
-            [Player(f"player {i+1}") for i in range(player_count)]
+            [Player(f"player {i + 1}") for i in range(player_count)]
         )
         self.connections = {
             player: connection_factory(player) for player in self.turn_order
@@ -1678,7 +1831,9 @@ class GameState:
         serialized_game_state = {
             "player": context.player.name,
             "target_points": self.target_points,
-            "players": [player.serialize() for player in self.turn_order.original_order],
+            "players": [
+                player.serialize() for player in self.turn_order.original_order
+            ],
             "round": self.round_counter,
             "map": self.map.serialize(context),
             "decision": decision_point.serialize(context) if decision_point else None,
@@ -1734,7 +1889,6 @@ class GameState:
 
 
 class ScopedGameState:
-
     # TODO protocol/interface?
     def __init__(self):
         self._store = threading.local()

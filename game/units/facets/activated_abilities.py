@@ -33,8 +33,9 @@ from game.core import (
     ActiveUnitContext,
     is_vision_obstructed_for_unit_at,
     TriHexTargetActivatedAbility,
+    TargetProfile,
+    O,
 )
-from game.decisions import TargetProfile, O
 from game.effects.hooks import AdjacencyHook
 from game.events import (
     Kill,

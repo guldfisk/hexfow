@@ -23,7 +23,6 @@ game
     logging damage source? (relevant for mines and such)
     status linking
     don't merge movement option in menu (shrine keeper)
-    fix fin direction
     exclude killed units from ghosts
     fade ghosts over time
     corpses
@@ -36,6 +35,7 @@ game
         linked group with points to player with max presence
 
 code
+    refactor game.core somehow
     common status merge mixins
     check negative sight
     response validation

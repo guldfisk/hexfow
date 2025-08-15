@@ -14,8 +14,7 @@ from sqlalchemy import select, Exists
 from events.eventsystem import ES
 from events.exceptions import GameException
 from game.events import Play
-from game.interface import Connection
-from game.player import Player
+from game.core import Player, Connection
 from game_server.game_types import GameType
 from game_server.setup import setup_scenario
 from model.engine import SS

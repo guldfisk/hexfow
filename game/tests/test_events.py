@@ -34,13 +34,13 @@ from game.core import (
     Hex,
     HexSpec,
     GS,
+    Connection,
 )
 from game.events import SpawnUnit, Hit, Turn, Round
-from game.interface import Connection
 from game.map.coordinates import CC
 from game.map.geometry import hex_circle
 from game.map.terrain import Water, Plains
-from game.player import Player
+from game.core import Player
 from game.tests.conftest import TestScope
 from game.tests.test_terrain import InstantDamageMagma
 from game.units.blueprints import (
@@ -480,7 +480,7 @@ def test_fight(
         MeleeAttackSelector(OneOfUnitsSelector(evil_chicken)),
         ActivateSelector(OneOfUnitsSelector(chicken)),
         MeleeAttackSelector(OneOfUnitsSelector(evil_chicken)),
-        MoveOptionSelector(OneOfHexesSelector(CC(1, -1)))
+        MoveOptionSelector(OneOfHexesSelector(CC(1, -1))),
     )
     player2_connection.queue_responses(
         ActivateSelector(OneOfUnitsSelector(evil_chicken)),

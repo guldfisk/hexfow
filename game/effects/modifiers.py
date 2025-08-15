@@ -24,8 +24,8 @@ from game.core import (
     GS,
     AttackFacet,
     Facet,
+    Option,
 )
-from game.decisions import Option
 from game.map.terrain import Water
 from game.values import Resistance, VisionObstruction, Size, DamageType
 
