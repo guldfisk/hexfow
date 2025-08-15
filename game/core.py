@@ -42,7 +42,6 @@ JSON: TypeAlias = Mapping[str, Any]
 @dataclasses.dataclass
 class SerializationContext:
     player: Player
-    id_map: IDMap
     last_hex_states: dict[CC : dict[str, Any]] | None
     visible_unit_ids: set[str]
 
@@ -138,7 +137,10 @@ class VisionBound(Serializable):
     def serialize_values(self, context: SerializationContext) -> JSON: ...
 
     def serialize(self, context: SerializationContext) -> JSON:
-        return {"id": context.id_map.get_id_for(self), **self.serialize_values(context)}
+        return {
+            "id": context.player.id_map.get_id_for(self),
+            **self.serialize_values(context),
+        }
 
 
 class MoveOption(Option[G_DecisionResult]):
@@ -161,7 +163,7 @@ class ActivateUnitOption(Option[G_DecisionResult]):
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {
             "actions_preview": {
-                context.id_map.get_id_for(unit): [
+                context.player.id_map.get_id_for(unit): [
                     option.serialize(context) for option in options
                 ]
                 for unit, options in self.actions_previews.items()
@@ -931,7 +933,9 @@ class OneOfUnits(TargetProfile[Unit]):
 
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {
-            "units": [{"id": context.id_map.get_id_for(unit)} for unit in self.units]
+            "units": [
+                {"id": context.player.id_map.get_id_for(unit)} for unit in self.units
+            ]
         }
 
     def parse_response(self, v: Any) -> Unit:
@@ -947,7 +951,9 @@ class NOfUnits(TargetProfile[list[Unit]]):
 
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {
-            "units": [{"id": context.id_map.get_id_for(unit)} for unit in self.units],
+            "units": [
+                {"id": context.player.id_map.get_id_for(unit)} for unit in self.units
+            ],
             "select_count": self.select_count,
             "min_count": self.min_count,
             "labels": self.labels,
@@ -1443,7 +1449,7 @@ class TreeNode:
         cls, option: Unit | Hex, context: SerializationContext
     ) -> JSON:
         if isinstance(option, Unit):
-            return {"type": "unit", "id": context.id_map.get_id_for(option)}
+            return {"type": "unit", "id": context.player.id_map.get_id_for(option)}
         return {"type": "hex", "cc": option.position.serialize()}
 
     def serialize(self, context: SerializationContext) -> JSON:
@@ -1634,12 +1640,12 @@ class LogLine:
 
     @classmethod
     def _serialize_element(
-        cls, element: str | Unit | Hex, player: Player, id_map: IDMap
+        cls, element: str | Unit | Hex, player: Player
     ) -> dict[str, Any]:
         if isinstance(element, Unit):
             return {
                 "type": "unit",
-                "identifier": id_map.get_id_for(element),
+                "identifier": player.id_map.get_id_for(element),
                 "blueprint": element.blueprint.identifier,
                 "controller": element.controller.name,
             }
@@ -1653,24 +1659,24 @@ class LogLine:
             return {
                 "type": "list",
                 "items": [
-                    cls._serialize_element(e, player, id_map)
+                    cls._serialize_element(e, player)
                     for e in element
                     if e.is_visible_to(player)
                 ],
             }
         return {"type": "string", "message": element}
 
-    def serialize(self, player: Player, id_map: IDMap) -> list[dict[str, Any]]:
-        return [
-            self._serialize_element(element, player, id_map)
-            for element in self.elements
-        ]
+    def serialize(self, player: Player) -> list[dict[str, Any]]:
+        return [self._serialize_element(element, player) for element in self.elements]
 
 
 class Player:
     def __init__(self, name: str):
         self.name = name
+
         self.points: int = 0
+        self.id_map = IDMap()
+
         self.recently_witnessed_kills: set[Unit] = set()
 
     def witness_kill(self, unit: Unit) -> None:
@@ -1745,10 +1751,6 @@ class GameState:
         self.target_points = 23
         self.round_counter = 0
 
-        # TODO move to player
-        self.id_maps: dict[Player, IDMap] = {
-            player: IDMap() for player in self.turn_order
-        }
         self.previous_hex_states: dict[Player, dict[CC, dict[str, Any]] | None] = {
             player: None for player in self.turn_order
         }
@@ -1772,10 +1774,7 @@ class GameState:
                 if line.is_visible_to(player):
                     incremented_players.append(player)
                     self._pending_player_logs[player].append(
-                        (
-                            self._player_log_levels[player],
-                            line.serialize(player, self.id_maps[player]),
-                        )
+                        (self._player_log_levels[player], line.serialize(player))
                     )
                     self._player_log_levels[player] += 1
                     break
@@ -1827,16 +1826,15 @@ class GameState:
             for hex_values in serialized_game_state["map"]["hexes"]
         }
         # TODO lmao
-        context.id_map.prune()
+        context.player.id_map.prune()
         return serialized_game_state
 
     def _get_context_for(self, player: Player) -> SerializationContext:
         return SerializationContext(
             player,
-            self.id_maps[player],
             self.previous_hex_states[player],
             visible_unit_ids={
-                self.id_maps[player].get_id_for(unit)
+                player.id_map.get_id_for(unit)
                 for unit in self.map.units
                 if unit.is_visible_to(player)
             },
@@ -1913,10 +1911,6 @@ class ScopedGameState:
     @round_counter.setter
     def round_counter(self, v: int) -> None:
         self._gs.round_counter = v
-
-    @property
-    def id_maps(self) -> dict[Player, IDMap]:
-        return self._gs.id_maps
 
     @property
     def previous_hex_states(self) -> dict[Player, dict[CC, dict[str, Any]]]:

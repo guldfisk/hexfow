@@ -226,8 +226,7 @@ class OneOfUnitsSelector(TargetSelector):
 
         if self.available_choices is not None:
             unit_choices = {
-                GS.id_maps[player].get_id_for(unit): unit
-                for unit in self.available_choices
+                player.id_map.get_id_for(unit): unit for unit in self.available_choices
             }
             try:
                 assert options.keys() == unit_choices.keys()
@@ -235,7 +234,7 @@ class OneOfUnitsSelector(TargetSelector):
                 print("Unexpected units available for selection:")
                 print(
                     [
-                        GS.id_maps[player].get_object_for(_id)
+                        player.id_map.get_object_for(_id)
                         for _id in options.keys() - unit_choices.keys()
                     ]
                     # [unit_choices[_id] for _id in options.keys() - unit_choices.keys()]
@@ -243,13 +242,13 @@ class OneOfUnitsSelector(TargetSelector):
                 print("Expected units not available for selection:")
                 print(
                     [
-                        GS.id_maps[player].get_object_for(_id)
+                        player.id_map.get_object_for(_id)
                         for _id in unit_choices.keys() - options.keys()
                     ]
                 )
                 raise
 
-        return {"index": options[GS.id_maps[player].get_id_for(self.unit)]}
+        return {"index": options[player.id_map.get_id_for(self.unit)]}
 
         # raise ValueError("Blah")
 
