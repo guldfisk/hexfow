@@ -56,7 +56,7 @@ class Kill(Event[None]):
         with GS.log(LogLine([self.unit, "dies"])):
             for player in GS.turn_order:
                 if self.unit.is_visible_to(player):
-                    pass
+                    player.witness_kill(self.unit)
             ES.resolve(self.branch(KillUpkeep))
             GS.map.remove_unit(self.unit)
             self.unit.deregister()

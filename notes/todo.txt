@@ -23,7 +23,7 @@ game
     logging damage source? (relevant for mines and such)
     status linking
     don't merge movement option in menu (shrine keeper)
-    exclude killed units from ghosts
+    killed unit logs should still point to last known location somehow
     fade ghosts over time
     corpses
     countable size indicator

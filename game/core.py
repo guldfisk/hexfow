@@ -1748,6 +1748,7 @@ class GameState:
         self.map = HexMap(landscape)
         self.active_unit_context: ActiveUnitContext | None = None
         self.activation_queued_units: set[Unit] = set()
+        # TODO in scenario
         self.target_points = 23
         self.round_counter = 0
 
@@ -1758,7 +1759,6 @@ class GameState:
         self.vision_obstruction_map: dict[Player, dict[CC, VisionObstruction]] = {}
         self.vision_map: dict[Player, dict[CC, bool]] = {}
 
-        # TODO move to player
         self._player_log_levels: dict[Player, int] = {
             player: 0 for player in self.turn_order
         }
@@ -1827,6 +1827,7 @@ class GameState:
         }
         # TODO lmao
         context.player.id_map.prune()
+        context.player.clear_witnessed_kills()
         return serialized_game_state
 
     def _get_context_for(self, player: Player) -> SerializationContext:
@@ -1837,6 +1838,10 @@ class GameState:
                 player.id_map.get_id_for(unit)
                 for unit in self.map.units
                 if unit.is_visible_to(player)
+            }
+            | {
+                player.id_map.get_id_for(unit)
+                for unit in player.recently_witnessed_kills
             },
         )
 
