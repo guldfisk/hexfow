@@ -41,6 +41,8 @@ code
     response validation
     message ids
     don't send no change game state updates
+    update test framework
+    unit tests on core logic
 
 replays
 
