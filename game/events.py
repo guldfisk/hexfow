@@ -746,7 +746,7 @@ class AwardPoints(Event[None]):
     def resolve(self) -> None:
         player_values: dict[Player, int] = defaultdict(int)
         for unit, _hex in GS.map.unit_positions.items():
-            if _hex.is_objective:
+            if _hex.is_objective and unit.can_capture_objectives_on(_hex):
                 player_values[unit.controller] += 1
 
         for player, amount in player_values.items():

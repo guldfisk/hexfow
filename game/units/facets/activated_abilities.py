@@ -1034,3 +1034,62 @@ class SmokeGrenade(TriHexTargetActivatedAbility):
                     _hex, HexStatusSignature(HexStatus.get("smoke"), self, duration=2)
                 )
             )
+
+
+class SowDiscord(TriHexTargetActivatedAbility):
+    """
+    Target tri hex within 3 range NLoS.
+    Applies <paranoia> for 3 rounds.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 3
+
+    def perform(self, target: list[Hex]) -> None:
+        for unit in GS.map.units_on(target):
+            ES.resolve(
+                ApplyStatus(
+                    unit, StatusSignature(UnitStatus.get("paranoia"), self, duration=3)
+                )
+            )
+
+
+class Scorn(SingleEnemyActivatedAbility):
+    """
+    Target enemy unit within 2 range LoS.
+    Applies <dishonorable_coward> for 4 rounds.
+    """
+
+    cost = EnergyCost(2)
+    range = 2
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                target,
+                StatusSignature(
+                    UnitStatus.get("dishonorable_coward"), self, duration=4
+                ),
+            )
+        )
+
+
+class SpurIntoRage(SingleTargetActivatedAbility):
+    """
+    Target other unit within 2 range LoS.
+    Applies <senseless_rage> for 2 rounds.
+    """
+
+    cost = EnergyCost(3) | MovementCost(2)
+    range = 2
+
+    def can_target_unit(self, unit: Unit) -> bool:
+        return unit != self.owner
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                target,
+                StatusSignature(UnitStatus.get("senseless_rage"), self, duration=2),
+            )
+        )

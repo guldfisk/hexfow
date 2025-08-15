@@ -28,6 +28,7 @@ from game.units.facets.activated_abilities import (
     Rouse,
     SanctifyGrounds,
     Scorch,
+    Scorn,
     Scry,
     SelfDestruct,
     Shove,
@@ -36,6 +37,8 @@ from game.units.facets.activated_abilities import (
     SludgeBelch,
     SmokeCanister,
     SmokeGrenade,
+    SowDiscord,
+    SpurIntoRage,
     Stare,
     StimulatingInjection,
     SummonBees,
@@ -420,6 +423,16 @@ SCARAB = UnitBlueprint(
     size=Size.SMALL,
     facets=[Pinch],
     price=None,
+)
+
+BLOOD_FEUD_WARLOCK = UnitBlueprint(
+    "Blood Feud Warlock",
+    health=6,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[SowDiscord, Scorn, SpurIntoRage],
+    price=9,
 )
 
 SNAPPING_TURTLE = UnitBlueprint(

@@ -9,12 +9,15 @@ from game.core import (
     UnitStatus,
 )
 from game.effects.modifiers import (
+    MustAttackModifier,
+    ParanoiaModifier,
     RootedModifier,
     SilencedModifier,
     TerrorModifier,
     UnitArmorFlatModifier,
     UnitAttackPowerFlatModifier,
     UnitMaxHealthFlatModifier,
+    UnitNoCaptureModifier,
     UnitProportionalSpeedModifier,
     UnitSightFlatModifier,
     UnitSizeFlatModifier,
@@ -24,6 +27,7 @@ from game.effects.replacements import LuckyCharmReplacement, StunnedReplacement
 from game.effects.triggers import (
     BellStruckTrigger,
     BurnTrigger,
+    ExpireOnDealDamageStatusTrigger,
     HitchedTrigger,
     OneTimeModifyMovementPointsStatusTrigger,
     PanickedTrigger,
@@ -338,3 +342,36 @@ class Slimed(RefreshableMixin, UnitStatus):
 
     def create_effects(self) -> None:
         self.register_effects(UnitSpeedModifier(self.parent, -1))
+
+
+class Paranoia(RefreshableMixin, UnitStatus):
+    """
+    When this unit isn't active, it does not provide vision for its controller. When it is, no other units does.
+    """
+
+    default_intention = StatusIntention.DEBUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(ParanoiaModifier(self.parent))
+
+
+class DishonorableCoward(RefreshableMixin, UnitStatus):
+    """
+    This unit can't capture points. Remove this status when this unit damages an enemy unit with an attack or ability.
+    """
+
+    default_intention = StatusIntention.DEBUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            UnitNoCaptureModifier(self.parent), ExpireOnDealDamageStatusTrigger(self)
+        )
+
+
+class SenselessRage(RefreshableMixin, UnitStatus):
+    """+2 attack power. If this unit can attack, it must."""
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            MustAttackModifier(self.parent), UnitAttackPowerFlatModifier(self.parent, 2)
+        )

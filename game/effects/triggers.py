@@ -571,6 +571,22 @@ class TurnExpiringStatusTrigger(TriggerEffect[Turn]):
 
 
 @dataclasses.dataclass(eq=False)
+class ExpireOnDealDamageStatusTrigger(TriggerEffect[Damage]):
+    priority: ClassVar[int] = 0
+
+    status: Status
+
+    def should_trigger(self, event: Damage) -> bool:
+        return (
+            event.signature.get_unit_source() == self.status.parent
+            and event.unit.controller != self.status.parent.controller
+        )
+
+    def resolve(self, event: Damage) -> None:
+        self.status.remove()
+
+
+@dataclasses.dataclass(eq=False)
 class RoundDamageTrigger(TriggerEffect[RoundCleanup]):
     priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
 

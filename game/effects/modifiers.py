@@ -151,7 +151,6 @@ class ForestStealthModifier(StateModifierEffect[Unit, Player, bool]):
         return True
 
 
-# TODO should maybe not allow skipping?
 @dataclasses.dataclass(eq=False)
 class FightFlightFreezeModifier(
     StateModifierEffect[Unit, ActiveUnitContext, list[Option]]
@@ -201,6 +200,31 @@ class FightFlightFreezeModifier(
 
 
 @dataclasses.dataclass(eq=False)
+class MustAttackModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.get_legal_options
+
+    unit: Unit
+
+    def should_modify(
+        self, obj: Unit, request: ActiveUnitContext, value: list[Option]
+    ) -> bool:
+        return obj == self.unit
+
+    def modify(
+        self, obj: Unit, request: ActiveUnitContext, value: list[Option]
+    ) -> list[Option]:
+        if attack_options := [
+            option
+            for option in value
+            if isinstance(option, EffortOption)
+            and isinstance(option.facet, AttackFacet)
+        ]:
+            return attack_options
+        return value
+
+
+@dataclasses.dataclass(eq=False)
 class TelepathicSpyModifier(StateModifierEffect[Unit, None, set[Player]]):
     priority: ClassVar[int] = 1
     target: ClassVar[object] = Unit.provides_vision_for
@@ -215,6 +239,36 @@ class TelepathicSpyModifier(StateModifierEffect[Unit, None, set[Player]]):
 
     def modify(self, obj: Unit, request: None, value: set[Player]) -> set[Player]:
         return value | {self.unit.controller}
+
+
+@dataclasses.dataclass(eq=False)
+class ParanoiaModifier(StateModifierEffect[Unit, None, set[Player]]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.provides_vision_for
+
+    unit: Unit
+
+    def should_modify(self, obj: Unit, request: None, value: set[Player]) -> bool:
+        if GS.active_unit_context and GS.active_unit_context.unit == self.unit:
+            return obj != self.unit
+        return obj == self.unit
+
+    def modify(self, obj: Unit, request: None, value: set[Player]) -> set[Player]:
+        return value - {self.unit.controller}
+
+
+@dataclasses.dataclass(eq=False)
+class UnitNoCaptureModifier(StateModifierEffect[Unit, Hex, bool]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.can_capture_objectives_on
+
+    unit: Unit
+
+    def should_modify(self, obj: Unit, request: Hex, value: bool) -> bool:
+        return obj == self.unit
+
+    def modify(self, obj: Unit, request: Hex, value: bool) -> bool:
+        return False
 
 
 @dataclasses.dataclass(eq=False)

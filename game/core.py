@@ -762,6 +762,10 @@ class Unit(HasStatuses, Modifiable, VisionBound):
         return Resistance.NONE
 
     @modifiable
+    def can_capture_objectives_on(self, space: Hex) -> bool:
+        return True
+
+    @modifiable
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
         return GS.map.hex_off(self).get_terrain_protection_for(request)
 
@@ -1334,6 +1338,9 @@ class DamageSignature:
 
     def with_damage(self, amount: int) -> DamageSignature:
         return self.branch(amount=amount)
+
+    def get_unit_source(self) -> Unit | None:
+        return self.source.owner if isinstance(self.source, Facet) else None
 
 
 class HexStatus(Status[Hex], ABC):
