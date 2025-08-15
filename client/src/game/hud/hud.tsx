@@ -49,7 +49,6 @@ const LogLineComponentView = ({
   }
   if (element.type == "unit") {
     return (
-      //   TODO should highlight hex of unit / detail actual unit if the id is still known
       <div
         className={`log-component highlighted-log-component ${player == element.controller ? "allied" : "enemy"}-highlighted-log-component`}
         onMouseEnter={() => {
@@ -61,12 +60,16 @@ const LogLineComponentView = ({
               }),
             );
             store.dispatch(
-              highlightCCs([ccToKey(unitMap[element.identifier][0].cc)]),
+              highlightCCs([
+                ccToKey(element.cc),
+                ccToKey(unitMap[element.identifier][0].cc),
+              ]),
             );
           } else {
             store.dispatch(
               hoverDetail({ type: "blueprint", blueprint: element.blueprint }),
             );
+            store.dispatch(highlightCCs([ccToKey(element.cc)]));
           }
         }}
         onMouseLeave={() => store.dispatch(removeCCHighlight())}

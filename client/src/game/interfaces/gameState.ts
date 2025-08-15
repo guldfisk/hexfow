@@ -194,6 +194,7 @@ export interface UnitLogLineComponent extends LogLineComponentBase {
   identifier: string;
   blueprint: string;
   controller: string;
+  cc: CC;
 }
 
 export interface HexLogLineComponent extends LogLineComponentBase {

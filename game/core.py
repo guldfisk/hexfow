@@ -1648,6 +1648,7 @@ class LogLine:
                 "identifier": player.id_map.get_id_for(element),
                 "blueprint": element.blueprint.identifier,
                 "controller": element.controller.name,
+                "cc": GS.map.position_off(element).serialize(),
             }
         if isinstance(element, Hex):
             return {"type": "hex", "cc": element.position.serialize()}
