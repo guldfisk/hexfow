@@ -24,12 +24,10 @@ game
     status linking
     don't merge movement option in menu (shrine keeper)
     killed unit logs should still point to last known location somehow
-    fade ghosts over time
     corpses
     countable size indicator
     status merge explanations
     small units stealth on forest
-    move "last visible" hex information to hex detail view
     alternate capture points
         keeps captured state for player when unit walks off
         linked group with points to player with max presence

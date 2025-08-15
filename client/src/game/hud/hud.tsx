@@ -432,9 +432,11 @@ const HexDetailView = ({
   hex,
   //   TODO handle this in a non trash way
   gameObjectDetails,
+  gameState,
 }: {
   hex: Hex;
   gameObjectDetails: GameObjectDetails;
+  gameState: GameState;
 }) => {
   const terrainDetails = gameObjectDetails.terrain[hex.terrain];
   const relatedStatuses: string[] = [];
@@ -457,6 +459,15 @@ const HexDetailView = ({
         src={getImageUrl("terrain", hex.terrain)}
         className={"terrain-image"}
       />
+      <div className={"facet-details"}>
+        {hex.visible
+          ? "visible"
+          : "not visible" +
+            (hex.lastVisibleRound !== null &&
+            gameState.round - hex.lastVisibleRound > 0
+              ? ` - last visible ${gameState.round - hex.lastVisibleRound} rounds ago`
+              : "")}
+      </div>
       {terrainDetails.is_water ||
       terrainDetails.blocks_vision ||
       terrainDetails.is_high_ground ? (
@@ -609,7 +620,11 @@ export const HUD = ({ connection }: { connection: WebSocket }) => {
   const applicationState = useAppSelector((state) => state);
 
   let detailView = null;
-  if (applicationState.gameObjectDetails && applicationState.detailed) {
+  if (
+    applicationState.gameObjectDetails &&
+    applicationState.gameState &&
+    applicationState.detailed
+  ) {
     if (
       applicationState.detailed.type == "unit" ||
       applicationState.detailed.type == "blueprint"
@@ -636,6 +651,7 @@ export const HUD = ({ connection }: { connection: WebSocket }) => {
         <HexDetailView
           hex={applicationState.detailed.hex}
           gameObjectDetails={applicationState.gameObjectDetails}
+          gameState={applicationState.gameState}
         />
       );
     } else if (applicationState.detailed.type == "statuses") {

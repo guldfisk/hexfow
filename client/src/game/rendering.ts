@@ -603,7 +603,14 @@ export const renderMap = (
         const unitSprite = newSprite(
           app.renderer.generateTexture(unitContainer),
         );
-        unitSprite.alpha = 0.5;
+        unitSprite.alpha =
+          0.6 -
+          Math.min(
+            hexData.lastVisibleRound === null
+              ? 0
+              : (gameState.round - hexData.lastVisibleRound) * 0.15,
+            0.4,
+          );
         unitSprite.anchor = 0.5;
         hexContainer.addChild(unitSprite);
       } else {
@@ -638,31 +645,6 @@ export const renderMap = (
       );
 
       hexContainer.addChild(statusContainer);
-    }
-
-    if (!hexData.visible) {
-      const eyeContainer = new Container();
-      const eyeIcon = newSprite(textureMap["closed_eye_icon"]);
-      eyeIcon.anchor = 0.5;
-
-      if (
-        hexData.lastVisibleRound !== null &&
-        gameState.round - hexData.lastVisibleRound > 0
-      ) {
-        const eyeText = newText({
-          text: `${gameState.round - hexData.lastVisibleRound}`,
-          style: ghostStyle,
-        });
-        eyeText.anchor = 0.5;
-        eyeText.x = 40;
-        eyeContainer.addChild(eyeText);
-        eyeContainer.x = -10;
-      }
-
-      eyeContainer.addChild(eyeIcon);
-      eyeContainer.y = hexHeight / 2 - 40;
-      eyeContainer.x = -10;
-      hexContainer.addChild(eyeContainer);
     }
 
     if (
