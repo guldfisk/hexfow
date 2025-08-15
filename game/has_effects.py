@@ -11,13 +11,13 @@ class HasEffectChildren:
     children: list[HasEffects] = dataclasses.field(default_factory=list, repr=False)
 
 
-P = TypeVar("P", bound=HasEffectChildren)
+G_HasEffectChildren = TypeVar("G_HasEffectChildren", bound=HasEffectChildren)
 
 
 @dataclasses.dataclass(kw_only=True)
-class HasEffects(HasEffectChildren, Generic[P]):
+class HasEffects(HasEffectChildren, Generic[G_HasEffectChildren]):
     effects: set[Effect] = dataclasses.field(default_factory=set, init=False)
-    parent: P | None = dataclasses.field(default=None, repr=False)
+    parent: G_HasEffectChildren | None = dataclasses.field(default=None, repr=False)
 
     # TODO :(
     def __post_init__(self):

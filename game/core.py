@@ -33,9 +33,8 @@ from game.map.geometry import hex_arc, hex_circle, hex_ring
 from game.values import DamageType, Resistance, Size, StatusIntention, VisionObstruction
 
 
-T = TypeVar("T")
-S = TypeVar("S")
-O = TypeVar("O")  # noqa: E741
+G_Status = TypeVar("G_Status")
+G_DecisionResult = TypeVar("G_DecisionResult")
 
 JSON: TypeAlias = Mapping[str, Any]
 
@@ -81,7 +80,7 @@ class Serializable(ABC):
     def serialize(self, context: SerializationContext) -> JSON: ...
 
 
-class DecisionPoint(Serializable, Generic[O]):
+class DecisionPoint(Serializable, Generic[G_DecisionResult]):
     @abstractmethod
     def get_explanation(self) -> str: ...
 
@@ -96,13 +95,13 @@ class DecisionPoint(Serializable, Generic[O]):
         }
 
     @abstractmethod
-    def parse_response(self, v: Any) -> O: ...
+    def parse_response(self, v: Any) -> G_DecisionResult: ...
 
 
-A = TypeVar("A", bound=DecisionPoint)
+G_DecisionPoint = TypeVar("G_DecisionPoint", bound=DecisionPoint)
 
 
-class TargetProfile(ABC, Generic[O]):
+class TargetProfile(ABC, Generic[G_DecisionResult]):
     @abstractmethod
     def serialize_values(self, context: SerializationContext) -> JSON: ...
 
@@ -110,7 +109,7 @@ class TargetProfile(ABC, Generic[O]):
         return {"type": type(self).__name__, "values": self.serialize_values(context)}
 
     @abstractmethod
-    def parse_response(self, v: Any) -> O: ...
+    def parse_response(self, v: Any) -> G_DecisionResult: ...
 
 
 class NoTarget(TargetProfile[None]):
@@ -122,8 +121,8 @@ class NoTarget(TargetProfile[None]):
 
 
 @dataclasses.dataclass(kw_only=True)
-class Option(ABC, Generic[O]):
-    target_profile: TargetProfile[O]
+class Option(ABC, Generic[G_DecisionResult]):
+    target_profile: TargetProfile[G_DecisionResult]
 
     @abstractmethod
     def serialize_values(self, context: SerializationContext) -> JSON: ...
@@ -137,9 +136,9 @@ class Option(ABC, Generic[O]):
 
 
 @dataclasses.dataclass
-class OptionDecision(Generic[O]):
-    option: Option[O]
-    target: O
+class OptionDecision(Generic[G_DecisionResult]):
+    option: Option[G_DecisionResult]
+    target: G_DecisionResult
 
 
 @dataclasses.dataclass
@@ -169,13 +168,13 @@ class VisionBound(Serializable):
         return {"id": context.id_map.get_id_for(self), **self.serialize_values(context)}
 
 
-class MoveOption(Option[O]):
+class MoveOption(Option[G_DecisionResult]):
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {}
 
 
 @dataclasses.dataclass
-class EffortOption(Option[O]):
+class EffortOption(Option[G_DecisionResult]):
     facet: EffortFacet
 
     def serialize_values(self, context: SerializationContext) -> JSON:
@@ -183,7 +182,7 @@ class EffortOption(Option[O]):
 
 
 @dataclasses.dataclass
-class ActivateUnitOption(Option[O]):
+class ActivateUnitOption(Option[G_DecisionResult]):
     actions_previews: dict[Unit, list[Option]]
 
     def serialize_values(self, context: SerializationContext) -> JSON:
@@ -203,10 +202,10 @@ class SkipOption(Option[None]):
 
 
 @dataclasses.dataclass
-class HasStatuses(HasEffects, Generic[S]):
+class HasStatuses(HasEffects, Generic[G_Status]):
     statuses: list[Status] = dataclasses.field(default_factory=list, init=False)
 
-    def add_status(self, status: S) -> S:
+    def add_status(self, status: G_Status) -> G_Status:
         if not status.on_apply(self):
             # TODO should return None instead?
             return status
@@ -218,7 +217,7 @@ class HasStatuses(HasEffects, Generic[S]):
         status.create_effects()
         return status
 
-    def get_statuses(self, status_type: type[S]) -> list[S]:
+    def get_statuses(self, status_type: type[G_Status]) -> list[G_Status]:
         return [status for status in self.statuses if isinstance(status, status_type)]
 
     def has_status(self, status_type: type[Status] | str) -> bool:
@@ -237,7 +236,7 @@ class HasStatuses(HasEffects, Generic[S]):
         status.deregister()
 
 
-H = TypeVar("H", bound=HasStatuses)
+G_HasStatuses = TypeVar("G_HasStatuses", bound=HasStatuses)
 
 
 # TODO a facet should not have statuses
@@ -292,7 +291,7 @@ class EffortCost(ABC):
         return {"type": self.__class__.__name__, **self.serialize_values()}
 
 
-Co = TypeVar("Co", bound=EffortCost)
+G_EffortCost = TypeVar("G_EffortCost", bound=EffortCost)
 
 
 class EffortCostSet:
@@ -304,7 +303,7 @@ class EffortCostSet:
             cost_type: cost_type.merge(_costs) for cost_type, _costs in grouped.items()
         }
 
-    def get(self, cost_type: type[Co]) -> Co | None:
+    def get(self, cost_type: type[G_EffortCost]) -> G_EffortCost | None:
         return self.costs.get(cost_type)
 
     @abstractmethod
@@ -434,8 +433,7 @@ class EffortFacet(Facet, Modifiable, ABC):
 class AttackFacet(EffortFacet, ABC): ...
 
 
-# TODO cleanup typevar definitions and names
-C = TypeVar("C", bound=AttackFacet)
+G_AttackFacet = TypeVar("G_AttackFacet", bound=AttackFacet)
 
 
 # TODO maybe this is all attacks, and "aoe attacks" are all abilities?
@@ -542,14 +540,14 @@ class RangedAttackFacet(SingleTargetAttackFacet, ABC):
         return {**super().serialize_type(), "range": cls.range}
 
 
-class ActivatedAbilityFacet(EffortFacet, Generic[O], ABC):
+class ActivatedAbilityFacet(EffortFacet, Generic[G_DecisionResult], ABC):
     category = "activated_ability"
 
     @abstractmethod
-    def get_target_profile(self) -> TargetProfile[O] | None: ...
+    def get_target_profile(self) -> TargetProfile[G_DecisionResult] | None: ...
 
     @abstractmethod
-    def perform(self, target: O) -> None: ...
+    def perform(self, target: G_DecisionResult) -> None: ...
 
     @modifiable
     def can_be_activated(self, context: ActiveUnitContext) -> bool:
@@ -569,7 +567,11 @@ class StaticAbilityFacet(Facet, ABC):
 
 
 class Status(
-    Registered, HasEffects[H], Serializable, ABC, metaclass=get_registered_meta()
+    Registered,
+    HasEffects[G_HasStatuses],
+    Serializable,
+    ABC,
+    metaclass=get_registered_meta(),
 ):
     registry: ClassVar[dict[str, Status]]
     # TODO should prob be modifiable, and also something something dispel costs.
@@ -583,7 +585,7 @@ class Status(
         source: Source = None,
         duration: int | None = None,
         stacks: int | None = None,
-        parent: H | None,
+        parent: G_HasStatuses | None,
     ):
         super().__init__(parent=parent)
         self.controller = controller
@@ -591,7 +593,7 @@ class Status(
         self.duration = duration
         self.stacks = stacks
 
-    def on_apply(self, to: H) -> bool:
+    def on_apply(self, to: G_HasStatuses) -> bool:
         return True
 
     def merge(self, incoming: Self) -> bool:
@@ -767,7 +769,9 @@ class Unit(HasStatuses, Modifiable, VisionBound):
         for facet in self.attacks + self.activated_abilities + self.static_abilities:
             facet.create_effects()
 
-    def get_primary_attack(self, of_type: type[C] | None = None) -> C | None:
+    def get_primary_attack(
+        self, of_type: type[G_AttackFacet] | None = None
+    ) -> G_AttackFacet | None:
         for attack in self.attacks:
             if of_type is None or isinstance(attack, of_type):
                 return attack
@@ -919,7 +923,7 @@ class UnitStatus(Status[Unit], ABC):
         source: Source = None,
         duration: int | None = None,
         stacks: int | None = None,
-        parent: H | None,
+        parent: G_HasStatuses | None,
         intention: StatusIntention,
     ):
         super().__init__(
@@ -1875,7 +1879,9 @@ class GameState:
                 self.serialize_for(self._get_context_for(_player), None)
             )
 
-    def make_decision(self, player: Player, decision_point: DecisionPoint[O]) -> O:
+    def make_decision(
+        self, player: Player, decision_point: DecisionPoint[G_DecisionResult]
+    ) -> G_DecisionResult:
         for _player in self.turn_order:
             if _player != player:
                 self.connections[_player].send(
@@ -1971,7 +1977,9 @@ class ScopedGameState:
     def send_to_players(self) -> None:
         self._gs.send_to_players()
 
-    def make_decision(self, player: Player, decision_point: DecisionPoint[O]) -> O:
+    def make_decision(
+        self, player: Player, decision_point: DecisionPoint[G_DecisionResult]
+    ) -> G_DecisionResult:
         return self._gs.make_decision(player, decision_point)
 
 

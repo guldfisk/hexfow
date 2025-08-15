@@ -9,7 +9,6 @@ from typing import (
     Iterator,
     Mapping,
     TypeAlias,
-    TypeVar,
     cast,
 )
 
@@ -23,6 +22,7 @@ from game.core import (
     ActivateUnitOption,
     Connection,
     EffortOption,
+    G_AttackFacet,
     GameState,
     Hex,
     HexMap,
@@ -53,8 +53,6 @@ from game.units.blueprints import (
 from game.units.facets.attacks import Peck
 from game.values import Size
 
-
-A = TypeVar("A")
 
 JSON_DICT: TypeAlias = Mapping[str, Any]
 
@@ -415,7 +413,7 @@ def unit_spawner(ground_map: HexMap, player1: Player) -> UnitSpawner:
     return UnitSpawner(ground_map, player1)
 
 
-def get_attack(unit: Unit, attack_type: type[A]) -> A:
+def get_attack(unit: Unit, attack_type: type[G_AttackFacet]) -> G_AttackFacet:
     for attack in unit.attacks:
         if isinstance(attack, attack_type):
             return attack

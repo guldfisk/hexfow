@@ -27,7 +27,7 @@ from events.exceptions import GameException
 T = TypeVar("T")
 V = TypeVar("V")
 C = TypeVar("C")
-A = TypeVar("A", bound=Callable)
+G_Callable = TypeVar("G_Callable", bound=Callable)
 
 
 # TODO maybe triggers can't cause triggers to trigger?
@@ -562,12 +562,12 @@ class StateModifierEffect(Effect, Generic[T, C, V], ABC, metaclass=_StateModifie
     def modify(self, obj: T, request: C, value: V) -> V: ...
 
 
-def modifiable(f: A) -> A:
+def modifiable(f: G_Callable) -> G_Callable:
     f.__modifiable__ = True
     return f
 
 
-def _wrap_method(f: A) -> A:
+def _wrap_method(f: G_Callable) -> G_Callable:
     @functools.wraps(f)
     def _wrapper(self: object, request: Any) -> Any:
         v = f(self, request)
