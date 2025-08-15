@@ -26,7 +26,6 @@ from game.core import (
     TerrainProtectionRequest,
     Unit,
 )
-from game.map.terrain import Water
 from game.values import DamageType, Resistance, Size, VisionObstruction
 
 
@@ -111,6 +110,14 @@ class PusherModifier(StateModifierEffect[Hex, Unit, bool]):
         return True
 
 
+def stealth_hidden_for(unit: Unit, player: Player) -> bool:
+    return unit.controller != player and not any(
+        player in seeing_unit.provides_vision_for(None)
+        and seeing_unit.can_see(GS.map.hex_off(unit))
+        for seeing_unit in GS.map.get_neighboring_units_off(unit)
+    )
+
+
 @dataclasses.dataclass(eq=False)
 class StealthModifier(StateModifierEffect[Unit, Player, bool]):
     priority: ClassVar[int] = 1
@@ -120,14 +127,24 @@ class StealthModifier(StateModifierEffect[Unit, Player, bool]):
     unit: Unit
 
     def should_modify(self, obj: Unit, request: Player, value: bool) -> bool:
+        return obj == self.unit and stealth_hidden_for(obj, request)
+
+    def modify(self, obj: Unit, request: Player, value: bool) -> bool:
+        return True
+
+
+@dataclasses.dataclass(eq=False)
+class ForestStealthModifier(StateModifierEffect[Unit, Player, bool]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.is_hidden_for
+
+    hex: Hex
+
+    def should_modify(self, obj: Unit, request: Player, value: bool) -> bool:
         return (
-            obj == self.unit
-            and request != self.unit.controller
-            and not any(
-                request in unit.provides_vision_for(None)
-                and unit.can_see(GS.map.hex_off(self.unit))
-                for unit in GS.map.get_neighboring_units_off(self.unit)
-            )
+            GS.map.hex_off(obj) == self.hex
+            and obj.size.g() == Size.SMALL
+            and stealth_hidden_for(obj, request)
         )
 
     def modify(self, obj: Unit, request: Player, value: bool) -> bool:
@@ -589,7 +606,9 @@ class UnwieldySwimmerModifier(
     def should_modify(
         self, obj: Unit, request: ActiveUnitContext, value: list[Option]
     ) -> bool:
-        return obj == self.unit and isinstance(GS.map.hex_off(self.unit).terrain, Water)
+        return obj == self.unit and isinstance(
+            GS.map.hex_off(self.unit).terrain, Terrain.registry["water"]
+        )
 
     def modify(
         self, obj: Unit, request: ActiveUnitContext, value: list[Option]

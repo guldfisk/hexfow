@@ -1,4 +1,5 @@
 from game.core import Hex, Terrain, TerrainProtectionRequest, Unit
+from game.effects.modifiers import ForestStealthModifier
 from game.effects.triggers import BurnOnCleanup, BurnOnWalkIn
 from game.values import DamageType, Size
 
@@ -10,6 +11,7 @@ class Forest(Terrain):
     """
     1/2/2 melee/ranged/aoe protection for small and medium units.
     1 move in penalty.
+    Small units have stealth.
     """
 
     blocks_vision = True
@@ -27,6 +29,9 @@ class Forest(Terrain):
         # if request.damage_signature.type in (DamageType.RANGED, DamageType.AOE):
         #     return 1
         return 0
+
+    def create_effects(self, space: Hex) -> None:
+        self.register_effects(ForestStealthModifier(space))
 
 
 # TODO block vision for small units? :^)

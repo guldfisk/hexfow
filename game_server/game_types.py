@@ -42,7 +42,9 @@ class TestGameType(GameType):
                     random.choice(
                         [
                             Plains,
-                            # Forest,
+                            Plains,
+                            Plains,
+                            Forest,
                             # Hills,
                             # Water,
                         ]
@@ -57,10 +59,10 @@ class TestGameType(GameType):
             (
                 # OTTER_SCOUT,
                 # OTTER_SCOUT,
-                # EFFORTLESS_ATHLETE,
+                EFFORTLESS_ATHLETE,
                 # CHAINSAW_SADIST,
                 SHRINE_KEEPER,
-                INFERNO_TANK,
+                # INFERNO_TANK,
                 # CHAINSAW_SADIST,
                 # STAUNCH_IRON_HEART,
                 # LIGHT_ARCHER,
@@ -73,8 +75,9 @@ class TestGameType(GameType):
                 # CHICKEN,
                 # CHICKEN,
                 # GNOME_COMMANDO,
+                GOBLIN_ASSASSIN,
                 GNOME_COMMANDO,
-                # BUGLING,
+                BUGLING,
                 # EFFORTLESS_ATHLETE,
                 # CHAINSAW_SADIST,
                 # SHRINE_KEEPER,

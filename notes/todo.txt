@@ -23,7 +23,6 @@ game
     status linking
     corpses
     status merge explanations
-    small units stealth on forest
     alternate capture points
         keeps captured state for player when unit walks off
         linked group with points to player with max presence
