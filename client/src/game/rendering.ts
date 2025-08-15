@@ -50,10 +50,10 @@ const sizeScales: { S: number; M: number; L: number } = {
   M: 1,
   L: 1.1,
 };
-const sizeArrowPositions: { S: number; M: number; L: number } = {
+const sizeDiamondCounts: { S: number; M: number; L: number } = {
   S: 1,
-  M: 0,
-  L: -1,
+  M: 2,
+  L: 3,
 };
 
 const selectionIconMap: { [key in selectionIcon]: string } = {
@@ -138,6 +138,18 @@ const dividerFrames = [
   [0, 1].map(getDividerFrame),
   [1, 0, 2].map(getThreePartDividerFrame),
 ];
+
+const sizeIndicatorDiamondSize = 10;
+
+const getSizeDiamondGraphicsContext = moize((color: FillInput) =>
+  new GraphicsContext()
+    .moveTo(0, -sizeIndicatorDiamondSize)
+    .lineTo(sizeIndicatorDiamondSize, 0)
+    .lineTo(0, sizeIndicatorDiamondSize)
+    .lineTo(-sizeIndicatorDiamondSize, 0)
+    .closePath()
+    .fill(color),
+);
 
 const statusFrame = new GraphicsContext().circle(0, 0, 20).fill({ alpha: 0 });
 const diag = Math.sqrt(2) * 22;
@@ -230,23 +242,18 @@ const menuStyle = new TextStyle({
 const unitWidth = 120;
 const unitHeight = 148;
 const borderWith = 4;
-const arrowLength = 15;
+const arrowLength = 7;
 
-const getUnitBackgroundGraphicsContext = moize(
-  (color: ColorSource, size: keyof typeof sizeArrowPositions) => {
-    return new GraphicsContext()
-      .moveTo(-unitWidth / 2 - borderWith, -unitHeight / 2 - borderWith)
-      .lineTo(unitWidth / 2 + borderWith, -unitHeight / 2 - borderWith)
-      .lineTo(
-        unitWidth / 2 + borderWith + arrowLength,
-        (unitHeight / 2 + borderWith) * sizeArrowPositions[size],
-      )
-      .lineTo(unitWidth / 2 + borderWith, unitHeight / 2 + borderWith)
-      .lineTo(-unitWidth / 2 - borderWith, unitHeight / 2 + borderWith)
-      .closePath()
-      .fill(color);
-  },
-);
+const getUnitBackgroundGraphicsContext = moize((color: ColorSource) => {
+  return new GraphicsContext()
+    .moveTo(-unitWidth / 2 - borderWith, -unitHeight / 2 - borderWith)
+    .lineTo(unitWidth / 2 + borderWith, -unitHeight / 2 - borderWith)
+    .lineTo(unitWidth / 2 + borderWith + arrowLength, 0)
+    .lineTo(unitWidth / 2 + borderWith, unitHeight / 2 + borderWith)
+    .lineTo(-unitWidth / 2 - borderWith, unitHeight / 2 + borderWith)
+    .closePath()
+    .fill(color);
+});
 
 const getIndicatorBg = moize(
   (
@@ -467,17 +474,32 @@ export const renderMap = (
         baseUnitContainer.scale.x = -baseUnitContainer.scale.x;
       }
 
-      let graphics = newGraphic(
-        getUnitBackgroundGraphicsContext(
-          hexData.unit.controller != gameState.player
-            ? colors.enemy
-            : colors.ally,
-          hexData.unit.size,
-        ),
+      const borderColor =
+        hexData.unit.controller != gameState.player
+          ? colors.enemy
+          : colors.ally;
+      const unitBorder = newGraphic(
+        getUnitBackgroundGraphicsContext(borderColor),
       );
 
-      baseUnitContainer.addChild(graphics);
+      baseUnitContainer.addChild(unitBorder);
       baseUnitContainer.addChild(unitSprite);
+
+      const diamondCount = sizeDiamondCounts[hexData.unit.size];
+
+      for (let i = 0; i < diamondCount; i++) {
+        let sizeDiamond = newGraphic(
+          getSizeDiamondGraphicsContext(borderColor),
+        );
+
+        sizeDiamond.y = -(unitHeight + borderWith) / 2;
+        sizeDiamond.x =
+          (diamondCount - 1) *
+          (sizeIndicatorDiamondSize * 0.7) *
+          (diamondCount > 1 ? (i * 2) / (diamondCount - 1) - 1 : 1);
+
+        baseUnitContainer.addChild(sizeDiamond);
+      }
 
       if (
         gameState.activeUnitContext &&

@@ -555,7 +555,7 @@ class Status(
     def __init__(
         self,
         *,
-        # TODO this is redundante with the source
+        # TODO this is redundant with the source
         controller: Player | None = None,
         source: Source = None,
         duration: int | None = None,

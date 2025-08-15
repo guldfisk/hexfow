@@ -57,7 +57,7 @@ class TestGameType(GameType):
             (
                 # OTTER_SCOUT,
                 # OTTER_SCOUT,
-                # EFFORTLESS_ATHLETE,
+                EFFORTLESS_ATHLETE,
                 # CHAINSAW_SADIST,
                 INFERNO_TANK,
                 # CHAINSAW_SADIST,
