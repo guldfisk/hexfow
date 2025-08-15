@@ -1802,7 +1802,10 @@ class GameState:
 
         for player in self.turn_order:
             self.vision_map[player] = {
-                position: any(unit.can_see(_hex) for unit in unit_vision_map[player])
+                position: (
+                    (unit := self.map.unit_on(_hex)) and unit.controller == player
+                )
+                or any(unit.can_see(_hex) for unit in unit_vision_map[player])
                 for position, _hex in self.map.hexes.items()
             }
 

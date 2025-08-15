@@ -37,10 +37,12 @@ class TestGameRunner(Thread):
         with self._lock:
             self._is_running = v
 
+    def start(self):
+        self.is_running = True
+        super().start()
+
     def run(self):
         try:
-            self.is_running = True
-
             ES.bind(EventSystem())
 
             game = self
