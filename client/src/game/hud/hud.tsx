@@ -325,6 +325,7 @@ const StatusDetailView = ({
       />
       {statusDetails.name}
     </div>
+    <div className={"facet-stats"}>{statusDetails.stacking_info}</div>
     {status ? (
       <div className={"facet-stats"}>{getStatusStatLine(status)}</div>
     ) : null}

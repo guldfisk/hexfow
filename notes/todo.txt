@@ -23,14 +23,12 @@ game
     status linking
     corpses
     player log component
-    status merge explanations
     alternate capture points
         keeps captured state for player when unit walks off
         linked group with points to player with max presence
 
 code
     refactor game.core somehow
-    common status merge mixins
     response validation
     message ids
     don't send no change game state updates

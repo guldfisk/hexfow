@@ -96,6 +96,7 @@ export interface StatusDetails {
   category: StatusCategory;
   description: string | null;
   related_statuses: string[];
+  stacking_info: string;
 }
 
 export interface GameObjectDetails {

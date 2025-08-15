@@ -1,7 +1,11 @@
-from typing import Self
-
 from events.tests.game_objects.advanced_units import Player
-from game.core import DurationStatusMixin, HexStatus
+from game.core import (
+    HexStatus,
+    HighestStackableRefreshableMixin,
+    PerPlayerRefreshable,
+    PerPlayerUnstackable,
+    RefreshableMixin,
+)
 from game.effects.modifiers import (
     HexBlocksVisionModifier,
     HexDecreaseSightCappedModifier,
@@ -31,9 +35,6 @@ class Shrine(HexStatus):
     When a unit skips it's within 1 range of this hex, it is healed 1.
     """
 
-    def merge(self, incoming: Self) -> bool:
-        return True
-
     def create_effects(self) -> None:
         self.register_effects(
             HexIncreasesEnergyRegenModifier(self.parent, 1),
@@ -42,7 +43,7 @@ class Shrine(HexStatus):
         )
 
 
-class Soot(DurationStatusMixin, HexStatus):
+class Soot(RefreshableMixin, HexStatus):
     """
     This hex blocks vision, and units on it has -1 sight, to a minimum of 1.
     When a unit moves into this hex, and at the end of the round, units on this hex suffers 1 pure damage.
@@ -57,7 +58,7 @@ class Soot(DurationStatusMixin, HexStatus):
         )
 
 
-class Smoke(DurationStatusMixin, HexStatus):
+class Smoke(RefreshableMixin, HexStatus):
     """
     This hex blocks vision, and units on it has -1 sight, to a minimum of 1.
     """
@@ -69,20 +70,10 @@ class Smoke(DurationStatusMixin, HexStatus):
         )
 
 
-class BurningTerrain(HexStatus):
+class BurningTerrain(HighestStackableRefreshableMixin, HexStatus):
     """
     When a unit moves into this hex, and at the end of the round, units on this hex suffers stacks of <burn> equals to the stacks of this status.
     """
-
-    def merge(self, incoming: Self) -> bool:
-        # TODO common logic?
-        if self.duration is not None and (
-            incoming.duration is None or (incoming.duration > self.duration)
-        ):
-            self.duration = incoming.duration
-        if incoming.stacks > self.stacks:
-            self.stacks = incoming.stacks
-        return True
 
     def create_effects(self) -> None:
         self.register_effects(
@@ -91,20 +82,10 @@ class BurningTerrain(HexStatus):
         )
 
 
-class Revealed(HexStatus):
+class Revealed(PerPlayerRefreshable, HexStatus):
     """
     You have vision of this hex. This status is hidden for opponents.
     """
-
-    def merge(self, incoming: Self) -> bool:
-        # TODO common logic?
-        if incoming.controller == self.controller:
-            if self.duration is not None and (
-                incoming.duration is None or (incoming.duration > self.duration)
-            ):
-                self.duration = incoming.duration
-            return True
-        return False
 
     def is_hidden_for(self, player: Player) -> bool:
         return player != self.controller
@@ -113,13 +94,10 @@ class Revealed(HexStatus):
         self.register_effects(HexRevealedModifier(self.parent, self.controller))
 
 
-class Glimpse(HexStatus):
+class Glimpse(PerPlayerUnstackable, HexStatus):
     """
     This hex is visible to the controller of this status. Expires at the end of the turn.
     """
-
-    def merge(self, incoming: Self) -> bool:
-        return incoming.controller == self.controller
 
     def is_hidden_for(self, player: Player) -> bool:
         return player != self.controller
@@ -136,9 +114,6 @@ class DoombotScaffold(HexStatus):
     Removed when a unit moves into this hex.
     """
 
-    def merge(self, incoming: Self) -> bool:
-        return True
-
     def create_effects(self) -> None:
         self.register_effects(WalkInDestroyStatusTrigger(self))
 
@@ -148,9 +123,6 @@ class RuneOfHealing(HexStatus):
     At the end of each round, units on this hex are healed 1.
     """
 
-    def merge(self, incoming: Self) -> bool:
-        return True
-
     def create_effects(self) -> None:
         self.register_effects(HexRoundHealTrigger(self.parent, 1))
 
@@ -159,9 +131,6 @@ class RuneOfClarity(HexStatus):
     """
     Units on this hex has +1 energy regeneration.
     """
-
-    def merge(self, incoming: Self) -> bool:
-        return True
 
     def create_effects(self) -> None:
         self.register_effects(HexIncreasesEnergyRegenModifier(self.parent, 1))
@@ -173,9 +142,6 @@ class Mine(HexStatus):
     This status is hidden for opponents.
     """
 
-    def merge(self, incoming: Self) -> bool:
-        return True
-
     def is_hidden_for(self, player: Player) -> bool:
         return player != self.controller
 
@@ -183,18 +149,10 @@ class Mine(HexStatus):
         self.register_effects(MineTrigger(self))
 
 
-class Sludge(HexStatus):
+class Sludge(RefreshableMixin, HexStatus):
     """
     +1 move out penalty. At the end of each round, applies <slimed> to unit on this hex for 2 rounds.
     """
-
-    def merge(self, incoming: Self) -> bool:
-        # TODO common logic?
-        if self.duration is not None and (
-            incoming.duration is None or (incoming.duration > self.duration)
-        ):
-            self.duration = incoming.duration
-        return True
 
     def create_effects(self) -> None:
         self.register_effects(

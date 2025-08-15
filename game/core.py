@@ -568,6 +568,10 @@ class Status(
         self.duration = duration
         self.stacks = stacks
 
+    @classmethod
+    def get_stacking_info(cls) -> str:
+        return "unstackable"
+
     def on_apply(self, to: G_HasStatuses) -> bool:
         return True
 
@@ -587,6 +591,7 @@ class Status(
             "category": cls.category,
             "description": cls.description,
             "related_statuses": cls.related_statuses,
+            "stacking_info": cls.get_stacking_info(),
         }
 
     def serialize(self, context: SerializationContext) -> JSON:
@@ -972,22 +977,107 @@ class NOfUnits(TargetProfile[list[Unit]]):
         return [self.units[idx] for idx in indexes]
 
 
-class DurationStatusMixin:
+class StatusMixin:
+    controller: Player
+    source: Source
     duration: int | None
+    stacks: int | None
+
+    @classmethod
+    @abstractmethod
+    def get_stacking_info(cls) -> str: ...
+
+    @abstractmethod
+    def merge(self, incoming: Self) -> bool:
+        return False
+
+
+def refresh_duration(
+    existing_status: Status | StatusMixin, incoming_status: Status | StatusMixin
+) -> None:
+    if (
+        incoming_status.duration is None
+        or existing_status.duration is None
+        or (incoming_status.duration > existing_status.duration)
+    ):
+        existing_status.duration = incoming_status.duration
+
+
+class RefreshableMixin(StatusMixin):
+    @classmethod
+    def get_stacking_info(cls) -> str:
+        return "refreshable"
 
     def merge(self, incoming: Self) -> bool:
-        if (
-            incoming.duration is None
-            or self.duration is None
-            or (incoming.duration > self.duration)
+        refresh_duration(self, incoming)
+        return True
+
+
+class LowestRefreshableMixin(StatusMixin):
+    @classmethod
+    def get_stacking_info(cls) -> str:
+        return "lowest refreshable"
+
+    def merge(self, incoming: Self) -> bool:
+        if self.duration is None or (
+            incoming.duration is not None and incoming.duration < self.duration
         ):
             self.duration = incoming.duration
         return True
 
 
-# TODO ABC, where should this be?
-# TODO just use the mixin instead
-class RefreshableDurationUnitStatus(DurationStatusMixin, UnitStatus, ABC): ...
+class StackableMixin(StatusMixin):
+    @classmethod
+    def get_stacking_info(cls) -> str:
+        return "stackable"
+
+    def merge(self, incoming: Self) -> bool:
+        self.stacks += incoming.stacks
+        return True
+
+
+class StackableRefreshableMixin(StatusMixin):
+    @classmethod
+    def get_stacking_info(cls) -> str:
+        return "stackable, refreshable"
+
+    def merge(self, incoming: Self) -> bool:
+        refresh_duration(self, incoming)
+        self.stacks += incoming.stacks
+        return True
+
+
+class HighestStackableRefreshableMixin(StackableMixin):
+    @classmethod
+    def get_stacking_info(cls) -> str:
+        return "highest stackable, refreshable"
+
+    def merge(self, incoming: Self) -> bool:
+        refresh_duration(self, incoming)
+        if incoming.stacks > self.stacks:
+            self.stacks = incoming.stacks
+        return True
+
+
+class PerPlayerRefreshable(StatusMixin):
+    @classmethod
+    def get_stacking_info(cls) -> str:
+        return "per-player - refreshable"
+
+    def merge(self, incoming: Self) -> bool:
+        if incoming.controller == self.controller:
+            refresh_duration(self, incoming)
+            return True
+        return False
+
+
+class PerPlayerUnstackable(StatusMixin):
+    @classmethod
+    def get_stacking_info(cls) -> str:
+        return "per-player - unstackable"
+
+    def merge(self, incoming: Self) -> bool:
+        return incoming.controller == self.controller
 
 
 class NoTargetActivatedAbility(ActivatedAbilityFacet[None], ABC):

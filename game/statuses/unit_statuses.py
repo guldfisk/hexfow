@@ -1,7 +1,13 @@
-from typing import Self
-
 from events.eventsystem import ES
-from game.core import GS, RefreshableDurationUnitStatus, Unit, UnitStatus
+from game.core import (
+    GS,
+    LowestRefreshableMixin,
+    RefreshableMixin,
+    StackableMixin,
+    StackableRefreshableMixin,
+    Unit,
+    UnitStatus,
+)
 from game.effects.modifiers import (
     RootedModifier,
     SilencedModifier,
@@ -29,31 +35,23 @@ from game.events import ExhaustUnit, Kill
 from game.values import StatusIntention
 
 
-class Burn(UnitStatus):
+class Burn(StackableMixin, UnitStatus):
     """
     At the end of each round, this unit suffers damage equals to its stacks of burn, then remove a stack of burn.
     """
 
     default_intention = StatusIntention.DEBUFF
 
-    def merge(self, incoming: Self) -> bool:
-        self.stacks += incoming.stacks
-        return True
-
     def create_effects(self) -> None:
         self.register_effects(BurnTrigger(self))
 
 
-class Poison(UnitStatus):
+class Poison(StackableMixin, UnitStatus):
     """
     At the end of each round this unit suffers pure damage equals to its stacks of poison.
     """
 
     default_intention = StatusIntention.DEBUFF
-
-    def merge(self, incoming: Self) -> bool:
-        self.stacks += incoming.stacks
-        return True
 
     def create_effects(self) -> None:
         self.register_effects(
@@ -61,7 +59,7 @@ class Poison(UnitStatus):
         )
 
 
-class Panicked(RefreshableDurationUnitStatus):
+class Panicked(RefreshableMixin, UnitStatus):
     """
     At the end of eah round, this unit suffers pure damage equal to the number of adjacent units.
     """
@@ -72,24 +70,18 @@ class Panicked(RefreshableDurationUnitStatus):
         self.register_effects(PanickedTrigger(self))
 
 
-class Ephemeral(UnitStatus):
+class Ephemeral(LowestRefreshableMixin, UnitStatus):
     """
     When this status expires, this unit dies.
     """
 
     default_intention = StatusIntention.DEBUFF
 
-    def merge(self, incoming: Self) -> bool:
-        if incoming.duration < self.duration:
-            self.duration = incoming.duration
-            return True
-        return False
-
     def on_expires(self) -> None:
         ES.resolve(Kill(self.parent))
 
 
-class Terrified(RefreshableDurationUnitStatus):
+class Terrified(RefreshableMixin, UnitStatus):
     """
     -1 attack power.
     """
@@ -109,10 +101,6 @@ class Parasite(UnitStatus):
 
     default_intention = StatusIntention.DEBUFF
 
-    # TODO ABC for this
-    def merge(self, incoming: Self) -> bool:
-        return True
-
     def create_effects(self) -> None:
         self.register_effects(ParasiteTrigger(self))
 
@@ -121,9 +109,6 @@ class BurstOfSpeed(UnitStatus):
     """When this unit is activated, it gains 1 movement point, and this status is removed."""
 
     default_intention = StatusIntention.BUFF
-
-    def merge(self, incoming: Self) -> bool:
-        return True
 
     def create_effects(self) -> None:
         self.register_effects(OneTimeModifyMovementPointsStatusTrigger(self, 1))
@@ -135,9 +120,6 @@ class Stumbling(UnitStatus):
     """
 
     default_intention = StatusIntention.DEBUFF
-
-    def merge(self, incoming: Self) -> bool:
-        return True
 
     def create_effects(self) -> None:
         self.register_effects(OneTimeModifyMovementPointsStatusTrigger(self, -1))
@@ -152,9 +134,6 @@ class TheyVeGotASteelChair(UnitStatus):
 
     default_intention = StatusIntention.BUFF
 
-    def merge(self, incoming: Self) -> bool:
-        return True
-
     def create_effects(self) -> None:
         self.register_effects(UnitAttackPowerFlatModifier(self.parent, 2))
 
@@ -164,24 +143,16 @@ class Staggered(UnitStatus):
 
     default_intention = StatusIntention.DEBUFF
 
-    def merge(self, incoming: Self) -> bool:
-        return True
-
     def create_effects(self) -> None:
         self.register_effects(TurnExpiringStatusTrigger(self))
 
 
-class AllInJest(UnitStatus):
+class AllInJest(StackableMixin, UnitStatus):
     """
     +1 attack power per stack.
     """
 
     default_intention = StatusIntention.BUFF
-
-    def merge(self, incoming: Self) -> bool:
-        if incoming.stacks:
-            self.stacks += incoming.stacks
-        return True
 
     def create_effects(self) -> None:
         self.register_effects(
@@ -190,7 +161,7 @@ class AllInJest(UnitStatus):
         )
 
 
-class Rooted(RefreshableDurationUnitStatus):
+class Rooted(RefreshableMixin, UnitStatus):
     """
     This unit can't move or melee attack.
     """
@@ -201,7 +172,7 @@ class Rooted(RefreshableDurationUnitStatus):
         self.register_effects(RootedModifier(self.parent))
 
 
-class Fortified(RefreshableDurationUnitStatus):
+class Fortified(RefreshableMixin, UnitStatus):
     """
     +1 maximum health.
     """
@@ -212,7 +183,7 @@ class Fortified(RefreshableDurationUnitStatus):
         self.register_effects(UnitMaxHealthFlatModifier(self.parent, 1))
 
 
-class LuckyCharm(RefreshableDurationUnitStatus):
+class LuckyCharm(RefreshableMixin, UnitStatus):
     """
     If this unit would suffer exactly one damage, instead remove this buff.
     """
@@ -223,7 +194,7 @@ class LuckyCharm(RefreshableDurationUnitStatus):
         self.register_effects(LuckyCharmReplacement(self))
 
 
-class BellStruck(RefreshableDurationUnitStatus):
+class BellStruck(RefreshableMixin, UnitStatus):
     """
     When this unit receives 3 or more damage (after terrain reductions, before any
     other modifiers), it is exhausted.
@@ -242,14 +213,11 @@ class MortallyWounded(UnitStatus):
 
     default_intention = StatusIntention.DEBUFF
 
-    def merge(self, incoming: Self) -> bool:
-        return True
-
     def on_expires(self) -> None:
         ES.resolve(Kill(self.parent))
 
 
-class Terror(RefreshableDurationUnitStatus):
+class Terror(RefreshableMixin, UnitStatus):
     """
     This unit can't move into spaces adjacent to visible enemy units. As long as it is adjacent to an enemy unit, the only legal action this unit can take is move away.
     """
@@ -260,7 +228,7 @@ class Terror(RefreshableDurationUnitStatus):
         self.register_effects(TerrorModifier(self.parent))
 
 
-class DebilitatingVenom(RefreshableDurationUnitStatus):
+class DebilitatingVenom(RefreshableMixin, UnitStatus):
     """
     -1 attack power, and -x speed, where x is this units speed, rounded down.
     """
@@ -274,18 +242,10 @@ class DebilitatingVenom(RefreshableDurationUnitStatus):
         )
 
 
-class Shrunk(UnitStatus):
+class Shrunk(StackableRefreshableMixin, UnitStatus):
     """
     This unit has -1 attack power, -1 size and -2 max health per stack.
     """
-
-    def merge(self, incoming: Self) -> bool:
-        if self.duration is not None and (
-            incoming.duration is None or (incoming.duration > self.duration)
-        ):
-            self.duration = incoming.duration
-        self.stacks += incoming.stacks
-        return True
 
     def create_effects(self) -> None:
         self.register_effects(
@@ -296,7 +256,7 @@ class Shrunk(UnitStatus):
 
 
 # TODO bad name
-class Blinded(RefreshableDurationUnitStatus):
+class Blinded(RefreshableMixin, UnitStatus):
     """
     -1 sight.
     """
@@ -309,7 +269,7 @@ class Blinded(RefreshableDurationUnitStatus):
         )
 
 
-class Silenced(RefreshableDurationUnitStatus):
+class Silenced(RefreshableMixin, UnitStatus):
     """
     This unit can't activate abilities.
     """
@@ -320,7 +280,7 @@ class Silenced(RefreshableDurationUnitStatus):
         self.register_effects(SilencedModifier(self.parent))
 
 
-class Stunned(UnitStatus):
+class Stunned(StackableMixin, UnitStatus):
     """
     This unit cannot take any actions.
     If this unit would be become ready, instead remove a stack of this debuff.
@@ -339,15 +299,11 @@ class Stunned(UnitStatus):
                 self.stacks -= 1
         return self.stacks > 0
 
-    def merge(self, incoming: Self) -> bool:
-        self.stacks += incoming.stacks
-        return True
-
     def create_effects(self) -> None:
         self.register_effects(StunnedReplacement(self))
 
 
-class Armored(RefreshableDurationUnitStatus):
+class Armored(RefreshableMixin, UnitStatus):
     """
     +1 armor.
     """
@@ -366,9 +322,6 @@ class Hitched(UnitStatus):
 
     default_intention = StatusIntention.DEBUFF
 
-    def merge(self, incoming: Self) -> bool:
-        return True
-
     def create_effects(self) -> None:
         self.register_effects(
             HitchedTrigger(self.source.owner, self.parent),
@@ -376,7 +329,7 @@ class Hitched(UnitStatus):
         )
 
 
-class Slimed(RefreshableDurationUnitStatus):
+class Slimed(RefreshableMixin, UnitStatus):
     """
     -1 speed.
     """
