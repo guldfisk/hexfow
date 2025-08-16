@@ -64,6 +64,7 @@ from game.units.facets.attacks import (
     BloodExpunge,
     BuglingClaw,
     Chainsaw,
+    Chomp,
     CommandersPistol,
     DeathLaser,
     DiamondFist,
@@ -95,6 +96,7 @@ from game.units.facets.attacks import (
     Shiv,
     Slay,
     Slice,
+    SlingShot,
     SnappingBeak,
     SolidMunition,
     Spew,
@@ -144,35 +146,30 @@ from game.units.facets.static_abilities import (
 from game.values import Size
 
 
-CACTUS = UnitBlueprint(
-    name="Cactus",
-    health=3,
-    speed=0,
-    sight=0,
-    energy=2,
-    starting_energy=0,
-    facets=[Prickly, Immobile, Grow],
-    price=1,
+BLIND_GRUB = UnitBlueprint(
+    name="Blind Grub", health=3, speed=3, sight=0, size=Size.SMALL, price=1
+)
+
+BLIND_ORACLE = UnitBlueprint(
+    "Blind Oracle", health=2, speed=2, sight=0, energy=2, facets=[Scry], price=1
 )
 
 CHICKEN = UnitBlueprint(
     name="Chicken", health=2, speed=1, sight=1, size=Size.SMALL, facets=[Peck], price=1
 )
 
-LOTUS_BUD = UnitBlueprint(
-    name="Lotus Bud",
-    health=3,
-    speed=0,
-    sight=0,
-    energy=2,
-    starting_energy=0,
-    size=Size.SMALL,
-    facets=[Immobile, Nourishing, Bloom],
-    price=1,
+CRAWLING_URCHIN = UnitBlueprint(
+    name="Crawling Urchin", health=4, speed=1, sight=1, facets=[Prickly], price=2
 )
 
-BLIND_ORACLE = UnitBlueprint(
-    "Blind Oracle", health=2, speed=2, sight=0, energy=2, facets=[Scry], price=2
+GOBLIN_SLINGSHOT = UnitBlueprint(
+    "Goblin Slingshot",
+    health=3,
+    speed=3,
+    sight=1,
+    size=Size.SMALL,
+    facets=[SlingShot],
+    price=2,
 )
 
 LUMBERING_PILLAR = UnitBlueprint(
@@ -195,6 +192,10 @@ SNAPPING_TURTLE = UnitBlueprint(
     aquatic=True,
     facets=[SnappingBeak],
     price=2,
+)
+
+SNAP_JAW = UnitBlueprint(
+    "Snap Jaw", health=3, speed=1, sight=1, facets=[Chomp], price=2
 )
 
 BLOOD_CONDUIT = UnitBlueprint(
@@ -701,6 +702,17 @@ BEE_SWARM = UnitBlueprint(
     price=None,
 )
 
+CACTUS = UnitBlueprint(
+    name="Cactus",
+    health=3,
+    speed=0,
+    sight=0,
+    energy=2,
+    starting_energy=0,
+    facets=[Prickly, Immobile, Grow],
+    price=None,
+)
+
 DOOMBOT_3000 = UnitBlueprint(
     "Doombot 3000",
     identifier="doombot_3000",
@@ -721,6 +733,18 @@ HORROR_SPAWN = UnitBlueprint(
     sight=1,
     size=Size.SMALL,
     facets=[SerratedBeak],
+    price=None,
+)
+
+LOTUS_BUD = UnitBlueprint(
+    name="Lotus Bud",
+    health=3,
+    speed=0,
+    sight=0,
+    energy=2,
+    starting_energy=0,
+    size=Size.SMALL,
+    facets=[Immobile, Nourishing, Bloom],
     price=None,
 )
 

@@ -55,6 +55,10 @@ from game.values import Resistance
 
 
 class Prickly(StaticAbilityFacet):
+    """
+    When this unit is hit with a melee attack, the attacker suffers 2 damage.
+    """
+
     def create_effects(self) -> None:
         self.register_effects(PricklyTrigger(self.owner, self, 2))
 

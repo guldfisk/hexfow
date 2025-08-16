@@ -1725,7 +1725,7 @@ class ActiveUnitContext(Serializable):
 
 @dataclasses.dataclass
 class LogLine:
-    elements: list[str | Unit | Hex | list[Hex | Unit] | EffortFacet | Status | Player]
+    elements: list[str | Unit | Hex | list[Hex | Unit] | Facet | Status | Player]
 
     def is_visible_to(self, player: Player) -> bool:
         for element in self.elements:
@@ -1755,7 +1755,7 @@ class LogLine:
             }
         if isinstance(element, Hex):
             return {"type": "hex", "cc": element.position.serialize()}
-        if isinstance(element, EffortFacet):
+        if isinstance(element, Facet):
             return {"type": "facet", "identifier": element.identifier}
         if isinstance(element, Status):
             return {"type": "status", "identifier": element.identifier}

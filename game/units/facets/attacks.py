@@ -389,3 +389,14 @@ class MiniGun(RangedAttackFacet):
 class Wrench(MeleeAttackFacet):
     cost = MovementCost(1)
     damage = 2
+
+
+class SlingShot(RangedAttackFacet):
+    cost = MovementCost(1)
+    damage = 2
+    range = 1
+
+
+class Chomp(MeleeAttackFacet):
+    cost = ExclusiveCost()
+    damage = 3
