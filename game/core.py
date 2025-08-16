@@ -665,6 +665,7 @@ class UnitBlueprint:
         self.price = price
         self.max_count = max_count
 
+    # TODO nice name lol
     @classmethod
     def get_class(cls, identifier: str) -> Self:
         try:

@@ -1093,3 +1093,76 @@ class SpurIntoRage(SingleTargetActivatedAbility):
                 StatusSignature(UnitStatus.get("senseless_rage"), self, duration=2),
             )
         )
+
+
+class ConstructTurret(SingleHexTargetActivatedAbility):
+    """
+    Target visible empty space within 1 range.
+    Summons an exhausted Sentry Turret with <ephemeral> for 4 rounds.
+    """
+
+    cost = MovementCost(2) | EnergyCost(4)
+
+    def can_target_hex(self, hex_: Hex) -> bool:
+        return (unit := GS.map.unit_on(hex_)) is None or unit.is_hidden_for(
+            self.owner.controller
+        )
+
+    def perform(self, target: Hex) -> None:
+        ES.resolve(
+            SpawnUnit(
+                UnitBlueprint.get_class("sentry_turret"),
+                self.owner.controller,
+                target,
+                exhausted=True,
+                with_statuses=[
+                    StatusSignature(UnitStatus.get("ephemeral"), self, duration=4)
+                ],
+            )
+        )
+
+
+class FixErUp(SingleTargetActivatedAbility):
+    """
+    Target adjacent allied unit with 1 or more base armor or Sentry Turret.
+    Heals 2.
+    """
+
+    name = "Fix 'er Up"
+    cost = EnergyCost(2) | MovementCost(1)
+
+    def can_target_unit(self, unit: Unit) -> bool:
+        return (
+            unit != self.owner
+            and unit.controller == self.owner.controller
+            and (
+                unit.armor.get_base() > 0
+                or unit.blueprint == UnitBlueprint.get_class("sentry_turret")
+            )
+        )
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(Heal(target, 2))
+
+
+class TurboTune(SingleTargetActivatedAbility):
+    """
+    Target adjacent allied unit with 1 or more base armor.
+    Applies <turbo> for 2 rounds.
+    """
+
+    cost = EnergyCost(2) | MovementCost(2)
+
+    def can_target_unit(self, unit: Unit) -> bool:
+        return (
+            unit != self.owner
+            and unit.controller == self.owner.controller
+            and unit.armor.get_base() > 0
+        )
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                target, StatusSignature(UnitStatus.get("turbo"), self, duration=2)
+            )
+        )

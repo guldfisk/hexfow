@@ -21,6 +21,7 @@ from game.effects.modifiers import (
     StealthModifier,
     TelepathicSpyModifier,
     TerrainProtectionModifier,
+    UnitNoCaptureModifier,
     UnwieldySwimmerModifier,
 )
 from game.effects.replacements import (
@@ -72,6 +73,10 @@ class ToxicSkin(StaticAbilityFacet):
 
 
 class Immobile(StaticAbilityFacet):
+    """
+    This unit can't take move actions.
+    """
+
     def create_effects(self) -> None:
         self.register_effects(RootedModifier(self.owner))
 
@@ -356,3 +361,12 @@ class SludgeTrail(StaticAbilityFacet):
                 HexStatusSignature(HexStatus.get("sludge"), self, duration=2),
             )
         )
+
+
+class Automated(StaticAbilityFacet):
+    """
+    This unit can't capture objectives.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(UnitNoCaptureModifier(self.owner))

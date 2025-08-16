@@ -378,3 +378,14 @@ class DeathLaser(RangedAttackFacet):
     cost = ExclusiveCost()
     damage = 4
     range = 4
+
+
+class MiniGun(RangedAttackFacet):
+    cost = ExclusiveCost()
+    damage = 3
+    range = 3
+
+
+class Wrench(MeleeAttackFacet):
+    cost = MovementCost(1)
+    damage = 2

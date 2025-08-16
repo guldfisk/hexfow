@@ -4,7 +4,9 @@ from game.units.facets.activated_abilities import (
     BatonPass,
     Bloom,
     ChokingSoot,
+    ConstructTurret,
     CoordinatedManeuver,
+    FixErUp,
     FlameThrower,
     FlameWall,
     FlashBang,
@@ -47,6 +49,7 @@ from game.units.facets.activated_abilities import (
     Sweep,
     Terrorize,
     Translocate,
+    TurboTune,
     Vault,
     VenomousSpine,
     VitalityTransfer,
@@ -78,6 +81,7 @@ from game.units.facets.attacks import (
     LightBow,
     MarshmallowFist,
     MightyBlow,
+    MiniGun,
     OtterBite,
     Peck,
     Pinch,
@@ -99,8 +103,10 @@ from game.units.facets.attacks import (
     Tackle,
     TongueLash,
     TwinRevolvers,
+    Wrench,
 )
 from game.units.facets.static_abilities import (
+    Automated,
     Camouflage,
     CaughtInTheMatch,
     DiamondSkin,
@@ -585,6 +591,16 @@ WAR_HOG = UnitBlueprint(
     "War Hog", health=8, speed=3, sight=2, facets=[RazorTusk, Furious], price=11
 )
 
+COMBAT_ENGINEER = UnitBlueprint(
+    "Combat Engineer",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[Wrench, ConstructTurret, FixErUp, TurboTune],
+    price=12,
+)
+
 INFERNO_TANK = UnitBlueprint(
     "Inferno Tank",
     health=7,
@@ -716,6 +732,15 @@ SCARAB = UnitBlueprint(
     sight=1,
     size=Size.SMALL,
     facets=[Pinch],
+    price=None,
+)
+
+SENTRY_TURRET = UnitBlueprint(
+    "Sentry Turret",
+    health=4,
+    speed=0,
+    sight=2,
+    facets=[MiniGun, Immobile, Automated],
     price=None,
 )
 

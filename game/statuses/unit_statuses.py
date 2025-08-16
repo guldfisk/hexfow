@@ -375,3 +375,12 @@ class SenselessRage(RefreshableMixin, UnitStatus):
         self.register_effects(
             MustAttackModifier(self.parent), UnitAttackPowerFlatModifier(self.parent, 2)
         )
+
+
+class Turbo(RefreshableMixin, UnitStatus):
+    """+1 speed and -1 armor."""
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            UnitSpeedModifier(self.parent, 1), UnitArmorFlatModifier(self.parent, -1)
+        )
