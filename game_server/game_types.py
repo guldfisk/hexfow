@@ -57,12 +57,14 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                COMBAT_ENGINEER,
+                # COMBAT_ENGINEER,
                 INFERNO_TANK,
                 # BLOOD_FEUD_WARLOCK,
-                LIGHT_ARCHER,
+                # LIGHT_ARCHER,
+                MINE_LAYER_BEETLE,
             ),
             (
+                WITCH_ENGINE,
                 RIFLE_INFANTRY,
                 # INFERNO_TANK,
                 LUMBERING_PILLAR,

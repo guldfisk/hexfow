@@ -19,7 +19,6 @@ game
     kill source
     "+2 attack power to melee attacks"
     terror/terrified/panic debuff names
-    logging damage source? (relevant for mines and such)
     status linking
     corpses
     ability target descriptions, prob something like for status stacking

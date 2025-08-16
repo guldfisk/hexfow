@@ -118,7 +118,15 @@ class SufferDamage(Event[int]):
     def resolve(self) -> int:
         result = self.unit.suffer_damage(self.signature)
         # TODO source? type?
-        with GS.log(LogLine([self.unit, f"suffers {result} damage"])):
+        with GS.log(
+            LogLine(
+                [
+                    self.unit,
+                    f"suffers {result} damage",
+                    *(("from", self.signature.source) if self.signature.source else ()),
+                ]
+            )
+        ):
             return result
 
 
