@@ -20,6 +20,7 @@ class Peck(MeleeAttackFacet):
 
 
 class BuglingClaw(MeleeAttackFacet):
+    cost = MovementCost(1)
     combinable = True
     damage = 2
 

@@ -42,10 +42,10 @@ class TestGameType(GameType):
                     random.choice(
                         [
                             Plains,
-                            # Plains,
-                            # Plains,
-                            # Forest,
-                            # Hills,
+                            Plains,
+                            Plains,
+                            Forest,
+                            Hills,
                             # Water,
                         ]
                     ),
@@ -56,14 +56,11 @@ class TestGameType(GameType):
         )
 
         player_units = (
+            (BUGLING,),
             (
-                SNAP_JAW,
+                # BUGLING,
+                # CRAWLING_URCHIN,
                 CHICKEN,
-                BLIND_GRUB,
-            ),
-            (
-                CRAWLING_URCHIN,
-                GOBLIN_SLINGSHOT,
             ),
         )
 

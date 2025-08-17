@@ -270,12 +270,13 @@ class MeleeAttackAction(Event[None]):
             # and self.attack.should_follow_up()
         ):
             ES.resolve(MoveUnit(self.attacker, defender_position))
+            GS.active_unit_context.movement_points -= movement_cost
+            ES.resolve(move_out_penalty)
+            ES.resolve(move_in_penalty)
+
         # TODO even if keeping new melee movement rules, where should this be before
         #   or after?
         self.attack.get_cost().pay(GS.active_unit_context)
-        GS.active_unit_context.movement_points -= movement_cost
-        ES.resolve(move_out_penalty)
-        ES.resolve(move_in_penalty)
 
 
 @dataclasses.dataclass
