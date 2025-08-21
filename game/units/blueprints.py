@@ -411,7 +411,6 @@ EFFORTLESS_ATHLETE = UnitBlueprint(
     health=6,
     speed=3,
     sight=2,
-    energy=4,
     facets=[RoundhouseKick, Vault, BatonPass],
     price=8,
 )

@@ -151,7 +151,7 @@ class Vault(SingleTargetActivatedAbility):
     an enemy, apply <staggered> to it.
     """
 
-    cost = MovementCost(1) | EnergyCost(1)
+    cost = MovementCost(1)
     range = 1
     combinable = True
     max_activations = None
@@ -181,9 +181,6 @@ class BatonPass(SingleTargetActivatedAbility):
     Target different allied unit within 1 range that wasn't adjacent to this unit
     at the beginning of this units turn. Applies <burst_of_speed> to the target unit.
     """
-
-    range = 1
-    cost = EnergyCost(1)
 
     # TODO really ugly
     def __init__(self, owner: Unit):

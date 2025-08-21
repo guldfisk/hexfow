@@ -12,13 +12,9 @@ unit sizes stadig ikke intuitivt
 asker skip
 alternativer til "last acted" based initiativ. måske baseret på point?
 
-hvordan virker movement costs på melee attacks som første action?
-
 aura effect indicators?
 
 aoe arc target outside map
-
-gets points with units dying to debuffs?
 
 finner måske gone?
 
@@ -42,12 +38,7 @@ per unit reminder text
 
 effortless athelete på hovedet :(
 
-size should be word
-
-log på points gained
-
 ikke intuitivt burn ikke er pure damage
-pusher beskriv squished unit gir plads
 push should deal damage to all units when unit is squished
 
 test capture end of round keep catpure only get points if already captured

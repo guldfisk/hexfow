@@ -56,11 +56,14 @@ class TestGameType(GameType):
         )
 
         player_units = (
-            (BUGLING,),
+            (
+                EFFORTLESS_ATHLETE,
+                PESTILENCE_PRIEST,
+            ),
             (
                 # BUGLING,
-                # CRAWLING_URCHIN,
                 CHICKEN,
+                CYCLOPS,
             ),
         )
 

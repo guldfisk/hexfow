@@ -21,6 +21,7 @@ game
     terror/terrified/panic debuff names
     status linking
     corpses
+    status merge outcomes for triggers and such
     ability target descriptions, prob something like for status stacking
     alternate capture points
         keeps captured state for player when unit walks off

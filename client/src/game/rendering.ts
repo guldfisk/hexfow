@@ -45,17 +45,6 @@ import moize from "moize";
 import { ViewContainer } from "pixi.js/lib/scene/view/ViewContainer";
 import { CanvasTextOptions } from "pixi.js/lib/scene/text/Text";
 
-const sizeScales: { S: number; M: number; L: number } = {
-  S: 0.9,
-  M: 1,
-  L: 1.1,
-};
-const sizeDiamondCounts: { S: number; M: number; L: number } = {
-  S: 1,
-  M: 2,
-  L: 3,
-};
-
 const selectionIconMap: { [key in selectionIcon]: string } = {
   ranged_attack: "hex_selection_ranged_attack",
   melee_attack: "hex_selection_melee",
@@ -463,7 +452,7 @@ export const renderMap = (
       unitContainer.addChild(baseUnitContainer);
       const unitSprite = newSprite(getTexture("unit", hexData.unit.blueprint));
       unitSprite.anchor = 0.5;
-      baseUnitContainer.scale = sizeScales[hexData.unit.size];
+      baseUnitContainer.scale = (hexData.unit.size + 1) * 0.1 + 1;
       if (hexData.unit.controller == gameState.players[0].name) {
         baseUnitContainer.scale.x = -baseUnitContainer.scale.x;
       }
@@ -479,7 +468,7 @@ export const renderMap = (
       baseUnitContainer.addChild(unitBorder);
       baseUnitContainer.addChild(unitSprite);
 
-      const diamondCount = sizeDiamondCounts[hexData.unit.size];
+      const diamondCount = hexData.unit.size + 1;
 
       for (let i = 0; i < diamondCount; i++) {
         let sizeDiamond = newGraphic(
@@ -569,8 +558,9 @@ export const renderMap = (
         colors.noHealth,
       );
 
-      const imgWidth = unitSprite.width * sizeScales[hexData.unit.size];
-      const imgHeight = unitSprite.height * sizeScales[hexData.unit.size];
+      const sizeScale = (hexData.unit.size + 1) * 0.1 + 1;
+      const imgWidth = unitSprite.width * sizeScale;
+      const imgHeight = unitSprite.height * sizeScale;
 
       healthIndicatorContainer.position = {
         x: imgWidth / 2 - healthIndicatorContainer.width / 2 + 20,

@@ -30,6 +30,8 @@ import {
 } from "../state/store.ts";
 import { getBaseActionSpace } from "../actions/actionSpace.ts";
 
+const sizeNames = { "0": "Small", "1": "Medium", "2": "Large" };
+
 const LogLineComponentView = ({
   element,
   unitMap,
@@ -424,7 +426,7 @@ const UnitDetailsView = ({
           </>
         )}
         {/*TODO*/}
-        <div>size: {(unit || details).size}</div>
+        <div>size: {sizeNames[(unit || details).size.toString()]}</div>
         <div>price: {details.price}</div>
       </div>
 

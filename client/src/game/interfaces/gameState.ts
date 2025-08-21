@@ -3,7 +3,7 @@ import { EffortFacetDetails } from "./gameObjectDetails.ts";
 
 // TODO refactor this shit
 
-export type Size = "S" | "M" | "L";
+export type Size = 0 | 1 | 2
 
 export interface Status {
   type: string;

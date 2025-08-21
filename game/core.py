@@ -576,7 +576,7 @@ class Status(
         return True
 
     def merge(self, incoming: Self) -> bool:
-        return False
+        return True
 
     def is_hidden_for(self, player: Player) -> bool:
         return False
@@ -688,7 +688,7 @@ class UnitBlueprint:
             "armor": self.armor,
             "energy": self.energy,
             # TODO
-            "size": self.size.name[0],
+            "size": self.size.value,
             "aquatic": self.aquatic,
             "facets": [facet.identifier for facet in self.facets],
             "price": self.price,
@@ -880,7 +880,7 @@ class Unit(HasStatuses, Modifiable, VisionBound):
             "max_energy": self.max_energy.g(),
             "energy": self.energy,
             # TODO
-            "size": self.size.g().name[0],
+            "size": self.size.g().value,
             "armor": self.armor.g(),
             "attack_power": self.attack_power.g(),
             "exhausted": self.exhausted,
