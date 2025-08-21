@@ -171,6 +171,10 @@ class LightBow(RangedAttackFacet):
 
 
 class APGun(RangedAttackFacet):
+    """
+    +1 damage against large. Ignores 1 armor.
+    """
+
     cost = ExclusiveCost()
     range = 3
     ap = 1

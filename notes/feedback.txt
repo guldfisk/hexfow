@@ -16,13 +16,33 @@ hvordan virker movement costs på melee attacks som første action?
 
 aura effect indicators?
 
-debuffs explain stacking
-
 aoe arc target outside map
 
 gets points with units dying to debuffs?
 
 finner måske gone?
+
+target iconer hover?
+
+move distance preview
+
+line of sight preview
+
+dynamic reminder text
+
+dynamic text size
+
+cost m unintuitive
+
+low contrast facet icons in unit details
+
+more readable negative armor
+
+per unit reminder text
+
+effortless athelete på hovedet :(
+
+size should be word
 
 log på points gained
 

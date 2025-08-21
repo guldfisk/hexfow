@@ -950,7 +950,7 @@ class SanctifyGrounds(SingleHexTargetActivatedAbility):
 
 class Vomit(SingleHexTargetActivatedAbility):
     """
-    Target adjacent hex. Deals 5 damage.
+    Target adjacent hex. Deals aoe 5 damage.
     """
 
     cost = MovementCost(2)
@@ -962,7 +962,7 @@ class Vomit(SingleHexTargetActivatedAbility):
 
     def perform(self, target: Hex) -> None:
         if unit := GS.map.unit_on(target):
-            ES.resolve(Damage(unit, DamageSignature(5, self)))
+            ES.resolve(Damage(unit, DamageSignature(5, self, DamageType.AOE)))
 
 
 class SludgeBelch(TriHexTargetActivatedAbility):

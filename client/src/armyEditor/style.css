@@ -1,0 +1,45 @@
+body {
+  margin: 0;
+  display: flex;
+}
+.sidebar {
+  height: 100%;
+  width: 400px;
+  position: fixed;
+  background-color: #111;
+  overflow-x: hidden;
+  color: white;
+}
+.sidebar-left {
+  left: 0;
+  padding: 5px;
+}
+.sidebar-right {
+  right: 0;
+  padding: 5px;
+}
+
+.unit-list {
+  width: 100%;
+  overflow-y: scroll;
+  white-space: pre-wrap;
+  /*height: 60%;*/
+}
+
+.unit-list-item {
+  border-radius: 8px;
+  background: #333333;
+  padding: 8px;
+  margin-top: 10px;
+  font-size: 0.7em;
+    display: flex;
+
+  /*width: 200px;*/
+  /*height: 150px;*/
+}
+
+.unit-thumbnail {
+  width: 60px;
+  height: 74px;
+  margin-left: auto;
+}

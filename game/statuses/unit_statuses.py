@@ -324,8 +324,6 @@ class Hitched(UnitStatus):
     Expires at the end of the turn.
     """
 
-    default_intention = StatusIntention.DEBUFF
-
     def create_effects(self) -> None:
         self.register_effects(
             HitchedTrigger(self.source.owner, self.parent),
