@@ -511,6 +511,10 @@ class ModifiableAttribute(Generic[T, V]):
     def get_base(self, instance: object) -> V:
         return getattr(instance, self.source_name)
 
+    # TODO yikes
+    def g(self) -> V:
+        raise NotImplementedError()
+
     def __get__(
         self, instance: object | None, owner
     ) -> _BoundModifiableAttribute[T, V] | ModifiableAttribute:

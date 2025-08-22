@@ -33,8 +33,11 @@ from game.map.geometry import hex_arc, hex_circle, hex_ring
 from game.values import DamageType, Resistance, Size, StatusIntention, VisionObstruction
 
 
-G_Status = TypeVar("G_Status")
-G_DecisionResult = TypeVar("G_DecisionResult")
+G_Status = TypeVar("G_Status", bound="Status")
+G_decision_result = TypeVar("G_decision_result")
+G_HasStatuses = TypeVar("G_HasStatuses", bound="HasStatuses")
+G_EffortCost = TypeVar("G_EffortCost", bound="EffortCost")
+G_AttackFacet = TypeVar("G_AttackFacet", bound="AttackFacet")
 
 JSON: TypeAlias = Mapping[str, Any]
 
@@ -51,7 +54,7 @@ class Serializable(ABC):
     def serialize(self, context: SerializationContext) -> JSON: ...
 
 
-class DecisionPoint(Serializable, Generic[G_DecisionResult]):
+class DecisionPoint(Serializable, Generic[G_decision_result]):
     @abstractmethod
     def get_explanation(self) -> str: ...
 
@@ -66,13 +69,10 @@ class DecisionPoint(Serializable, Generic[G_DecisionResult]):
         }
 
     @abstractmethod
-    def parse_response(self, v: Any) -> G_DecisionResult: ...
+    def parse_response(self, v: Any) -> G_decision_result: ...
 
 
-G_DecisionPoint = TypeVar("G_DecisionPoint", bound=DecisionPoint)
-
-
-class TargetProfile(ABC, Generic[G_DecisionResult]):
+class TargetProfile(ABC, Generic[G_decision_result]):
     @abstractmethod
     def serialize_values(self, context: SerializationContext) -> JSON: ...
 
@@ -80,7 +80,7 @@ class TargetProfile(ABC, Generic[G_DecisionResult]):
         return {"type": type(self).__name__, "values": self.serialize_values(context)}
 
     @abstractmethod
-    def parse_response(self, v: Any) -> G_DecisionResult: ...
+    def parse_response(self, v: Any) -> G_decision_result: ...
 
 
 class NoTarget(TargetProfile[None]):
@@ -92,8 +92,8 @@ class NoTarget(TargetProfile[None]):
 
 
 @dataclasses.dataclass(kw_only=True)
-class Option(ABC, Generic[G_DecisionResult]):
-    target_profile: TargetProfile[G_DecisionResult]
+class Option(ABC, Generic[G_decision_result]):
+    target_profile: TargetProfile[G_decision_result]
 
     @abstractmethod
     def serialize_values(self, context: SerializationContext) -> JSON: ...
@@ -107,9 +107,9 @@ class Option(ABC, Generic[G_DecisionResult]):
 
 
 @dataclasses.dataclass
-class OptionDecision(Generic[G_DecisionResult]):
-    option: Option[G_DecisionResult]
-    target: G_DecisionResult
+class OptionDecision(Generic[G_decision_result]):
+    option: Option[G_decision_result]
+    target: G_decision_result
 
 
 @dataclasses.dataclass
@@ -130,25 +130,13 @@ class SelectOptionDecisionPoint(DecisionPoint[OptionDecision]):
         )
 
 
-# TODO wtf if this
-class VisionBound(Serializable):
-    @abstractmethod
-    def serialize_values(self, context: SerializationContext) -> JSON: ...
-
-    def serialize(self, context: SerializationContext) -> JSON:
-        return {
-            "id": context.player.id_map.get_id_for(self),
-            **self.serialize_values(context),
-        }
-
-
-class MoveOption(Option[G_DecisionResult]):
+class MoveOption(Option[G_decision_result]):
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {}
 
 
 @dataclasses.dataclass
-class EffortOption(Option[G_DecisionResult]):
+class EffortOption(Option[G_decision_result]):
     facet: EffortFacet
 
     def serialize_values(self, context: SerializationContext) -> JSON:
@@ -156,7 +144,7 @@ class EffortOption(Option[G_DecisionResult]):
 
 
 @dataclasses.dataclass
-class ActivateUnitOption(Option[G_DecisionResult]):
+class ActivateUnitOption(Option[G_decision_result]):
     actions_previews: dict[Unit, list[Option]]
 
     def serialize_values(self, context: SerializationContext) -> JSON:
@@ -176,7 +164,6 @@ class SkipOption(Option[None]):
 
 
 class HasStatuses(HasEffects, Generic[G_Status]):
-    # TODO parent type?
     def __init__(self, parent: HasEffectChildren | None = None):
         super().__init__(parent=parent)
         self.statuses: list[G_Status] = []
@@ -210,9 +197,6 @@ class HasStatuses(HasEffects, Generic[G_Status]):
         except ValueError:
             pass
         status.deregister()
-
-
-G_HasStatuses = TypeVar("G_HasStatuses", bound=HasStatuses)
 
 
 class Facet(HasEffects["Unit"], Registered, ABC, metaclass=get_registered_meta()):
@@ -258,9 +242,6 @@ class EffortCost(ABC):
 
     def serialize(self) -> dict[str, Any]:
         return {"type": self.__class__.__name__, **self.serialize_values()}
-
-
-G_EffortCost = TypeVar("G_EffortCost", bound=EffortCost)
 
 
 class EffortCostSet:
@@ -355,9 +336,8 @@ class EnergyCost(EffortCost):
         return {"amount": self.amount}
 
 
-class EffortFacet(Facet, Modifiable, ABC):
+class EffortFacet(Facet, ABC):
     cost: ClassVar[EffortCostSet | EffortCost | None] = None
-    # TODO these should be some signature together
     combinable: ClassVar[bool] = False
     max_activations: int | None = 1
 
@@ -400,9 +380,6 @@ class EffortFacet(Facet, Modifiable, ABC):
 
 
 class AttackFacet(EffortFacet, ABC): ...
-
-
-G_AttackFacet = TypeVar("G_AttackFacet", bound=AttackFacet)
 
 
 # TODO maybe this is all attacks, and "aoe attacks" are all abilities?
@@ -509,14 +486,14 @@ class RangedAttackFacet(SingleTargetAttackFacet, ABC):
         return {**super().serialize_type(), "range": cls.range}
 
 
-class ActivatedAbilityFacet(EffortFacet, Generic[G_DecisionResult], ABC):
+class ActivatedAbilityFacet(EffortFacet, Generic[G_decision_result], ABC):
     category = "activated_ability"
 
     @abstractmethod
-    def get_target_profile(self) -> TargetProfile[G_DecisionResult] | None: ...
+    def get_target_profile(self) -> TargetProfile[G_decision_result] | None: ...
 
     @abstractmethod
-    def perform(self, target: G_DecisionResult) -> None: ...
+    def perform(self, target: G_decision_result) -> None: ...
 
     @modifiable
     def can_be_activated(self, context: ActiveUnitContext) -> bool:
@@ -689,7 +666,7 @@ class UnitBlueprint:
         }
 
 
-class Unit(HasStatuses, Modifiable, VisionBound):
+class Unit(HasStatuses, Modifiable, Serializable):
     speed: ModifiableAttribute[None, int]
     sight: ModifiableAttribute[None, int]
     max_health: ModifiableAttribute[None, int]
@@ -863,8 +840,9 @@ class Unit(HasStatuses, Modifiable, VisionBound):
     def health(self) -> int:
         return self.max_health.g() - self.damage
 
-    def serialize_values(self, context: SerializationContext) -> JSON:
+    def serialize(self, context: SerializationContext) -> JSON:
         return {
+            "id": context.player.id_map.get_id_for(self),
             "blueprint": self.blueprint.identifier,
             "controller": self.controller.name,
             "max_health": self.max_health.g(),
@@ -885,12 +863,6 @@ class Unit(HasStatuses, Modifiable, VisionBound):
                 if not status.is_hidden_for(context.player)
             ],
         }
-
-    def __eq__(self, other: Any) -> bool:
-        return self is other
-
-    def __hash__(self) -> int:
-        return hash(id(self))
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.blueprint.name}, {self.controller.name}, {id(self)})"
@@ -1957,8 +1929,8 @@ class GameState:
             )
 
     def make_decision(
-        self, player: Player, decision_point: DecisionPoint[G_DecisionResult]
-    ) -> G_DecisionResult:
+        self, player: Player, decision_point: DecisionPoint[G_decision_result]
+    ) -> G_decision_result:
         for _player in self.turn_order:
             if _player != player:
                 self.connections[_player].send(
@@ -2051,8 +2023,8 @@ class ScopedGameState:
         self._gs.send_to_players()
 
     def make_decision(
-        self, player: Player, decision_point: DecisionPoint[G_DecisionResult]
-    ) -> G_DecisionResult:
+        self, player: Player, decision_point: DecisionPoint[G_decision_result]
+    ) -> G_decision_result:
         return self._gs.make_decision(player, decision_point)
 
 

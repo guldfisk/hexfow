@@ -22,7 +22,6 @@ from game.core import (
     ActivateUnitOption,
     Connection,
     EffortOption,
-    G_AttackFacet,
     GameState,
     Hex,
     HexMap,
@@ -50,7 +49,6 @@ from game.units.blueprints import (
     LUMBERING_PILLAR,
     MARSHMALLOW_TITAN,
 )
-from game.units.facets.attacks import Peck
 from game.values import Size
 
 
@@ -412,18 +410,13 @@ def unit_spawner(ground_map: HexMap, player1: Player) -> UnitSpawner:
     return UnitSpawner(ground_map, player1)
 
 
-def get_attack(unit: Unit, attack_type: type[G_AttackFacet]) -> G_AttackFacet:
-    for attack in unit.attacks:
-        if isinstance(attack, attack_type):
-            return attack
-    raise ValueError(f"{unit} does not have attack {attack_type}")
-
-
 def test_attack(unit_spawner: UnitSpawner) -> None:
     chicken = unit_spawner.spawn(CHICKEN)
     cactus = unit_spawner.spawn(CACTUS)
 
-    ES.resolve(Hit(attacker=chicken, defender=cactus, attack=get_attack(chicken, Peck)))
+    ES.resolve(
+        Hit(attacker=chicken, defender=cactus, attack=chicken.get_primary_attack())
+    )
     ES.resolve_pending_triggers()
 
     assert cactus.damage == 1

@@ -8,7 +8,6 @@ from game.core import (
     DamageSignature,
     EnergyCost,
     ExclusiveCost,
-    G_DecisionResult,
     Hex,
     HexHexes,
     HexRing,
@@ -252,7 +251,7 @@ class Stare(ActivatedAbilityFacet[list[Hex]]):
 
     combinable = True
 
-    def get_target_profile(self) -> TargetProfile[G_DecisionResult] | None:
+    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
         return RadiatingLine(
             GS.map.hex_off(self.parent),
             list(GS.map.get_neighbors_off(self.parent)),

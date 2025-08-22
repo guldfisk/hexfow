@@ -12,7 +12,7 @@ from game.core import (
     DamageSignature,
     EffortOption,
     Facet,
-    G_DecisionResult,
+    G_decision_result,
     HasStatuses,
     Hex,
     HexStatusSignature,
@@ -410,8 +410,8 @@ class DispelStatus(Event[None]):
 @dataclasses.dataclass
 class ActivateAbilityAction(Event[None]):
     unit: Unit
-    ability: ActivatedAbilityFacet[G_DecisionResult]
-    target: G_DecisionResult
+    ability: ActivatedAbilityFacet[G_decision_result]
+    target: G_decision_result
 
     def resolve(self) -> None:
         with GS.log(
