@@ -173,8 +173,8 @@ class Schadenfreude(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(
-            SchadenfreudeDamageTrigger(self.parent),
-            SchadenfreudeDebuffTrigger(self.parent),
+            SchadenfreudeDamageTrigger(self.parent, self),
+            SchadenfreudeDebuffTrigger(self.parent, self),
         )
 
 
@@ -322,7 +322,7 @@ class Inspiration(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(InspirationTrigger(self.parent))
+        self.register_effects(InspirationTrigger(self.parent, self))
 
 
 class InspiringPresence(StaticAbilityFacet):

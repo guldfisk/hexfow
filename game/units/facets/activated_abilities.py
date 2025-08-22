@@ -114,7 +114,7 @@ class GreaseTheGears(SingleAllyActivatedAbility):
             for kill_event in ES.resolve(Kill(target)).iter_type(Kill)
         ):
             ES.resolve(Heal(self.parent, 2))
-            ES.resolve(GainEnergy(self.parent, 2))
+            ES.resolve(GainEnergy(self.parent, 2, source=self))
             ES.resolve(ModifyMovementPoints(self.parent, movement_bonus))
 
 

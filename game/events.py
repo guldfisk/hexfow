@@ -1,3 +1,4 @@
+import contextlib
 import dataclasses
 import math
 from collections import defaultdict
@@ -28,6 +29,7 @@ from game.core import (
     SelectOptionDecisionPoint,
     SingleTargetAttackFacet,
     SkipOption,
+    Source,
     Status,
     TerrainProtectionRequest,
     TurnOrder,
@@ -35,6 +37,7 @@ from game.core import (
     UnitBlueprint,
     UnitStatus,
     UnitStatusSignature,
+    get_source_controller,
 )
 from game.values import DamageType, Resistance
 
@@ -96,13 +99,18 @@ class Heal(Event[int]):
 class GainEnergy(Event[int]):
     unit: Unit
     amount: int
+    source: Source
 
     def is_valid(self) -> bool:
         return self.amount > 0 and self.unit.energy < self.unit.max_energy.g()
 
     def resolve(self) -> int:
         amount = max(min(self.amount, self.unit.max_energy.g() - self.unit.energy), 0)
-        with GS.log(LogLine([self.unit, f"gains {amount} energy"])):
+        with (
+            GS.log(LogLine([self.unit, f"gains {amount} energy from", self.source]))
+            if get_source_controller(self.source)
+            else contextlib.nullcontext()
+        ):
             self.unit.energy += amount
         return amount
 
@@ -676,7 +684,7 @@ class Turn(Event[bool]):
 class RoundUpkeep(Event[None]):
     def resolve(self) -> None:
         for unit in list(GS.map.unit_positions.keys()):
-            ES.resolve(GainEnergy(unit, unit.energy_regen.g()))
+            ES.resolve(GainEnergy(unit, unit.energy_regen.g(), source=None))
             for status in list(unit.statuses):
                 status.decrement_duration()
         for hex_ in GS.map.hexes.values():
@@ -828,8 +836,9 @@ class Round(Event[None]):
 
             # TODO should we trigger turn skip for remaining units or something?
 
-            ES.resolve(RoundCleanup())
-            do_state_based_check()
+            with gs.log(LogLine(["Round cleanup"])):
+                ES.resolve(RoundCleanup())
+                do_state_based_check()
 
             gs.turn_order.set_player_order(
                 sorted(gs.turn_order, key=lambda p: last_action_timestamps[p])

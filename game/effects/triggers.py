@@ -154,6 +154,7 @@ class SchadenfreudeDamageTrigger(TriggerEffect[Damage]):
     priority: ClassVar[int] = 0
 
     unit: Unit
+    source: Source
 
     def should_trigger(self, event: Damage) -> bool:
         return (
@@ -162,7 +163,7 @@ class SchadenfreudeDamageTrigger(TriggerEffect[Damage]):
         )
 
     def resolve(self, event: Damage) -> None:
-        ES.resolve(GainEnergy(self.unit, 1))
+        ES.resolve(GainEnergy(self.unit, 1, source=self.source))
 
 
 @dataclasses.dataclass(eq=False)
@@ -170,6 +171,7 @@ class SchadenfreudeDebuffTrigger(TriggerEffect[ApplyStatus]):
     priority: ClassVar[int] = 0
 
     unit: Unit
+    source: Source
 
     def should_trigger(self, event: ApplyStatus) -> bool:
         return (
@@ -180,7 +182,7 @@ class SchadenfreudeDebuffTrigger(TriggerEffect[ApplyStatus]):
         )
 
     def resolve(self, event: ApplyStatus) -> None:
-        ES.resolve(GainEnergy(self.unit, 1))
+        ES.resolve(GainEnergy(self.unit, 1, source=self.source))
 
 
 # TODO originally this was for all simple attacks, but then the kill event isn't
@@ -708,6 +710,7 @@ class InspirationTrigger(TriggerEffect[ActivateAbilityAction]):
     priority: ClassVar[int] = 0
 
     unit: Unit
+    source: Source
 
     def should_trigger(self, event: ActivateAbilityAction) -> bool:
         return (
@@ -728,6 +731,7 @@ class InspirationTrigger(TriggerEffect[ActivateAbilityAction]):
                     and energy_cost.amount >= 4
                     else 1
                 ),
+                source=self.source,
             )
         )
 
