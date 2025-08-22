@@ -358,7 +358,7 @@ class EffortFacet(Facet, ABC):
             return EffortCostSet([cls.cost])
         return cls.cost or EffortCostSet()
 
-    # TODO should prob be modifyable. prob need some way to lock in costs for effort
+    # TODO should prob be modifiable. prob need some way to lock in costs for effort
     #  options then.
     def get_cost(self) -> EffortCostSet:
         return self.get_cost_set()
@@ -552,15 +552,7 @@ class Status(
 
     @property
     def controller(self) -> Player | None:
-        return (
-            (
-                self.source.parent.controller
-                if isinstance(self.source, Facet)
-                else self.source.controller
-            )
-            if self.source
-            else None
-        )
+        return get_source_controller(self.source)
 
     @classmethod
     def get_stacking_info(cls) -> str:
@@ -684,7 +676,6 @@ class UnitBlueprint:
             "sight": self.sight,
             "armor": self.armor,
             "energy": self.energy,
-            # TODO
             "size": self.size.value,
             "aquatic": self.aquatic,
             "facets": [facet.identifier for facet in self.facets],
@@ -939,15 +930,7 @@ class StatusSignature(Generic[G_HasStatuses, G_Status]):
 
     @property
     def controller(self) -> Player | None:
-        return (
-            (
-                self.source.parent.controller
-                if isinstance(self.source, Facet)
-                else self.source.controller
-            )
-            if self.source
-            else None
-        )
+        return get_source_controller(self.source)
 
     @abstractmethod
     def realize(self, for_: G_HasStatuses) -> G_Status: ...
@@ -1352,6 +1335,14 @@ class Hex(Modifiable, HasStatuses["HexStatus", "HexStatusSignature"], Serializab
 
 
 Source: TypeAlias = Facet | Status | None
+
+
+def get_source_controller(source: Source) -> Player | None:
+    return (
+        (source.parent.controller if isinstance(source, Facet) else source.controller)
+        if source
+        else None
+    )
 
 
 @dataclasses.dataclass

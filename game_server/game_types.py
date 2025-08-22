@@ -66,7 +66,8 @@ class TestGameType(GameType):
             ),
             (
                 # BUGLING,
-                CHICKEN,
+                # CHICKEN,
+                WITCH_ENGINE,
                 CHICKEN,
                 CYCLOPS,
             ),
