@@ -180,7 +180,7 @@ class Schadenfreude(StaticAbilityFacet):
 class GrizzlyMurderer(StaticAbilityFacet):
     """
     When this unit kills an opposing unit with a melee attack, each unit allied to
-    the killed units that could see it suffers <terrified> for 2 rounds.
+    the killed units that could see it suffers <shocked> for 2 rounds.
     """
 
     def create_effects(self) -> None:

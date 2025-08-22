@@ -85,7 +85,7 @@ class Ephemeral(LowestRefreshableMixin, UnitStatus):
         ES.resolve(Kill(self.parent))
 
 
-class Terrified(RefreshableMixin, UnitStatus):
+class Shocked(RefreshableMixin, UnitStatus):
     """
     -1 attack power.
     """

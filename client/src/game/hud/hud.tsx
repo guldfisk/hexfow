@@ -304,7 +304,7 @@ const getStatusStatLine = (status: Status | UnitStatus): string => {
     stats.push(`duration: ${status.duration} rounds`);
   }
 
-  return stats.join(" ");
+  return stats.join(" - ");
 };
 
 const FacetDetailView = ({

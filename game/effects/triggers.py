@@ -211,7 +211,7 @@ class GrizzlyMurdererTrigger(TriggerEffect[MeleeAttackAction]):
                     ApplyStatus(
                         unit,
                         StatusSignature(
-                            UnitStatus.get("terrified"), self.source, duration=2
+                            UnitStatus.get("shocked"), self.source, duration=2
                         ),
                     )
                 )
