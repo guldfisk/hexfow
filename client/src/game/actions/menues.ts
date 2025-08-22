@@ -9,6 +9,7 @@ import {
   HexRingMenu,
   ListMenu,
   MenuData,
+  NOfHexesMenu,
   NOfUnitsMenu,
   RadiatingLineMenu,
   TreeMenu,
@@ -34,6 +35,69 @@ import { CC, Corner, RC } from "../interfaces/geometry.ts";
 import { min } from "../utils/min.ts";
 
 // TODO some common logic in this mess
+
+const getNOfHexesActionSpace = (
+  gameState: GameState,
+  takeAction: (body: { [key: string]: any }) => void,
+  menu: NOfHexesMenu,
+): ActionSpace => {
+  const hexActions: { [key: string]: HexActions } = Object.fromEntries(
+    gameState.map.hexes.map((hex) => [
+      ccToKey(hex.cc),
+      { actions: [], highlighted: false },
+    ]),
+  );
+
+  for (const [idx, hex] of menu.targetProfile.values.hexes.entries()) {
+    if (!menu.selectedIndexes.includes(idx)) {
+      hexActions[ccToKey(hex.cc)].actions.push({
+        type: "activated_ability",
+        description:
+          menu.targetProfile.values.labels[menu.selectedIndexes.length],
+        do: () => {
+          const selectedIndexes = menu.selectedIndexes.concat([idx]);
+          if (selectedIndexes.length >= menu.targetProfile.values.selectCount) {
+            takeAction({
+              index: menu.optionIndex,
+              target: {
+                indexes: selectedIndexes,
+              },
+            });
+          } else {
+            store.dispatch(advanceMenu({ ...menu, selectedIndexes }));
+          }
+        },
+      });
+    } else {
+      hexActions[ccToKey(hex.cc)].highlighted = true;
+    }
+  }
+  return {
+    hexActions,
+    buttonAction:
+      menu.targetProfile.values.minCount !== null &&
+      menu.selectedIndexes.length >= menu.targetProfile.values.minCount
+        ? {
+            description: "finish selection",
+            do: () => {
+              takeAction({
+                index: menu.optionIndex,
+                target: {
+                  indexes: menu.selectedIndexes,
+                },
+              });
+            },
+          }
+        : null,
+  };
+};
+
+const getNOfHexesDescription = (
+  gameState: GameState,
+  menu: NOfHexesMenu,
+): string => {
+  return menu.targetProfile.values.labels[menu.selectedIndexes.length];
+};
 
 const getNOfUnitsActionSpace = (
   gameState: GameState,
@@ -577,6 +641,7 @@ export const menuActionSpacers: {
   ) => ActionSpace;
 } = {
   NOfUnits: getNOfUnitsActionSpace,
+  NOfHexes: getNOfHexesActionSpace,
   ConsecutiveAdjacentHexes: getConsecutiveAdjacentHexesActionSpace,
   HexHexes: getHexHexesActionSpace,
   RadiatingLine: getRadiatingLineActionSpace,
@@ -591,6 +656,7 @@ export const menuDescribers: {
   [key: string]: (gameState: GameState, menu: MenuData) => string;
 } = {
   NOfUnits: getNOfUnitsDescription,
+  NOfHexes: getNOfHexesDescription,
   ConsecutiveAdjacentHexes: getConsecutiveAdjacentHexesDescription,
   HexHexes: getHexHexesDescription,
   RadiatingLine: getRadiatingLineDescription,

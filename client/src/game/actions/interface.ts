@@ -3,6 +3,7 @@ import {
   ConsecutiveAdjacentHexes,
   HexHexes,
   HexRing,
+  NOfHexes,
   NOfUnits,
   Option,
   RadiatingLine,
@@ -54,6 +55,13 @@ export interface NOfUnitsMenu extends BaseMenuData {
   optionIndex: number;
   selectedUnits: string[];
   targetProfile: NOfUnits;
+}
+
+export interface NOfHexesMenu extends BaseMenuData {
+  type: "NOfHexes";
+  optionIndex: number;
+  selectedIndexes: number[];
+  targetProfile: NOfHexes;
 }
 
 export interface ConsecutiveAdjacentHexesMenu extends BaseMenuData {
@@ -112,6 +120,7 @@ export interface TriHexMenu extends BaseMenuData {
 
 export type MenuData =
   | NOfUnitsMenu
+  | NOfHexesMenu
   | TreeMenu
   | ConsecutiveAdjacentHexesMenu
   | HexHexesMenu

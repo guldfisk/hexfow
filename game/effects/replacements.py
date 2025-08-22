@@ -1,11 +1,14 @@
 import dataclasses
+from enum import IntEnum, auto
 from typing import ClassVar
 
+from debug_utils import dp
 from events.eventsystem import ES, ReplacementEffect, hook_on
 from game.core import (
     GS,
     DamageSignature,
     Hex,
+    HexStatusLink,
     Source,
     Unit,
     UnitStatus,
@@ -27,6 +30,11 @@ from game.statuses.dispel import dispel_from_unit
 from game.values import StatusIntention
 
 
+class MoveUnitLayers(IntEnum):
+    PUSH_LAYER = auto()
+    PORTAL_LAYER = auto()
+
+
 @dataclasses.dataclass(eq=False)
 class CrushableReplacement(ReplacementEffect[MoveUnit]):
     priority: ClassVar[int] = 0
@@ -46,8 +54,31 @@ class CrushableReplacement(ReplacementEffect[MoveUnit]):
 
 
 @dataclasses.dataclass(eq=False)
+class GateReplacement(ReplacementEffect[MoveUnit]):
+    priority: ClassVar[int] = MoveUnitLayers.PORTAL_LAYER
+
+    link: HexStatusLink
+
+    def can_replace(self, event: MoveUnit) -> bool:
+        return any(status.parent == event.to_ for status in self.link.statuses)
+
+    def resolve(self, event: MoveUnit) -> None:
+        different_hexes = [
+            status.parent for status in self.link.statuses if status.parent != event.to_
+        ]
+        print("in gate")
+        if len(different_hexes) != 1 or not different_hexes[0].can_move_into(
+            event.unit
+        ):
+            event.resolve()
+            return
+        dp("gate change", event.to_, different_hexes[0])
+        ES.resolve(event.branch(to_=different_hexes[0]))
+
+
+@dataclasses.dataclass(eq=False)
 class PusherReplacement(ReplacementEffect[MoveUnit]):
-    priority: ClassVar[int] = 0
+    priority: ClassVar[int] = MoveUnitLayers.PUSH_LAYER
 
     unit: Unit
     source: Source
@@ -58,6 +89,11 @@ class PusherReplacement(ReplacementEffect[MoveUnit]):
     def resolve(self, event: MoveUnit) -> None:
         _map = GS.map
         direction = event.to_.position - _map.position_off(event.unit)
+        dp(direction, direction.length)
+
+        if direction.length > 1:
+            ES.resolve(event)
+            return
 
         unit_positions: list[tuple[Unit, Hex | None]] = []
         current_position = _map.position_off(event.unit)

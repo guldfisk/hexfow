@@ -44,11 +44,12 @@ class CC(NamedTuple):
     def serialize(self) -> Mapping[str, Any]:
         return {"r": self.r, "h": self.h}
 
+    @property
+    def length(self):
+        return (abs(self.r) + abs(self.r + self.h) + abs(self.h)) // 2
+
     def distance_to(self, to_: CC) -> int:
-        difference = self - to_
-        return (
-            abs(difference.r) + abs(difference.r + difference.h) + abs(difference.h)
-        ) // 2
+        return (self - to_).length
 
 
 class CornerPosition(IntEnum):

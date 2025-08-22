@@ -25,6 +25,7 @@ from game.units.facets.activated_abilities import (
     LayMine,
     MalevolentStare,
     NothingStopsTheMail,
+    OpenGate,
     Poof,
     RaiseShrine,
     Rouse,
@@ -775,4 +776,8 @@ TELEPATH = UnitBlueprint(
     energy=5,
     facets=[TelepathicSpy, Rouse],
     price=None,
+)
+
+GATE_FIEND = UnitBlueprint(
+    "Gate Fiend", health=8, speed=3, sight=2, energy=4, facets=[OpenGate], price=None
 )

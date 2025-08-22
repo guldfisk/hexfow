@@ -57,19 +57,16 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                EFFORTLESS_ATHLETE,
-                PESTILENCE_PRIEST,
-                # INFERNO_TANK,
-                # CHAINSAW_SADIST,
-                # STAUNCH_IRON_HEART,
-                # CHAINSAW_SADIST,
+                GATE_FIEND,
+                BULLDOZER,
             ),
             (
                 # BUGLING,
                 # CHICKEN,
-                WITCH_ENGINE,
-                CHICKEN,
-                CYCLOPS,
+                # WITCH_ENGINE,
+                SHRINE_KEEPER,
+                BULLDOZER,
+                # CYCLOPS,
             ),
         )
 

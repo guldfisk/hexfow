@@ -6,6 +6,7 @@ import {
   Hex,
   HexHexes,
   HexRing,
+  NOfHexes,
   NOfUnits,
   RadiatingLine,
   Tree,
@@ -73,6 +74,24 @@ export const getBaseActions = (
                   index: targetIdx,
                 },
               }),
+          });
+        }
+      } else if (option.targetProfile.type == "NOfHexes") {
+        for (const [hexIdx, hex] of option.targetProfile.values.hexes.entries()) {
+          actions[ccToKey(hex.cc)].push({
+            type: "activated_ability",
+            description:
+              option.values?.facet?.name ||
+              (option.targetProfile as NOfHexes).values.labels[0],
+            do: () =>
+              store.dispatch(
+                activateMenu({
+                  type: "NOfHexes",
+                  selectedIndexes: [hexIdx],
+                  targetProfile: option.targetProfile as NOfHexes,
+                  optionIndex: idx,
+                }),
+              ),
           });
         }
       } else if (option.targetProfile.type == "NOfUnits") {

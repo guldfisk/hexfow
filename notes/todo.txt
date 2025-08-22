@@ -17,7 +17,6 @@ game
     well-defined effects order
     well-defined order of iterating units on map
     kill source
-    gain energy source
     "+2 attack power to melee attacks"
     status linking
     corpses

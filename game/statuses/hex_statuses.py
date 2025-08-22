@@ -158,3 +158,9 @@ class Sludge(RefreshableMixin, HexStatus):
         self.register_effects(
             HexMoveOutPenaltyModifier(self.parent, 1), SludgeTrigger(self)
         )
+
+
+class Gate(HexStatus):
+    """
+    If a unit would move into this hex, it instead moves into the hex with the linked gate, if able.
+    """

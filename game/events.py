@@ -388,9 +388,14 @@ class MoveUnit(Event[Hex | None]):
     #     return self.to_.can_move_into(self.unit)
 
     def resolve(self) -> Hex | None:
+        moved = False
+        from_ = None
+        print("in move unit")
         if self.to_.can_move_into(self.unit):
             from_ = self.to_.map.hex_off(self.unit)
-            self.to_.map.move_unit_to(self.unit, self.to_)
+            moved = self.to_.map.move_unit_to(self.unit, self.to_)
+
+        if moved:
             # TODO hmm
             GS.update_vision()
             with GS.log(
@@ -403,7 +408,7 @@ class MoveUnit(Event[Hex | None]):
                 LogLine([self.unit, "fails to move into", self.to_]),
                 LogLine([self.unit, "fails to move"]),
             ):
-                return None
+                return from_
 
 
 @dataclasses.dataclass

@@ -77,6 +77,7 @@ class EffectSet:
 
     # TODO type
     def get_effects(self, effect_type: type[F] | F, target: Any) -> Iterable[F]:
+        print("get effects", effect_type, target)
         return self.effects[effect_type.effect_type][target].keys()
 
 
@@ -155,6 +156,7 @@ class EventSystem:
             self.deregister_effects(trigger_effect)
 
     def resolve(self, event: Event[V]) -> EventResolution:
+        print("resolving", event)
         if not event.is_valid():
             return EventResolution([])
 

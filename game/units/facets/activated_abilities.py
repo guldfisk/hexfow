@@ -1,3 +1,5 @@
+import itertools
+
 from events.eventsystem import ES
 from game.core import (
     GS,
@@ -15,6 +17,7 @@ from game.core import (
     HexStatusSignature,
     MeleeAttackFacet,
     MovementCost,
+    NOfHexes,
     NOfUnits,
     NoTargetActivatedAbility,
     OneOfHexes,
@@ -54,6 +57,7 @@ from game.events import (
 )
 from game.statuses.dispel import dispel_all, dispel_from_unit
 from game.statuses.hex_statuses import BurningTerrain, Glimpse, Shrine, Smoke, Soot
+from game.statuses.links import GateLink
 from game.statuses.unit_statuses import (
     Burn,
     BurstOfSpeed,
@@ -1125,3 +1129,43 @@ class TurboTune(SingleTargetActivatedAbility):
                 target, UnitStatusSignature(UnitStatus.get("turbo"), self, duration=2)
             )
         )
+
+
+class OpenGate(ActivatedAbilityFacet[list[Hex]]):
+    """
+    Target 2 hexes within 3 range NLoS.
+    Applies <gate> to both hexes for 3 rounds.
+    """
+
+    cost = ExclusiveCost() | EnergyCost(4)
+
+    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
+        if (
+            len(
+                hexes := [
+                    _hex for _hex in GS.map.get_hexes_within_range_off(self.parent, 3)
+                ]
+            )
+            >= 2
+        ):
+            return NOfHexes(hexes, 2, ["select hex"] * 2)
+
+    def perform(self, target: list[Hex]) -> None:
+        if statuses := [
+            result.result
+            for result in itertools.chain(
+                *(
+                    ES.resolve(
+                        ApplyHexStatus(
+                            hex_,
+                            HexStatusSignature(HexStatus.get("gate"), self, duration=3),
+                        )
+                    ).iter_type(ApplyHexStatus)
+                    for hex_ in target
+                )
+            )
+            if result.result
+            and result.space in target
+            and isinstance(result.result, HexStatus.get("gate"))
+        ]:
+            GateLink(statuses)

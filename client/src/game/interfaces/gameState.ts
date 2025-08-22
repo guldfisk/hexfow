@@ -3,7 +3,7 @@ import { EffortFacetDetails } from "./gameObjectDetails.ts";
 
 // TODO refactor this shit
 
-export type Size = 0 | 1 | 2
+export type Size = 0 | 1 | 2;
 
 export interface Status {
   type: string;
@@ -90,6 +90,16 @@ export interface NOfUnits extends TargetProfileBase {
   };
 }
 
+export interface NOfHexes extends TargetProfileBase {
+  type: "NOfHexes";
+  values: {
+    hexes: { cc: CC }[];
+    selectCount: number;
+    minCount: number | null;
+    labels: string[];
+  };
+}
+
 export interface ConsecutiveAdjacentHexes extends TargetProfileBase {
   type: "ConsecutiveAdjacentHexes";
   values: { adjacentTo: CC; armLength: number };
@@ -137,6 +147,7 @@ export type TargetProfile =
   | OneOfUnits
   | NOfUnits
   | OneOfHexes
+  | NOfHexes
   | NoTarget
   | ConsecutiveAdjacentHexes
   | HexHexes

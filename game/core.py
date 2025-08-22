@@ -550,6 +550,8 @@ class Status(
         self.duration = duration
         self.stacks = stacks
 
+        self.links: list[StatusLink] = []
+
     @property
     def controller(self) -> Player | None:
         return get_source_controller(self.source)
@@ -595,6 +597,8 @@ class Status(
         pass
 
     def remove(self) -> None:
+        for link in list(self.links):
+            link.remove_status(self)
         # TODO is this all?
         self.parent.remove_status(self)
 
@@ -610,6 +614,61 @@ class Status(
         self.stacks -= 1
         if self.stacks <= 0:
             self.remove()
+
+
+class StatusLink(HasEffects, Generic[G_Status], ABC):
+    def __init__(self, statuses: list[G_Status]):
+        super().__init__()
+
+        self.statuses: list[G_Status] = []
+
+        for status in statuses:
+            self.add_status(status)
+
+        self.create_effects()
+
+    def on_remove(self) -> None: ...
+
+    def remove(self) -> None:
+        self.on_remove()
+        for status in list(self.statuses):
+            self.remove_status(status)
+        self.statuses = []
+        self.deregister()
+
+    def add_status(self, status: G_Status) -> None:
+        self.statuses.append(status)
+        status.links.append(self)
+
+    def on_status_removed(self, status: G_Status) -> None: ...
+
+    def remove_status(self, status: G_Status) -> None:
+        if status in self.statuses:
+            self.statuses.remove(status)
+            self.on_status_removed(status)
+            if not self.statuses:
+                self.remove()
+
+    def create_effects(self) -> None: ...
+
+
+class StatusLinkMixin(ABC):
+    statuses: list[G_Status] = []
+    remove: Callable[[], None]
+
+    @abstractmethod
+    def on_remove(self) -> None: ...
+    @abstractmethod
+    def on_status_removed(self, status: G_Status) -> None: ...
+
+
+class CohesiveGroupMixin(StatusLinkMixin):
+    def on_remove(self) -> None:
+        for status in list(self.statuses):
+            status.remove()
+
+    def on_status_removed(self, status: G_Status) -> None:
+        self.remove()
 
 
 FULL_ENERGY: Literal["FULL_ENERGY"] = "FULL_ENERGY"
@@ -812,6 +871,7 @@ class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Seriali
     # TODO should effects modifying get_legal_options on movement modify this instead?
     @modifiable
     def get_potential_move_destinations(self, _: None) -> list[Hex]:
+        print("in gate")
         return [
             _hex
             for _hex in GS.map.get_neighbors_off(self)
@@ -1389,6 +1449,9 @@ class HexStatusSignature(StatusSignature[Hex, HexStatus]):
         )
 
 
+class HexStatusLink(StatusLink[HexStatus], ABC): ...
+
+
 class SingleHexTargetActivatedAbility(ActivatedAbilityFacet[Hex], ABC):
     range: ClassVar[int] = 1
     requires_los: ClassVar[bool] = True
@@ -1434,6 +1497,29 @@ class OneOfHexes(TargetProfile[Hex]):
 
     def parse_response(self, v: Any) -> Hex:
         return self.hexes[v["index"]]
+
+
+@dataclasses.dataclass
+class NOfHexes(TargetProfile[list[Hex]]):
+    hexes: list[Hex]
+    select_count: int
+    labels: list[str]
+    min_count: int | None = None
+
+    def serialize_values(self, context: SerializationContext) -> JSON:
+        return {
+            "hexes": [{"cc": hex_.position.serialize()} for hex_ in self.hexes],
+            "select_count": self.select_count,
+            "min_count": self.min_count,
+            "labels": self.labels,
+        }
+
+    def parse_response(self, v: Any) -> list[Hex]:
+        indexes = v["indexes"]
+        # TODO nice validation LMAO
+        # assert len(indexes) == self.select_count
+        # assert len(indexes) == len(set(indexes))
+        return [self.hexes[idx] for idx in indexes]
 
 
 # TODO where, maybe in "aoe_target_profiles.py"?
@@ -1669,11 +1755,12 @@ class HexMap:
             return self.hex_off(value)
         return value
 
-    def move_unit_to(self, unit: Unit, to: CCArg) -> None:
+    def move_unit_to(self, unit: Unit, to: CCArg) -> bool:
         _hex = self._to_hex(to)
         if self.unit_positions.inverse.get(_hex) is not None:
-            raise MovementException()
+            return False
         self.unit_positions[unit] = _hex
+        return True
 
     def remove_unit(self, unit: Unit) -> None:
         self.last_known_positions[unit] = self.unit_positions[unit]
