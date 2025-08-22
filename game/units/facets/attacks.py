@@ -5,9 +5,9 @@ from game.core import (
     MeleeAttackFacet,
     MovementCost,
     RangedAttackFacet,
-    StatusSignature,
     Unit,
     UnitStatus,
+    UnitStatusSignature,
 )
 from game.effects.hooks import AdjacencyHook
 from game.events import ApplyStatus, Damage
@@ -101,7 +101,8 @@ class SolidMunition(RangedAttackFacet):
     def resolve_post_damage_effects(self, defender: Unit) -> None:
         ES.resolve(
             ApplyStatus(
-                self.parent, StatusSignature(UnitStatus.get("stunned"), self, stacks=1)
+                self.parent,
+                UnitStatusSignature(UnitStatus.get("stunned"), self, stacks=1),
             )
         )
 
@@ -121,7 +122,8 @@ class MightyBlow(MeleeAttackFacet):
     def resolve_post_damage_effects(self, defender: Unit) -> None:
         ES.resolve(
             ApplyStatus(
-                self.parent, StatusSignature(UnitStatus.get("stunned"), self, stacks=1)
+                self.parent,
+                UnitStatusSignature(UnitStatus.get("stunned"), self, stacks=1),
             )
         )
 
@@ -225,7 +227,8 @@ class Spew(RangedAttackFacet):
     def resolve_post_damage_effects(self, defender: Unit) -> None:
         ES.resolve(
             ApplyStatus(
-                defender, StatusSignature(UnitStatus.get("slimed"), self, duration=2)
+                defender,
+                UnitStatusSignature(UnitStatus.get("slimed"), self, duration=2),
             )
         )
 
@@ -342,7 +345,7 @@ class Tackle(MeleeAttackFacet):
     damage = 2
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(ApplyStatus(defender, StatusSignature(Stumbling, self)))
+        ES.resolve(ApplyStatus(defender, UnitStatusSignature(Stumbling, self)))
 
 
 class FromTheTopRope(MeleeAttackFacet):
@@ -376,7 +379,9 @@ class BellHammer(MeleeAttackFacet):
     damage = 4
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(ApplyStatus(defender, StatusSignature(BellStruck, self, duration=2)))
+        ES.resolve(
+            ApplyStatus(defender, UnitStatusSignature(BellStruck, self, duration=2))
+        )
 
 
 class DeathLaser(RangedAttackFacet):

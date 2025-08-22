@@ -5,8 +5,8 @@ from game.core import (
     HexStatusSignature,
     StaticAbilityFacet,
     Status,
-    StatusSignature,
     UnitStatus,
+    UnitStatusSignature,
 )
 from game.effects.modifiers import (
     CamouflageModifier,
@@ -71,7 +71,8 @@ class ToxicSkin(StaticAbilityFacet):
     def create_effects(self) -> None:
         self.register_effects(
             DebuffOnMeleeAttackTrigger(
-                self.parent, StatusSignature(UnitStatus.get("poison"), self, stacks=1)
+                self.parent,
+                UnitStatusSignature(UnitStatus.get("poison"), self, stacks=1),
             )
         )
 

@@ -17,11 +17,10 @@ game
     well-defined effects order
     well-defined order of iterating units on map
     kill source
+    gain energy source
     "+2 attack power to melee attacks"
-    terror/terrified/panic debuff names
     status linking
     corpses
-    status merge outcomes for triggers and such
     ability target descriptions, prob something like for status stacking
     alternate capture points
         keeps captured state for player when unit walks off
@@ -35,6 +34,8 @@ code
     update test framework
     unit tests on core logic
     move aquatic to ability
+    "no effect error"/disable triggers in event resolution
+        hard to get right with event result and history
 
 replays
 

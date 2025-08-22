@@ -11,10 +11,10 @@ from game.core import (
     ActiveUnitContext,
     DamageSignature,
     EffortOption,
-    Facet,
     G_decision_result,
     HasStatuses,
     Hex,
+    HexStatus,
     HexStatusSignature,
     LogLine,
     MeleeAttackFacet,
@@ -29,14 +29,14 @@ from game.core import (
     SingleTargetAttackFacet,
     SkipOption,
     Status,
-    StatusSignature,
     TerrainProtectionRequest,
     TurnOrder,
     Unit,
     UnitBlueprint,
     UnitStatus,
+    UnitStatusSignature,
 )
-from game.values import DamageType, Resistance, StatusIntention
+from game.values import DamageType, Resistance
 
 
 # TODO yikes (have this rn so we can do stuff on kill before unit has it's effect
@@ -214,7 +214,6 @@ class Hit(Event[None]):
                     self.attack.get_damage_signature_against(self.defender),
                 )
             )
-            # TODO do we actually want this here, or should it be triggers?
             self.attack.resolve_post_damage_effects(self.defender)
 
 
@@ -291,43 +290,6 @@ class RangedAttackAction(Event[None]):
         self.attack.get_cost().pay(GS.active_unit_context)
 
 
-# TODO where?
-def realize_status_for_unit(unit: Unit, signature: StatusSignature) -> UnitStatus:
-    return signature.status_type(
-        controller=(
-            controller := (
-                (
-                    signature.source.parent.controller
-                    if isinstance(signature.source, Facet)
-                    else signature.source.controller
-                )
-                if signature.source
-                else None
-            )
-        ),
-        source=signature.source,
-        intention=signature.intention
-        or signature.status_type.default_intention
-        or (
-            (
-                StatusIntention.BUFF
-                if unit.controller == controller
-                else StatusIntention.DEBUFF
-            )
-            if signature.source
-            else StatusIntention.NEUTRAL
-        ),
-        duration=signature.duration,
-        stacks=signature.stacks,
-        parent=unit,
-    )
-
-
-# TODO where?
-def apply_status_to_unit(unit: Unit, signature: StatusSignature) -> UnitStatus:
-    return unit.add_status(realize_status_for_unit(unit, signature))
-
-
 def make_status_log_line(status: Status, recipient: Unit | Hex) -> LogLine:
     return LogLine(
         [
@@ -349,44 +311,30 @@ def make_status_log_line(status: Status, recipient: Unit | Hex) -> LogLine:
 
 
 @dataclasses.dataclass
-class ApplyStatus(Event[UnitStatus]):
+class ApplyStatus(Event[UnitStatus | None]):
     unit: Unit
-    signature: StatusSignature
+    signature: UnitStatusSignature
 
     def is_valid(self) -> bool:
         return self.unit.on_map()
 
-    def resolve(self) -> UnitStatus:
-        status = realize_status_for_unit(self.unit, self.signature)
-
-        with GS.log(make_status_log_line(status, self.unit)):
-            return self.unit.add_status(status)
+    def resolve(self) -> UnitStatus | None:
+        if status := self.unit.add_status(self.signature):
+            with GS.log(make_status_log_line(status, self.unit)):
+                return status
+        return None
 
 
 @dataclasses.dataclass
-class ApplyHexStatus(Event[None]):
+class ApplyHexStatus(Event[HexStatus | None]):
     space: Hex
     signature: HexStatusSignature
 
-    def resolve(self) -> None:
-        status = self.signature.status_type(
-            controller=(
-                (
-                    self.signature.source.parent.controller
-                    if isinstance(self.signature.source, Facet)
-                    else self.signature.source.controller
-                )
-                if self.signature.source
-                else None
-            ),
-            source=self.signature.source,
-            duration=self.signature.duration,
-            stacks=self.signature.stacks,
-            parent=self.space,
-        )
-
-        with GS.log(make_status_log_line(status, self.space)):
-            self.space.add_status(status)
+    def resolve(self) -> HexStatus | None:
+        if status := self.space.add_status(self.signature):
+            with GS.log(make_status_log_line(status, self.space)):
+                return status
+        return None
 
 
 @dataclasses.dataclass
@@ -456,7 +404,7 @@ class SpawnUnit(Event[Unit | None]):
     controller: Player
     space: Hex
     exhausted: bool = False
-    with_statuses: Iterable[StatusSignature] = ()
+    with_statuses: Iterable[UnitStatusSignature] = ()
 
     def is_valid(self) -> bool:
         return not self.space.map.unit_on(self.space)
@@ -464,12 +412,10 @@ class SpawnUnit(Event[Unit | None]):
     def resolve(self) -> Unit | None:
         unit = Unit(self.controller, self.blueprint, exhausted=self.exhausted)
         self.space.map.move_unit_to(unit, self.space)
-        # TODO hmm
         GS.update_vision()
-        # TODO statuses? exhausted?
         with GS.log(LogLine([unit, "is spawned in", self.space])):
             for signature in self.with_statuses:
-                apply_status_to_unit(unit, signature)
+                unit.add_status(signature)
         return unit
 
 

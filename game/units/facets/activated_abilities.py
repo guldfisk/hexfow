@@ -24,7 +24,6 @@ from game.core import (
     SingleEnemyActivatedAbility,
     SingleHexTargetActivatedAbility,
     SingleTargetActivatedAbility,
-    StatusSignature,
     TargetProfile,
     Tree,
     TreeNode,
@@ -32,6 +31,7 @@ from game.core import (
     Unit,
     UnitBlueprint,
     UnitStatus,
+    UnitStatusSignature,
     is_vision_obstructed_for_unit_at,
     line_of_sight_obstructed_for_unit,
 )
@@ -141,7 +141,7 @@ class InducePanic(SingleEnemyActivatedAbility):
     cost = MovementCost(2) | EnergyCost(4)
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(ApplyStatus(target, StatusSignature(Panicked, self, duration=2)))
+        ES.resolve(ApplyStatus(target, UnitStatusSignature(Panicked, self, duration=2)))
 
 
 class Vault(SingleTargetActivatedAbility):
@@ -172,7 +172,7 @@ class Vault(SingleTargetActivatedAbility):
                 )
                 and target.controller != self.parent.controller
             ):
-                ES.resolve(ApplyStatus(target, StatusSignature(Staggered, self)))
+                ES.resolve(ApplyStatus(target, UnitStatusSignature(Staggered, self)))
 
 
 class BatonPass(SingleTargetActivatedAbility):
@@ -198,7 +198,9 @@ class BatonPass(SingleTargetActivatedAbility):
         )
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(ApplyStatus(target, StatusSignature(BurstOfSpeed, self, stacks=1)))
+        ES.resolve(
+            ApplyStatus(target, UnitStatusSignature(BurstOfSpeed, self, stacks=1))
+        )
 
 
 class SummonScarab(SingleHexTargetActivatedAbility):
@@ -223,7 +225,7 @@ class SummonScarab(SingleHexTargetActivatedAbility):
                 controller=self.parent.controller,
                 space=target,
                 exhausted=True,
-                with_statuses=[StatusSignature(Ephemeral, self, duration=3)],
+                with_statuses=[UnitStatusSignature(Ephemeral, self, duration=3)],
             )
         )
 
@@ -320,7 +322,7 @@ class SummonBees(SingleHexTargetActivatedAbility):
                 blueprint=UnitBlueprint.registry["bee_swarm"],
                 controller=self.parent.controller,
                 space=target,
-                with_statuses=[StatusSignature(Ephemeral, self, duration=1)],
+                with_statuses=[UnitStatusSignature(Ephemeral, self, duration=1)],
             )
         )
 
@@ -375,7 +377,7 @@ class Lasso(SingleEnemyActivatedAbility):
     combinable = True
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(ApplyStatus(target, StatusSignature(Rooted, self, duration=1)))
+        ES.resolve(ApplyStatus(target, UnitStatusSignature(Rooted, self, duration=1)))
 
 
 class Showdown(SingleEnemyActivatedAbility):
@@ -434,7 +436,9 @@ class GrantCharm(SingleAllyActivatedAbility):
     cost = EnergyCost(2)
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(ApplyStatus(target, StatusSignature(LuckyCharm, self, duration=3)))
+        ES.resolve(
+            ApplyStatus(target, UnitStatusSignature(LuckyCharm, self, duration=3))
+        )
 
 
 class ChokingSoot(ActivatedAbilityFacet[list[Hex]]):
@@ -487,7 +491,7 @@ class Terrorize(SingleEnemyActivatedAbility):
     cost = MovementCost(2) | EnergyCost(5)
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(ApplyStatus(target, StatusSignature(Terror, self, duration=2)))
+        ES.resolve(ApplyStatus(target, UnitStatusSignature(Terror, self, duration=2)))
 
 
 class Scorch(ActivatedAbilityFacet[list[Hex]]):
@@ -504,7 +508,7 @@ class Scorch(ActivatedAbilityFacet[list[Hex]]):
         for h in target:
             if unit := GS.map.unit_on(h):
                 ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.AOE)))
-                ES.resolve(ApplyStatus(unit, StatusSignature(Burn, self, stacks=2)))
+                ES.resolve(ApplyStatus(unit, UnitStatusSignature(Burn, self, stacks=2)))
 
 
 class FlameWall(ActivatedAbilityFacet[list[Hex]]):
@@ -530,7 +534,7 @@ class FlameWall(ActivatedAbilityFacet[list[Hex]]):
                 )
             )
             if unit := GS.map.unit_on(h):
-                ES.resolve(ApplyStatus(unit, StatusSignature(Burn, self, stacks=2)))
+                ES.resolve(ApplyStatus(unit, UnitStatusSignature(Burn, self, stacks=2)))
 
 
 class FlameThrower(ActivatedAbilityFacet[list[Hex]]):
@@ -558,7 +562,7 @@ class FlameThrower(ActivatedAbilityFacet[list[Hex]]):
                 )
             )
             if unit := GS.map.unit_on(h):
-                ES.resolve(ApplyStatus(unit, StatusSignature(Burn, self, stacks=1)))
+                ES.resolve(ApplyStatus(unit, UnitStatusSignature(Burn, self, stacks=1)))
 
 
 class VitalityTransfer(ActivatedAbilityFacet):
@@ -659,12 +663,14 @@ class VenomousSpine(SingleEnemyActivatedAbility):
 
     def perform(self, target: Unit) -> None:
         ES.resolve(
-            ApplyStatus(target, StatusSignature(UnitStatus.get("parasite"), self))
+            ApplyStatus(target, UnitStatusSignature(UnitStatus.get("parasite"), self))
         )
         ES.resolve(
             ApplyStatus(
                 target,
-                StatusSignature(UnitStatus.get("debilitating_venom"), self, duration=2),
+                UnitStatusSignature(
+                    UnitStatus.get("debilitating_venom"), self, duration=2
+                ),
             )
         )
 
@@ -700,7 +706,9 @@ class ShrinkRay(SingleTargetActivatedAbility):
         ES.resolve(
             ApplyStatus(
                 target,
-                StatusSignature(UnitStatus.get("shrunk"), self, stacks=1, duration=2),
+                UnitStatusSignature(
+                    UnitStatus.get("shrunk"), self, stacks=1, duration=2
+                ),
             )
         )
 
@@ -728,7 +736,9 @@ class AssembleTheDoombot(SingleHexTargetActivatedAbility):
                     target,
                     exhausted=True,
                     with_statuses=[
-                        StatusSignature(UnitStatus.get("ephemeral"), self, duration=4)
+                        UnitStatusSignature(
+                            UnitStatus.get("ephemeral"), self, duration=4
+                        )
                     ],
                 )
             )
@@ -784,7 +794,8 @@ class InkRing(ActivatedAbilityFacet):
         for unit in GS.map.units_on(target):
             ES.resolve(
                 ApplyStatus(
-                    unit, StatusSignature(UnitStatus.get("blinded"), self, duration=3)
+                    unit,
+                    UnitStatusSignature(UnitStatus.get("blinded"), self, duration=3),
                 )
             )
 
@@ -801,7 +812,8 @@ class MalevolentStare(SingleEnemyActivatedAbility):
         dispel_from_unit(target, StatusIntention.BUFF)
         ES.resolve(
             ApplyStatus(
-                target, StatusSignature(UnitStatus.get("silenced"), self, duration=2)
+                target,
+                UnitStatusSignature(UnitStatus.get("silenced"), self, duration=2),
             )
         )
 
@@ -818,7 +830,7 @@ class IronBlessing(SingleAllyActivatedAbility):
     def perform(self, target: Unit) -> None:
         ES.resolve(
             ApplyStatus(
-                target, StatusSignature(UnitStatus.get("armored"), self, duration=2)
+                target, UnitStatusSignature(UnitStatus.get("armored"), self, duration=2)
             )
         )
 
@@ -835,7 +847,7 @@ class Hitch(SingleAllyActivatedAbility):
 
     def perform(self, target: Unit) -> None:
         ES.resolve(
-            ApplyStatus(target, StatusSignature(UnitStatus.get("hitched"), self))
+            ApplyStatus(target, UnitStatusSignature(UnitStatus.get("hitched"), self))
         )
 
 
@@ -957,7 +969,9 @@ class FlashBang(TriHexTargetActivatedAbility):
                 ES.resolve(
                     ApplyStatus(
                         unit,
-                        StatusSignature(UnitStatus.get("blinded"), self, duration=2),
+                        UnitStatusSignature(
+                            UnitStatus.get("blinded"), self, duration=2
+                        ),
                     )
                 )
 
@@ -993,7 +1007,8 @@ class SowDiscord(TriHexTargetActivatedAbility):
         for unit in GS.map.units_on(target):
             ES.resolve(
                 ApplyStatus(
-                    unit, StatusSignature(UnitStatus.get("paranoia"), self, duration=3)
+                    unit,
+                    UnitStatusSignature(UnitStatus.get("paranoia"), self, duration=3),
                 )
             )
 
@@ -1011,7 +1026,7 @@ class Scorn(SingleEnemyActivatedAbility):
         ES.resolve(
             ApplyStatus(
                 target,
-                StatusSignature(
+                UnitStatusSignature(
                     UnitStatus.get("dishonorable_coward"), self, duration=4
                 ),
             )
@@ -1034,7 +1049,7 @@ class SpurIntoRage(SingleTargetActivatedAbility):
         ES.resolve(
             ApplyStatus(
                 target,
-                StatusSignature(UnitStatus.get("senseless_rage"), self, duration=2),
+                UnitStatusSignature(UnitStatus.get("senseless_rage"), self, duration=2),
             )
         )
 
@@ -1060,7 +1075,7 @@ class ConstructTurret(SingleHexTargetActivatedAbility):
                 target,
                 exhausted=True,
                 with_statuses=[
-                    StatusSignature(UnitStatus.get("ephemeral"), self, duration=4)
+                    UnitStatusSignature(UnitStatus.get("ephemeral"), self, duration=4)
                 ],
             )
         )
@@ -1107,6 +1122,6 @@ class TurboTune(SingleTargetActivatedAbility):
     def perform(self, target: Unit) -> None:
         ES.resolve(
             ApplyStatus(
-                target, StatusSignature(UnitStatus.get("turbo"), self, duration=2)
+                target, UnitStatusSignature(UnitStatus.get("turbo"), self, duration=2)
             )
         )

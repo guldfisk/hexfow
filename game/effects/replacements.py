@@ -7,9 +7,9 @@ from game.core import (
     DamageSignature,
     Hex,
     Source,
-    StatusSignature,
     Unit,
     UnitStatus,
+    UnitStatusSignature,
 )
 from game.events import (
     ApplyStatus,
@@ -161,7 +161,7 @@ class LastStandReplacement(ReplacementEffect[Kill]):
         ES.resolve(
             ApplyStatus(
                 event.unit,
-                StatusSignature(
+                UnitStatusSignature(
                     UnitStatus.get("mortally_wounded"), self.source, duration=1
                 ),
             )

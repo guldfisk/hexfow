@@ -7,6 +7,7 @@ import re
 import threading
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from enum import Enum
 from typing import (
     Any,
     Callable,
@@ -34,6 +35,7 @@ from game.values import DamageType, Resistance, Size, StatusIntention, VisionObs
 
 
 G_Status = TypeVar("G_Status", bound="Status")
+G_StatusSignature = TypeVar("G_StatusSignature", bound="StatusSignature")
 G_decision_result = TypeVar("G_decision_result")
 G_HasStatuses = TypeVar("G_HasStatuses", bound="HasStatuses")
 G_EffortCost = TypeVar("G_EffortCost", bound="EffortCost")
@@ -163,19 +165,24 @@ class SkipOption(Option[None]):
         return {}
 
 
-class HasStatuses(HasEffects, Generic[G_Status]):
+class HasStatuses(HasEffects, Generic[G_Status, G_StatusSignature]):
     def __init__(self, parent: HasEffectChildren | None = None):
         super().__init__(parent=parent)
         self.statuses: list[G_Status] = []
 
-    def add_status(self, status: G_Status) -> G_Status:
-        if not status.on_apply(self):
-            # TODO should return None instead?
-            return status
-        # TODO should prob set parent
+    def add_status(self, signature: G_StatusSignature) -> G_Status | None:
+        if not (signature := signature.status_type.on_apply(signature, self)):
+            return None
         for existing_status in self.statuses:
-            if type(existing_status) is type(status) and existing_status.merge(status):
-                return existing_status
+            if type(existing_status) is signature.status_type:
+                if (
+                    merge_result := existing_status.merge(signature)
+                ) == MergeResult.REJECTED:
+                    return None
+                if merge_result == MergeResult.MERGED:
+                    return existing_status
+
+        status = signature.realize(self)
         self.statuses.append(status)
         status.create_effects()
         return status
@@ -183,7 +190,7 @@ class HasStatuses(HasEffects, Generic[G_Status]):
     def get_statuses(self, status_type: type[G_Status]) -> list[G_Status]:
         return [status for status in self.statuses if isinstance(status, status_type)]
 
-    def has_status(self, status_type: type[Status] | str) -> bool:
+    def has_status(self, status_type: type[G_Status] | str) -> bool:
         status_type = (
             Status.registry[status_type]
             if isinstance(status_type, str)
@@ -191,7 +198,7 @@ class HasStatuses(HasEffects, Generic[G_Status]):
         )
         return any(isinstance(status, status_type) for status in self.statuses)
 
-    def remove_status(self, status: Status) -> None:
+    def remove_status(self, status: G_Status) -> None:
         try:
             self.statuses.remove(status)
         except ValueError:
@@ -512,10 +519,17 @@ class StaticAbilityFacet(Facet, ABC):
     category = "static_ability"
 
 
+class MergeResult(Enum):
+    MERGED = 0
+    REJECTED = 1
+    STACK = 2
+
+
 class Status(
     Registered,
     HasEffects[G_HasStatuses],
     Serializable,
+    Generic[G_HasStatuses, G_StatusSignature],
     ABC,
     metaclass=get_registered_meta(),
 ):
@@ -526,28 +540,40 @@ class Status(
     def __init__(
         self,
         *,
-        # TODO this is redundant with the source
-        controller: Player | None = None,
         source: Source = None,
         duration: int | None = None,
         stacks: int | None = None,
         parent: G_HasStatuses | None,
     ):
         super().__init__(parent=parent)
-        self.controller = controller
         self.source = source
         self.duration = duration
         self.stacks = stacks
+
+    @property
+    def controller(self) -> Player | None:
+        return (
+            (
+                self.source.parent.controller
+                if isinstance(self.source, Facet)
+                else self.source.controller
+            )
+            if self.source
+            else None
+        )
 
     @classmethod
     def get_stacking_info(cls) -> str:
         return "unstackable"
 
-    def on_apply(self, to: G_HasStatuses) -> bool:
-        return True
+    @classmethod
+    def on_apply(
+        cls, signature: G_StatusSignature, to: G_HasStatuses
+    ) -> G_StatusSignature | None:
+        return signature
 
-    def merge(self, incoming: Self) -> bool:
-        return True
+    def merge(self, signature: G_StatusSignature) -> MergeResult:
+        return MergeResult.REJECTED
 
     def is_hidden_for(self, player: Player) -> bool:
         return False
@@ -666,7 +692,7 @@ class UnitBlueprint:
         }
 
 
-class Unit(HasStatuses, Modifiable, Serializable):
+class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Serializable):
     speed: ModifiableAttribute[None, int]
     sight: ModifiableAttribute[None, int]
     max_health: ModifiableAttribute[None, int]
@@ -868,28 +894,33 @@ class Unit(HasStatuses, Modifiable, Serializable):
         return f"{type(self).__name__}({self.blueprint.name}, {self.controller.name}, {id(self)})"
 
 
-class UnitStatus(Status[Unit], ABC):
+class UnitStatus(Status[Unit, "UnitStatusSignature"], ABC):
     category: ClassVar[str] = "unit"
     default_intention: ClassVar[StatusIntention | None] = None
 
     def __init__(
         self,
         *,
-        controller: Player | None = None,
         source: Source = None,
         duration: int | None = None,
         stacks: int | None = None,
-        parent: G_HasStatuses | None,
-        intention: StatusIntention,
+        parent: Unit,
+        intention: StatusIntention | None = None,
     ):
-        super().__init__(
-            controller=controller,
-            source=source,
-            duration=duration,
-            stacks=stacks,
-            parent=parent,
+        super().__init__(source=source, duration=duration, stacks=stacks, parent=parent)
+        self.intention = (
+            intention
+            or self.default_intention
+            or (
+                (
+                    StatusIntention.BUFF
+                    if parent.controller == self.controller
+                    else StatusIntention.DEBUFF
+                )
+                if self.source
+                else StatusIntention.NEUTRAL
+            )
         )
-        self.intention = intention
 
     @classmethod
     def get(cls, identifier: str) -> type[UnitStatus]:
@@ -900,12 +931,48 @@ class UnitStatus(Status[Unit], ABC):
 
 
 @dataclasses.dataclass
-class StatusSignature:
-    status_type: type[UnitStatus]
+class StatusSignature(Generic[G_HasStatuses, G_Status]):
+    status_type: type[G_Status]
     source: Source
     stacks: int | None = None
     duration: int | None = None
+
+    @property
+    def controller(self) -> Player | None:
+        return (
+            (
+                self.source.parent.controller
+                if isinstance(self.source, Facet)
+                else self.source.controller
+            )
+            if self.source
+            else None
+        )
+
+    @abstractmethod
+    def realize(self, for_: G_HasStatuses) -> G_Status: ...
+
+    def branch(self, **kwargs) -> Self:
+        return self.__class__(
+            **(
+                {f.name: getattr(self, f.name) for f in dataclasses.fields(self)}
+                | kwargs
+            )
+        )
+
+
+@dataclasses.dataclass
+class UnitStatusSignature(StatusSignature[Unit, UnitStatus]):
     intention: StatusIntention | None = None
+
+    def realize(self, for_: Unit) -> UnitStatus:
+        return self.status_type(
+            source=self.source,
+            duration=self.duration,
+            stacks=self.stacks,
+            parent=for_,
+            intention=self.intention,
+        )
 
 
 @dataclasses.dataclass
@@ -959,19 +1026,20 @@ class StatusMixin:
     def get_stacking_info(cls) -> str: ...
 
     @abstractmethod
-    def merge(self, incoming: Self) -> bool:
-        return False
+    def merge(self, signature: StatusSignature) -> MergeResult: ...
 
 
 def refresh_duration(
-    existing_status: Status | StatusMixin, incoming_status: Status | StatusMixin
-) -> None:
+    existing_status: Status | StatusMixin, signature: StatusSignature
+) -> MergeResult:
     if (
-        incoming_status.duration is None
+        signature.duration is None
         or existing_status.duration is None
-        or (incoming_status.duration > existing_status.duration)
+        or (signature.duration > existing_status.duration)
     ):
-        existing_status.duration = incoming_status.duration
+        existing_status.duration = signature.duration
+        return MergeResult.MERGED
+    return MergeResult.REJECTED
 
 
 class RefreshableMixin(StatusMixin):
@@ -979,9 +1047,8 @@ class RefreshableMixin(StatusMixin):
     def get_stacking_info(cls) -> str:
         return "refreshable"
 
-    def merge(self, incoming: Self) -> bool:
-        refresh_duration(self, incoming)
-        return True
+    def merge(self, signature: StatusSignature) -> MergeResult:
+        return refresh_duration(self, signature)
 
 
 class LowestRefreshableMixin(StatusMixin):
@@ -989,12 +1056,13 @@ class LowestRefreshableMixin(StatusMixin):
     def get_stacking_info(cls) -> str:
         return "lowest refreshable"
 
-    def merge(self, incoming: Self) -> bool:
+    def merge(self, signature: StatusSignature) -> MergeResult:
         if self.duration is None or (
-            incoming.duration is not None and incoming.duration < self.duration
+            signature.duration is not None and signature.duration < self.duration
         ):
-            self.duration = incoming.duration
-        return True
+            self.duration = signature.duration
+            return MergeResult.MERGED
+        return MergeResult.REJECTED
 
 
 class StackableMixin(StatusMixin):
@@ -1002,9 +1070,9 @@ class StackableMixin(StatusMixin):
     def get_stacking_info(cls) -> str:
         return "stackable"
 
-    def merge(self, incoming: Self) -> bool:
-        self.stacks += incoming.stacks
-        return True
+    def merge(self, signature: StatusSignature) -> MergeResult:
+        self.stacks += signature.stacks
+        return MergeResult.MERGED
 
 
 class StackableRefreshableMixin(StatusMixin):
@@ -1012,10 +1080,10 @@ class StackableRefreshableMixin(StatusMixin):
     def get_stacking_info(cls) -> str:
         return "stackable, refreshable"
 
-    def merge(self, incoming: Self) -> bool:
-        refresh_duration(self, incoming)
-        self.stacks += incoming.stacks
-        return True
+    def merge(self, signature: StatusSignature) -> MergeResult:
+        refresh_duration(self, signature)
+        self.stacks += signature.stacks
+        return MergeResult.MERGED
 
 
 class HighestStackableRefreshableMixin(StackableMixin):
@@ -1023,11 +1091,12 @@ class HighestStackableRefreshableMixin(StackableMixin):
     def get_stacking_info(cls) -> str:
         return "highest stackable, refreshable"
 
-    def merge(self, incoming: Self) -> bool:
-        refresh_duration(self, incoming)
-        if incoming.stacks > self.stacks:
-            self.stacks = incoming.stacks
-        return True
+    def merge(self, signature: StatusSignature) -> MergeResult:
+        refresh_result = refresh_duration(self, signature)
+        if signature.stacks > self.stacks:
+            self.stacks = signature.stacks
+            return MergeResult.MERGED
+        return refresh_result
 
 
 class PerPlayerRefreshable(StatusMixin):
@@ -1035,11 +1104,10 @@ class PerPlayerRefreshable(StatusMixin):
     def get_stacking_info(cls) -> str:
         return "per-player - refreshable"
 
-    def merge(self, incoming: Self) -> bool:
-        if incoming.controller == self.controller:
-            refresh_duration(self, incoming)
-            return True
-        return False
+    def merge(self, signature: StatusSignature) -> MergeResult:
+        if signature.controller == self.controller:
+            return refresh_duration(self, signature)
+        return MergeResult.STACK
 
 
 class PerPlayerUnstackable(StatusMixin):
@@ -1047,8 +1115,10 @@ class PerPlayerUnstackable(StatusMixin):
     def get_stacking_info(cls) -> str:
         return "per-player - unstackable"
 
-    def merge(self, incoming: Self) -> bool:
-        return incoming.controller == self.controller
+    def merge(self, signature: StatusSignature) -> MergeResult:
+        if signature.controller == self.controller:
+            return MergeResult.REJECTED
+        return MergeResult.STACK
 
 
 class NoTargetActivatedAbility(ActivatedAbilityFacet[None], ABC):
@@ -1150,7 +1220,7 @@ class Terrain(HasEffects, Registered, ABC, metaclass=get_registered_meta()):
         }
 
 
-class Hex(Modifiable, HasStatuses, Serializable):
+class Hex(Modifiable, HasStatuses["HexStatus", "HexStatusSignature"], Serializable):
     def __init__(
         self, position: CC, terrain: Terrain, is_objective: bool, map_: HexMap
     ):
@@ -1308,7 +1378,7 @@ class DamageSignature:
         return self.source.parent if isinstance(self.source, Facet) else None
 
 
-class HexStatus(Status[Hex], ABC):
+class HexStatus(Status[Hex, "HexStatusSignature"], ABC):
     category: ClassVar[str] = "hex"
 
     # TODO obsolete?
@@ -1317,13 +1387,15 @@ class HexStatus(Status[Hex], ABC):
         return cls.registry[identifier]
 
 
-# TODO inherit from status signature base?
 @dataclasses.dataclass
-class HexStatusSignature:
-    status_type: type[HexStatus]
-    source: Source
-    stacks: int | None = None
-    duration: int | None = None
+class HexStatusSignature(StatusSignature[Hex, HexStatus]):
+    def realize(self, for_: Hex) -> HexStatus:
+        return self.status_type(
+            source=self.source,
+            duration=self.duration,
+            stacks=self.stacks,
+            parent=for_,
+        )
 
 
 class SingleHexTargetActivatedAbility(ActivatedAbilityFacet[Hex], ABC):

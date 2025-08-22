@@ -18,10 +18,10 @@ from game.core import (
     SkipOption,
     Source,
     Status,
-    StatusSignature,
     Unit,
     UnitBlueprint,
     UnitStatus,
+    UnitStatusSignature,
 )
 from game.events import (
     ActionCleanup,
@@ -84,7 +84,7 @@ class DebuffOnMeleeAttackTrigger(TriggerEffect[Hit]):
     priority: ClassVar[int] = 0
 
     unit: Unit
-    signature: StatusSignature
+    signature: UnitStatusSignature
 
     def should_trigger(self, event: Hit) -> bool:
         return event.defender == self.unit and isinstance(
@@ -149,7 +149,6 @@ class ExplosiveTrigger(TriggerEffect[KillUpkeep]):
             )
 
 
-# TODO same trigger etc
 @dataclasses.dataclass(eq=False)
 class SchadenfreudeDamageTrigger(TriggerEffect[Damage]):
     priority: ClassVar[int] = 0
@@ -175,6 +174,7 @@ class SchadenfreudeDebuffTrigger(TriggerEffect[ApplyStatus]):
     def should_trigger(self, event: ApplyStatus) -> bool:
         return (
             event.unit != self.unit
+            and event.result
             and event.result.intention == StatusIntention.DEBUFF
             and GS.map.distance_between(self.unit, event.unit) <= 1
         )
@@ -210,7 +210,7 @@ class GrizzlyMurdererTrigger(TriggerEffect[MeleeAttackAction]):
                 ES.resolve(
                     ApplyStatus(
                         unit,
-                        StatusSignature(
+                        UnitStatusSignature(
                             UnitStatus.get("shocked"), self.source, duration=2
                         ),
                     )
@@ -256,7 +256,7 @@ class HeelTurnTrigger(TriggerEffect[SufferDamage]):
         ES.resolve(
             ApplyStatus(
                 self.unit,
-                StatusSignature(
+                UnitStatusSignature(
                     UnitStatus.get("they_ve_got_a_steel_chair"), self.source
                 ),
             )
@@ -301,7 +301,7 @@ class ToxicPresenceTrigger(TriggerEffect[TurnCleanup]):
             ES.resolve(
                 ApplyStatus(
                     unit,
-                    StatusSignature(
+                    UnitStatusSignature(
                         UnitStatus.get("poison"), self.source, stacks=self.amount
                     ),
                 )
@@ -338,7 +338,9 @@ class JukeAndJiveTrigger(TriggerEffect[ActionCleanup]):
         ES.resolve(
             ApplyStatus(
                 self.unit,
-                StatusSignature(UnitStatus.get("all_in_jest"), self.source, stacks=1),
+                UnitStatusSignature(
+                    UnitStatus.get("all_in_jest"), self.source, stacks=1
+                ),
             )
         )
 
@@ -371,7 +373,7 @@ class BurnOnWalkIn(TriggerEffect[MoveUnit]):
         ES.resolve(
             ApplyStatus(
                 unit=event.unit,
-                signature=StatusSignature(
+                signature=UnitStatusSignature(
                     UnitStatus.get("burn"),
                     None,
                     stacks=(
@@ -411,7 +413,7 @@ class BurnOnCleanup(TriggerEffect[RoundCleanup]):
             ES.resolve(
                 ApplyStatus(
                     unit=unit,
-                    signature=StatusSignature(
+                    signature=UnitStatusSignature(
                         UnitStatus.get("burn"),
                         None,
                         stacks=(
@@ -451,7 +453,9 @@ class SludgeTrigger(TriggerEffect[RoundCleanup]):
             ES.resolve(
                 ApplyStatus(
                     unit,
-                    StatusSignature(UnitStatus.get("slimed"), self.status, duration=2),
+                    UnitStatusSignature(
+                        UnitStatus.get("slimed"), self.status, duration=2
+                    ),
                 )
             )
 
@@ -485,7 +489,9 @@ class ShrineWalkInTrigger(TriggerEffect[MoveUnit]):
         ES.resolve(
             ApplyStatus(
                 event.unit,
-                StatusSignature(UnitStatus.get("fortified"), self.source, duration=4),
+                UnitStatusSignature(
+                    UnitStatus.get("fortified"), self.source, duration=4
+                ),
             )
         )
 

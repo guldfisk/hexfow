@@ -57,12 +57,16 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                EFFORTLESS_ATHLETE,
-                PESTILENCE_PRIEST,
+                # EFFORTLESS_ATHLETE,
+                # PESTILENCE_PRIEST,
+                # INFERNO_TANK,
                 CHAINSAW_SADIST,
+                STAUNCH_IRON_HEART,
+                # CHAINSAW_SADIST,
             ),
             (
                 # BUGLING,
+                CHICKEN,
                 CHICKEN,
                 CYCLOPS,
             ),

@@ -7,6 +7,7 @@ from game.core import (
     StackableRefreshableMixin,
     Unit,
     UnitStatus,
+    UnitStatusSignature,
 )
 from game.effects.modifiers import (
     MustAttackModifier,
@@ -293,15 +294,18 @@ class Stunned(StackableMixin, UnitStatus):
 
     default_intention = StatusIntention.DEBUFF
 
-    def on_apply(self, to: Unit) -> bool:
-        # TODO maybe this logic should be somewhere else?
+    @classmethod
+    def on_apply(
+        cls, signature: UnitStatusSignature, to: Unit
+    ) -> UnitStatusSignature | None:
         if (context := GS.active_unit_context) and context.unit == to:
             context.should_stop = True
-        else:
-            while not to.exhausted and self.stacks > 0:
-                ES.resolve(ExhaustUnit(to))
-                self.stacks -= 1
-        return self.stacks > 0
+            return signature
+        stacks = signature.stacks
+        while not to.exhausted and stacks > 0:
+            ES.resolve(ExhaustUnit(to))
+            stacks -= 1
+        return signature.branch(stacks=stacks) if stacks > 0 else None
 
     def create_effects(self) -> None:
         self.register_effects(StunnedReplacement(self))
