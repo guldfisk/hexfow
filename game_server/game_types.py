@@ -42,10 +42,10 @@ class TestGameType(GameType):
                     random.choice(
                         [
                             Plains,
-                            Plains,
-                            Plains,
-                            Forest,
-                            Hills,
+                            # Plains,
+                            # Plains,
+                            # Forest,
+                            # Hills,
                             # Water,
                         ]
                     ),
@@ -59,6 +59,7 @@ class TestGameType(GameType):
             (
                 EFFORTLESS_ATHLETE,
                 PESTILENCE_PRIEST,
+                CHAINSAW_SADIST,
             ),
             (
                 # BUGLING,

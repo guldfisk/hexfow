@@ -249,35 +249,44 @@ const getFacetStatLine = (
   facet: FacetDetails,
   unit: Unit | null,
 ): ReactNode[] => {
-  const stats: ReactNode[] = [];
+  const stats: ReactNode[][] = [];
 
   if ("combineable" in facet && facet.combineable) {
-    stats.push("combineable ");
+    stats.push(["combineable"]);
   }
   if ("max_activations" in facet && facet.max_activations != 1) {
-    stats.push(
+    stats.push([
       facet.max_activations === null
-        ? "unlimited activations "
-        : `x${facet.max_activations} max activations `,
-    );
+        ? "unlimited activations"
+        : `x${facet.max_activations} max activations`,
+    ]);
   }
   if ("cost" in facet && facet.cost.atoms.length) {
-    stats.push(`cost: ${effortCostToShort(facet.cost)} `);
+    stats.push([`cost: ${effortCostToShort(facet.cost)}`]);
   }
   if ("damage" in facet) {
-    stats.push("damage: ");
-    stats.push(
+    stats.push([
+      "damage: ",
       <ModifiedValue
         current={facet.damage + (unit ? unit.attackPower : 0)}
         base={facet.damage}
       />,
-    );
-    stats.push(" ");
+    ]);
   }
   if ("range" in facet) {
-    stats.push(`range: ${facet.range} `);
+    stats.push([`range: ${facet.range}`]);
   }
-  return stats;
+
+  const atoms = [];
+
+  for (let i = 0; i < stats.length; i++) {
+    atoms.push(stats[i]);
+    if (i + 1 < stats.length) {
+      atoms.push(" - ");
+    }
+  }
+
+  return atoms;
 };
 
 const getStatusStatLine = (status: Status | UnitStatus): string => {

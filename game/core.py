@@ -1151,13 +1151,15 @@ class Terrain(HasEffects, Registered, ABC, metaclass=get_registered_meta()):
 
 
 class Hex(Modifiable, HasStatuses, Serializable):
-    def __init__(self, position: CC, terrain: Terrain, is_objective: bool, map: HexMap):
+    def __init__(
+        self, position: CC, terrain: Terrain, is_objective: bool, map_: HexMap
+    ):
         super().__init__()
         self.position = position
         self.terrain = terrain
         self.is_objective = is_objective
         # TODO name?
-        self.map = map
+        self.map = map_
 
     @modifiable
     def is_passable_to(self, unit: Unit) -> bool:
@@ -1565,14 +1567,14 @@ class HexMap:
                 position=position,
                 terrain=hex_spec.terrain_type(),
                 is_objective=hex_spec.is_objective,
-                map=self,
+                map_=self,
             )
             for position, hex_spec in landscape.terrain_map.items()
         }
         for _hex in self.hexes.values():
             _hex.terrain.create_effects(_hex)
         self.unit_positions: bidict[Unit, Hex] = bidict()
-        # TODO better plan for handling this
+        # TODO better plan for handling this?
         self.last_known_positions: dict[Unit, Hex] = {}
 
     @property
