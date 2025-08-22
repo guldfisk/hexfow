@@ -72,16 +72,16 @@ class Bloom(NoTargetActivatedAbility):
     cost = EnergyCost(2)
 
     def perform(self, target: None) -> None:
-        for unit in GS.map.get_neighboring_units_off(self.owner):
+        for unit in GS.map.get_neighboring_units_off(self.parent):
             ES.resolve(Heal(unit, 1))
-        ES.resolve(Kill(self.owner))
+        ES.resolve(Kill(self.parent))
 
 
 class Grow(NoTargetActivatedAbility):
     cost = EnergyCost(2)
 
     def perform(self, target: None) -> None:
-        ES.resolve(Heal(self.owner, 1))
+        ES.resolve(Heal(self.parent, 1))
 
 
 class HealBeam(SingleAllyActivatedAbility):
@@ -114,23 +114,23 @@ class GreaseTheGears(SingleAllyActivatedAbility):
             kill_event.unit == target
             for kill_event in ES.resolve(Kill(target)).iter_type(Kill)
         ):
-            ES.resolve(Heal(self.owner, 2))
-            ES.resolve(GainEnergy(self.owner, 2))
-            ES.resolve(ModifyMovementPoints(self.owner, movement_bonus))
+            ES.resolve(Heal(self.parent, 2))
+            ES.resolve(GainEnergy(self.parent, 2))
+            ES.resolve(ModifyMovementPoints(self.parent, movement_bonus))
 
 
 class NothingStopsTheMail(NoTargetActivatedAbility):
     """Kills this unit."""
 
     def perform(self, target: None) -> None:
-        ES.resolve(Kill(self.owner))
+        ES.resolve(Kill(self.parent))
 
 
 class SelfDestruct(NoTargetActivatedAbility):
     """Kills this unit."""
 
     def perform(self, target: None) -> None:
-        ES.resolve(Kill(self.owner))
+        ES.resolve(Kill(self.parent))
 
 
 class InducePanic(SingleEnemyActivatedAbility):
@@ -157,21 +157,21 @@ class Vault(SingleTargetActivatedAbility):
     max_activations = None
 
     def can_target_unit(self, unit: Unit) -> bool:
-        return unit != self.owner
+        return unit != self.parent
 
     def perform(self, target: Unit) -> None:
         target_position = GS.map.position_off(target)
-        difference = target_position - GS.map.position_off(self.owner)
+        difference = target_position - GS.map.position_off(self.parent)
         target_hex = GS.map.hexes.get(target_position + difference)
-        if target_hex and target_hex.can_move_into(self.owner):
+        if target_hex and target_hex.can_move_into(self.parent):
             if (
                 any(
                     e.result
-                    for e in ES.resolve(MoveUnit(self.owner, target_hex)).iter_type(
+                    for e in ES.resolve(MoveUnit(self.parent, target_hex)).iter_type(
                         MoveUnit
                     )
                 )
-                and target.controller != self.owner.controller
+                and target.controller != self.parent.controller
             ):
                 ES.resolve(ApplyStatus(target, StatusSignature(Staggered, self)))
 
@@ -186,15 +186,15 @@ class BatonPass(SingleTargetActivatedAbility):
     def __init__(self, owner: Unit):
         super().__init__(owner)
 
-        self.adjacency_hook = AdjacencyHook(self.owner)
+        self.adjacency_hook = AdjacencyHook(self.parent)
 
     def create_effects(self) -> None:
         self.register_effects(self.adjacency_hook)
 
     def can_target_unit(self, unit: Unit) -> bool:
         return (
-            unit.controller == self.owner.controller
-            and unit != self.owner
+            unit.controller == self.parent.controller
+            and unit != self.parent
             and unit not in self.adjacency_hook.adjacent_units
         )
 
@@ -214,14 +214,14 @@ class SummonScarab(SingleHexTargetActivatedAbility):
     # TODO common logic? or flag on SingleHexTargetActivatedAbility?
     def can_target_hex(self, hex_: Hex) -> bool:
         return (unit := GS.map.unit_on(hex_)) is None or unit.is_hidden_for(
-            self.owner.controller
+            self.parent.controller
         )
 
     def perform(self, target: Hex) -> None:
         ES.resolve(
             SpawnUnit(
                 blueprint=UnitBlueprint.registry["scarab"],
-                controller=self.owner.controller,
+                controller=self.parent.controller,
                 space=target,
                 exhausted=True,
                 with_statuses=[StatusSignature(Ephemeral, self, duration=3)],
@@ -237,7 +237,7 @@ class Sweep(ActivatedAbilityFacet[list[Hex]]):
     cost = MovementCost(1)
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        return ConsecutiveAdjacentHexes(GS.map.hex_off(self.owner), 1)
+        return ConsecutiveAdjacentHexes(GS.map.hex_off(self.parent), 1)
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
@@ -254,15 +254,15 @@ class Stare(ActivatedAbilityFacet[list[Hex]]):
 
     def get_target_profile(self) -> TargetProfile[G_DecisionResult] | None:
         return RadiatingLine(
-            GS.map.hex_off(self.owner),
-            list(GS.map.get_neighbors_off(self.owner)),
+            GS.map.hex_off(self.parent),
+            list(GS.map.get_neighbors_off(self.parent)),
             4,
         )
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
             ES.resolve(ApplyHexStatus(h, HexStatusSignature(Glimpse, self)))
-            if is_vision_obstructed_for_unit_at(self.owner, h.position):
+            if is_vision_obstructed_for_unit_at(self.parent, h.position):
                 break
 
 
@@ -273,11 +273,11 @@ class Jaunt(ActivatedAbilityFacet[Hex]):
     combinable = True
 
     def get_target_profile(self) -> TargetProfile[Hex] | None:
-        if hexes := list(GS.map.get_hexes_within_range_off(self.owner, 4)):
+        if hexes := list(GS.map.get_hexes_within_range_off(self.parent, 4)):
             return OneOfHexes(hexes)
 
     def perform(self, target: Hex) -> None:
-        ES.resolve(MoveUnit(self.owner, target))
+        ES.resolve(MoveUnit(self.parent, target))
 
 
 class Jump(ActivatedAbilityFacet[Hex]):
@@ -286,35 +286,11 @@ class Jump(ActivatedAbilityFacet[Hex]):
     cost = EnergyCost(2) | ExclusiveCost()
 
     def get_target_profile(self) -> TargetProfile[Hex] | None:
-        if hexes := list(GS.map.get_hexes_within_range_off(self.owner, 2)):
+        if hexes := list(GS.map.get_hexes_within_range_off(self.parent, 2)):
             return OneOfHexes(hexes)
 
     def perform(self, target: Hex) -> None:
-        ES.resolve(MoveUnit(self.owner, target))
-
-
-# telepath {7pp} x1
-# health 5, movement 3, sight 0, energy 5, M
-# rouse
-#     ability 3 energy
-#     target other unit 3 range NLoS
-#     -1 movement
-#     activates target
-# pacify
-#     ability 3 energy
-#     target other unit 3 range NLoS
-#     -2 movement
-#     applies pacified for 1 round
-#         disarmed
-#         +1 energy regen
-# turn outwards
-#     ability 3 energy
-#     target other unit 2 range NLoS
-#     -1 movement
-#     applies far gazing for 2 rounds
-#         +1 sight
-#         cannot see adjacent hexes
-# - adjacent enemy units also provide vision for this units controller
+        ES.resolve(MoveUnit(self.parent, target))
 
 
 class Rouse(SingleTargetActivatedAbility):
@@ -323,23 +299,11 @@ class Rouse(SingleTargetActivatedAbility):
     requires_los = False
 
     def can_target_unit(self, unit: Unit) -> bool:
-        return unit != self.owner
+        return unit != self.parent
 
     def perform(self, target: Unit) -> None:
         # TODO make it not able to skip?
         ES.resolve(QueueUnitForActivation(target))
-
-
-# bee shaman {7wrp} x2
-# health 4, movement 3, sight 2, energy 3, S
-# summon bees
-#     ability 2 energy
-#     target hex 2 range LoS, -2 movement
-#     summons bee swarm with ephemeral duration 1 round
-# royal jelly
-#     ability 2 energy
-#     target different allied unit 2 range LoS, -1 movement
-#     heals 2 and restores 1 energy
 
 
 class SummonBees(SingleHexTargetActivatedAbility):
@@ -348,14 +312,14 @@ class SummonBees(SingleHexTargetActivatedAbility):
 
     def can_target_hex(self, hex_: Hex) -> bool:
         return (unit := GS.map.unit_on(hex_)) is None or unit.is_hidden_for(
-            self.owner.controller
+            self.parent.controller
         )
 
     def perform(self, target: Hex) -> None:
         ES.resolve(
             SpawnUnit(
                 blueprint=UnitBlueprint.registry["bee_swarm"],
-                controller=self.owner.controller,
+                controller=self.parent.controller,
                 space=target,
                 with_statuses=[StatusSignature(Ephemeral, self, duration=1)],
             )
@@ -373,37 +337,13 @@ class StimulatingInjection(SingleTargetActivatedAbility):
     cost = EnergyCost(3)
 
     def can_target_unit(self, unit: Unit) -> bool:
-        return unit != self.owner
+        return unit != self.parent
 
     def perform(self, target: Unit) -> None:
         ES.resolve(Damage(target, DamageSignature(1, self, DamageType.PURE)))
         ES.resolve(ReadyUnit(target))
         # TODO sacrifice as a cost?
-        ES.resolve(Kill(self.owner))
-
-
-# legendary wrestler {11pg} x1
-# health 7, movement 3, sight 2, energy 4, M
-# tackle
-#     melee attack
-#     2 damage
-#     applies stumble
-#         -1 movement point next activation
-# from the top rope
-#     melee attack
-#     4 damage, -1 movement
-#     +1 damage against units with stumble debuff
-#     deals 2 non-lethal physical damage to this unit
-# supplex
-#     ability 3 energy, -2 movement
-#     target M- adjacent unit
-#     deals 3 melee damage and moves the target to the other side of this unit, if able.
-# - caught in the match
-#     enemies disengageging this units suffers -1 movement point
-# - heel turn
-#     when this unit receives 4 or more damage in a single instance, it gets, "they've got a still chari"
-#         unstackable
-#         +1 attack power
+        ES.resolve(Kill(self.parent))
 
 
 class Suplex(SingleTargetActivatedAbility):
@@ -415,11 +355,11 @@ class Suplex(SingleTargetActivatedAbility):
     cost = MovementCost(2) | EnergyCost(3)
 
     def can_target_unit(self, unit: Unit) -> bool:
-        return unit != self.owner and unit.size.g() < Size.LARGE
+        return unit != self.parent and unit.size.g() < Size.LARGE
 
     def perform(self, target: Unit) -> None:
         ES.resolve(Damage(target, DamageSignature(3, self, DamageType.MELEE)))
-        own_position = GS.map.position_off(self.owner)
+        own_position = GS.map.position_off(self.parent)
         if target_hex := GS.map.hexes.get(
             own_position + (own_position - GS.map.position_off(target))
         ):
@@ -451,22 +391,24 @@ class Showdown(SingleEnemyActivatedAbility):
     cost = ExclusiveCost() | EnergyCost(3)
 
     def perform(self, target: Unit) -> None:
-        if attack := self.owner.get_primary_attack(RangedAttackFacet):
+        if attack := self.parent.get_primary_attack(RangedAttackFacet):
             for _ in range(2):
-                ES.resolve(Hit(attacker=self.owner, defender=target, attack=attack))
+                ES.resolve(Hit(attacker=self.parent, defender=target, attack=attack))
 
         if not target.exhausted:
             for attack_type in (RangedAttackFacet, MeleeAttackFacet):
                 if (
                     (defender_attack := target.get_primary_attack(attack_type))
-                    and self.owner
+                    and self.parent
                     in
                     # TODO yikes
                     defender_attack.get_legal_targets(ActiveUnitContext(target, 1))
                 ):
                     ES.resolve(
                         Hit(
-                            attacker=target, defender=self.owner, attack=defender_attack
+                            attacker=target,
+                            defender=self.parent,
+                            attack=defender_attack,
                         )
                     )
                     ES.resolve(ExhaustUnit(target))
@@ -505,7 +447,9 @@ class ChokingSoot(ActivatedAbilityFacet[list[Hex]]):
     cost = MovementCost(1) | EnergyCost(4)
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        if hexes := [_hex for _hex in GS.map.get_hexes_within_range_off(self.owner, 2)]:
+        if hexes := [
+            _hex for _hex in GS.map.get_hexes_within_range_off(self.parent, 2)
+        ]:
             return HexHexes(hexes, 1)
 
     def perform(self, target: list[Hex]) -> None:
@@ -523,7 +467,9 @@ class SmokeCanister(ActivatedAbilityFacet[list[Hex]]):
     combinable = True
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        if hexes := [_hex for _hex in GS.map.get_hexes_within_range_off(self.owner, 2)]:
+        if hexes := [
+            _hex for _hex in GS.map.get_hexes_within_range_off(self.parent, 2)
+        ]:
             return HexHexes(hexes, 1)
 
     def perform(self, target: list[Hex]) -> None:
@@ -553,7 +499,7 @@ class Scorch(ActivatedAbilityFacet[list[Hex]]):
     cost = MovementCost(1) | EnergyCost(3)
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        return ConsecutiveAdjacentHexes(GS.map.hex_off(self.owner), 1)
+        return ConsecutiveAdjacentHexes(GS.map.hex_off(self.parent), 1)
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
@@ -571,8 +517,8 @@ class FlameWall(ActivatedAbilityFacet[list[Hex]]):
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
         return RadiatingLine(
-            GS.map.hex_off(self.owner),
-            list(GS.map.get_neighbors_off(self.owner)),
+            GS.map.hex_off(self.parent),
+            list(GS.map.get_neighbors_off(self.parent)),
             3,
         )
 
@@ -599,8 +545,8 @@ class FlameThrower(ActivatedAbilityFacet[list[Hex]]):
     # TODO variable length cone?
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
         return Cone(
-            GS.map.hex_off(self.owner),
-            list(GS.map.get_neighbors_off(self.owner)),
+            GS.map.hex_off(self.parent),
+            list(GS.map.get_neighbors_off(self.parent)),
             [0, 0, 1],
         )
 
@@ -631,12 +577,12 @@ class VitalityTransfer(ActivatedAbilityFacet):
                 # TODO some common logic for this trash
                 units := [
                     unit
-                    for unit in GS.map.get_units_within_range_off(self.owner, 3)
-                    if unit.controller == self.owner.controller
-                    and unit.is_visible_to(self.owner.controller)
+                    for unit in GS.map.get_units_within_range_off(self.parent, 3)
+                    if unit.controller == self.parent.controller
+                    and unit.is_visible_to(self.parent.controller)
                     and not line_of_sight_obstructed_for_unit(
-                        self.owner,
-                        GS.map.position_off(self.owner),
+                        self.parent,
+                        GS.map.position_off(self.parent),
                         GS.map.position_off(unit),
                     )
                 ]
@@ -665,7 +611,7 @@ class Shove(SingleTargetActivatedAbility):
     combinable = True
 
     def can_target_unit(self, unit: Unit) -> bool:
-        return unit != self.owner
+        return unit != self.parent
 
     def perform(self, target: Unit) -> None:
         target_position = GS.map.position_off(target)
@@ -674,12 +620,12 @@ class Shove(SingleTargetActivatedAbility):
                 target,
                 GS.map.hexes.get(
                     target_position
-                    + (target_position - GS.map.position_off(self.owner))
+                    + (target_position - GS.map.position_off(self.parent))
                 ),
             )
         )
         if any(isinstance(status, Staggered) for status in target.statuses):
-            ES.resolve(ModifyMovementPoints(self.owner, 1))
+            ES.resolve(ModifyMovementPoints(self.parent, 1))
 
 
 class Poof(SingleHexTargetActivatedAbility):
@@ -691,16 +637,16 @@ class Poof(SingleHexTargetActivatedAbility):
     requires_vision = False
 
     def can_target_hex(self, hex_: Hex) -> bool:
-        return hex_.can_move_into(self.owner)
+        return hex_.can_move_into(self.parent)
 
     def perform(self, target: Hex) -> None:
         ES.resolve(
             ApplyHexStatus(
-                GS.map.hex_off(self.owner),
+                GS.map.hex_off(self.parent),
                 HexStatusSignature(Smoke, self, duration=1),
             )
         )
-        ES.resolve(MoveUnit(self.owner, target))
+        ES.resolve(MoveUnit(self.parent, target))
 
 
 class VenomousSpine(SingleEnemyActivatedAbility):
@@ -779,7 +725,7 @@ class AssembleTheDoombot(SingleHexTargetActivatedAbility):
             ES.resolve(
                 SpawnUnit(
                     UnitBlueprint.registry["doombot_3000"],
-                    self.owner.controller,
+                    self.parent.controller,
                     target,
                     exhausted=True,
                     with_statuses=[
@@ -811,8 +757,8 @@ class Translocate(ActivatedAbilityFacet):
                     [(h, None) for h in GS.map.get_neighbors_off(unit)], "select hex"
                 ),
             )
-            for unit in GS.map.get_units_within_range_off(self.owner, 1)
-            if unit.is_visible_to(self.owner.controller)
+            for unit in GS.map.get_units_within_range_off(self.parent, 1)
+            if unit.is_visible_to(self.parent.controller)
         ]:
             return Tree(TreeNode(units, "select unit"))
 
@@ -830,7 +776,9 @@ class InkRing(ActivatedAbilityFacet):
     cost = EnergyCost(3)
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        if hexes := [_hex for _hex in GS.map.get_hexes_within_range_off(self.owner, 3)]:
+        if hexes := [
+            _hex for _hex in GS.map.get_hexes_within_range_off(self.parent, 3)
+        ]:
             return HexRing(hexes, 1)
 
     def perform(self, target: list[Hex]) -> None:
@@ -902,13 +850,13 @@ class CoordinatedManeuver(ActivatedAbilityFacet[list[Unit]]):
     def get_target_profile(self) -> TargetProfile[list[Unit]] | None:
         if units := [
             unit
-            for unit in GS.map.get_units_within_range_off(self.owner, 2)
-            if unit.controller == self.owner.controller
-            and unit != self.owner
+            for unit in GS.map.get_units_within_range_off(self.parent, 2)
+            if unit.controller == self.parent.controller
+            and unit != self.parent
             and not unit.exhausted
             and not line_of_sight_obstructed_for_unit(
-                self.owner,
-                GS.map.position_off(self.owner),
+                self.parent,
+                GS.map.position_off(self.parent),
                 GS.map.position_off(unit),
             )
         ]:
@@ -1081,7 +1029,7 @@ class SpurIntoRage(SingleTargetActivatedAbility):
     range = 2
 
     def can_target_unit(self, unit: Unit) -> bool:
-        return unit != self.owner
+        return unit != self.parent
 
     def perform(self, target: Unit) -> None:
         ES.resolve(
@@ -1102,14 +1050,14 @@ class ConstructTurret(SingleHexTargetActivatedAbility):
 
     def can_target_hex(self, hex_: Hex) -> bool:
         return (unit := GS.map.unit_on(hex_)) is None or unit.is_hidden_for(
-            self.owner.controller
+            self.parent.controller
         )
 
     def perform(self, target: Hex) -> None:
         ES.resolve(
             SpawnUnit(
                 UnitBlueprint.get_class("sentry_turret"),
-                self.owner.controller,
+                self.parent.controller,
                 target,
                 exhausted=True,
                 with_statuses=[
@@ -1130,8 +1078,8 @@ class FixErUp(SingleTargetActivatedAbility):
 
     def can_target_unit(self, unit: Unit) -> bool:
         return (
-            unit != self.owner
-            and unit.controller == self.owner.controller
+            unit != self.parent
+            and unit.controller == self.parent.controller
             and (
                 unit.armor.get_base() > 0
                 or unit.blueprint == UnitBlueprint.get_class("sentry_turret")
@@ -1152,8 +1100,8 @@ class TurboTune(SingleTargetActivatedAbility):
 
     def can_target_unit(self, unit: Unit) -> bool:
         return (
-            unit != self.owner
-            and unit.controller == self.owner.controller
+            unit != self.parent
+            and unit.controller == self.parent.controller
             and unit.armor.get_base() > 0
         )
 

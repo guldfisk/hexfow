@@ -1,26 +1,24 @@
 from __future__ import annotations
 
-import dataclasses
 from typing import Generic, TypeVar
 
 from events.eventsystem import ES, Effect
 
 
-@dataclasses.dataclass(kw_only=True)
 class HasEffectChildren:
-    children: list[HasEffects] = dataclasses.field(default_factory=list, repr=False)
+    def __init__(self):
+        self.children: list[HasEffects] = []
 
 
 G_HasEffectChildren = TypeVar("G_HasEffectChildren", bound=HasEffectChildren)
 
 
-@dataclasses.dataclass(kw_only=True)
 class HasEffects(HasEffectChildren, Generic[G_HasEffectChildren]):
-    effects: set[Effect] = dataclasses.field(default_factory=set, init=False)
-    parent: G_HasEffectChildren | None = dataclasses.field(default=None, repr=False)
+    def __init__(self, parent: G_HasEffectChildren | None = None):
+        super().__init__()
+        self.effects: set[Effect] = set()
+        self.parent = parent
 
-    # TODO :(
-    def __post_init__(self):
         if self.parent is not None:
             self.parent.children.append(self)
 

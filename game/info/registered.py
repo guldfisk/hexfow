@@ -65,6 +65,7 @@ class Registered(ABC):
     description: ClassVar[str | None] = None
     related_statuses: ClassVar[list[str]] = []
 
+    # TODO name
     @classmethod
     def get_class(cls, identifier: str) -> type[Self]:
         try:

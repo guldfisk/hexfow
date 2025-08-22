@@ -326,7 +326,7 @@ class Hitched(UnitStatus):
 
     def create_effects(self) -> None:
         self.register_effects(
-            HitchedTrigger(self.source.owner, self.parent),
+            HitchedTrigger(self.source.parent, self.parent),
             TurnExpiringStatusTrigger(self),
         )
 

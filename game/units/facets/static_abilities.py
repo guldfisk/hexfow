@@ -60,7 +60,7 @@ class Prickly(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(PricklyTrigger(self.owner, self, 2))
+        self.register_effects(PricklyTrigger(self.parent, self, 2))
 
 
 class ToxicSkin(StaticAbilityFacet):
@@ -71,7 +71,7 @@ class ToxicSkin(StaticAbilityFacet):
     def create_effects(self) -> None:
         self.register_effects(
             DebuffOnMeleeAttackTrigger(
-                self.owner, StatusSignature(UnitStatus.get("poison"), self, stacks=1)
+                self.parent, StatusSignature(UnitStatus.get("poison"), self, stacks=1)
             )
         )
 
@@ -82,7 +82,7 @@ class Immobile(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(RootedModifier(self.owner))
+        self.register_effects(RootedModifier(self.parent))
 
 
 class Farsighted(StaticAbilityFacet):
@@ -91,7 +91,7 @@ class Farsighted(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(FarsightedModifier(self.owner))
+        self.register_effects(FarsightedModifier(self.parent))
 
 
 class PackHunter(StaticAbilityFacet):
@@ -100,13 +100,13 @@ class PackHunter(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(PackHunterTrigger(self.owner))
+        self.register_effects(PackHunterTrigger(self.parent))
 
 
 class Nourishing(StaticAbilityFacet):
     def create_effects(self) -> None:
         self.register_effects(
-            CrushableReplacement(self.owner), CrushableModifier(self.owner)
+            CrushableReplacement(self.parent), CrushableModifier(self.parent)
         )
 
 
@@ -119,7 +119,7 @@ class Pusher(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(
-            PusherModifier(self.owner), PusherReplacement(self.owner, self)
+            PusherModifier(self.parent), PusherReplacement(self.parent, self)
         )
 
 
@@ -127,7 +127,7 @@ class TerrainSavvy(StaticAbilityFacet):
     """Ignores the first movement penalty each turn."""
 
     def create_effects(self) -> None:
-        self.register_effects(PerTurnMovePenaltyIgnoreReplacement(self.owner, 1))
+        self.register_effects(PerTurnMovePenaltyIgnoreReplacement(self.parent, 1))
 
 
 class Furious(StaticAbilityFacet):
@@ -136,7 +136,7 @@ class Furious(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(FuriousTrigger(self.owner))
+        self.register_effects(FuriousTrigger(self.parent))
 
 
 class Stealth(StaticAbilityFacet):
@@ -145,7 +145,7 @@ class Stealth(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(StealthModifier(self.owner))
+        self.register_effects(StealthModifier(self.parent))
 
 
 class FightFlightFreeze(StaticAbilityFacet):
@@ -155,14 +155,14 @@ class FightFlightFreeze(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(FightFlightFreezeModifier(self.owner))
+        self.register_effects(FightFlightFreezeModifier(self.parent))
 
 
 class Explosive(StaticAbilityFacet):
     """When this unit dies, it deals 5 aoe damage to unit within 1 range."""
 
     def create_effects(self) -> None:
-        self.register_effects(ExplosiveTrigger(self.owner, self, 5))
+        self.register_effects(ExplosiveTrigger(self.parent, self, 5))
 
 
 class Schadenfreude(StaticAbilityFacet):
@@ -172,8 +172,8 @@ class Schadenfreude(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(
-            SchadenfreudeDamageTrigger(self.owner),
-            SchadenfreudeDebuffTrigger(self.owner),
+            SchadenfreudeDamageTrigger(self.parent),
+            SchadenfreudeDebuffTrigger(self.parent),
         )
 
 
@@ -184,12 +184,12 @@ class GrizzlyMurderer(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(GrizzlyMurdererTrigger(self.owner, self))
+        self.register_effects(GrizzlyMurdererTrigger(self.parent, self))
 
 
 class TelepathicSpy(StaticAbilityFacet):
     def create_effects(self) -> None:
-        self.register_effects(TelepathicSpyModifier(self.owner))
+        self.register_effects(TelepathicSpyModifier(self.parent))
 
 
 class CaughtInTheMatch(StaticAbilityFacet):
@@ -198,7 +198,7 @@ class CaughtInTheMatch(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(CaughtInTheMatchTrigger(self.owner))
+        self.register_effects(CaughtInTheMatchTrigger(self.parent))
 
 
 class HeelTurn(StaticAbilityFacet):
@@ -207,7 +207,7 @@ class HeelTurn(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(HeelTurnTrigger(self.owner, self))
+        self.register_effects(HeelTurnTrigger(self.parent, self))
 
 
 class Quick(StaticAbilityFacet):
@@ -216,7 +216,7 @@ class Quick(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(QuickTrigger(self.owner))
+        self.register_effects(QuickTrigger(self.parent))
 
 
 class GlassSkin(StaticAbilityFacet):
@@ -226,7 +226,7 @@ class GlassSkin(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(
-            SourceTypeResistance(self.owner, Status, Resistance.MAJOR)
+            SourceTypeResistance(self.parent, Status, Resistance.MAJOR)
         )
 
 
@@ -237,7 +237,7 @@ class DiamondSkin(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(
-            SourceTypeResistance(self.owner, Status, Resistance.IMMUNE)
+            SourceTypeResistance(self.parent, Status, Resistance.IMMUNE)
         )
 
 
@@ -247,7 +247,7 @@ class FlameResistant(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(SourceTypeResistance(self.owner, Burn, Resistance.MAJOR))
+        self.register_effects(SourceTypeResistance(self.parent, Burn, Resistance.MAJOR))
 
 
 class LastStand(StaticAbilityFacet):
@@ -257,7 +257,7 @@ class LastStand(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(LastStandReplacement(self.owner, self))
+        self.register_effects(LastStandReplacement(self.parent, self))
 
 
 class ToxicPresence(StaticAbilityFacet):
@@ -266,7 +266,7 @@ class ToxicPresence(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(ToxicPresenceTrigger(self.owner, self, 1))
+        self.register_effects(ToxicPresenceTrigger(self.parent, self, 1))
 
 
 class Diver(StaticAbilityFacet):
@@ -275,7 +275,7 @@ class Diver(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(TerrainProtectionModifier(self.owner, Water, 1))
+        self.register_effects(TerrainProtectionModifier(self.parent, Water, 1))
 
 
 class Camouflage(StaticAbilityFacet):
@@ -284,7 +284,7 @@ class Camouflage(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(CamouflageModifier(self.owner))
+        self.register_effects(CamouflageModifier(self.parent))
 
 
 class UnwieldySwimmer(StaticAbilityFacet):
@@ -293,7 +293,7 @@ class UnwieldySwimmer(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(UnwieldySwimmerModifier(self.owner))
+        self.register_effects(UnwieldySwimmerModifier(self.parent))
 
 
 class ScurryInTheShadows(StaticAbilityFacet):
@@ -302,7 +302,7 @@ class ScurryInTheShadows(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(ScurryInTheShadowsModifier(self.owner, 2))
+        self.register_effects(ScurryInTheShadowsModifier(self.parent, 2))
 
 
 class JukeAndJive(StaticAbilityFacet):
@@ -312,7 +312,7 @@ class JukeAndJive(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(JukeAndJiveTrigger(self.owner, self))
+        self.register_effects(JukeAndJiveTrigger(self.parent, self))
 
 
 class Inspiration(StaticAbilityFacet):
@@ -321,7 +321,7 @@ class Inspiration(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(InspirationTrigger(self.owner))
+        self.register_effects(InspirationTrigger(self.parent))
 
 
 class InspiringPresence(StaticAbilityFacet):
@@ -330,7 +330,7 @@ class InspiringPresence(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(IncreaseSpeedAuraModifier(self.owner, 1))
+        self.register_effects(IncreaseSpeedAuraModifier(self.parent, 1))
 
 
 class SlimyLocomotion(StaticAbilityFacet):
@@ -339,7 +339,7 @@ class SlimyLocomotion(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(IgnoresMoveOutPenaltyReplacement(self.owner))
+        self.register_effects(IgnoresMoveOutPenaltyReplacement(self.parent))
 
 
 class SlimySkin(StaticAbilityFacet):
@@ -349,7 +349,7 @@ class SlimySkin(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(
-            UnitImmuneToStatusReplacement(self.owner, UnitStatus.get("slimed"))
+            UnitImmuneToStatusReplacement(self.parent, UnitStatus.get("slimed"))
         )
 
 
@@ -361,7 +361,7 @@ class SludgeTrail(StaticAbilityFacet):
     def create_effects(self) -> None:
         self.register_effects(
             UnitAppliesStatusOnMoveTrigger(
-                self.owner,
+                self.parent,
                 HexStatusSignature(HexStatus.get("sludge"), self, duration=2),
             )
         )
@@ -373,4 +373,4 @@ class Automated(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(UnitNoCaptureModifier(self.owner))
+        self.register_effects(UnitNoCaptureModifier(self.parent))

@@ -297,7 +297,7 @@ def realize_status_for_unit(unit: Unit, signature: StatusSignature) -> UnitStatu
         controller=(
             controller := (
                 (
-                    signature.source.owner.controller
+                    signature.source.parent.controller
                     if isinstance(signature.source, Facet)
                     else signature.source.controller
                 )
@@ -372,7 +372,7 @@ class ApplyHexStatus(Event[None]):
         status = self.signature.status_type(
             controller=(
                 (
-                    self.signature.source.owner.controller
+                    self.signature.source.parent.controller
                     if isinstance(self.signature.source, Facet)
                     else self.signature.source.controller
                 )

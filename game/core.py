@@ -25,7 +25,7 @@ from typing import (
 from bidict import bidict
 
 from events.eventsystem import Modifiable, ModifiableAttribute, modifiable
-from game.has_effects import HasEffects
+from game.has_effects import HasEffectChildren, HasEffects
 from game.identification import IDMap
 from game.info.registered import Registered, UnknownIdentifierError, get_registered_meta
 from game.map.coordinates import CC, Corner, CornerPosition, line_of_sight_obstructed
@@ -46,7 +46,6 @@ class SerializationContext:
     visible_unit_ids: set[str]
 
 
-# TODO this should just be a protocol?
 class Serializable(ABC):
     @abstractmethod
     def serialize(self, context: SerializationContext) -> JSON: ...
@@ -176,9 +175,11 @@ class SkipOption(Option[None]):
         return {}
 
 
-@dataclasses.dataclass
 class HasStatuses(HasEffects, Generic[G_Status]):
-    statuses: list[Status] = dataclasses.field(default_factory=list, init=False)
+    # TODO parent type?
+    def __init__(self, parent: HasEffectChildren | None = None):
+        super().__init__(parent=parent)
+        self.statuses: list[G_Status] = []
 
     def add_status(self, status: G_Status) -> G_Status:
         if not status.on_apply(self):
@@ -214,15 +215,8 @@ class HasStatuses(HasEffects, Generic[G_Status]):
 G_HasStatuses = TypeVar("G_HasStatuses", bound=HasStatuses)
 
 
-# TODO a facet should not have statuses
-class Facet(HasStatuses, Modifiable, Registered, ABC, metaclass=get_registered_meta()):
+class Facet(HasEffects["Unit"], Registered, ABC, metaclass=get_registered_meta()):
     registry: ClassVar[dict[str, Facet]]
-
-    def __init__(self, owner: Unit):
-        super().__init__(parent=owner)
-
-        # TODO should be able to unify this with parent from has_statuses or whatever
-        self.owner = owner
 
     # TODO common interface?
     def create_effects(self) -> None: ...
@@ -428,7 +422,7 @@ class SingleTargetAttackFacet(AttackFacet, ABC):
             max(
                 self.damage
                 + (self.get_damage_modifier_against(unit) or 0)
-                + self.owner.attack_power.g(),
+                + self.parent.attack_power.g(),
                 0,
             ),
             self,
@@ -453,9 +447,9 @@ class MeleeAttackFacet(SingleTargetAttackFacet, ABC):
     def get_legal_targets(self, context: ActiveUnitContext) -> list[Unit]:
         return [
             unit
-            for unit in GS.map.get_neighboring_units_off(self.owner)
-            if unit.controller != self.owner.controller
-            and unit.is_visible_to(self.owner.controller)
+            for unit in GS.map.get_neighboring_units_off(self.parent)
+            if unit.controller != self.parent.controller
+            and unit.is_visible_to(self.parent.controller)
             and unit.can_be_attacked_by(self)
             # TODO testing
             # and GS.map.hex_off(unit).is_passable_to(self.owner)
@@ -498,13 +492,13 @@ class RangedAttackFacet(SingleTargetAttackFacet, ABC):
     def get_legal_targets(self, context: ActiveUnitContext) -> list[Unit]:
         return [
             unit
-            for unit in GS.map.get_units_within_range_off(self.owner, self.range)
-            if unit.controller != self.owner.controller
+            for unit in GS.map.get_units_within_range_off(self.parent, self.range)
+            if unit.controller != self.parent.controller
             # TODO test on this
-            and unit.is_visible_to(self.owner.controller)
+            and unit.is_visible_to(self.parent.controller)
             and not line_of_sight_obstructed_for_unit(
-                self.owner,
-                GS.map.position_off(self.owner),
+                self.parent,
+                GS.map.position_off(self.parent),
                 GS.map.position_off(unit),
             )
             and unit.can_be_attacked_by(self)
@@ -1100,14 +1094,14 @@ class SingleTargetActivatedAbility(ActivatedAbilityFacet[Unit], ABC):
     def get_target_profile(self) -> TargetProfile[Unit] | None:
         if units := [
             unit
-            for unit in GS.map.get_units_within_range_off(self.owner, self.range)
+            for unit in GS.map.get_units_within_range_off(self.parent, self.range)
             if self.can_target_unit(unit)
-            and unit.is_visible_to(self.owner.controller)
+            and unit.is_visible_to(self.parent.controller)
             and (
                 not self.requires_los
                 or not line_of_sight_obstructed_for_unit(
-                    self.owner,
-                    GS.map.position_off(self.owner),
+                    self.parent,
+                    GS.map.position_off(self.parent),
                     GS.map.position_off(unit),
                 )
             )
@@ -1119,14 +1113,14 @@ class SingleAllyActivatedAbility(SingleTargetActivatedAbility, ABC):
     can_target_self: ClassVar[bool] = True
 
     def can_target_unit(self, unit: Unit) -> bool:
-        return unit.controller == self.owner.controller and (
-            self.can_target_self or unit != self.owner
+        return unit.controller == self.parent.controller and (
+            self.can_target_self or unit != self.parent
         )
 
 
 class SingleEnemyActivatedAbility(SingleTargetActivatedAbility, ABC):
     def can_target_unit(self, unit: Unit) -> bool:
-        return unit.controller != self.owner.controller
+        return unit.controller != self.parent.controller
 
 
 @dataclasses.dataclass
@@ -1184,12 +1178,14 @@ class Terrain(HasEffects, Registered, ABC, metaclass=get_registered_meta()):
         }
 
 
-@dataclasses.dataclass
 class Hex(Modifiable, HasStatuses, Serializable):
-    position: CC
-    terrain: Terrain
-    is_objective: bool
-    map: HexMap
+    def __init__(self, position: CC, terrain: Terrain, is_objective: bool, map: HexMap):
+        super().__init__()
+        self.position = position
+        self.terrain = terrain
+        self.is_objective = is_objective
+        # TODO name?
+        self.map = map
 
     @modifiable
     def is_passable_to(self, unit: Unit) -> bool:
@@ -1250,7 +1246,7 @@ class Hex(Modifiable, HasStatuses, Serializable):
             and isinstance(request.damage_signature.source, Facet)
             and GS.map.hex_off(request.unit).terrain.is_high_ground
             and not GS.map.hex_off(
-                request.damage_signature.source.owner
+                request.damage_signature.source.parent
             ).terrain.is_high_ground
             else 0
         )
@@ -1307,12 +1303,6 @@ class Hex(Modifiable, HasStatuses, Serializable):
             ),
         }
 
-    def __eq__(self, other: Any) -> bool:
-        return self is other
-
-    def __hash__(self) -> int:
-        return hash(id(self))
-
     def __repr__(self):
         return f"{type(self).__name__}({self.position.r}, {self.position.h})"
 
@@ -1341,7 +1331,7 @@ class DamageSignature:
         return self.branch(amount=amount)
 
     def get_unit_source(self) -> Unit | None:
-        return self.source.owner if isinstance(self.source, Facet) else None
+        return self.source.parent if isinstance(self.source, Facet) else None
 
 
 class HexStatus(Status[Hex], ABC):
@@ -1373,13 +1363,13 @@ class SingleHexTargetActivatedAbility(ActivatedAbilityFacet[Hex], ABC):
     def get_target_profile(self) -> TargetProfile[Hex] | None:
         if hexes := [
             _hex
-            for _hex in GS.map.get_hexes_within_range_off(self.owner, self.range)
-            if (not self.requires_vision or _hex.is_visible_to(self.owner.controller))
+            for _hex in GS.map.get_hexes_within_range_off(self.parent, self.range)
+            if (not self.requires_vision or _hex.is_visible_to(self.parent.controller))
             and (
                 not self.requires_los
                 or not line_of_sight_obstructed_for_unit(
-                    self.owner,
-                    GS.map.position_off(self.owner),
+                    self.parent,
+                    GS.map.position_off(self.parent),
                     _hex.position,
                 )
             )
@@ -1392,7 +1382,9 @@ class TriHexTargetActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
     range: ClassVar[int]
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        if corners := list(GS.map.get_corners_within_range_off(self.owner, self.range)):
+        if corners := list(
+            GS.map.get_corners_within_range_off(self.parent, self.range)
+        ):
             return TriHex(corners)
 
 

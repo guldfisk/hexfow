@@ -40,7 +40,7 @@ class Gore(MeleeAttackFacet):
     def __init__(self, owner: Unit):
         super().__init__(owner)
 
-        self.adjacency_hook = AdjacencyHook(self.owner)
+        self.adjacency_hook = AdjacencyHook(self.parent)
 
     def create_effects(self) -> None:
         self.register_effects(self.adjacency_hook)
@@ -101,7 +101,7 @@ class SolidMunition(RangedAttackFacet):
     def resolve_post_damage_effects(self, defender: Unit) -> None:
         ES.resolve(
             ApplyStatus(
-                self.owner, StatusSignature(UnitStatus.get("stunned"), self, stacks=1)
+                self.parent, StatusSignature(UnitStatus.get("stunned"), self, stacks=1)
             )
         )
 
@@ -121,7 +121,7 @@ class MightyBlow(MeleeAttackFacet):
     def resolve_post_damage_effects(self, defender: Unit) -> None:
         ES.resolve(
             ApplyStatus(
-                self.owner, StatusSignature(UnitStatus.get("stunned"), self, stacks=1)
+                self.parent, StatusSignature(UnitStatus.get("stunned"), self, stacks=1)
             )
         )
 
@@ -358,7 +358,7 @@ class FromTheTopRope(MeleeAttackFacet):
             return 1
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(Damage(self.owner, DamageSignature(2, self, lethal=False)))
+        ES.resolve(Damage(self.parent, DamageSignature(2, self, lethal=False)))
 
 
 class TwinRevolvers(RangedAttackFacet):

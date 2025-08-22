@@ -601,21 +601,6 @@ class ModifiableMeta(ABCMeta):
             ) or (isinstance(annotation, str) and "ModifiableAttribute" in annotation):
                 attributes[key] = ModifiableAttribute(key, "_" + key)
         klass = super().__new__(metacls, name, bases, attributes)
-        # print(klass, get_annotations(klass, eval_str=True))
-        # for key, annotation in get_annotations(klass, eval_str=True).items():
-        #     print(
-        #         key,
-        #         type(annotation),
-        #         hasattr(annotation, "__origin__")
-        #         # and issubclass(annotation.__origin__, ModifiableAttribute),
-        #     )
-        #     # if isinstance(annotation, str):
-        #     #     annotation = eval(annotation)
-        #     if hasattr(annotation, "__origin__") and issubclass(
-        #         annotation.__origin__, ModifiableAttribute
-        #     ):
-        #         setattr(klass, key, ModifiableAttribute(key, "_" + key))
-        #         # attributes[key] = ModifiableAttribute(key, "_" + key)
         for name, modifiable_method, wrapper in modifiable_methods:
             modifiable_method.__target__ = wrapper.__target__ = (klass, name)
         return klass

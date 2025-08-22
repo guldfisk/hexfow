@@ -332,7 +332,7 @@ class CamouflageModifier(StateModifierEffect[Unit, TerrainProtectionRequest, int
             and request.damage_signature.type == DamageType.RANGED
             and isinstance(request.damage_signature.source, Facet)
             and GS.map.distance_between(
-                self.unit, request.damage_signature.source.owner
+                self.unit, request.damage_signature.source.parent
             )
             > 1
         )
