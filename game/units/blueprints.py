@@ -139,6 +139,7 @@ from game.units.facets.static_abilities import (
     SlimySkin,
     SludgeTrail,
     Stealth,
+    StrainedPusher,
     TelepathicSpy,
     TerrainSavvy,
     ToxicPresence,
@@ -322,6 +323,10 @@ GLASS_GOLEM = UnitBlueprint(
     sight=2,
     facets=[GlassFist, GlassSkin],
     price=5,
+)
+
+LITTLE_ENGINE = UnitBlueprint(
+    "Little Engine", health=6, speed=1, sight=1, facets=[StrainedPusher], price=5
 )
 
 MEDIC = UnitBlueprint(

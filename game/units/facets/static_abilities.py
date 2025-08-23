@@ -30,6 +30,7 @@ from game.effects.replacements import (
     LastStandReplacement,
     PerTurnMovePenaltyIgnoreReplacement,
     PusherReplacement,
+    StrainedPusherReplacement,
     UnitImmuneToStatusReplacement,
 )
 from game.effects.triggers import (
@@ -121,6 +122,19 @@ class Pusher(StaticAbilityFacet):
     def create_effects(self) -> None:
         self.register_effects(
             PusherModifier(self.parent), PusherReplacement(self.parent, self)
+        )
+
+
+class StrainedPusher(StaticAbilityFacet):
+    """
+    This unit can move into occupied spaces. If it would do so, it first pushes the occupying unit one space, repeating
+    if that unit would be pushed into an occupied space as well. This unit suffers 1 pure damage for each unit it attempts to
+    push this way beyond the first.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            PusherModifier(self.parent), StrainedPusherReplacement(self.parent, self)
         )
 
 

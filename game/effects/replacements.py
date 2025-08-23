@@ -25,8 +25,9 @@ from game.events import (
     SufferDamage,
     Turn,
 )
+from game.map.coordinates import CC
 from game.statuses.dispel import dispel_from_unit
-from game.values import StatusIntention
+from game.values import DamageType, StatusIntention
 
 
 class MoveUnitLayers(IntEnum):
@@ -77,6 +78,26 @@ class GateReplacement(ReplacementEffect[MoveUnit]):
         ES.resolve(event)
 
 
+def get_push_chain(from_: CC, direction: CC) -> list[tuple[Unit, Hex | None]]:
+    unit_positions: list[tuple[Unit, Hex | None]] = []
+    current_position = from_
+    while True:
+        current_position += direction
+        current_unit = GS.map.unit_on(current_position)
+        if not current_unit:
+            break
+        next_position = current_position + direction
+        if next_position not in GS.map.hexes:
+            unit_positions.append((current_unit, None))
+            break
+        if GS.map.hexes[next_position].is_passable_to(current_unit):
+            unit_positions.append((current_unit, GS.map.hexes[next_position]))
+        else:
+            unit_positions.append((current_unit, None))
+            break
+    return list(reversed(unit_positions))
+
+
 @dataclasses.dataclass(eq=False)
 class PusherReplacement(ReplacementEffect[MoveUnit]):
     priority: ClassVar[int] = MoveUnitLayers.PUSH_LAYER
@@ -93,24 +114,9 @@ class PusherReplacement(ReplacementEffect[MoveUnit]):
         if (
             direction := event.to_.position - GS.map.position_off(event.unit)
         ).length == 1:
-            unit_positions: list[tuple[Unit, Hex | None]] = []
-            current_position = GS.map.position_off(event.unit)
-            while True:
-                current_position += direction
-                current_unit = GS.map.unit_on(current_position)
-                if not current_unit:
-                    break
-                next_position = current_position + direction
-                if next_position not in GS.map.hexes:
-                    unit_positions.append((current_unit, None))
-                    break
-                if GS.map.hexes[next_position].is_passable_to(current_unit):
-                    unit_positions.append((current_unit, GS.map.hexes[next_position]))
-                else:
-                    unit_positions.append((current_unit, None))
-                    break
-
-            for unit, target in reversed(unit_positions):
+            for unit, target in get_push_chain(
+                GS.map.position_off(event.unit), direction
+            ):
                 moved = False
                 if target:
                     moved = any(
@@ -122,6 +128,43 @@ class PusherReplacement(ReplacementEffect[MoveUnit]):
                 if not moved:
                     ES.resolve(Damage(unit, DamageSignature(2, self.source)))
                     ES.resolve(CheckAlive(unit))
+
+        ES.resolve(event)
+
+
+@dataclasses.dataclass(eq=False)
+class StrainedPusherReplacement(ReplacementEffect[MoveUnit]):
+    priority: ClassVar[int] = MoveUnitLayers.PUSH_LAYER
+
+    unit: Unit
+    source: Source
+
+    def can_replace(self, event: MoveUnit) -> bool:
+        return (
+            event.unit == self.unit and not event.external and GS.map.unit_on(event.to_)
+        )
+
+    def resolve(self, event: MoveUnit) -> None:
+        if (
+            direction := event.to_.position - GS.map.position_off(event.unit)
+        ).length == 1:
+            for unit, target in (
+                unit_positions := get_push_chain(
+                    GS.map.position_off(event.unit), direction
+                )
+            ):
+                if target:
+                    ES.resolve(MoveUnit(unit, target, external=True))
+
+            if len(unit_positions) > 1:
+                ES.resolve(
+                    Damage(
+                        self.unit,
+                        DamageSignature(
+                            len(unit_positions) - 1, self.source, DamageType.PURE
+                        ),
+                    )
+                )
 
         ES.resolve(event)
 

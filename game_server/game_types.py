@@ -42,11 +42,11 @@ class TestGameType(GameType):
                     random.choice(
                         [
                             Plains,
-                            # Plains,
-                            # Plains,
+                            Plains,
+                            Plains,
                             # Forest,
                             # Hills,
-                            # Water,
+                            Water,
                         ]
                     ),
                     cc.distance_to(CC(0, 0)) <= 1,
@@ -59,6 +59,7 @@ class TestGameType(GameType):
             (
                 INFERNO_TANK,
                 CAPRICIOUS_TRICKSTER,
+                LITTLE_ENGINE,
             ),
             (
                 GATE_FIEND,
@@ -72,7 +73,11 @@ class TestGameType(GameType):
         )
 
         ccs = sorted(
-            landscape.terrain_map.keys(),
+            [
+                cc
+                for cc, spec in landscape.terrain_map.items()
+                if not spec.terrain_type == Water
+            ],
             key=lambda cc: (cc.distance_to(CC(0, 0)), cc.r, CC.h),
         )
 
