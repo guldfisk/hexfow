@@ -29,7 +29,6 @@ from game.units.facets.activated_abilities import (
     Poof,
     RaiseShrine,
     Rouse,
-    SanctifyGrounds,
     Scorch,
     Scorn,
     Scry,
@@ -49,6 +48,7 @@ from game.units.facets.activated_abilities import (
     Suplex,
     Sweep,
     Terrorize,
+    TidyUp,
     Translocate,
     TurboTune,
     Vault,
@@ -284,7 +284,7 @@ SHRINE_KEEPER = UnitBlueprint(
     sight=2,
     energy=4,
     size=Size.SMALL,
-    facets=[RaiseShrine, GrantCharm, SanctifyGrounds],
+    facets=[RaiseShrine, GrantCharm, TidyUp],
     price=4,
 )
 

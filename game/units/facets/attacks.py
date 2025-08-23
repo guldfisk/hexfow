@@ -373,7 +373,7 @@ class TwinRevolvers(RangedAttackFacet):
 
 class InfernalBlade(MeleeAttackFacet):
     """
-    Applies 2 burn.
+    Applies 2 <burn>.
     """
 
     cost = MovementCost(2)

@@ -500,7 +500,7 @@ class Terrorize(SingleEnemyActivatedAbility):
 
 class Scorch(ActivatedAbilityFacet[list[Hex]]):
     """
-    Target length 3 adjacent arc. Deals 3 ranged damage and applies 2 stacks of <burn> to units on hexes.
+    Target length 3 adjacent arc. Deals 3 aoe damage and applies 2 stacks of <burn> to units on hexes.
     """
 
     cost = MovementCost(1) | EnergyCost(3)
@@ -900,8 +900,8 @@ class LayMine(SingleHexTargetActivatedAbility):
         )
 
 
-class SanctifyGrounds(SingleHexTargetActivatedAbility):
-    """Target hex within 1 range. Dispels hex statuses."""
+class TidyUp(SingleHexTargetActivatedAbility):
+    """Target hex within 1 range. Dispels all hex statuses."""
 
     cost = EnergyCost(2)
 

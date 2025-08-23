@@ -244,7 +244,7 @@ class DiamondSkin(StaticAbilityFacet):
 
 class FlameResistant(StaticAbilityFacet):
     """
-    Major resistant to damage from the <burn> status.
+    Reduce damage from the <burn> status by half (after armor), rounding the reduction up.
     """
 
     def create_effects(self) -> None:

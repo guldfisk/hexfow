@@ -57,10 +57,7 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                GATE_FIEND,
-                LEGENDARY_WRESTLER,
-                # GATE_FIEND,
-                BULLDOZER,
+                INFERNO_TANK,
                 CAPRICIOUS_TRICKSTER,
             ),
             (
