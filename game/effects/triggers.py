@@ -539,12 +539,11 @@ class HitchedTrigger(TriggerEffect[MoveUnit]):
     pulled: Unit
 
     def should_trigger(self, event: MoveUnit) -> bool:
-        print("HALO", event.unit, self.puller)
         return event.unit == self.puller
 
     def resolve(self, event: MoveUnit) -> None:
         if event.result:
-            ES.resolve(MoveUnit(self.pulled, event.result))
+            ES.resolve(MoveUnit(self.pulled, event.result, external=True))
 
 
 @dataclasses.dataclass(eq=False)

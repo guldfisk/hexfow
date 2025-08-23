@@ -104,7 +104,7 @@ class PusherModifier(StateModifierEffect[Hex, Unit, bool]):
     unit: Unit
 
     def should_modify(self, obj: Hex, request: Unit, value: bool) -> bool:
-        return request == self.unit
+        return request == self.unit and obj != GS.map.hex_off(self.unit)
 
     def modify(self, obj: Hex, request: Unit, value: bool) -> bool:
         return True

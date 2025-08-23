@@ -382,20 +382,16 @@ class ActivateAbilityAction(Event[None]):
 class MoveUnit(Event[Hex | None]):
     unit: Unit
     to_: Hex
-
-    # TODO check was used?
-    # def is_valid(self) -> bool:
-    #     return self.to_.can_move_into(self.unit)
+    external: bool = False
 
     def resolve(self) -> Hex | None:
-        moved = False
         from_ = None
-        print("in move unit")
         if self.to_.can_move_into(self.unit):
             from_ = self.to_.map.hex_off(self.unit)
-            moved = self.to_.map.move_unit_to(self.unit, self.to_)
+            if not self.to_.map.move_unit_to(self.unit, self.to_):
+                from_ = None
 
-        if moved:
+        if from_:
             # TODO hmm
             GS.update_vision()
             with GS.log(
@@ -408,7 +404,7 @@ class MoveUnit(Event[Hex | None]):
                 LogLine([self.unit, "fails to move into", self.to_]),
                 LogLine([self.unit, "fails to move"]),
             ):
-                return from_
+                return None
 
 
 @dataclasses.dataclass

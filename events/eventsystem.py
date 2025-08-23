@@ -75,9 +75,7 @@ class EffectSet:
         for effect in effects:
             self.deregister_effect(effect)
 
-    # TODO type
     def get_effects(self, effect_type: type[F] | F, target: Any) -> Iterable[F]:
-        print("get effects", effect_type, target)
         return self.effects[effect_type.effect_type][target].keys()
 
 
@@ -156,7 +154,6 @@ class EventSystem:
             self.deregister_effects(trigger_effect)
 
     def resolve(self, event: Event[V]) -> EventResolution:
-        print("resolving", event)
         if not event.is_valid():
             return EventResolution([])
 
@@ -169,15 +166,16 @@ class EventSystem:
             and replacement_effect.can_replace(event)
         ]:
             replacement_effect = min(eligible_replacements, key=lambda r: r.priority)
-
             self._exhausted_replacement_effects.add(replacement_effect)
             previous_active_replacement_effect = self._active_replacement_effect
             self._active_replacement_effect = replacement_effect
             previous_replacement_results = self._replacement_results
+            self._replacement_results = []
             replacement_effect.resolve(event)
             self._active_replacement_effect = previous_active_replacement_effect
             self._exhausted_replacement_effects.remove(replacement_effect)
             resolution = EventResolution(self._replacement_results)
+            previous_replacement_results.append(resolution)
             self._replacement_results = previous_replacement_results
             return resolution
 

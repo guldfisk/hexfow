@@ -79,6 +79,7 @@ from game.units.facets.attacks import (
     HammerCannon,
     HiddenBlade,
     HurlBoulder,
+    InfernalBlade,
     LightBlaster,
     LightBow,
     MarshmallowFist,
@@ -642,6 +643,16 @@ CHAINSAW_SADIST = UnitBlueprint(
     price=13,
 )
 
+GATE_FIEND = UnitBlueprint(
+    "Gate Fiend",
+    health=8,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[InfernalBlade, OpenGate],
+    price=13,
+)
+
 MAD_SCIENTIST = UnitBlueprint(
     "Mad Scientist",
     health=6,
@@ -776,8 +787,4 @@ TELEPATH = UnitBlueprint(
     energy=5,
     facets=[TelepathicSpy, Rouse],
     price=None,
-)
-
-GATE_FIEND = UnitBlueprint(
-    "Gate Fiend", health=8, speed=3, sight=2, energy=4, facets=[OpenGate], price=None
 )

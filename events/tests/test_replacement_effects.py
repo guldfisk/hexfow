@@ -97,13 +97,19 @@ def test_replacement_spawns_multiple_events_multiple_times():
     for _ in range(2):
         ES.register_effects(DamageAlsoMoves())
     resolution = ES.resolve(DamageDummy(1))
-    assert sum(e.distance for e in resolution.iter_type(MoveDummy)) == 2
-    assert sum(e.value for e in resolution.iter_type(DamageDummy)) == 1
     assert Dummy.damage == 1
     assert Dummy.position == 2
+    assert sum(e.value for e in resolution.iter_type(DamageDummy)) == 1
+    assert sum(e.distance for e in resolution.iter_type(MoveDummy)) == 2
     assert ES.history == [
         MoveDummy(1, result=1),
         MoveDummy(1, result=1),
         DummyLossHealth(1, result=1),
         DamageDummy(1, result=1),
     ]
+
+    resolution = ES.resolve(DamageDummy(1))
+    assert Dummy.damage == 2
+    assert Dummy.position == 4
+    assert sum(e.value for e in resolution.iter_type(DamageDummy)) == 1
+    assert sum(e.distance for e in resolution.iter_type(MoveDummy)) == 2

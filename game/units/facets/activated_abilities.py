@@ -68,7 +68,7 @@ from game.statuses.unit_statuses import (
     Staggered,
     Terror,
 )
-from game.values import DamageType, Size, StatusIntention
+from game.values import DamageType, StatusIntention
 
 
 class Bloom(NoTargetActivatedAbility):
@@ -353,14 +353,14 @@ class StimulatingInjection(SingleTargetActivatedAbility):
 
 class Suplex(SingleTargetActivatedAbility):
     """
-    Target small or medium adjacent unit. Deals 3 melee damage, and moves the target to the other side of this unit.
+    Target adjacent unit. Deals 3 melee damage, and moves the target to the other side of this unit.
     """
 
     range = 1
     cost = MovementCost(2) | EnergyCost(3)
 
     def can_target_unit(self, unit: Unit) -> bool:
-        return unit != self.parent and unit.size.g() < Size.LARGE
+        return unit != self.parent
 
     def perform(self, target: Unit) -> None:
         ES.resolve(Damage(target, DamageSignature(3, self, DamageType.MELEE)))
@@ -368,7 +368,7 @@ class Suplex(SingleTargetActivatedAbility):
         if target_hex := GS.map.hexes.get(
             own_position + (own_position - GS.map.position_off(target))
         ):
-            ES.resolve(MoveUnit(target, target_hex))
+            ES.resolve(MoveUnit(target, target_hex, external=True))
 
 
 class Lasso(SingleEnemyActivatedAbility):
@@ -629,6 +629,7 @@ class Shove(SingleTargetActivatedAbility):
                     target_position
                     + (target_position - GS.map.position_off(self.parent))
                 ),
+                external=True,
             )
         )
         if any(isinstance(status, Staggered) for status in target.statuses):
@@ -777,7 +778,7 @@ class Translocate(ActivatedAbilityFacet):
 
     def perform(self, target: list[Hex | Unit]) -> None:
         unit, to_ = target
-        ES.resolve(MoveUnit(unit, to_))
+        ES.resolve(MoveUnit(unit, to_, external=unit != self.parent))
 
 
 class InkRing(ActivatedAbilityFacet):
@@ -1168,4 +1169,8 @@ class OpenGate(ActivatedAbilityFacet[list[Hex]]):
             and result.space in target
             and isinstance(result.result, HexStatus.get("gate"))
         ]:
-            GateLink(statuses)
+            if len(statuses) == 2:
+                GateLink(statuses)
+            else:
+                for status in statuses:
+                    status.remove()

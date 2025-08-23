@@ -871,7 +871,6 @@ class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Seriali
     # TODO should effects modifying get_legal_options on movement modify this instead?
     @modifiable
     def get_potential_move_destinations(self, _: None) -> list[Hex]:
-        print("in gate")
         return [
             _hex
             for _hex in GS.map.get_neighbors_off(self)

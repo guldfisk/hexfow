@@ -371,6 +371,22 @@ class TwinRevolvers(RangedAttackFacet):
     max_activations = 2
 
 
+class InfernalBlade(MeleeAttackFacet):
+    """
+    Applies 2 burn.
+    """
+
+    cost = MovementCost(2)
+    damage = 2
+
+    def resolve_post_damage_effects(self, defender: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                defender, UnitStatusSignature(UnitStatus.get("burn"), self, stacks=2)
+            )
+        )
+
+
 class BellHammer(MeleeAttackFacet):
     """
     Applies status <bell_struck> for 2 rounds.

@@ -2,7 +2,6 @@ import dataclasses
 from enum import IntEnum, auto
 from typing import ClassVar
 
-from debug_utils import dp
 from events.eventsystem import ES, ReplacementEffect, hook_on
 from game.core import (
     GS,
@@ -63,17 +62,19 @@ class GateReplacement(ReplacementEffect[MoveUnit]):
         return any(status.parent == event.to_ for status in self.link.statuses)
 
     def resolve(self, event: MoveUnit) -> None:
-        different_hexes = [
+        linked_hexes = [
             status.parent for status in self.link.statuses if status.parent != event.to_
         ]
-        print("in gate")
-        if len(different_hexes) != 1 or not different_hexes[0].can_move_into(
-            event.unit
+
+        if len(linked_hexes) == 1 and any(
+            e.result and e.unit == event.unit
+            for e in ES.resolve(
+                event.branch(to_=linked_hexes[0], external=True)
+            ).iter_type(MoveUnit)
         ):
-            event.resolve()
             return
-        dp("gate change", event.to_, different_hexes[0])
-        ES.resolve(event.branch(to_=different_hexes[0]))
+
+        ES.resolve(event)
 
 
 @dataclasses.dataclass(eq=False)
@@ -84,48 +85,45 @@ class PusherReplacement(ReplacementEffect[MoveUnit]):
     source: Source
 
     def can_replace(self, event: MoveUnit) -> bool:
-        return event.unit == self.unit and GS.map.unit_on(event.to_)
+        return (
+            event.unit == self.unit and not event.external and GS.map.unit_on(event.to_)
+        )
 
     def resolve(self, event: MoveUnit) -> None:
-        _map = GS.map
-        direction = event.to_.position - _map.position_off(event.unit)
-        dp(direction, direction.length)
+        if (
+            direction := event.to_.position - GS.map.position_off(event.unit)
+        ).length == 1:
+            unit_positions: list[tuple[Unit, Hex | None]] = []
+            current_position = GS.map.position_off(event.unit)
+            while True:
+                current_position += direction
+                current_unit = GS.map.unit_on(current_position)
+                if not current_unit:
+                    break
+                next_position = current_position + direction
+                if next_position not in GS.map.hexes:
+                    unit_positions.append((current_unit, None))
+                    break
+                if GS.map.hexes[next_position].is_passable_to(current_unit):
+                    unit_positions.append((current_unit, GS.map.hexes[next_position]))
+                else:
+                    unit_positions.append((current_unit, None))
+                    break
 
-        if direction.length > 1:
-            ES.resolve(event)
-            return
+            for unit, target in reversed(unit_positions):
+                moved = False
+                if target:
+                    moved = any(
+                        e.unit == unit and e.result
+                        for e in ES.resolve(
+                            MoveUnit(unit, target, external=True)
+                        ).iter_type(MoveUnit)
+                    )
+                if not moved:
+                    ES.resolve(Damage(unit, DamageSignature(2, self.source)))
+                    ES.resolve(CheckAlive(unit))
 
-        unit_positions: list[tuple[Unit, Hex | None]] = []
-        current_position = _map.position_off(event.unit)
-        while True:
-            current_position += direction
-            current_unit = _map.unit_on(_map.hexes[current_position])
-            if not current_unit:
-                break
-            next_position = current_position + direction
-            if next_position not in _map.hexes:
-                unit_positions.append((current_unit, None))
-                break
-            if _map.hexes[next_position].is_passable_to(current_unit):
-                unit_positions.append((current_unit, _map.hexes[next_position]))
-            else:
-                unit_positions.append((current_unit, None))
-                break
-
-        for unit, target in reversed(unit_positions):
-            moved = False
-            if target:
-                moved = any(
-                    e.unit == unit
-                    for e in ES.resolve(MoveUnit(unit, target)).iter_type(MoveUnit)
-                )
-            if not moved:
-                # TODO should damage when move fails, even if the target wasn't non to begin with
-                ES.resolve(Damage(unit, DamageSignature(2, self.source)))
-                ES.resolve(CheckAlive(unit))
-
-        if not _map.unit_on(event.to_):
-            ES.resolve(event)
+        ES.resolve(event)
 
 
 @dataclasses.dataclass(eq=False)
