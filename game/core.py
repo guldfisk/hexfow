@@ -49,6 +49,7 @@ class SerializationContext:
     player: Player
     last_hex_states: dict[CC : dict[str, Any]] | None
     visible_unit_ids: set[str]
+    visible_blueprint_ids: set[str]
 
 
 class Serializable(ABC):
@@ -1355,6 +1356,8 @@ class Hex(Modifiable, HasStatuses["HexStatus", "HexStatusSignature"], Serializab
                             old_hex["unit"] | {"is_ghost": True}
                             if old_hex
                             and old_hex["unit"]
+                            and old_hex["unit"]["blueprint"]
+                            not in context.visible_blueprint_ids
                             and old_hex["unit"]["id"] not in context.visible_unit_ids
                             else None
                         )
@@ -1373,6 +1376,8 @@ class Hex(Modifiable, HasStatuses["HexStatus", "HexStatusSignature"], Serializab
                         "unit": (
                             old_hex["unit"] | {"is_ghost": True}
                             if old_hex["unit"]
+                            and old_hex["unit"]["blueprint"]
+                            not in context.visible_blueprint_ids
                             and old_hex["unit"]["id"] not in context.visible_unit_ids
                             else None
                         ),
@@ -2055,17 +2060,17 @@ class GameState:
         return serialized_game_state
 
     def _get_context_for(self, player: Player) -> SerializationContext:
+        visible_units = {
+            unit for unit in self.map.units if unit.is_visible_to(player)
+        } | player.recently_witnessed_kills
         return SerializationContext(
             player,
             self.previous_hex_states[player],
-            visible_unit_ids={
-                player.id_map.get_id_for(unit)
-                for unit in self.map.units
-                if unit.is_visible_to(player)
-            }
-            | {
-                player.id_map.get_id_for(unit)
-                for unit in player.recently_witnessed_kills
+            visible_unit_ids={player.id_map.get_id_for(unit) for unit in visible_units},
+            visible_blueprint_ids={
+                unit.blueprint.identifier
+                for unit in visible_units
+                if unit.blueprint.price is not None and unit.controller != player
             },
         )
 

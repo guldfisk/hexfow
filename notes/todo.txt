@@ -18,12 +18,16 @@ game
     well-defined order of iterating units on map
     kill source
     "+2 attack power to melee attacks"
-    status linking
     corpses
+    fix roots with new melee attack rules
+    decrement duration of hex status ghosts
     ability target descriptions, prob something like for status stacking
     alternate capture points
         keeps captured state for player when unit walks off
         linked group with points to player with max presence
+    modifyable terrain types
+    delayed unit activation
+    linked statuses display
 
 code
     refactor game.core somehow

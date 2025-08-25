@@ -1,13 +1,13 @@
 måske slight delay på action preview hover for mindre flicker?
+
 irrerterende med ghost duplication, selv hvis når de teknisk set er korrekt
+
 status indicator på unit detail
+    not obvious when unit is affected by status
+
 mere visible det din tur
     bjælke i topped med current turn player eller ramme om viewport eller farved cirkel ved action detail view
-
-line of sight test ikke blokked når på hill
-    online
-unit sizes stadig ikke intuitivt
-    måske hak i finden? I TOPPEN
+tykkere turn indicator ramme (grøn)
 
 asker skip
 alternativer til "last acted" based initiativ. måske baseret på point?
@@ -15,8 +15,6 @@ alternativer til "last acted" based initiativ. måske baseret på point?
 aura effect indicators?
 
 aoe arc target outside map
-
-finner måske gone?
 
 target iconer hover?
 
@@ -36,12 +34,12 @@ more readable negative armor
 
 per unit reminder text
 
-effortless athelete på hovedet :(
+dumb that units aren't exhausted when round skipping
 
 ikke intuitivt burn ikke er pure damage
+
 push should deal damage to all units when unit is squished
 
 test capture end of round keep catpure only get points if already captured
-remove runes
 
-tykkere turn indicator ramme (grøn)
+gib terrain type modifying effects
