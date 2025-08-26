@@ -631,7 +631,21 @@ export const renderMap = (
       hexContainer.addChild(flagSprite);
     }
 
-    for (const [idx, status] of hexData.statuses.entries()) {
+    for (let [idx, status] of hexData.statuses.entries()) {
+      if (
+        !hexData.visible &&
+        status.duration !== null &&
+        hexData.lastVisibleRound !== null
+      ) {
+        if (gameState.round - hexData.lastVisibleRound >= status.duration) {
+          continue;
+        }
+        status = {
+          ...status,
+          duration:
+            status.duration - (gameState.round - hexData.lastVisibleRound),
+        };
+      }
       const statusContainer = makeStatusIndicator(status, null);
 
       const smallerSize = hexSize - 30;

@@ -20,7 +20,6 @@ game
     "+2 attack power to melee attacks"
     corpses
     fix roots with new melee attack rules
-    decrement duration of hex status ghosts
     ability target descriptions, prob something like for status stacking
     alternate capture points
         keeps captured state for player when unit walks off
@@ -28,6 +27,7 @@ game
     modifyable terrain types
     delayed unit activation
     linked statuses display
+    unit last seen at round counter / ghost fading
 
 code
     refactor game.core somehow

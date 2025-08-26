@@ -58,8 +58,8 @@ class TestGameType(GameType):
         player_units = (
             (
                 INFERNO_TANK,
-                CAPRICIOUS_TRICKSTER,
-                LITTLE_ENGINE,
+                # CAPRICIOUS_TRICKSTER,
+                # LITTLE_ENGINE,
             ),
             (
                 GATE_FIEND,
@@ -67,7 +67,7 @@ class TestGameType(GameType):
                 # CHICKEN,
                 # WITCH_ENGINE,
                 SHRINE_KEEPER,
-                BULLDOZER,
+                # BULLDOZER,
                 # CYCLOPS,
             ),
         )
