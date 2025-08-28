@@ -21,6 +21,7 @@ from game.core import (
     Unit,
     UnitBlueprint,
     UnitStatus,
+    UnitStatusLink,
     UnitStatusSignature,
 )
 from game.events import (
@@ -266,6 +267,28 @@ class HeelTurnTrigger(TriggerEffect[SufferDamage]):
 
 
 @dataclasses.dataclass(eq=False)
+class TaintedBondTrigger(TriggerEffect[SufferDamage]):
+    priority: ClassVar[int] = 0
+
+    link: UnitStatusLink
+
+    def should_trigger(self, event: SufferDamage) -> bool:
+        return any(
+            event.unit == status.parent for status in self.link.statuses
+        ) and not isinstance(event.signature.source, UnitStatus.get("tainted_bond"))
+
+    def resolve(self, event: SufferDamage) -> None:
+        for status in self.link.statuses:
+            if status.parent != event.unit:
+                ES.resolve(
+                    Damage(
+                        status.parent,
+                        DamageSignature(event.result, status, DamageType.PURE),
+                    )
+                )
+
+
+@dataclasses.dataclass(eq=False)
 class QuickTrigger(TriggerEffect[TurnCleanup]):
     priority: ClassVar[int] = 0
 
@@ -275,16 +298,25 @@ class QuickTrigger(TriggerEffect[TurnCleanup]):
         return event.unit == self.unit
 
     def resolve(self, event: TurnCleanup) -> None:
-        options = [SkipOption(target_profile=NoTarget())]
         if moveable_hexes := self.unit.get_potential_move_destinations(None):
-            options.append(MoveOption(target_profile=OneOfHexes(moveable_hexes)))
-
-        decision = GS.make_decision(
-            self.unit.controller,
-            SelectOptionDecisionPoint(options, explanation="quick"),
-        )
-        if isinstance(decision.option, MoveOption):
-            ES.resolve(MoveAction(self.unit, to_=decision.target))
+            decision = GS.make_decision(
+                self.unit.controller,
+                SelectOptionDecisionPoint(
+                    [
+                        MoveOption(
+                            target_profile=OneOfHexes(
+                                moveable_hexes + [GS.map.hex_off(self.unit)]
+                            )
+                        ),
+                        SkipOption(target_profile=NoTarget()),
+                    ],
+                    explanation="quick",
+                ),
+            )
+            if isinstance(
+                decision.option, MoveOption
+            ) and decision.target != GS.map.hex_off(self.unit):
+                ES.resolve(MoveAction(self.unit, to_=decision.target))
 
 
 @dataclasses.dataclass(eq=False)

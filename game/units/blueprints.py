@@ -6,6 +6,8 @@ from game.units.facets.activated_abilities import (
     ChokingSoot,
     ConstructTurret,
     CoordinatedManeuver,
+    FalseCure,
+    FatalBonding,
     FixErUp,
     FlameThrower,
     FlameWall,
@@ -55,6 +57,7 @@ from game.units.facets.activated_abilities import (
     VenomousSpine,
     VitalityTransfer,
     Vomit,
+    WringEssence,
 )
 from game.units.facets.attacks import (
     APGun,
@@ -69,10 +72,12 @@ from game.units.facets.attacks import (
     CommandersPistol,
     DeathLaser,
     DiamondFist,
+    DrainingGrasp,
     EtherealSting,
     FromTheTopRope,
     GiantClub,
     GlassFist,
+    Gnaw,
     GnomeSpear,
     Gore,
     HammerBlow,
@@ -639,6 +644,16 @@ NOTORIOUS_OUTLAW = UnitBlueprint(
     price=12,
 )
 
+VILE_TRANSMUTER = UnitBlueprint(
+    "Vile Transmuter",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[DrainingGrasp, WringEssence, FatalBonding, FalseCure],
+    price=12,
+)
+
 CHAINSAW_SADIST = UnitBlueprint(
     "Chainsaw Sadist",
     health=7,
@@ -716,6 +731,10 @@ BEE_SWARM = UnitBlueprint(
     size=Size.SMALL,
     facets=[Stinger],
     price=None,
+)
+
+BLOOD_HOMUNCULUS = UnitBlueprint(
+    "Blood Homunculus", health=4, speed=2, sight=1, facets=[Gnaw], price=None
 )
 
 CACTUS = UnitBlueprint(

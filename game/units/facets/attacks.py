@@ -10,7 +10,7 @@ from game.core import (
     UnitStatusSignature,
 )
 from game.effects.hooks import AdjacencyHook
-from game.events import ApplyStatus, Damage
+from game.events import ApplyStatus, Damage, Heal
 from game.statuses.unit_statuses import BellStruck, Staggered, Stumbling
 from game.values import DamageType, Size, StatusIntention
 
@@ -385,6 +385,23 @@ class InfernalBlade(MeleeAttackFacet):
                 defender, UnitStatusSignature(UnitStatus.get("burn"), self, stacks=2)
             )
         )
+
+
+class Gnaw(MeleeAttackFacet):
+    cost = MovementCost(1)
+    damage = 2
+
+
+class DrainingGrasp(MeleeAttackFacet):
+    """
+    Heals this unit 1.
+    """
+
+    cost = MovementCost(1)
+    damage = 2
+
+    def resolve_post_damage_effects(self, defender: Unit) -> None:
+        ES.resolve(Heal(self.parent, 1))
 
 
 class BellHammer(MeleeAttackFacet):

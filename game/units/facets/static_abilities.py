@@ -227,7 +227,7 @@ class HeelTurn(StaticAbilityFacet):
 
 class Quick(StaticAbilityFacet):
     """
-    At the end of this units turn, it may move on space (unaffected by movement points).
+    At the end of this units turn, it may move one hex (unaffected by movement points).
     """
 
     def create_effects(self) -> None:

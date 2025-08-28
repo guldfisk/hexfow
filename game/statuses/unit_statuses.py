@@ -386,3 +386,10 @@ class Turbo(RefreshableMixin, UnitStatus):
         self.register_effects(
             UnitSpeedModifier(self.parent, 1), UnitArmorFlatModifier(self.parent, -1)
         )
+
+
+class TaintedBond(UnitStatus):
+    """
+    Whenever a unit with a linked Tainted Bond status suffers damage not from a Tainted Bond
+    status, this status deals that much pure damage to this unit.
+    """

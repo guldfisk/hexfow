@@ -46,7 +46,7 @@ class TestGameType(GameType):
                             Plains,
                             # Forest,
                             # Hills,
-                            Water,
+                            # Water,
                         ]
                     ),
                     cc.distance_to(CC(0, 0)) <= 1,
@@ -57,16 +57,22 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                INFERNO_TANK,
+                CYCLOPS,
+                VILE_TRANSMUTER,
+                # NOTORIOUS_OUTLAW,
+                # INFERNO_TANK,
                 # CAPRICIOUS_TRICKSTER,
                 # LITTLE_ENGINE,
             ),
             (
-                GATE_FIEND,
+                OTTER_SCOUT,
+                NOTORIOUS_OUTLAW,
+                CRAWLING_URCHIN,
+                # GATE_FIEND,
                 # BUGLING,
                 # CHICKEN,
                 # WITCH_ENGINE,
-                SHRINE_KEEPER,
+                # SHRINE_KEEPER,
                 # BULLDOZER,
                 # CYCLOPS,
             ),

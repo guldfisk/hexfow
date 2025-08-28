@@ -14,7 +14,6 @@ from game.core import (
     EffortOption,
     Facet,
     Hex,
-    MeleeAttackFacet,
     MoveOption,
     OneOfHexes,
     OneOfUnits,
@@ -34,33 +33,18 @@ class SpeedLayer(IntEnum):
     PROPORTIONAL = auto()
 
 
-# TODO melee attack etc
 @dataclasses.dataclass(eq=False)
-class RootedModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]]):
+class RootedModifier(StateModifierEffect[Unit, None, list[Hex]]):
     priority: ClassVar[int] = 1
-    target: ClassVar[object] = Unit.get_legal_options
+    target: ClassVar[object] = Unit.get_potential_move_destinations
 
     unit: Unit
 
-    def should_modify(
-        self, obj: Unit, request: ActiveUnitContext, value: list[Option]
-    ) -> bool:
+    def should_modify(self, obj: Unit, request: None, value: list[Hex]) -> bool:
         return obj == self.unit
 
-    def modify(
-        self, obj: Unit, request: ActiveUnitContext, value: list[Option]
-    ) -> list[Option]:
-        return [
-            option
-            for option in value
-            if not (
-                isinstance(option, MoveOption)
-                or (
-                    isinstance(option, EffortOption)
-                    and isinstance(option.facet, MeleeAttackFacet)
-                )
-            )
-        ]
+    def modify(self, obj: Unit, request: None, value: list[Hex]) -> list[Hex]:
+        return []
 
 
 @dataclasses.dataclass(eq=False)

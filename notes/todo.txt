@@ -3,6 +3,7 @@ infrastructure
     lobby system
 
 map editor
+    edit deployment zones
     unit details
     add/remove hexes
 
@@ -13,23 +14,26 @@ army editor
     load
 
 game
-    chess clock
-    well-defined effects order
-    well-defined order of iterating units on map
-    kill source
-    "+2 attack power to melee attacks"
-    corpses
-    fix roots with new melee attack rules
+    asker skip
+    persistent capture points
+
     ability target descriptions, prob something like for status stacking
-    alternate capture points
-        keeps captured state for player when unit walks off
-        linked group with points to player with max presence
-    modifyable terrain types
-    delayed unit activation
+    delayed unit activation ("undo activation")
     linked statuses display
     unit last seen at round counter / ghost fading
 
+    corpses
+    chess clock
+    modifiable terrain support
+
+    kill source
+    "+2 attack power to melee attacks"
+
+    well-defined effects order
+    well-defined order of iterating units on map
+
 code
+    fix game error when disconnecting from test seat
     refactor game.core somehow
     response validation
     message ids
@@ -41,8 +45,6 @@ code
         hard to get right with event result and history
 
 replays
-
-pre-commit
 
 production configuration
     web server behind nginx

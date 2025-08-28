@@ -62,6 +62,8 @@ class Kill(Event[None]):
                     player.witness_kill(self.unit)
             ES.resolve(self.branch(KillUpkeep))
             GS.map.remove_unit(self.unit)
+            for status in list(self.unit.statuses):
+                status.remove()
             self.unit.deregister()
 
 
@@ -125,7 +127,6 @@ class SufferDamage(Event[int]):
 
     def resolve(self) -> int:
         result = self.unit.suffer_damage(self.signature)
-        # TODO source? type?
         with GS.log(
             LogLine(
                 [
@@ -251,10 +252,9 @@ class MeleeAttackAction(Event[None]):
         )
         ES.resolve(self.branch(Hit))
         ES.resolve(CheckAlive(self.defender))
-        # TODO testing
         if (
-            defender_position.can_move_into(self.attacker)
-            and GS.active_unit_context.movement_points >= movement_cost
+            GS.active_unit_context.movement_points >= movement_cost
+            and defender_position in self.attacker.get_potential_move_destinations(None)
             and (
                 decision := GS.make_decision(
                     self.attacker.controller,
@@ -273,16 +273,12 @@ class MeleeAttackAction(Event[None]):
             )
             and isinstance(decision.option, MoveOption)
             and decision.target == defender_position
-            # TODO with new rules this should be "can_follow_up" or something
-            # and self.attack.should_follow_up()
         ):
             ES.resolve(MoveUnit(self.attacker, defender_position))
             GS.active_unit_context.movement_points -= movement_cost
             ES.resolve(move_out_penalty)
             ES.resolve(move_in_penalty)
 
-        # TODO even if keeping new melee movement rules, where should this be before
-        #   or after?
         self.attack.get_cost().pay(GS.active_unit_context)
 
 
@@ -420,7 +416,8 @@ class SpawnUnit(Event[Unit | None]):
 
     def resolve(self) -> Unit | None:
         unit = Unit(self.controller, self.blueprint, exhausted=self.exhausted)
-        self.space.map.move_unit_to(unit, self.space)
+        if not self.space.map.move_unit_to(unit, self.space):
+            return None
         GS.update_vision()
         with GS.log(LogLine([unit, "is spawned in", self.space])):
             for signature in self.with_statuses:

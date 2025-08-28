@@ -57,7 +57,7 @@ from game.events import (
 )
 from game.statuses.dispel import dispel_all, dispel_from_unit
 from game.statuses.hex_statuses import BurningTerrain, Glimpse, Shrine, Smoke, Soot
-from game.statuses.links import GateLink
+from game.statuses.links import GateLink, TaintedLink
 from game.statuses.unit_statuses import (
     Burn,
     BurstOfSpeed,
@@ -608,6 +608,61 @@ class VitalityTransfer(ActivatedAbilityFacet):
             ES.resolve(Heal(recipient, available_health))
 
 
+class FatalBonding(ActivatedAbilityFacet):
+    """
+    Target 2 units within 4 range LoS.
+    Applies linked <tainted_bond> to both units for 2 rounds.
+    """
+
+    cost = EnergyCost(3) | ExclusiveCost()
+
+    def get_target_profile(self) -> TargetProfile[list[Unit]] | None:
+        if (
+            len(
+                # TODO some common logic for this trash
+                units := [
+                    unit
+                    for unit in GS.map.get_units_within_range_off(self.parent, 4)
+                    if unit.is_visible_to(self.parent.controller)
+                    and not line_of_sight_obstructed_for_unit(
+                        self.parent,
+                        GS.map.position_off(self.parent),
+                        GS.map.position_off(unit),
+                    )
+                ]
+            )
+            >= 2
+        ):
+            return NOfUnits(units, 2, ["select unit"] * 2)
+
+    def perform(self, target: list[Unit]) -> None:
+        # TODO common logic
+        if statuses := [
+            event.result
+            for event in itertools.chain(
+                *(
+                    ES.resolve(
+                        ApplyStatus(
+                            unit,
+                            UnitStatusSignature(
+                                UnitStatus.get("tainted_bond"), self, duration=2
+                            ),
+                        )
+                    ).iter_type(ApplyStatus)
+                    for unit in target
+                )
+            )
+            if event.result
+            and event.unit in target
+            and isinstance(event.result, UnitStatus.get("tainted_bond"))
+        ]:
+            if len(statuses) == 2:
+                TaintedLink(statuses)
+            else:
+                for status in statuses:
+                    status.remove()
+
+
 class Shove(SingleTargetActivatedAbility):
     """
     Moves target adjacent unit one space away from this unit. If it is staggered, this unit gains 1 movement point.
@@ -781,6 +836,51 @@ class Translocate(ActivatedAbilityFacet):
         ES.resolve(MoveUnit(unit, to_, external=unit != self.parent))
 
 
+class WringEssence(ActivatedAbilityFacet):
+    """
+    Target unit within 2 range LoS, and a hex within 1 range of that unit.
+    Spawns an exhausted controller on the selected hex with the same controller as the selected unit.
+    If a unit is spawned this way, this ability deals 4 pure damage to the selected unit.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+
+    def get_target_profile(self) -> TargetProfile[list[Unit | Hex]] | None:
+        if units := [
+            (
+                unit,
+                TreeNode(
+                    [(h, None) for h in GS.map.get_neighbors_off(unit)], "select hex"
+                ),
+            )
+            for unit in GS.map.get_units_within_range_off(self.parent, 2)
+            if unit.is_visible_to(self.parent.controller)
+            and (
+                not line_of_sight_obstructed_for_unit(
+                    self.parent,
+                    GS.map.position_off(self.parent),
+                    GS.map.position_off(unit),
+                )
+            )
+        ]:
+            return Tree(TreeNode(units, "select unit"))
+
+    def perform(self, target: list[Hex | Unit]) -> None:
+        unit, to_ = target
+        if any(
+            event.result
+            for event in ES.resolve(
+                SpawnUnit(
+                    UnitBlueprint.get_class("blood_homunculus"),
+                    unit.controller,
+                    to_,
+                    exhausted=True,
+                )
+            ).iter_type(SpawnUnit)
+        ):
+            ES.resolve(Damage(unit, DamageSignature(4, self, DamageType.PURE)))
+
+
 class InkRing(ActivatedAbilityFacet):
     """
     Target size hex ring size 2, center within 3 range NloS.
@@ -940,6 +1040,25 @@ class SludgeBelch(TriHexTargetActivatedAbility):
             ES.resolve(
                 ApplyHexStatus(
                     _hex, HexStatusSignature(HexStatus.get("sludge"), self, duration=2)
+                )
+            )
+
+
+class FalseCure(TriHexTargetActivatedAbility):
+    """
+    Target tri hex within 3 range NLoS.
+    Heals units 3 and applies 1 stack of <poison>.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 3
+
+    def perform(self, target: list[Hex]) -> None:
+        for unit in GS.map.units_on(target):
+            ES.resolve(Heal(unit, 3))
+            ES.resolve(
+                ApplyStatus(
+                    unit, UnitStatusSignature(UnitStatus.get("poison"), self, stacks=1)
                 )
             )
 

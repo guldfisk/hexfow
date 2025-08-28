@@ -663,6 +663,14 @@ class StatusLinkMixin(ABC):
     def on_status_removed(self, status: G_Status) -> None: ...
 
 
+class LooseGroupMixin(StatusLinkMixin):
+    def on_remove(self) -> None:
+        for status in list(self.statuses):
+            status.remove()
+
+    def on_status_removed(self, status: G_Status) -> None: ...
+
+
 class CohesiveGroupMixin(StatusLinkMixin):
     def on_remove(self) -> None:
         for status in list(self.statuses):
@@ -1454,6 +1462,9 @@ class HexStatusSignature(StatusSignature[Hex, HexStatus]):
 
 
 class HexStatusLink(StatusLink[HexStatus], ABC): ...
+
+
+class UnitStatusLink(StatusLink[UnitStatus], ABC): ...
 
 
 class SingleHexTargetActivatedAbility(ActivatedAbilityFacet[Hex], ABC):
