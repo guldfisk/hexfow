@@ -4,20 +4,6 @@ anemone polyp {1} x1
  - units melee attacking this suffers paralysis 6 for 3 rounds
  - when this unit moves, stun it
 
-cactus {1} x1
-health 3, movement 0, sight 0, energy 0/2, M
-grow
-    ability 2 energy
-    heals 1
-- units melee attacking this unit suffers 2 damage
-- immobile
-
-chicken {1} x1
-health 2, movement 1, sight 1, S
-peck
-    melee attack
-    1 damage
-
 coral growth {1} x1
 health 4, movement 0, sight 0, energy 0/3, M
 harden
@@ -54,15 +40,6 @@ balloon {1u} x1
 health 1, movement 1, sight 1, M
 - flying
 
-lotus bud {1p} x1
-health 3, movement 0, sight 0, energy 0/2, S
-bloom
-    ability 2 energy
-    this units dies
-    heals each adjacent unit 1
- - immobile
- - allied units can move unto this unit. when they do, this unit dies, and the allied unit is healed 1.
-
 ambush mine {2} x3
 health 2, movement 2, sight 1, S
 burrow
@@ -83,28 +60,11 @@ spear
     melee attack
     2 damage
 
-lumbering pillar {2} x2
-health 7, movement 1, sight 0, armor 2, L
-
 snap-jaw grub {2} x2
 health 3, movement 2, sight 1, S
 jaws
     melee attack
     3 damage, no movement
-
-snapping turtle {2} x1
-health 2, movement 2, sight 1, armor 1, S
-bite
-    melee attack
-    2 damage, -1 movement
-- aquatic
-
-blind oracle {2p} x1
-health 2, movement 2, sight 0, energy 2/3, M
-vision
-    aoe ability 2 energy
-    aot type hex, 6 range, NLoS, no movement
-    applies revealed to hex for 1 round
 
 mud pest {2p} x1
 health 1, movement, 1, sight 1, energy 0/4, S
@@ -152,36 +112,11 @@ heatwave
     1 damage, 1 range
     applies parched for 3 rounds
 
-light archer {3} x3
-health 4, movement 3, sight 2, M
-bow
-    ranged attack
-    1 damage, 3 range, -1 movement
-
 light infantry {3} x3
 health 4, movement 3, sight 2, M
 sword
     melee attack
     2 damage
-
-marshmallow titan {3} x2
-health 10, movement 2, sight 1, armor -1, L
-marshmallow fist
-    melee attack
-    2 damage
-
-sentry turret {3}
-health 4, movement 0, sight 2, M
-gun
-    ranged attack
-    3 damage, 3 range
-- immobile
-
-slingshot goblin {3} x3
-health 3, movement 3, sight 2, S
-slingshot
-    ranged attack
-    2 damage, 1 range, -1 movement
 
 disruptor imp {3p} x1
 health 2, movement 3, sight 2, S
@@ -189,13 +124,6 @@ beam
     ranged attack
     1 damage, 1 range
 - whenever a unit within 2 range uses an ability, it loses 1 energy
-
-gnome commando {3w} x2
-health 4, movement 3, sight 1, S
-spear
-    melee attack
-    2 damage
-- ignores first move penalty each turn
 
 goblin field medic {3p} x1
 health 3, movement 3, sight 2, energy 2, S
@@ -233,14 +161,6 @@ flaming arrow
     1 damage, 3 range, -2 movement
     applies 1 burning
 
-goblin assassin {4} x2
-health 3, movement 3, sight 2, S
-hidden blade
-    melee attack
-    1 damage
-    +1 damage against exhausted units
-- stealth
-
 infantry {4} x3
 health 6, movement 3, sight 2, M
 sword
@@ -253,15 +173,6 @@ pinch
     melee attack
     2 damage
 
-otter scout {4w} x2
-health 5, movement 3, sight 2, S
-bite
-    melee attack
-    2 damage
-- aquatic
-- ignores move penalties on wet terrain
-- +1 terrain protection on wet terrain
-
 psy-synced null {4p} x2
 health 4, movement 3, sight 2, energy 3, M
 psionic synchronization
@@ -269,26 +180,12 @@ psionic synchronization
     target allied unit 2 range NLoS
     activates target
 
-rat scout {4w} x2
-health 4, movement 3, sight 2, S
-scratch and bite
-    melee attack 2 damage
-scurry in the shadows
-    +2 movement as long as the enemy can't see this unit
-
 sparrowhawk {4u} x1
 health 3, movement 3, sight 2, S
 dive
     melee attack
     1 damage
 - flying
-
-blood conduit {4pp} x1
-health 3, movement 3, sight 2, energy 3, M
-vitality transfer
-    ability 2 energy
-    target two allied units 3 range LoS, -1 movement
-    transfers up to 3 health from one to the other
 
 firefly {4wu} x2
 health 3, movement 4, sight 1, S
@@ -307,21 +204,6 @@ splat
     applies blind to target for 2 rounds
     this unit dies
 - flying
-
-stim drone {4pp} x1
-health 3, movement 2, sight 1, energy 3, S
-inject
-    ability 3 energy
-    target unit 1 range
-    ready target, it suffers 1 pure damage
-    this unit dies
-
-glass golem {5} x2
-health 1, movement 3, armor 2, sight 2, M
-punch
-    melee attack
-    3 damage
-- greater resistance to damage from statuses
 
 inferno trooper {5} x2
 health 6, movement 3, sight 2, M
@@ -344,22 +226,6 @@ spray vomit
         apply this debuff to each adjacent unit
 - immune to plague
 - at the end of each round, apply plague to each adjacent unit
-
-zone skirmisher {5} x2
-health 6, movement 3, sight 2, M
-salvo
-    ranged attack
-    3 damage, 2 range, -1 movement
-    -1 damage against air
-engage
-    melee attack
-    3 damage
-
-bugling {5w} x3
-health 4, movement 4, sight 2, S
-claws
-    combinable melee attack
-    2 damage
 
 combat medic {5p} x2
 health 5, movement 3, sight 2, energy 3, M
@@ -429,36 +295,6 @@ prick
     1 damage, -1 movement
     +1 damage against exhausted units
 
-shrine keeper {5pp} x1
-health 4, movement 3, sight 2, 4 energy, S
-raise shrine
-    ability 3 energy, -2 movement
-    target hex 1 range
-    applies status shrine to terrain
-        units on this hex has +1 mana regen
-        whenever a unit within 1 range skips, heal it 1
-        whenever a unit enters this hex, apply buff fortified for 4 rounds
-            unstackable, refreshable
-            +1 max health
-lucky charm
-    ability 1 energy
-    target different allied unit 1 range
-    applies buff lucky charm for 3 rounds
-        unstackable, refreshable
-        if this unit would suffer exactly one damage, instead remove this buff
-clean up
-    combinable ability 2 energy, -2 movement
-    target hex 1 range
-    removes all statuses from hex
-
-bomb truck {6} x2
-health 5, movement 3, sight 1, M
-blow up
-    ability
-    this unit dies
-- explode
-    when this unit dies, every unit within 1 range suffers 5 aoe damage.
-
 desolation trooper {6} x2
 health 6, movement 3, sight 2, energy 4, M
 beam
@@ -495,16 +331,6 @@ lie in wait
     gains prepared to strike until next activation
         when an enemy unit engages, if this unit can attack it, it does and remove this buff
 - stealth
-
-ap rifle squad {6r} x2
-health 5, movement 2, sight 2, M
-ap rifle
-    ranged attack
-    3 damage, 3 range
-    1 ap
-    +1 damage against large
-    -1 damage against air
-    no movement
 
 armadillo {6g}
 health 4, movement 3, armor 2, sight 1, M
@@ -550,13 +376,6 @@ stare
 - flying
 - stealth
 
-bombard canon {6rr} x2
-health 4, movement 1, sight 1, M
-solid munition
-    ranged attack
-    4 damage, 4 range, no movement
-    stun this unit
-
 med crawler {6pp} x1
 health 5, movement 3, sight 2, energy 4, M
 rejuvenation serum
@@ -570,13 +389,6 @@ nanobot injection
         unstackable, refreshable
         heals 1 health at the end of the round
 - ignores first terrain move in cost / penalty each turn
-
-medic {6pp} x1
-health 5, movement 3, sight 2, energy 4, M
-heal beam
-    ability 2 energy
-    target different allied unit 2 range LoS, -1 movement
-    heals 3 health
 
 priest fanatic {6pp} x1
 health 5, movement 3, sight 2, energy 5, M
@@ -640,24 +452,6 @@ consecrate land
     target hex range 3 LoS
     remove all statuses from hex
 - +1 terrain protection on vegetation
-
-diamond golem {7} x2
-health 1, movement 3, armor 3, sight 2, M
-diamond fist
-    melee attack
-    4 damage
-- immune to damage from statuses
-
-giant slayer mouse {7} x1
-health 5, movement 3, sight 2, S
-slay
-    melee attack
-    3 damage
-    +2 damage against L
-- if health would be reduced below 1, instead reduce it to 1, dispel all debuffs and apply mortally wounded for 1 round
-    unstackable, unrefreshable
-    undispellable
-    dies when expires
 
 armored blimp {7u} x1
 health 5, movement 1, armor 1, sight 2, L
@@ -728,19 +522,6 @@ stomp
     melee attack
     6 damage, -1 movement
 - at the beginning of each round, this unit suffers 2 pure damage
-
-mine layer beetle {7p} x2
-health 7, movement 3, sight 2, energy 5, M
-slice
-    melee attack
-    3 damage, -1 movement
-lay mine
-    combinable ability 2 energy
-    -1 movement
-    applies minefield status to current terrain
-        unstackable
-        hidden
-        when ground unit moves into this hex, remove this status, and the unit suffers 2 damage.
 
 mule beast {7g}
 health 8, movement 3, sight 2, M
@@ -854,16 +635,6 @@ turn outwards
         cannot see adjacent hexes
 - adjacent enemy units also provide vision for this units controller
 
-void sprite {7ww} x1
-health 5, movement 1, sight 2, energy 7, S
-sting
-    melee attack
-    2 damage
-jaunt
-    combinable ability 3 energy
-    target hex 4 range NLoS
-    teleport to that hex
-
 bee shaman {7wrp} x2
 health 4, movement 3, sight 2, energy 3, S
 summon bees
@@ -928,14 +699,6 @@ acid spit
 - when a unit melee attacks this unit, apply corrosion to the attacker for 2 rounds
 - +1 ranged protection against non-adjacent
 
-boulder hurler oaf {8g} x1
-health 9, movement 3, sight 2, L
-hurl boulder
-    ranged attack
-    5 damage, 2 range, no movement
-    +1 damage on rock terrain
-- cannot see adjacent spaces
-
 hellion car {8w} x2
 health 4, movement 4, sight 2, M
 flamethrower
@@ -975,13 +738,6 @@ tusk
 - +1 terrain protection on wet terrain
 - spawns with one stack of vigor
 
-blind abomination {8gg} x2
-health 11, movement 3, sight 0, L
-flail
-    aoe melee attack
-    aoe type hex range 1
-    6 damage, -1 movement
-
 greater bugling {8ww} x1
 health 6, movement 5, sight 2, S
 claws
@@ -1011,25 +767,6 @@ purifying nova
     ability 4 energy
     no movement
     each adjacent enemy unit suffers 2 pure damage. heal each adjacent allied unit 2.
-
-effortless athlete {8wwp} x1
-health 6, movement 3, sight 2, energy 4, M
-vault
-    multi unlimited activations combinable ability 1 energy
-    -1 movement, target adjacent unit
-    move this unit to the opposite side of the targeted unit
-    if successful and the target unit is an enemy, apply staggered to it.
-        removed at the end of the turn
-roundhouse kick
-    melee attack
-    3 damage
-    +1 damage against staggered units
-baton pass
-    ability 1 energy
-    target other allied unit this unit wasn't adjacent to at the beginning of its turn
-    applies burst of speed
-        +1 movement point next activation
-- ignores first movement penalty each turn
 
 gigantomancer {8gpp}
 health 5, movement 3, sight 2, energy 4, S
@@ -1093,14 +830,6 @@ beam
 - when moving into a hex with no stacks of radiation, applies radiation 1 to it.
 - immune to radiated
 
-dire wolf {9w} x2
-health 7, movement 4, sight 2, M
-bite
-    melee attack
-    3 damage
-- pack hunter
-    when adjacent enemy unit is melee attacked by different allied unit, dire wolf also hits it.
-
 pile driver droid {9g} x1
 health 8, movement 3, armor 1, sight 2, M
 hammer
@@ -1152,19 +881,6 @@ berserk
 - when dies, applies status courageous battleground to hex
     +1 melee attack power to allied units
 
-giant toad {9wg} x2
-health 9, movement 2, sight 2, energy 6, L
-tongue lash
-    melee attack
-    4 damage
-    can attack air
-jump
-    combinable ability 3 energy
-    target hex 2 range LoS vision required
-    -1 movement
-    teleport to target
-- unit melee attacking this unit suffers 1 poison
-
 hoplite {9gp} x1
 health 8, movement 3, sight 2, M
 engage
@@ -1190,26 +906,6 @@ howl
         unstackable, refreshable
         -1 attack power
 
-sludge slug {9gp} x1
-health 11, movement 2, sight 1, energy 3, M
-spew
-    ranged attack
-    4 damage, 1 range, no movement
-    ground only
-    damaged units receive slimed debuff for 2 rounds
-        unstackable, refreshable
-        -1 movement
-belch
-    aoe ability 3 energy, -1 movement
-    aoe type triangle size 1 range 2 NLoS
-    applies slimed debuff to all units for 2 rounds
-    applies sludged status to terrain for 2 rounds
-        +1 move in/out penalty to hex
-        units entering receive slimed debuff for 2 rounds
-- immune to slimed debuff and sludged status
-- when enters space, applies sludged status to terrain for 2 rounds
-- units melee attacking this unit suffers slimed for 2 rounds
-
 sniper {9rr} x2
 health 3, movement 3, sight 2, S
 snipe
@@ -1218,24 +914,6 @@ snipe
     cannot target adjacent units
     -2 damage against air
 - stealth while not moving
-
-staunch iron-heart {9gp}
-health 7, movement 2, armor 1, sight 2, energy 4, S
-hammer blow
-    melee attack
-    4 damage
-mighty blow
-    melee attack
-    6 damage
-    no movement
-    stun this unit
-iron blessing
-    ability 3 energy
-    target different allied unit 2 range
-    -1 movement
-    applies iron blessing for 2 rounds
-        unstackable, refreshable
-        +1 armor
 
 time knight {9pp} x1
 health 7, movement 3, sight 2, energy 3, M
@@ -1259,27 +937,6 @@ bite
     3 damage
     +1 damage against damaged units
 
-bulldozer {9gpp} x1
-health 11, movement 2, armor 2, sight 1, L
-- doze
-    can move into occupied squares. pushes unit back chainable. all units in push line take 1 damage, even if they can't be pushed (if it would push a unit into impassable terrain).
-
-ink witch {9rpp} x1
-health 6, movement 3, sight 2, energy 5, M
-blood expunge
-    ranged attack
-    2 damage, 3 range, -2 movement
-    +2 damage for each unique debuff on target
-ink ring
-    aoe ability 3 energy
-    aoe type ring size 1 range 3 NLoS
-    apply blinded for 2 rounds
-malevolent stare
-    ability 3 energy
-    target enemy unit, 3 range LoS
-    -2 movement
-    dispels all buffs and applies silenced for 2 rounds
-
 shaolin frog {9wwg} x1
 health 6, movement 3, sight 2, energy 4, S
 4-finger punch
@@ -1292,28 +949,6 @@ jump
     -1 movement
     teleport to target
 - resistance to ranged
-
-veteran commander {9wpp} x1
-health 7, movement 3, sight 2, energy 3, M
-engage
-    melee attack
-    3 damage
-spear
-    melee attack
-    3 damage
-    no follow-up
-inspiring shout
-    ability 3 energy
-    target allied unit 3 range LoS
-    dispels all debuffs and activates unit
-- adjacent allied units gets +1 movement
-
-war hog {9gpp} x2
-health 9, movement 3, sight 2, M
-gore
-    melee attack
-    3 damage
-- readied when attacked
 
 arms master {10} x1
 health 8, movement 3, sight 2, energy 3, M
@@ -1329,26 +964,6 @@ disarm
         can't attack
 - enemies ground units attempting to disengaging this unit suffer 2 melee damage first
 - whenever an enemy ground unit engages this unit it suffers 2 melee damage
-
-bell-striker brute {10p} x1
-health 8, movement 3, sight 2, M
-bell hammer
-    melee attack
-    4 damage
-    applies bell-struck for 2 rounds
-        unstackable, refreshable
-        when unit is dealt 3 or more damage before modifications (but after terrain reductions), exhaust it
-
-chainsaw sadist {10p} x1
-health 7, movement 3, sight 2, M
-chainsaw
-    melee attack
-    3 damage, -1 movement
-    +2 damage against unarmored
-- when this unit kills a unit with an attack, each enemy unit that could see it suffers terrified for 2 rounds.
-    stackable, refreshable
-    -1 attack power
-- adjacent enemy units can't take actions that aren't skip, attack this unit, or move away from this unit
 
 demo operative {10p} x1
 health 6, movement 3, sight 2, energy 3, M
@@ -1460,16 +1075,6 @@ missile strike
 - flying
 - energy cost toggle 2/2 stealth
 
-blitz trooper {10wr} x1
-health 6, movement 3, sight 2, M
-blast
-    ranged attack
-    2 damage, 3 range
-strafe
-    combinable ranged attack
-    2 damage, 2 range
-    -1 movement
-
 gorgon archer {10pp} x1
 health 6, movement 3, sight 2, energy 4, M
 poison arrow
@@ -1511,22 +1116,6 @@ bombard
     -floor(distance/2) damage
     can not target adjacent
     applies status flattened to terrain
-
-pestilence priest {10pp} x1
-health 5, movement 3, sight 2, energy 6, M
-summon scarab
-    ability 3 energy
-    target unoccupied hex range 3 LoS
-    -2 movement
-    summons exhausted scarab with ephemeral 3
-induce panic
-    ability 3 energy
-    target enemy unit range 3 LoS
-    -1 movement
-    applies panicked for 3 rounds
-        unstackable, refreshable
-        at the end of each round, this unit suffers pure damage equal to the number of adjacent units.
-- whenever an adjacent unit is damaged or debuffed, this unit regens 1 energy
 
 raptor roc {10wu} x1
 health 6, movement 4, sight 2, M
@@ -1575,28 +1164,6 @@ poof
     beginning of the activation, or the other way around, this unit gains a stack of zig zag
         +1 attack power
         removed at the end of turn
-
-commando squad {10wrp} x2
-health 6, movement 3, sight 2, energy 5, M
-riffle salvo
-    ranged attack
-    3 damage, 3 range, -1 movement
-HE grenade
-    aoe attack 2 energy
-    aoe type hex 2 range NLoS
-    3 damage to ground units
-smoke grenade
-    aoe ability 3 energy
-    aoe type tri hex range 3 NLoS
-    applies status smoke to hexes for 2 rounds
-flash-bang
-    aoe ability 3 energy
-    aoe type tri hex 3 range NLoS
-    applies blinded for 2 rounds
-- ignores first 2 move penalty each round
-- aquatic
-- cannot attack or use abilities when on water.
-- +1 ranged protection against non-adjacent attackers
 
 entangler brute {11g} x1
 health 11, movement 2, sight 2, L
@@ -1666,29 +1233,6 @@ spin web
         to the hex
 - stealth while on web
 
-legendary wrestler {11pg} x1
-health 7, movement 3, sight 2, energy 4, M
-tackle
-    melee attack
-    2 damage
-    applies stumble
-        -1 movement point next activation
-from the top rope
-    melee attack
-    4 damage, -1 movement
-    +1 damage against units with stumble debuff
-    deals 2 non-lethal physical damage to this unit
-suplex
-    ability 3 energy, -2 movement
-    target M- adjacent unit
-    deals 3 melee damage and moves the target to the other side of this unit, if able.
-- caught in the match
-    enemies disengageging this units suffers -1 movement point
-- heel turn
-    when this unit receives 4 or more damage in a single instance, it gets, "they've got a still chari"
-        unstackable
-        +1 attack power
-
 magebane desecrator {11pp}
 health 9, movement 3, sight 2, L
 ruinous blow
@@ -1718,7 +1262,7 @@ static charge
     -1 movement
     target gains statically charged for 2 rounds
         whenever this unit activates an ability or is the target of an ability from a different unit, this status deals 1 true
-        damage to each adjacent unit, and their adjacent units, recursivly.
+        damage to each adjacent unit, and their adjacent units, recursively.
  - whenever another unit within 2 range loses 3 or more energy (spending causes loss), this unit gains 1 energy.
 
 heavy artillery {11rrrg} x1
@@ -1774,22 +1318,6 @@ summon elemental
     applies ephemeral status to elemental duration 3 rounds
 - +1 energy regen
 
-horror {12wp} x1
-health 7, movement 4, sight 2, energy 4, M
-inject
-    melee attack
-    4 damage, -1 movement
-    applies horror parasite to damaged target
-        unstackable
-        when this unit dies, summon exhausted horror spawn under debuff controllers control on this hex. if hex is occupied by just followed up attacker, instead spawns on hex attacker attacked from.
-venomous spine
-    ability 3 energy
-    target enemy unit 2 range LoS, -1 movement
-    applies horror parasite and (debilitating venom for 2 rounds) to target.
-        unstackable, refreshable
-        +1 move penalty
-        -1 attack power
-
 voidling {12wp} x1
 health 5, movement 3, sight 2, energy 4, S
 ethereal claw
@@ -1802,45 +1330,6 @@ blink
     no movement
     teleport to that hex 
 - stealth
-
-inferno tank {12rgg} x1
-health 8, movement 2, armor 1, sight 1, 5 energy L
-scorch
-    aoe attack
-    aoe type tri-connected adjacent
-    3 damage, -1 movement
-    applies 2 burn
-flame wall
-    aoe ability 3 energy
-    aoe type 3 hex radiating line
-    -1 movement
-    all ground units in aof suffer 1 burn
-    apply flame wall status to terrain
-        3 round duration
-        unstackable, refreshable
-        ground units moving into and ending the round on this hex suffer 1 burn
-- greater resistance to damage from burn
-
-notorious outlaw {12pwr} x1
-health 5, movement 3, sight 2, energy 3, M
-twin revolvers
-    2x repeatable ranged attack
-    2 damage, 3 range, -1 movement
-lasso
-    combineable ability 3 energy
-    target enemy unit 2 range LoS
-    -2 movement
-    applies rooted for 1 round
-showdown
-    ability 3 energy
-    target enemy unit 3 range LoS
-    no movement
-    hits the targeted unit with primary ranged attack twice
-    if it is still alive, it will first try to hit with it's primary ranged attack if it has one, if it doesn't or can't,
-    it will try to hit with it's primary melee attack.
-    if it hits this way, exhaust it
-- quick
-    when this unit ends it's turn, it may move one space (irregardless of movement points)
 
 sanguiformer savant {12ppp} x1
 health 7, movement 3, sight 1, M
@@ -2018,60 +1507,6 @@ pinch
     5 melee damage, -1 movement
  - aquatic
 
-witch engine {13pp} x1
-health 7, movement 2, sight 2, energy, M
-choking soot
-    aoe ability 4 energy
-    aoe type hex size 1 range 3 NLoS
-    -1 movement
-    applies status soot to terrain for 2 rounds
-        unstackable, refreshable
-        blocks LoS
-        units on this space has -1 sight, to a minimum of 1
-        when a unit moves in, and at the end of each round, units on this hex receives 1 true damage
-terrify
-    ability 5 energy
-    4 range LoS
-    no movement
-    applies terrified for 2 rounds
-        unstackable, refreshable
-        if this unit is adjacent to an enemy unit, it's owner cannot round skip, and the only legal actions
-        of this units are to move away from any adjacent enemy units
-into the gears
-    ability
-    target adjacent allied unit
-    this unit heals equal to the the units heals and gains energy equal to its energy
-    kill the unit
-- withering presence
-    at the end of this units turn, it applies 1 poison to each adjacent unit
-- auro of paranoia
-    whenever an enemy unit within 4 range becomes the target of an allied ability, it suffers 1 true damage
-
-mad scientist {13ppp} x1
-health 6, movement 3, sight 2, energy 8, M
-shrink ray
-     ability 3 energy, -1 movement
-     target unit 2 range LoS
-     deals 1 ranged damage and applies shrunk for 2 rounds
-        stackable, refreshable
-        -1 size
-        -1 attack power
-        -2 maximum health
-translocator
-    combinable ability 2 energy
-    target unit 1 range LoS and a hex within 1 range of that unit NLoS
-    moves the target to the hex
-assemble the doombot 3000
-    ability 4 energy, no movement
-    target adjacent hex
-    applies doombot scaffold to hex
-        unstackable
-        when unit moves in, remove this status
-    if it already had the status, instead summon an exhausted doombot 3000 with ephemeral 4 there
-- inspiration
-    whenever this unit sees another spend 3 or more energy on an ability,
-    this units gains 1 energy. it gains 2 instead if it was 4 or more.
-
 brutodon {14gg} x1
 health 10, movement 2, armor 1, sight 2, L
 crush
@@ -2107,27 +1542,6 @@ tentacle
 - +1 movement point first time it moves into or starts its turn on wet terrain each turn
 - ignores first terrain movement penalty on wet terrain each turn
 
-cyclops {15gg} x1
-health 11, movement 3, sight 1, L
-club
-    melee attack
-    5 damage
-sweep
-    aoe attack
-    aoe type 3 consecutive adjacent hexes
-    4 melee damage, -1 movement
-stare
-    combinable aoe ability
-        aoe type radiating line length 4 FoV propagation
-        reveals hexes this action
-
-rhino beast {15wwg} x1
-health 10, movement 4, sight 2, L
-gore
-    melee attack
-    4 damage
-    +2 damage if this unit was not adjacent to target at the beginning of turn
-
 serene master {15ggpp} x1
 health 6, movement 3, sight 2, M
 dancing blade technique
@@ -2159,21 +1573,6 @@ unsiege
     combinable ability
     -2 movement
     removes status sieged
-
-zone mech {15rugg} x1
-health 10, movement 2, armor 1, sight 2, energy 5, L
-hammer
-    ranged attack
-    5 damage, 2 range
-    ground target only
-aa battery
-    3 damage, 3 range
-    air target only
-smoke bomb
-    aoe ability 3 energy
-    aoe type hex size 1 physical propagation range 3 NLoS
-    applies smoke to terrain for 2 rounds
-- ignores first terrain movement penalty each turn
 
 nuke tank {15wwrrg} x1
 health 7, movement 4, armor 1, sight 2, M
@@ -2212,19 +1611,6 @@ drain magic
 - energy cost toggle 2/3 flying
 - +1 energy regen
 - if a debuff with a duration would be applied to a damaged enemy unit within 2 range, it is applied with one additional duration instead.
-
-gate fiend {15wwwgpp} x1
-health 8, movement 2, sight 2, energy 4, M
-infernal blade
-    melee attack
-    4 damage
-    applies 2 burning
-open gate
-    ability 4 energy
-    two target hexes 4 range NLoS
-    no movement
-    applies linked status gate to both hexes for 3 rounds
-        units on this hex can move to linked hex as normal move action
 
 verdant hulk {16gpp} x1
 health 9, movement 3, sight 2, energy 5, L
@@ -2437,21 +1823,6 @@ punch
     3 damage
 - melee/ranged resistant
 
-doombot 3000 {-}
-health 7, movement 1, sight 2, energy 4, armor 1, L
-death laser
-    ranged attack
-    4 damage, 4 range, no movement
-flame thrower
-    ability 3 energy
-    aoe type cone size 1
-    applies 1 burning, and 1 burning ground to terrain for 2 rounds
-self destruct
-    ability, no movement
-    this unit dies
-- explode
-    when this unit dies, every unit within 1 range suffers 5 aoe damage.
-
 fire elemental {-}
 health 5, movement 3, sight 2, M
 scorch
@@ -2460,12 +1831,6 @@ scorch
     attacked units suffer 2 burn
 - immune to burn
 - melee/ranged resistant
-
-horror spawn {-}
-health 3, movement 2, sight 1, S
-bite
-    melee attack
-    2 damage
 
 ice elemental {-}
 health 4, movement 2, armor 2, sight 2, M
@@ -2496,12 +1861,6 @@ punch
 - melee/ranged resistant
 - ignores move penalties on sand terrain
 - +1 movement point first time move onto sand terrain each turn
-
-scarab {-}
-health 2, movement 2, armor 1, sight 1, S
-pinch
-    melee attack
-    2 damage, -1 movement
 
 skeleton {-}
 health 6, movement 3, sight 1
