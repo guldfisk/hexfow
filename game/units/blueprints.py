@@ -112,6 +112,7 @@ from game.units.facets.attacks import (
     Tackle,
     TongueLash,
     TwinRevolvers,
+    ViciousBite,
     Wrench,
 )
 from game.units.facets.static_abilities import (
@@ -418,15 +419,6 @@ BULLDOZER = UnitBlueprint(
     price=8,
 )
 
-EFFORTLESS_ATHLETE = UnitBlueprint(
-    "Effortless Athlete",
-    health=6,
-    speed=3,
-    sight=2,
-    facets=[RoundhouseKick, Vault, BatonPass],
-    price=8,
-)
-
 BLIND_ABOMINATION = UnitBlueprint(
     "Blind Abomination",
     health=11,
@@ -459,6 +451,15 @@ DIAMOND_GOLEM = UnitBlueprint(
 
 DIRE_WOLF = UnitBlueprint(
     "Dire Wolf", health=7, speed=4, sight=2, facets=[Bite, PackHunter], price=9
+)
+
+EFFORTLESS_ATHLETE = UnitBlueprint(
+    "Effortless Athlete",
+    health=6,
+    speed=3,
+    sight=2,
+    facets=[RoundhouseKick, Vault, BatonPass],
+    price=9,
 )
 
 FRONTLINE_TACTICIAN = UnitBlueprint(
@@ -515,6 +516,15 @@ SLUDGE_SLUG = UnitBlueprint(
     size=Size.LARGE,
     energy=3,
     facets=[Spew, SludgeBelch, SludgeTrail, SlimyLocomotion, SlimySkin],
+    price=9,
+)
+
+VELOCIRAPTOR = UnitBlueprint(
+    "Velociraptor",
+    health=6,
+    speed=5,
+    sight=2,
+    facets=[ViciousBite],
     price=9,
 )
 

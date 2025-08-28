@@ -289,6 +289,17 @@ class EtherealSting(MeleeAttackFacet):
     damage_type = DamageType.PURE
 
 
+class ViciousBite(MeleeAttackFacet):
+    """+1 damage against damaged units."""
+
+    cost = MovementCost(1)
+    damage = 3
+
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        if unit.damage > 0:
+            return 1
+
+
 class RoundhouseKick(MeleeAttackFacet):
     """+1 damage against staggered units."""
 

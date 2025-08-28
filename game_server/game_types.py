@@ -65,9 +65,10 @@ class TestGameType(GameType):
                 # LITTLE_ENGINE,
             ),
             (
-                OTTER_SCOUT,
+                # OTTER_SCOUT,
+                VELOCIRAPTOR,
                 NOTORIOUS_OUTLAW,
-                CRAWLING_URCHIN,
+                # CRAWLING_URCHIN,
                 # GATE_FIEND,
                 # BUGLING,
                 # CHICKEN,
