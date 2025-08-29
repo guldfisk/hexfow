@@ -15,6 +15,7 @@ export default defineConfig({
         main: "index.html",
         play: "./play/index.html",
         "map-editor": "./map-editor/index.html",
+        "army-editor": "./army-editor/index.html",
       },
     },
   },
