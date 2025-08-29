@@ -863,7 +863,7 @@ class DeployArmies(Event[None]):
                         if spec.deployment_zone_of == idx
                     ],
                 )
-                for idx, player in enumerate(GS.turn_order.original_order)
+                for idx, player in enumerate(reversed(GS.turn_order.original_order))
             }
         ).items():
             for blueprint, hex_ in deployment:

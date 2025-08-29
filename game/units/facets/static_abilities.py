@@ -16,7 +16,6 @@ from game.effects.modifiers import (
     IncreaseSpeedAuraModifier,
     PusherModifier,
     RootedModifier,
-    ScurryInTheShadowsModifier,
     SourceTypeResistance,
     StealthModifier,
     TelepathicSpyModifier,
@@ -47,6 +46,7 @@ from game.effects.triggers import (
     QuickTrigger,
     SchadenfreudeDamageTrigger,
     SchadenfreudeDebuffTrigger,
+    ScurryInTheShadowsTrigger,
     ToxicPresenceTrigger,
     UnitAppliesStatusOnMoveTrigger,
 )
@@ -218,7 +218,7 @@ class CaughtInTheMatch(StaticAbilityFacet):
 
 class HeelTurn(StaticAbilityFacet):
     """
-    When this unit suffers 4 or more damage at once, it gains <they_ve_got_a_steel_chair>.
+    When this unit suffers damage, if its health is exactly 1, it gains <they_ve_got_a_steel_chair>.
     """
 
     def create_effects(self) -> None:
@@ -313,11 +313,11 @@ class UnwieldySwimmer(StaticAbilityFacet):
 
 class ScurryInTheShadows(StaticAbilityFacet):
     """
-    As long as no enemy can see this unit, it has +2 speed.
+    When this unit is activated, if it is unseen by the enemy, it gains +2 movement points.
     """
 
     def create_effects(self) -> None:
-        self.register_effects(ScurryInTheShadowsModifier(self.parent, 2))
+        self.register_effects(ScurryInTheShadowsTrigger(self.parent))
 
 
 class JukeAndJive(StaticAbilityFacet):

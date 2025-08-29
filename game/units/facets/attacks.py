@@ -16,6 +16,7 @@ from game.values import DamageType, Size, StatusIntention
 
 
 class Peck(MeleeAttackFacet):
+    cost = MovementCost(1)
     damage = 1
 
 
@@ -55,10 +56,12 @@ class MarshmallowFist(MeleeAttackFacet):
 
 
 class GnomeSpear(MeleeAttackFacet):
+    cost = MovementCost(1)
     damage = 2
 
 
 class SerratedBeak(MeleeAttackFacet):
+    cost = MovementCost(1)
     damage = 2
 
 
@@ -141,6 +144,7 @@ class Strafe(RangedAttackFacet):
 
 
 class Bayonet(MeleeAttackFacet):
+    cost = MovementCost(1)
     damage = 3
 
 
@@ -211,7 +215,7 @@ class TongueLash(RangedAttackFacet):
 
 
 class Slice(MeleeAttackFacet):
-    cost = MovementCost(1)
+    cost = MovementCost(2)
     damage = 3
 
 
@@ -258,6 +262,7 @@ class HiddenBlade(MeleeAttackFacet):
 
 
 class Bite(MeleeAttackFacet):
+    cost = MovementCost(1)
     damage = 3
 
 
@@ -273,7 +278,7 @@ class HammerCannon(RangedAttackFacet):
 class SerratedClaws(MeleeAttackFacet):
     """+1 damage against damages units."""
 
-    cost = MovementCost(1)
+    cost = MovementCost(2)
     damage = 3
 
     def get_damage_modifier_against(self, unit: Unit) -> int | None:
@@ -311,6 +316,7 @@ class RoundhouseKick(MeleeAttackFacet):
 
 
 class ScratchAndBite(MeleeAttackFacet):
+    cost = MovementCost(1)
     damage = 2
 
 
@@ -329,6 +335,7 @@ class Stinger(MeleeAttackFacet):
 
 
 class GlassFist(MeleeAttackFacet):
+    cost = MovementCost(1)
     damage = 3
 
 
@@ -341,6 +348,7 @@ class Slay(MeleeAttackFacet):
     +2 damage against large units.
     """
 
+    cost = MovementCost(1)
     damage = 3
 
     def get_damage_modifier_against(self, unit: Unit) -> int | None:
@@ -365,7 +373,7 @@ class FromTheTopRope(MeleeAttackFacet):
     """
 
     damage = 4
-    cost = MovementCost(1)
+    cost = MovementCost(2)
 
     def get_damage_modifier_against(self, unit: Unit) -> int | None:
         if any(isinstance(status, Stumbling) for status in unit.statuses):
@@ -420,6 +428,7 @@ class BellHammer(MeleeAttackFacet):
     Applies status <bell_struck> for 2 rounds.
     """
 
+    cost = MovementCost(1)
     damage = 4
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:

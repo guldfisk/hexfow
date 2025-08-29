@@ -253,7 +253,7 @@ class HeelTurnTrigger(TriggerEffect[SufferDamage]):
     source: Source
 
     def should_trigger(self, event: SufferDamage) -> bool:
-        return event.unit == self.unit and event.result >= 4
+        return event.unit == self.unit and self.unit.health == 1
 
     def resolve(self, event: SufferDamage) -> None:
         ES.resolve(
@@ -721,6 +721,22 @@ class OneTimeModifyMovementPointsStatusTrigger(TriggerEffect[TurnUpkeep]):
     def resolve(self, event: TurnUpkeep) -> None:
         ES.resolve(ModifyMovementPoints(self.status.parent, self.amount))
         self.status.remove()
+
+
+@dataclasses.dataclass(eq=False)
+class ScurryInTheShadowsTrigger(TriggerEffect[TurnUpkeep]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def should_trigger(self, event: TurnUpkeep) -> bool:
+        return event.unit == self.unit and not any(
+            player != self.unit.controller and self.unit.is_visible_to(player)
+            for player in GS.turn_order
+        )
+
+    def resolve(self, event: TurnUpkeep) -> None:
+        ES.resolve(ModifyMovementPoints(self.unit, 2))
 
 
 @dataclasses.dataclass(eq=False)

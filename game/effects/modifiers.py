@@ -325,25 +325,6 @@ class CamouflageModifier(StateModifierEffect[Unit, TerrainProtectionRequest, int
         return value + 1
 
 
-# TODO should be a trigger instead
-@dataclasses.dataclass(eq=False)
-class ScurryInTheShadowsModifier(StateModifierEffect[Unit, None, int]):
-    priority: ClassVar[int] = SpeedLayer.FLAT
-    target: ClassVar[object] = Unit.speed
-
-    unit: Unit
-    amount: int
-
-    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
-        return obj == self.unit and not any(
-            player != self.unit.controller and self.unit.is_visible_to(player)
-            for player in GS.turn_order
-        )
-
-    def modify(self, obj: Unit, request: None, value: int) -> int:
-        return value + self.amount
-
-
 @dataclasses.dataclass(eq=False)
 class IncreaseSpeedAuraModifier(StateModifierEffect[Unit, None, int]):
     priority: ClassVar[int] = SpeedLayer.FLAT

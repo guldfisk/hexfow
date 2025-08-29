@@ -69,7 +69,11 @@ async def get_game_object_details() -> dict[str, Any]:
         "units": {
             unit.identifier: unit.serialize()
             for unit in sorted(
-                UnitBlueprint.registry.values(),
+                (
+                    unit
+                    for unit in UnitBlueprint.registry.values()
+                    if unit.max_count > 0
+                ),
                 key=lambda u: 1 - 1 / u.price if u.price is not None else 1,
             )
         },

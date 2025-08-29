@@ -42,9 +42,9 @@ from game.map.geometry import hex_circle
 from game.map.terrain import Plains, Water
 from game.tests.conftest import TestScope
 from game.tests.test_terrain import InstantDamageMagma
+from game.tests.units import TEST_CHICKEN
 from game.units.blueprints import (
     CACTUS,
-    CHICKEN,
     LIGHT_ARCHER,
     LUMBERING_PILLAR,
     MARSHMALLOW_TITAN,
@@ -414,7 +414,7 @@ def unit_spawner(ground_map: HexMap, player1: Player) -> UnitSpawner:
 
 
 def test_attack(unit_spawner: UnitSpawner) -> None:
-    chicken = unit_spawner.spawn(CHICKEN)
+    chicken = unit_spawner.spawn(TEST_CHICKEN)
     cactus = unit_spawner.spawn(CACTUS)
 
     ES.resolve(
@@ -427,7 +427,7 @@ def test_attack(unit_spawner: UnitSpawner) -> None:
 
 
 def test_move(unit_spawner: UnitSpawner, player1_connection: MockConnection) -> None:
-    chicken = unit_spawner.spawn(CHICKEN, coordinate=CC(0, 0))
+    chicken = unit_spawner.spawn(TEST_CHICKEN, coordinate=CC(0, 0))
     player1_connection.queue_responses(
         MoveOptionSelector(OneOfHexesSelector(CC(1, -1)))
     )
@@ -438,8 +438,8 @@ def test_move(unit_spawner: UnitSpawner, player1_connection: MockConnection) -> 
 def test_move_is_blocked(
     unit_spawner: UnitSpawner, player1_connection: MockConnection
 ) -> None:
-    chicken = unit_spawner.spawn(CHICKEN, coordinate=CC(0, 0))
-    unit_spawner.spawn(CHICKEN, coordinate=CC(1, -1))
+    chicken = unit_spawner.spawn(TEST_CHICKEN, coordinate=CC(0, 0))
+    unit_spawner.spawn(TEST_CHICKEN, coordinate=CC(1, -1))
     player1_connection.queue_responses(
         MoveOptionSelector(OneOfHexesSelector(CC(1, -1)))
     )
@@ -451,7 +451,7 @@ def test_move_fails(
     unit_spawner: UnitSpawner, player2: Player, player1_connection: MockConnection
 ) -> None:
     pillar = unit_spawner.spawn(LUMBERING_PILLAR, coordinate=CC(0, 0))
-    unit_spawner.spawn(CHICKEN, coordinate=CC(1, -1), controller=player2)
+    unit_spawner.spawn(TEST_CHICKEN, coordinate=CC(1, -1), controller=player2)
     player1_connection.queue_responses(
         MoveOptionSelector(OneOfHexesSelector(CC(1, -1)))
     )
@@ -466,8 +466,10 @@ def test_fight(
     player1_connection: MockConnection,
     player2_connection: MockConnection,
 ) -> None:
-    chicken = unit_spawner.spawn(CHICKEN, coordinate=CC(0, 0))
-    evil_chicken = unit_spawner.spawn(CHICKEN, controller=player2, coordinate=CC(1, -1))
+    chicken = unit_spawner.spawn(TEST_CHICKEN, coordinate=CC(0, 0))
+    evil_chicken = unit_spawner.spawn(
+        TEST_CHICKEN, controller=player2, coordinate=CC(1, -1)
+    )
     player1_connection.queue_responses(
         ActivateSelector(OneOfUnitsSelector(chicken)),
         MeleeAttackSelector(OneOfUnitsSelector(evil_chicken)),
@@ -575,7 +577,7 @@ def test_ranged_attack(
 
 
 def test_armor(unit_spawner: UnitSpawner, player2: Player):
-    chicken = unit_spawner.spawn(CHICKEN, coordinate=CC(0, 0))
+    chicken = unit_spawner.spawn(TEST_CHICKEN, coordinate=CC(0, 0))
     evil_pillar = unit_spawner.spawn(
         LUMBERING_PILLAR, coordinate=CC(0, 1), controller=player2
     )
@@ -590,7 +592,7 @@ def test_armor(unit_spawner: UnitSpawner, player2: Player):
 
 
 def test_round(unit_spawner, player1_connection: MockConnection) -> None:
-    chicken = unit_spawner.spawn(CHICKEN, coordinate=CC(0, 0))
+    chicken = unit_spawner.spawn(TEST_CHICKEN, coordinate=CC(0, 0))
     player1_connection.queue_responses(
         (
             ActivateSelector(OneOfUnitsSelector(chicken)),
@@ -639,7 +641,7 @@ def test_vision_blocked(
 
     # Spawning an enemy chicken has no effect, since small units does not block
     # vision.
-    unit_spawner.spawn(CHICKEN, coordinate=CC(0, -1), controller=player2)
+    unit_spawner.spawn(TEST_CHICKEN, coordinate=CC(0, -1), controller=player2)
     _check(set(hex_circle(2, center=CC(0, 0))) - {CC(2, 0), CC(2, -2), CC(2, -1)})
 
     # Spawn allied archer that can see behind one of the enemy ones.
@@ -674,7 +676,7 @@ def test_impassable_terrain(
     unit_spawner, player1_connection: MockConnection, player2: Player
 ) -> None:
     make_hex_terrain(GS.map.hexes[CC(0, 1)], Water)
-    chicken = unit_spawner.spawn(CHICKEN, coordinate=CC(0, 0))
+    chicken = unit_spawner.spawn(TEST_CHICKEN, coordinate=CC(0, 0))
     player1_connection.queue_responses(MoveOptionSelector(OneOfHexesSelector(CC(0, 1))))
     with pytest.raises(SelectionError):
         ES.resolve(Turn(chicken))
