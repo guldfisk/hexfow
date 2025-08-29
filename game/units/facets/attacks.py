@@ -111,6 +111,7 @@ class SolidMunition(RangedAttackFacet):
 
 
 class HammerBlow(MeleeAttackFacet):
+    cost = MovementCost(1)
     damage = 4
 
 
