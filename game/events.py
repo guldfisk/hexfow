@@ -388,6 +388,8 @@ class MoveUnit(Event[Hex | None]):
                 from_ = None
 
         if from_:
+            if self.to_.captured_by and self.to_.captured_by != self.unit.controller:
+                self.to_.captured_by = None
             # TODO hmm
             GS.update_vision()
             with GS.log(
@@ -708,7 +710,10 @@ class AwardPoints(Event[None]):
         player_values: dict[Player, int] = defaultdict(int)
         for unit, _hex in GS.map.unit_positions.items():
             if _hex.is_objective and unit.can_capture_objectives_on(_hex):
-                player_values[unit.controller] += 1
+                _hex.captured_by = unit.controller
+        for _hex in GS.map.hexes.values():
+            if _hex.captured_by:
+                player_values[_hex.captured_by] += 1
 
         for player, amount in player_values.items():
             ES.resolve(GainPoints(player, amount))

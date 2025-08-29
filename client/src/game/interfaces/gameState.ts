@@ -39,6 +39,7 @@ export interface Hex {
   cc: CC;
   terrain: string;
   isObjective: boolean;
+  capturedBy: string | boolean;
   visible: boolean;
   lastVisibleRound: number | null;
   unit: Unit | null;

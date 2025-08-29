@@ -140,6 +140,12 @@ const getSizeDiamondGraphicsContext = moize((color: FillInput) =>
     .fill(color),
 );
 
+const getFlagCapturedIndicator = moize((allied: boolean) =>
+  new GraphicsContext()
+    .circle(0, 0, 23)
+    .fill(allied ? colors.ally : colors.enemy),
+);
+
 const statusFrame = new GraphicsContext().circle(0, 0, 20).fill({ alpha: 0 });
 const diag = Math.sqrt(2) * 22;
 
@@ -625,10 +631,24 @@ export const renderMap = (
     }
 
     if (hexData.isObjective) {
+      const flagContainer = new Container();
+
+      flagContainer.x = -hexWidth / 2 + 30;
+      flagContainer.y = -hexSize / 2 + 20;
+
+      if (hexData.capturedBy) {
+        flagContainer.addChild(
+          newGraphic(
+            getFlagCapturedIndicator(hexData.capturedBy == gameState.player),
+          ),
+        );
+      }
+
       const flagSprite = newSprite(textureMap["flag_icon"]);
-      flagSprite.x = -hexWidth / 2 + 10;
-      flagSprite.y = -hexSize / 2;
-      hexContainer.addChild(flagSprite);
+      flagSprite.anchor = 0.5;
+
+      flagContainer.addChild(flagSprite);
+      hexContainer.addChild(flagContainer);
     }
 
     for (let [idx, status] of hexData.statuses.entries()) {

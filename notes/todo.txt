@@ -15,12 +15,13 @@ army editor
 
 game
     asker skip
-    persistent capture points
 
     ability target descriptions, prob something like for status stacking
     delayed unit activation ("undo activation")
     linked statuses display
     unit last seen at round counter / ghost fading
+    unit additional details
+    support facet detail for facet used by multiple units
 
     corpses
     chess clock
@@ -33,7 +34,6 @@ game
     well-defined order of iterating units on map
 
 code
-    fix game error when disconnecting from test seat
     refactor game.core somehow
     response validation
     message ids

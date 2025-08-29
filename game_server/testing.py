@@ -12,6 +12,7 @@ from websockets import ServerConnection
 from events.eventsystem import ES, EventSystem
 from game.core import Connection, Player
 from game.events import Play
+from game_server.exceptions import GameClosed
 from game_server.game_types import TestGameType
 from game_server.setup import setup_scenario
 
@@ -62,7 +63,7 @@ class TestGameRunner(Thread):
                             return response
                         except Empty:
                             pass
-                    raise ValueError("game closed")
+                    raise GameClosed()
 
             setup_scenario(
                 TestGameType().get_scenario(),
@@ -70,6 +71,8 @@ class TestGameRunner(Thread):
             )
 
             ES.resolve(Play())
+        except GameClosed:
+            pass
         except:
             traceback.print_exc()
             raise

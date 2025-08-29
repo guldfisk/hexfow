@@ -1279,6 +1279,7 @@ class Hex(Modifiable, HasStatuses["HexStatus", "HexStatusSignature"], Serializab
         self.position = position
         self.terrain = terrain
         self.is_objective = is_objective
+        self.captured_by: Player | None = None
         # TODO name?
         self.map = map_
 
@@ -1356,6 +1357,7 @@ class Hex(Modifiable, HasStatuses["HexStatus", "HexStatusSignature"], Serializab
                 {
                     "visible": True,
                     "last_visible_round": GS.round_counter,
+                    "captured_by": self.captured_by.name if self.captured_by else None,
                     "unit": (
                         unit.serialize(context)
                         if (unit := self.map.unit_on(self))
@@ -1381,6 +1383,7 @@ class Hex(Modifiable, HasStatuses["HexStatus", "HexStatusSignature"], Serializab
                     {
                         "visible": False,
                         "last_visible_round": old_hex["last_visible_round"],
+                        "captured_by": old_hex["captured_by"],
                         "unit": (
                             old_hex["unit"] | {"is_ghost": True}
                             if old_hex["unit"]
@@ -1395,6 +1398,7 @@ class Hex(Modifiable, HasStatuses["HexStatus", "HexStatusSignature"], Serializab
                     else {
                         "visible": False,
                         "last_visible_round": None,
+                        "captured_by": None,
                         "unit": None,
                         "statuses": [],
                     }
@@ -1986,7 +1990,7 @@ class GameState:
         self.active_unit_context: ActiveUnitContext | None = None
         self.activation_queued_units: set[Unit] = set()
         # TODO in scenario
-        self.target_points = 23
+        self.target_points = 24
         self.round_counter = 0
 
         self.previous_hex_states: dict[Player, dict[CC, dict[str, Any]] | None] = {

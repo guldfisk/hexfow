@@ -12,17 +12,13 @@ from uuid import UUID
 from sqlalchemy import Exists, select
 
 from events.eventsystem import ES
-from events.exceptions import GameException
 from game.core import Connection, Player
 from game.events import Play
+from game_server.exceptions import GameClosed
 from game_server.game_types import GameType
 from game_server.setup import setup_scenario
 from model.engine import SS
 from model.models import Game, Seat
-
-
-class GameClosed(GameException):
-    pass
 
 
 class GameManager:
