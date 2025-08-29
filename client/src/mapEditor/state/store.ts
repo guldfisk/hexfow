@@ -17,6 +17,7 @@ export interface HexSpec {
   terrainType: string;
   unit: UnitSpec | null;
   isObjective: boolean;
+  deploymentZoneOf: number | null | undefined;
   statuses: string[];
   cc: CC;
 }
@@ -68,6 +69,7 @@ const mainSlice = createSlice({
             unit: { allied: boolean; identifier: string } | null;
             statuses: string[];
             is_objective: boolean;
+            deployment_zone_of: number | null;
             terrain_type: string;
           }[];
         };
@@ -81,6 +83,7 @@ const mainSlice = createSlice({
             unit: spec.unit,
             statuses: spec.statuses,
             isObjective: spec.is_objective,
+            deploymentZoneOf: spec.deployment_zone_of,
             terrainType: spec.terrain_type,
           },
         ]),
@@ -133,6 +136,20 @@ const mainSlice = createSlice({
         : null;
       state.shouldRerender = true;
     },
+    toggleDeploymentZone: (state, action: PayloadAction<CC>) => {
+      state.mapData[ccToKey(action.payload)].deploymentZoneOf =
+        state.mapData[ccToKey(action.payload)].deploymentZoneOf == null
+          ? 0
+          : null;
+      state.mapData[
+        ccToKey({ r: -action.payload.r, h: -action.payload.h })
+      ].deploymentZoneOf =
+        state.mapData[ccToKey({ r: -action.payload.r, h: -action.payload.h })]
+          .deploymentZoneOf == null
+          ? 1
+          : null;
+      state.shouldRerender = true;
+    },
     toggleIsObjective: (state, action: PayloadAction<CC>) => {
       state.mapData[ccToKey(action.payload)].isObjective =
         !state.mapData[ccToKey(action.payload)].isObjective;
@@ -175,7 +192,8 @@ const mainSlice = createSlice({
 
 export const {
   setMapData,
-    loadMap,
+  toggleDeploymentZone,
+  loadMap,
   setMapName,
   setShowLoader,
   setLoaderSelected,

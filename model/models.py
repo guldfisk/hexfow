@@ -53,6 +53,7 @@ class Game(Base, CreatedMixin, IntPKMixin):
     status: Mapped[str] = mapped_column(default=GameStatus.PENDING)
     game_type: Mapped[str]
     with_fow: Mapped[bool]
+    custom_armies: Mapped[bool]
     settings: Mapped[dict[str, Any]] = mapped_column(JSONB)
 
     seats: Mapped[list[Seat]] = relationship(back_populates="game")

@@ -14,7 +14,7 @@ from game.core import Connection, Player
 from game.events import Play
 from game_server.exceptions import GameClosed
 from game_server.game_types import TestGameType
-from game_server.setup import setup_scenario
+from game_server.setup import setup_scenario, setup_scenario_units
 
 
 class TestGameRunner(Thread):
@@ -53,10 +53,10 @@ class TestGameRunner(Thread):
                     super().__init__(player)
 
                 def send(self, values: Mapping[str, Any]) -> None:
-                    pass
+                    if values.get("decision"):
+                        game.connection.send(json.dumps(values))
 
-                def get_response(self, values: Mapping[str, Any]) -> Mapping[str, Any]:
-                    game.connection.send(json.dumps(values))
+                def wait_for_response(self) -> Mapping[str, Any]:
                     while game.is_running:
                         try:
                             response = game.in_queue.get(timeout=1)
@@ -65,10 +65,9 @@ class TestGameRunner(Thread):
                             pass
                     raise GameClosed()
 
-            setup_scenario(
-                TestGameType().get_scenario(),
-                lambda player: WebsocketConnection(player),
-            )
+            scenario = TestGameType().get_scenario()
+            setup_scenario(scenario, lambda player: WebsocketConnection(player))
+            setup_scenario_units(scenario)
 
             ES.resolve(Play())
         except GameClosed:

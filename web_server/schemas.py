@@ -19,6 +19,7 @@ GameTypeValue = Annotated[str, AfterValidator(is_valid_game_type)]
 class CreateGameSchema(BaseModel):
     game_type: GameTypeValue
     with_fow: bool
+    custom_armies: bool
     settings: dict[str, Any]
 
     @model_validator(mode="after")

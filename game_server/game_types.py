@@ -50,6 +50,7 @@ class TestGameType(GameType):
                         ]
                     ),
                     cc.distance_to(CC(0, 0)) <= 1,
+                    deployment_zone_of=0 if cc.r & 1 else 1,
                 )
                 for cc in hex_circle(4)
             }

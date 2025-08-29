@@ -133,6 +133,31 @@ class SelectOptionDecisionPoint(DecisionPoint[OptionDecision]):
         )
 
 
+@dataclasses.dataclass
+class DeployArmyDecisionPoint(DecisionPoint[list[tuple["UnitBlueprint", "Hex"]]]):
+    max_units: int
+    max_points: int
+    deployment_zone: list[Hex]
+
+    def get_explanation(self) -> str:
+        return f"deploy army of max {self.max_units} units and max {self.max_points} points"
+
+    def serialize_payload(self, context: SerializationContext) -> JSON:
+        return {
+            "max_units": self.max_units,
+            "max_points": self.max_points,
+            "deployment_zone": [
+                hex_.position.serialize() for hex_ in self.deployment_zone
+            ],
+        }
+
+    def parse_response(self, v: dict[str, Any]) -> list[tuple["UnitBlueprint", "Hex"]]:
+        return [
+            (UnitBlueprint.get_class(blueprint_name), GS.map.hexes[CC(**cc)])
+            for blueprint_name, cc in v["deployments"]
+        ]
+
+
 class MoveOption(Option[G_decision_result]):
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {}
@@ -1220,6 +1245,7 @@ class SingleEnemyActivatedAbility(SingleTargetActivatedAbility, ABC):
 class HexSpec:
     terrain_type: type[Terrain]
     is_objective: bool
+    deployment_zone_of: int | None = None
     statuses: list[HexStatusSignature] = dataclasses.field(default_factory=list)
 
 
@@ -1967,7 +1993,11 @@ class Connection(ABC):
     def send(self, values: Mapping[str, Any]) -> None: ...
 
     @abstractmethod
-    def get_response(self, values: Mapping[str, Any]) -> Mapping[str, Any]: ...
+    def wait_for_response(self) -> Mapping[str, Any]: ...
+
+    def get_response(self, values: Mapping[str, Any]) -> Mapping[str, Any]:
+        self.send(values)
+        return self.wait_for_response()
 
 
 class GameState:
@@ -2112,6 +2142,22 @@ class GameState:
         )
         return decision_point.parse_response(response)
 
+    def make_parallel_decision(
+        self, decision_points: dict[Player, DecisionPoint[G_decision_result]]
+    ) -> dict[Player, G_decision_result]:
+        for player in self.turn_order:
+            self.connections[player].send(
+                self.serialize_for(
+                    self._get_context_for(player), decision_points.get(player)
+                )
+            )
+        return {
+            player: decision_point.parse_response(
+                self.connections[player].wait_for_response()
+            )
+            for player, decision_point in decision_points.items()
+        }
+
 
 class ScopedGameState:
     # TODO protocol/interface?
@@ -2197,6 +2243,11 @@ class ScopedGameState:
         self, player: Player, decision_point: DecisionPoint[G_decision_result]
     ) -> G_decision_result:
         return self._gs.make_decision(player, decision_point)
+
+    def make_parallel_decision(
+        self, decision_points: dict[Player, DecisionPoint[G_decision_result]]
+    ) -> dict[Player, G_decision_result]:
+        return self._gs.make_parallel_decision(decision_points)
 
 
 GS = ScopedGameState()

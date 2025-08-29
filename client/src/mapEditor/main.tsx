@@ -6,6 +6,7 @@ import {
   renderedGameState,
   setStatus,
   store,
+  toggleDeploymentZone,
   toggleIsObjective,
   updateTerrain,
   updateUnit,
@@ -63,6 +64,8 @@ async function main() {
         );
       } else if (event.key == "5") {
         store.dispatch(setStatus({ cc: state.hoveredHex.cc, status: null }));
+      } else if (event.key == "6") {
+        store.dispatch(toggleDeploymentZone(state.hoveredHex.cc));
       }
     }
   };

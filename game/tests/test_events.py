@@ -73,6 +73,9 @@ class MockConnection(Connection):
     def send(self, values: Mapping[str, Any]) -> None:
         self.history.append(values)
 
+    def wait_for_response(self) -> Mapping[str, Any]:
+        raise NotImplementedError()
+
     def get_response(self, values: Mapping[str, Any]) -> Mapping[str, Any]:
         self.history.append(values)
         if TestScope.log_game_states:

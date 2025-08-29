@@ -22,7 +22,8 @@ import {
   subRCs,
 } from "../game/geometry.ts";
 import type { ColorSource } from "pixi.js/lib/color/Color";
-import {getTexture, textureMap} from "./textures.ts";
+import { getTexture, textureMap } from "./textures.ts";
+import moize from "moize";
 
 const colors = {
   enemy: "0x9b1711",
@@ -44,12 +45,22 @@ const getHexMask = (color: FillInput, hexSize: number): GraphicsContext => {
   hexShape.fill(color);
   return hexShape;
 };
+const getHexBorder = moize(
+  (color: FillInput, hexSize: number): GraphicsContext => {
+    const hexVerticeOffsets = getHexVerticeOffsets(hexSize);
+    let hexShape = new GraphicsContext().moveTo(...hexVerticeOffsets[0]);
+    hexVerticeOffsets.slice(1).forEach((vert) => hexShape.lineTo(...vert));
+    hexShape.closePath();
+    hexShape.stroke({ color, width: 5 });
+    return hexShape;
+  },
+);
 
 const hexStatusFrame = getHexMask({ alpha: 0 }, 22);
 
 const makeStatusIndicator = (status: string): Container => {
   const statusContainer = new Container();
-  const statusSprite = new Sprite(getTexture('status', status));
+  const statusSprite = new Sprite(getTexture("status", status));
 
   statusSprite.anchor = 0.5;
   statusContainer.addChild(statusSprite);
@@ -133,7 +144,7 @@ export const renderMap = (
     hexContainer.addChild(label);
 
     if (spec.unit) {
-      const unitSprite = new Sprite(getTexture('unit', spec.unit.identifier));
+      const unitSprite = new Sprite(getTexture("unit", spec.unit.identifier));
       unitSprite.anchor = 0.5;
 
       const borderWith = 4;
@@ -177,6 +188,19 @@ export const renderMap = (
       );
 
       hexContainer.addChild(statusContainer);
+    }
+  }
+
+  for (const spec of Object.values(state.mapData)) {
+    if (spec.deploymentZoneOf != null) {
+      let hex = new Graphics(
+        getHexBorder(
+          spec.deploymentZoneOf === 0 ? colors.ally : colors.enemy,
+          hexSize,
+        ),
+      );
+      hex.position = addRCs(ccToRC(spec.cc), center);
+      map.addChild(hex);
     }
   }
 

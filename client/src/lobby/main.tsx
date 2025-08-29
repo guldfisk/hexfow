@@ -10,6 +10,7 @@ import {
   setMapNames,
   setSelectedGameType,
   setSettings,
+  setWithCustomArmies,
   setWithFow,
   store,
 } from "./state/store.ts";
@@ -87,6 +88,7 @@ const GameCreator = ({}: {}) => {
   const [loading, setLoading] = useState(false);
   const gameType = useLobbyState((state) => state.selectedGameType);
   const withFow = useLobbyState((state) => state.withFow);
+  const withCustomArmies = useLobbyState((state) => state.withCustomArmies);
   const settings = useLobbyState((state) => state.settings);
   const gameResponse = useLobbyState((state) => state.gameResponse);
   const dispatch = useLobbyDispatch();
@@ -125,6 +127,7 @@ const GameCreator = ({}: {}) => {
                 game_type: gameType,
                 settings: settings,
                 with_fow: withFow,
+                custom_armies: withCustomArmies,
               }),
               headers: {
                 "Content-type": "application/json",
@@ -144,6 +147,14 @@ const GameCreator = ({}: {}) => {
           type={"checkbox"}
           checked={withFow}
           onChange={() => dispatch(setWithFow(!withFow))}
+        />
+      </div>
+      <div>
+        <label>With custom armies</label>
+        <input
+          type={"checkbox"}
+          checked={withCustomArmies}
+          onChange={() => dispatch(setWithCustomArmies(!withCustomArmies))}
         />
       </div>
       <GameTypeSelector />

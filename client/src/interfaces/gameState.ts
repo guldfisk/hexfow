@@ -195,7 +195,16 @@ export interface SelectOptionDecisionPoint extends BaseDecision {
   payload: { options: Option[] };
 }
 
-export type Decision = SelectOptionDecisionPoint;
+export interface DeployArmyDecisionPoint extends BaseDecision {
+  type: "DeployArmyDecisionPoint";
+  payload: {
+    maxUnits: number;
+    maxPoints: number;
+    deploymentZone: CC[];
+  };
+}
+
+export type Decision = SelectOptionDecisionPoint | DeployArmyDecisionPoint;
 
 export interface LogLineComponentBase {
   type: string;

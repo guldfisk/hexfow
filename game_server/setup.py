@@ -3,13 +3,12 @@ from typing import Callable, ClassVar
 
 from events.eventsystem import ES, EventSystem, StateModifierEffect
 from game.core import GS, Connection, GameState, Hex, Player, Scenario, Unit
-from game.events import ApplyHexStatus, SpawnUnit
+from game.events import ApplyHexStatus, DeployArmies, SpawnUnit
 
 
 def setup_scenario(
     scenario: Scenario,
     connection_factory: Callable[[Player], Connection],
-    with_fow: bool = True,
 ) -> GameState:
     ES.bind(EventSystem())
 
@@ -17,45 +16,59 @@ def setup_scenario(
 
     GS.bind(gs)
 
-    for player, units in zip(gs.turn_order, scenario.units):
-        for cc, blueprint in units.items():
-            ES.resolve(
-                SpawnUnit(
-                    blueprint=blueprint,
-                    controller=player,
-                    space=gs.map.hexes[cc],
+    return gs
+
+
+def setup_scenario_units(
+    scenario: Scenario,
+    with_fow: bool = True,
+    custom_armies: bool = False,
+) -> GameState:
+    gs = GS._gs
+    if custom_armies:
+        ES.resolve(DeployArmies(scenario.landscape))
+    else:
+        for player, units in zip(gs.turn_order, scenario.units):
+            for cc, blueprint in units.items():
+                ES.resolve(
+                    SpawnUnit(
+                        blueprint=blueprint,
+                        controller=player,
+                        space=gs.map.hexes[cc],
+                    )
                 )
-            )
 
     for cc, spec in scenario.landscape.terrain_map.items():
         for signature in spec.statuses:
             ES.resolve(ApplyHexStatus(gs.map.hexes[cc], signature))
 
-    @dataclasses.dataclass(eq=False)
-    class AllHexRevealedModifier(StateModifierEffect[Hex, Player, bool]):
-        priority: ClassVar[int] = 100
-        target: ClassVar[object] = Hex.is_visible_to
+    if not with_fow or not custom_armies:
 
-        def modify(self, obj: Hex, request: Player, value: bool) -> bool:
-            return True
+        @dataclasses.dataclass(eq=False)
+        class AllHexRevealedModifier(StateModifierEffect[Hex, Player, bool]):
+            priority: ClassVar[int] = 100
+            target: ClassVar[object] = Hex.is_visible_to
 
-    @dataclasses.dataclass(eq=False)
-    class AllUnitsRevealedModifier(StateModifierEffect[Hex, Player, bool]):
-        priority: ClassVar[int] = 100
-        target: ClassVar[object] = Unit.is_hidden_for
+            def modify(self, obj: Hex, request: Player, value: bool) -> bool:
+                return True
 
-        def modify(self, obj: Unit, request: Player, value: bool) -> bool:
-            return False
+        @dataclasses.dataclass(eq=False)
+        class AllUnitsRevealedModifier(StateModifierEffect[Hex, Player, bool]):
+            priority: ClassVar[int] = 100
+            target: ClassVar[object] = Unit.is_hidden_for
 
-    effects = [AllHexRevealedModifier(), AllUnitsRevealedModifier()]
+            def modify(self, obj: Unit, request: Player, value: bool) -> bool:
+                return False
 
-    ES.register_effects(*effects)
+        effects = [AllHexRevealedModifier(), AllUnitsRevealedModifier()]
 
-    for player in gs.turn_order:
-        gs.serialize_for(gs._get_context_for(player), None)
+        ES.register_effects(*effects)
 
-    if with_fow:
-        ES.deregister_effects(*effects)
+        for player in gs.turn_order:
+            gs.serialize_for(gs._get_context_for(player), None)
+
+        if with_fow:
+            ES.deregister_effects(*effects)
 
     for logs in gs._pending_player_logs.values():
         logs[:] = []

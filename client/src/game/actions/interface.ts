@@ -1,6 +1,7 @@
 import {
   Cone,
   ConsecutiveAdjacentHexes,
+  DeployArmyDecisionPoint,
   HexHexes,
   HexRing,
   NOfHexes,
@@ -32,6 +33,7 @@ export interface HexActions {
   actions: Action[];
   sideMenuItems?: Action[];
   highlighted?: boolean;
+  blueprintGhost?: string | null;
   hoverTrigger?: (localPosition: RC) => void;
   previewOptions?: UnitOption[] | null;
 }
@@ -41,9 +43,15 @@ export interface ButtonAction {
   do: () => void;
 }
 
+export interface LoadFileAction {
+  description: string;
+  do: (content: string) => void;
+}
+
 export interface ActionSpace {
   hexActions: { [key: string]: HexActions };
   buttonAction: ButtonAction | null;
+  loadFileAction?: LoadFileAction | null;
 }
 
 export interface BaseMenuData {
@@ -118,6 +126,14 @@ export interface TriHexMenu extends BaseMenuData {
   hovering: Corner | null;
 }
 
+export interface ArrangeArmyMenu extends BaseMenuData {
+  type: "ArrangeArmy";
+  decisionPoint: DeployArmyDecisionPoint;
+  unitPositions: { [name: string]: CC };
+  swappingPosition: CC | null;
+  submitted: boolean
+}
+
 export type MenuData =
   | NOfUnitsMenu
   | NOfHexesMenu
@@ -128,4 +144,5 @@ export type MenuData =
   | RadiatingLineMenu
   | ConeMenu
   | ListMenu
-  | TriHexMenu;
+  | TriHexMenu
+  | ArrangeArmyMenu;

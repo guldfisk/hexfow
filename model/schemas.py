@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 from game.core import (
@@ -29,6 +31,7 @@ class HexSchema(BaseModel):
     cc: CCSchema
     terrain_type: str
     is_objective: bool
+    deployment_zone_of: Literal[0, 1, None]
     statuses: list[str]
     unit: UnitSchema | None
 
@@ -36,6 +39,7 @@ class HexSchema(BaseModel):
         return self.cc.get_cc(), HexSpec(
             Terrain.get_class(self.terrain_type),
             is_objective=self.is_objective,
+            deployment_zone_of=self.deployment_zone_of,
             statuses=[
                 HexStatusSignature(HexStatus.get_class(status_identifier), None)
                 for status_identifier in self.statuses

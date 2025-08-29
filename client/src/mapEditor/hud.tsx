@@ -90,6 +90,7 @@ export const HUD = ({}: {}) => {
                       cc: spec.cc,
                       terrain_type: spec.terrainType,
                       is_objective: spec.isObjective,
+                      deployment_zone_of: spec.deploymentZoneOf === undefined ? null : spec.deploymentZoneOf,
                       statuses: spec.statuses,
                       unit: spec.unit || null,
                     })),

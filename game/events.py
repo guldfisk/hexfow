@@ -11,12 +11,14 @@ from game.core import (
     ActivateUnitOption,
     ActiveUnitContext,
     DamageSignature,
+    DeployArmyDecisionPoint,
     EffortOption,
     G_decision_result,
     HasStatuses,
     Hex,
     HexStatus,
     HexStatusSignature,
+    Landscape,
     LogLine,
     MeleeAttackFacet,
     MoveOption,
@@ -842,6 +844,30 @@ class Round(Event[None]):
             gs.turn_order.set_player_order(
                 sorted(gs.turn_order, key=lambda p: last_action_timestamps[p])
             )
+
+
+@dataclasses.dataclass
+class DeployArmies(Event[None]):
+    landscape: Landscape
+
+    def resolve(self) -> None:
+        GS.update_vision()
+        for player, deployment in GS.make_parallel_decision(
+            {
+                player: DeployArmyDecisionPoint(
+                    12,
+                    70,
+                    [
+                        GS.map.hexes[cc]
+                        for cc, spec in self.landscape.terrain_map.items()
+                        if spec.deployment_zone_of == idx
+                    ],
+                )
+                for idx, player in enumerate(GS.turn_order.original_order)
+            }
+        ).items():
+            for blueprint, hex_ in deployment:
+                ES.resolve(SpawnUnit(blueprint, player, hex_))
 
 
 @dataclasses.dataclass

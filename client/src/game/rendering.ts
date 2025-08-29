@@ -304,6 +304,7 @@ export const renderMap = (
       : getBaseActionSpace(
           gameState,
           (body) => gameConnection.send(JSON.stringify(body)),
+          state.gameObjectDetails,
           gameState.decision,
         )
   ).hexActions;
@@ -360,9 +361,10 @@ export const renderMap = (
       }
     }
 
-    for (const [idx, action] of actionSpace[
-      ccToKey(hexData.cc)
-    ].actions.entries()) {
+    for (const [idx, action] of (ccToKey(hexData.cc) in actionSpace
+      ? actionSpace[ccToKey(hexData.cc)].actions
+      : []
+    ).entries()) {
       if (!state.actionPreview) {
         const selectionSprite = newSprite(
           textureMap[selectionIconMap[action.type]],
@@ -392,7 +394,10 @@ export const renderMap = (
     }
 
     // TODO common trigger zone
-    if (state.menuData && !actionSpace[ccToKey(hexData.cc)].actions.length) {
+    if (
+      state.menuData &&
+      !(actionSpace[ccToKey(hexData.cc)]?.actions || []).length
+    ) {
       let triggerZone = newGraphic(dividerFrames[0][0]);
       triggerZone.eventMode = "static";
       triggerZone.on("pointerdown", (event) => {
@@ -688,12 +693,20 @@ export const renderMap = (
     }
 
     if (
-      actionSpace[ccToKey(hexData.cc)].highlighted ||
-      (state.highlightedCCs &&
-        state.highlightedCCs.includes(ccToKey(hexData.cc)))
+      ccToKey(hexData.cc) in actionSpace &&
+      (actionSpace[ccToKey(hexData.cc)].highlighted ||
+        (state.highlightedCCs &&
+          state.highlightedCCs.includes(ccToKey(hexData.cc))))
     ) {
       let highlight = newGraphic(highlightShape);
       hexContainer.addChild(highlight);
+    }
+    if (actionSpace[ccToKey(hexData.cc)]?.blueprintGhost) {
+      const unitGhostSprite = newSprite(
+        getTexture("unit", actionSpace[ccToKey(hexData.cc)].blueprintGhost),
+      );
+      unitGhostSprite.anchor = 0.5;
+      hexContainer.addChild(unitGhostSprite);
     }
 
     for (const zone of actionTriggerZones) {
@@ -703,7 +716,7 @@ export const renderMap = (
   }
 
   gameState.map.hexes.forEach((hexData) => {
-    const menuItems = actionSpace[ccToKey(hexData.cc)].sideMenuItems || [];
+    const menuItems = actionSpace[ccToKey(hexData.cc)]?.sideMenuItems || [];
 
     if (menuItems.length) {
       const hexContainer = new Container();
@@ -799,7 +812,7 @@ export const renderMap = (
         }
       }
 
-      const hoverTrigger = actionSpace[ccToKey(hexData.cc)].hoverTrigger;
+      const hoverTrigger = actionSpace[ccToKey(hexData.cc)]?.hoverTrigger;
       if (hoverTrigger) {
         hoverTrigger(localPosition);
       }
@@ -813,17 +826,22 @@ export const renderMap = (
 
       store.dispatch(hoverDetail(detail));
 
-      const previewOptions = actionSpace[ccToKey(hexData.cc)].previewOptions;
+      const previewOptions = actionSpace[ccToKey(hexData.cc)]?.previewOptions;
       store.dispatch(
         setActionPreview(
           previewOptions && hoverType == "unit"
             ? Object.fromEntries(
                 Object.entries(
-                  getBaseActionSpace(gameState, () => null, {
-                    type: "SelectOptionDecisionPoint",
-                    explanation: "preview",
-                    payload: { options: previewOptions },
-                  }).hexActions,
+                  getBaseActionSpace(
+                    gameState,
+                    () => null,
+                    state.gameObjectDetails,
+                    {
+                      type: "SelectOptionDecisionPoint",
+                      explanation: "preview",
+                      payload: { options: previewOptions },
+                    },
+                  ).hexActions,
                 ).map(([cc, hexActions]) => [
                   cc,
                   hexActions.actions.map((action) => action.type),

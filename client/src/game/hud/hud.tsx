@@ -20,9 +20,12 @@ import {
   store,
 } from "../state/store.ts";
 import { getBaseActionSpace } from "../actions/actionSpace.ts";
-import {traverseStatuses} from "../../components/statuses.ts";
-import {StatusDetailView, StatusesDetailView} from "../../components/statusDetails.tsx";
-import {UnitDetailsView} from "../../components/unitDetails.tsx";
+import { traverseStatuses } from "../../components/statuses.ts";
+import {
+  StatusDetailView,
+  StatusesDetailView,
+} from "../../components/statusDetails.tsx";
+import { UnitDetailsView } from "../../components/unitDetails.tsx";
 
 const LogLineComponentView = ({
   element,
@@ -268,14 +271,16 @@ const GameInfoView = ({ gameState }: { gameState: GameState }) => (
 
 const DecisionDetailView = ({
   gameState,
+  gameObjectDetails,
   connection,
   menu,
 }: {
   gameState: GameState | null;
+  gameObjectDetails: GameObjectDetails | null;
   connection: WebSocket;
   menu: MenuData | null;
 }) => {
-  if (!gameState?.decision) {
+  if (!gameState?.decision || !gameObjectDetails) {
     return (
       <div className="info-window decision-details" id="decision-description">
         waiting for opponent
@@ -296,6 +301,7 @@ const DecisionDetailView = ({
     : getBaseActionSpace(
         gameState,
         (body) => connection.send(JSON.stringify(body)),
+        gameObjectDetails,
         gameState.decision,
       );
 
@@ -345,6 +351,23 @@ const DecisionDetailView = ({
           : gameState.decision.explanation}
       </div>
       {button}
+      {actionSpace.loadFileAction ? (
+        <>
+          <label>{actionSpace.loadFileAction.description}</label>
+          <input
+            type="file"
+            id="fileInput"
+            onChange={(event) => {
+              let fr = new FileReader();
+
+              fr.onload = () =>
+                actionSpace.loadFileAction.do(fr.result as string);
+
+              fr.readAsText(event.target.files[0]);
+            }}
+          />
+        </>
+      ) : null}
       {gameState ? <GameInfoView gameState={gameState} /> : null}
     </div>
   );
@@ -417,6 +440,7 @@ export const HUD = ({ connection }: { connection: WebSocket }) => {
 
         <DecisionDetailView
           gameState={applicationState.gameState}
+          gameObjectDetails={applicationState.gameObjectDetails}
           connection={connection}
           menu={applicationState.menuData}
         />

@@ -16,6 +16,7 @@ import {
 import { ccFromKey, ccToKey } from "../geometry.ts";
 import { Action, ActionSpace } from "./interface.ts";
 import { activateMenu, store } from "../state/store.ts";
+import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
 
 export const getUnitsOfHexes = (gameState: GameState): { [key: string]: Hex } =>
   Object.fromEntries(
@@ -77,7 +78,10 @@ export const getBaseActions = (
           });
         }
       } else if (option.targetProfile.type == "NOfHexes") {
-        for (const [hexIdx, hex] of option.targetProfile.values.hexes.entries()) {
+        for (const [
+          hexIdx,
+          hex,
+        ] of option.targetProfile.values.hexes.entries()) {
           actions[ccToKey(hex.cc)].push({
             type: "activated_ability",
             description:
@@ -274,13 +278,14 @@ export const getBaseActions = (
 export const getBaseActionSpace = (
   gameState: GameState,
   takeAction: (body: { [key: string]: any }) => void,
+  gameObjectDetails: GameObjectDetails,
   decision: Decision | null,
 ): ActionSpace => {
-  const actions = getBaseActions(gameState, takeAction, decision);
-
-  const previewMap: { [key: string]: UnitOption[] } = {};
-
   if (decision && decision.type == "SelectOptionDecisionPoint") {
+    const actions = getBaseActions(gameState, takeAction, decision);
+
+    const previewMap: { [key: string]: UnitOption[] } = {};
+
     const activationOption = decision.payload.options.find(
       (option) => option.type == "ActivateUnitOption",
     );
@@ -294,43 +299,71 @@ export const getBaseActionSpace = (
           activationOption.values.actionsPreview[unit["id"]];
       }
     }
-  }
 
-  return {
-    hexActions: Object.fromEntries(
-      Object.entries(actions).map(([cc, _actions]) => [
-        cc,
-        _actions.length > 2 ||
-        (_actions.length == 2 && _actions.some((a) => a.type == "menu")) ||
-        new Set(_actions.map((a) => a.type)).size != _actions.length
-          ? {
-              actions: [
-                ..._actions.filter(
-                  (action) =>
-                    action.sourceOption &&
-                    action.sourceOption.type == "MoveOption",
-                ),
-                {
-                  type: "menu",
-                  description: "open menu",
-                  do: () => {
-                    store.dispatch(
-                      activateMenu({
-                        type: "ListMenu",
-                        cc: ccFromKey(cc),
-                      }),
-                    );
+    return {
+      hexActions: Object.fromEntries(
+        Object.entries(actions).map(([cc, _actions]) => [
+          cc,
+          _actions.length > 2 ||
+          (_actions.length == 2 && _actions.some((a) => a.type == "menu")) ||
+          new Set(_actions.map((a) => a.type)).size != _actions.length
+            ? {
+                actions: [
+                  ..._actions.filter(
+                    (action) =>
+                      action.sourceOption &&
+                      action.sourceOption.type == "MoveOption",
+                  ),
+                  {
+                    type: "menu",
+                    description: "open menu",
+                    do: () => {
+                      store.dispatch(
+                        activateMenu({
+                          type: "ListMenu",
+                          cc: ccFromKey(cc),
+                        }),
+                      );
+                    },
                   },
-                },
-              ],
-            }
-          : {
-              actions: _actions,
-              highlighted: false,
-              previewOptions: previewMap[cc],
-            },
-      ]),
-    ),
-    buttonAction: null,
-  };
+                ],
+              }
+            : {
+                actions: _actions,
+                highlighted: false,
+                previewOptions: previewMap[cc],
+              },
+        ]),
+      ),
+      buttonAction: null,
+    };
+  } else if (decision && decision["type"] == "DeployArmyDecisionPoint") {
+    return {
+      hexActions: {},
+      buttonAction: null,
+      loadFileAction: {
+        description: "load army list",
+        do: (armyContent) => {
+          store.dispatch(
+            activateMenu({
+              type: "ArrangeArmy",
+              decisionPoint: decision,
+              unitPositions: Object.fromEntries(
+                armyContent
+                  .split("\n")
+                  .filter((id) => id in gameObjectDetails.units)
+                  .map((name, idx) => [
+                    name,
+                    decision.payload.deploymentZone[idx],
+                  ]),
+              ),
+              swappingPosition: null,
+              submitted: false,
+            }),
+          );
+        },
+      },
+    };
+  }
+  return { hexActions: {}, buttonAction: null };
 };

@@ -23,6 +23,7 @@ const mainSlice = createSlice({
     selectedGameType: "map",
     gameResponse: null,
     withFow: true,
+    withCustomArmies: false,
     settings: {},
     mapNames: [],
   } as {
@@ -30,6 +31,7 @@ const mainSlice = createSlice({
     gameResponse: GameResponse | null;
     settings: { [key: string]: any };
     withFow: boolean;
+    withCustomArmies: boolean,
     mapNames: string[];
   },
   reducers: {
@@ -39,6 +41,9 @@ const mainSlice = createSlice({
     },
     setWithFow: (state, action: PayloadAction<boolean>) => {
       state.withFow = action.payload;
+    },
+    setWithCustomArmies: (state, action: PayloadAction<boolean>) => {
+      state.withCustomArmies = action.payload;
     },
     setGameResponse: (state, action: PayloadAction<GameResponse>) => {
       state.gameResponse = action.payload;
@@ -57,6 +62,7 @@ export const {
   setSelectedGameType,
   setSettings,
   setWithFow,
+  setWithCustomArmies,
   setGameResponse,
   setMapNames,
 } = mainSlice.actions;

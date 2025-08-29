@@ -2,6 +2,7 @@ import { GameState, Hex, TreeNode } from "../../interfaces/gameState.ts";
 import { getBaseActions, getUnitsOfHexes } from "./actionSpace.ts";
 import {
   ActionSpace,
+  ArrangeArmyMenu,
   ConeMenu,
   ConsecutiveAdjacentHexesMenu,
   HexActions,
@@ -35,6 +36,87 @@ import { CC, Corner, RC } from "../../interfaces/geometry.ts";
 import { min } from "../utils/min.ts";
 
 // TODO some common logic in this mess
+
+const getArrangeArmiesActionSpace = (
+  gameState: GameState,
+  takeAction: (body: { [key: string]: any }) => void,
+  menu: ArrangeArmyMenu,
+): ActionSpace => {
+  const positionsMap: { [key: string]: string } = Object.fromEntries(
+    Object.entries(menu.unitPositions).map(([name, cc]) => [ccToKey(cc), name]),
+  );
+
+  const hexActions: { [key: string]: HexActions } = Object.fromEntries(
+    gameState.map.hexes.map((hex) => [
+      ccToKey(hex.cc),
+      {
+        actions:
+          !(menu.swappingPosition && ccEquals(hex.cc, menu.swappingPosition)) &&
+          menu.decisionPoint.payload.deploymentZone.some((v) =>
+            ccEquals(v, hex.cc),
+          ) &&
+          !menu.submitted
+            ? [
+                {
+                  type: "generic",
+                  description: "swap",
+                  do: () => {
+                    if (menu.swappingPosition) {
+                      const newPositions = { ...menu.unitPositions };
+                      if (positionsMap[ccToKey(menu.swappingPosition)]) {
+                        newPositions[
+                          positionsMap[ccToKey(menu.swappingPosition)]
+                        ] = hex.cc;
+                      }
+                      if (positionsMap[ccToKey(hex.cc)]) {
+                        newPositions[positionsMap[ccToKey(hex.cc)]] =
+                          menu.swappingPosition;
+                      }
+                      store.dispatch(
+                        advanceMenu({
+                          ...menu,
+                          unitPositions: newPositions,
+                          swappingPosition: null,
+                        }),
+                      );
+                    } else {
+                      store.dispatch(
+                        advanceMenu({ ...menu, swappingPosition: hex.cc }),
+                      );
+                    }
+                  },
+                },
+              ]
+            : [],
+        highlighted:
+          menu.swappingPosition && ccEquals(hex.cc, menu.swappingPosition),
+        blueprintGhost: positionsMap[ccToKey(hex.cc)],
+      },
+    ]),
+  );
+
+  return {
+    hexActions,
+    buttonAction: menu.submitted
+      ? null
+      : {
+          description: "submit",
+          do: () => {
+            takeAction({ deployments: Object.entries(menu.unitPositions) });
+            store.dispatch(advanceMenu({ ...menu, submitted: true }));
+          },
+        },
+  };
+};
+
+const getArrangeArmiesDescription = (
+  gameState: GameState,
+  menu: ArrangeArmyMenu,
+): string => {
+  return menu.submitted
+    ? "waiting for opponent to submit their army"
+    : "arrange army";
+};
 
 const getNOfHexesActionSpace = (
   gameState: GameState,
@@ -640,6 +722,7 @@ export const menuActionSpacers: {
     menu: MenuData,
   ) => ActionSpace;
 } = {
+  ArrangeArmy: getArrangeArmiesActionSpace,
   NOfUnits: getNOfUnitsActionSpace,
   NOfHexes: getNOfHexesActionSpace,
   ConsecutiveAdjacentHexes: getConsecutiveAdjacentHexesActionSpace,
@@ -655,6 +738,7 @@ export const menuActionSpacers: {
 export const menuDescribers: {
   [key: string]: (gameState: GameState, menu: MenuData) => string;
 } = {
+  ArrangeArmy: getArrangeArmiesDescription,
   NOfUnits: getNOfUnitsDescription,
   NOfHexes: getNOfHexesDescription,
   ConsecutiveAdjacentHexes: getConsecutiveAdjacentHexesDescription,

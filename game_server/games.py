@@ -16,7 +16,7 @@ from game.core import Connection, Player
 from game.events import Play
 from game_server.exceptions import GameClosed
 from game_server.game_types import GameType
-from game_server.setup import setup_scenario
+from game_server.setup import setup_scenario, setup_scenario_units
 from model.engine import SS
 from model.models import Game, Seat
 
@@ -105,8 +105,7 @@ class SeatInterface(Connection):
     def send(self, values: Mapping[str, Any]) -> None:
         self._send_frame(values)
 
-    def get_response(self, values: Mapping[str, Any]) -> Mapping[str, Any]:
-        self._send_frame(values)
+    def wait_for_response(self) -> Mapping[str, Any]:
         while self.game_runner.is_running:
             try:
                 response = self.in_queue.get(timeout=1)
@@ -181,7 +180,6 @@ class GameRunner(Thread):
             gs = setup_scenario(
                 self._scenario,
                 lambda player: SeatInterface(player, game_runner=self),
-                with_fow=self._game.with_fow,
             )
 
             self.seat_map: dict[UUID, SeatInterface] = {
@@ -191,6 +189,12 @@ class GameRunner(Thread):
                 )
             }
             GM.register(self)
+
+            setup_scenario_units(
+                self._scenario,
+                with_fow=self._game.with_fow,
+                custom_armies=self._game.custom_armies,
+            )
 
             ES.resolve(Play())
         except GameClosed:
