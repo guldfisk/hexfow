@@ -12,7 +12,7 @@ import {
   Tree,
   TriHex,
   UnitOption,
-} from "../interfaces/gameState.ts";
+} from "../../interfaces/gameState.ts";
 import { ccFromKey, ccToKey } from "../geometry.ts";
 import { Action, ActionSpace } from "./interface.ts";
 import { activateMenu, store } from "../state/store.ts";

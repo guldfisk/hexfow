@@ -1,4 +1,5 @@
-import "./style.css";
+import "../../common.css";
+
 
 import { Application, Container, Graphics } from "pixi.js";
 import { recursiveCamelCase } from "./utils/case.ts";

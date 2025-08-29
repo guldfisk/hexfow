@@ -4,9 +4,9 @@ import {
   PayloadAction,
   Tuple,
 } from "@reduxjs/toolkit";
-import { CC } from "../../game/interfaces/geometry.ts";
+import { CC } from "../../interfaces/geometry.ts";
 import { ccToKey } from "../../game/geometry.ts";
-import { GameObjectDetails } from "../../game/interfaces/gameObjectDetails.ts";
+import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
 
 export interface UnitSpec {
   identifier: string;

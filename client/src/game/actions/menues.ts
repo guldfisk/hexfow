@@ -1,4 +1,4 @@
-import { GameState, Hex, TreeNode } from "../interfaces/gameState.ts";
+import { GameState, Hex, TreeNode } from "../../interfaces/gameState.ts";
 import { getBaseActions, getUnitsOfHexes } from "./actionSpace.ts";
 import {
   ActionSpace,
@@ -31,7 +31,7 @@ import {
 } from "../geometry.ts";
 import { advanceMenu, store } from "../state/store.ts";
 import { range } from "../utils/range.ts";
-import { CC, Corner, RC } from "../interfaces/geometry.ts";
+import { CC, Corner, RC } from "../../interfaces/geometry.ts";
 import { min } from "../utils/min.ts";
 
 // TODO some common logic in this mess

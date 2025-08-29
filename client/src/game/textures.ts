@@ -1,7 +1,7 @@
 import { Assets, Texture } from "pixi.js";
 
-import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
-import { getImageUrl, ResourceType } from "./images.ts";
+import { GameObjectDetails } from "../interfaces/gameObjectDetails.ts";
+import { getImageUrl, ResourceType } from "../image/images.ts";
 import {loadedImage, receivedGameObjectDetails, store} from "./state/store.ts";
 
 // TODO don't export?

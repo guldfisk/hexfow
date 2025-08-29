@@ -3,7 +3,7 @@
 import { Assets, Texture } from "pixi.js";
 
 import { GameObjectDetails } from "./interfaces/gameObjectDetails.ts";
-import { getImageUrl, ResourceType } from "../game/images.ts";
+import { getImageUrl, ResourceType } from "../image/images.ts";
 import {
   loadedImage,
   receivedGameObjectDetails,

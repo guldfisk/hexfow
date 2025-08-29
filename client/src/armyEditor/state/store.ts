@@ -4,16 +4,21 @@ import {
   PayloadAction,
   Tuple,
 } from "@reduxjs/toolkit";
-import { GameObjectDetails } from "../../game/interfaces/gameObjectDetails.ts";
+import {
+  GameObjectDetails,
+  UnitDetails,
+} from "../../interfaces/gameObjectDetails.ts";
 
 const mainSlice = createSlice({
   name: "armyEditor",
   initialState: {
     gameObjectDetails: null,
-    units: [],
+    detailed: null,
+    armyList: [],
   } as {
     gameObjectDetails: GameObjectDetails | null;
-    units: string[];
+    detailed: UnitDetails | null;
+    armyList: string[];
   },
   reducers: {
     receivedGameObjectDetails: (
@@ -22,10 +27,30 @@ const mainSlice = createSlice({
     ) => {
       state.gameObjectDetails = action.payload;
     },
+    setUnits: (state, action: PayloadAction<string[]>) => {
+      state.armyList = action.payload;
+    },
+    addUnit: (state, action: PayloadAction<string>) => {
+      if (!state.armyList.includes(action.payload)) {
+        state.armyList = state.armyList.concat(action.payload);
+      }
+    },
+    removeUnit: (state, action: PayloadAction<string>) => {
+      state.armyList = state.armyList.filter((v) => v != action.payload);
+    },
+    hoverUnit: (state, action: PayloadAction<UnitDetails>) => {
+      state.detailed = action.payload;
+    },
   },
 });
 
-export const { receivedGameObjectDetails } = mainSlice.actions;
+export const {
+  receivedGameObjectDetails,
+  hoverUnit,
+  setUnits,
+  addUnit,
+  removeUnit,
+} = mainSlice.actions;
 
 export const store = configureStore({
   reducer: mainSlice.reducer,

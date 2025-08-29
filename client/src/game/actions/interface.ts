@@ -10,8 +10,8 @@ import {
   Tree,
   TriHex,
   UnitOption,
-} from "../interfaces/gameState.ts";
-import { CC, Corner, RC } from "../interfaces/geometry.ts";
+} from "../../interfaces/gameState.ts";
+import { CC, Corner, RC } from "../../interfaces/geometry.ts";
 
 export type selectionIcon =
   | "ranged_attack"

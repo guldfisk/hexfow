@@ -1,4 +1,4 @@
-import { ReactNode, RefObject, useEffect, useRef, useState } from "react";
+import React, { RefObject, useEffect, useRef, useState } from "react";
 import { useAppSelector } from "../state/hooks.ts";
 import {
   GameState,
@@ -6,19 +6,10 @@ import {
   LogLine,
   LogLineComponent,
   OptionBase,
-  Status,
   Unit,
-  UnitStatus,
-} from "../interfaces/gameState.ts";
-import {
-  CostAtom,
-  EffortCostSet,
-  FacetDetails,
-  GameObjectDetails,
-  StatusDetails,
-  UnitDetails,
-} from "../interfaces/gameObjectDetails.ts";
-import { getImageUrl } from "../images.ts";
+} from "../../interfaces/gameState.ts";
+import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
+import { getImageUrl } from "../../image/images.ts";
 import { MenuData } from "../actions/interface.ts";
 import { menuActionSpacers, menuDescribers } from "../actions/menues.ts";
 import { ccToKey } from "../geometry.ts";
@@ -29,8 +20,9 @@ import {
   store,
 } from "../state/store.ts";
 import { getBaseActionSpace } from "../actions/actionSpace.ts";
-
-const sizeNames = { "0": "Small", "1": "Medium", "2": "Large" };
+import {traverseStatuses} from "../../components/statuses.ts";
+import {StatusDetailView, StatusesDetailView} from "../../components/statusDetails.tsx";
+import {UnitDetailsView} from "../../components/unitDetails.tsx";
 
 const LogLineComponentView = ({
   element,
@@ -202,256 +194,6 @@ const LogList = ({ logLines }: { logLines: LogLine[] }) => {
   );
 };
 
-const ModifiedValue = ({
-  current,
-  base,
-}: {
-  current: number;
-  base: number;
-}) => {
-  if (current == base) {
-    return <span className={"neutral-modified"}>{current}</span>;
-  }
-  if (current > base) {
-    return (
-      <>
-        <span className={"increased-modified"}>{current}</span>
-        <span>{`(${base})`}</span>
-      </>
-    );
-  }
-  return (
-    <>
-      <span className={"decreased-modified"}>{current}</span>
-      <span>{`(${base})`}</span>
-    </>
-  );
-};
-
-const effortCostAtomToShort = (cost: CostAtom): string => {
-  switch (cost.type) {
-    case "EnergyCost": {
-      return `${cost.amount}E`;
-    }
-    case "MovementCost": {
-      return `${cost.amount}M`;
-    }
-    case "ExclusiveCost": {
-      return `Exclusive`;
-    }
-  }
-};
-
-const effortCostToShort = (cost: EffortCostSet): string =>
-  cost.atoms.length ? cost.atoms.map(effortCostAtomToShort).join(" ") : "-";
-
-const getFacetStatLine = (
-  facet: FacetDetails,
-  unit: Unit | null,
-): ReactNode[] => {
-  const stats: ReactNode[][] = [];
-
-  if ("combineable" in facet && facet.combineable) {
-    stats.push(["combineable"]);
-  }
-  if ("max_activations" in facet && facet.max_activations != 1) {
-    stats.push([
-      facet.max_activations === null
-        ? "unlimited activations"
-        : `x${facet.max_activations} max activations`,
-    ]);
-  }
-  if ("cost" in facet && facet.cost.atoms.length) {
-    stats.push([`cost: ${effortCostToShort(facet.cost)}`]);
-  }
-  if ("damage" in facet) {
-    stats.push([
-      "damage: ",
-      <ModifiedValue
-        current={facet.damage + (unit ? unit.attackPower : 0)}
-        base={facet.damage}
-      />,
-    ]);
-  }
-  if ("range" in facet) {
-    stats.push([`range: ${facet.range}`]);
-  }
-
-  const atoms = [];
-
-  for (let i = 0; i < stats.length; i++) {
-    atoms.push(stats[i]);
-    if (i + 1 < stats.length) {
-      atoms.push(" - ");
-    }
-  }
-
-  return atoms;
-};
-
-const getStatusStatLine = (status: Status | UnitStatus): string => {
-  const stats: string[] = [];
-
-  if ("intention" in status) {
-    stats.push(status.intention);
-  }
-
-  if (status.stacks) {
-    stats.push(`stacks: ${status.stacks}`);
-  }
-
-  if (status.duration) {
-    stats.push(`duration: ${status.duration} rounds`);
-  }
-
-  return stats.join(" - ");
-};
-
-const FacetDetailView = ({
-  facet,
-  unit,
-}: {
-  facet: FacetDetails;
-  unit: Unit | null;
-}) => (
-  <div className={"facet-details"}>
-    <div className={"facet-header"}>
-      <img src={getImageUrl("icon", facet.category)} className={"facet-icon"} />
-      {facet.name}
-    </div>
-    <div className={"facet-stats"}>{getFacetStatLine(facet, unit)}</div>
-    {facet.description ? (
-      <div className={"facet-description"}>{facet.description}</div>
-    ) : null}
-  </div>
-);
-
-const StatusDetailView = ({
-  status,
-  statusDetails,
-}: {
-  status: Status | null;
-  statusDetails: StatusDetails;
-}) => (
-  <div className={"status-details"}>
-    <div className={"facet-header"}>
-      <img
-        src={getImageUrl("status", statusDetails.identifier)}
-        className={
-          statusDetails.category == "unit"
-            ? "status-icon-unit"
-            : "status-icon-hex"
-        }
-      />
-      {statusDetails.name}
-    </div>
-    <div className={"facet-stats"}>{statusDetails.stacking_info}</div>
-    {status ? (
-      <div className={"facet-stats"}>{getStatusStatLine(status)}</div>
-    ) : null}
-    {statusDetails.description ? (
-      <div className={"facet-description"}>{statusDetails.description}</div>
-    ) : null}
-  </div>
-);
-
-const traverseStatuses = (
-  statusIdentifier: string,
-  gameObjectDetails: GameObjectDetails,
-  seen: string[],
-) => {
-  for (const related of gameObjectDetails.statuses[statusIdentifier]
-    .related_statuses) {
-    if (!seen.includes(related)) {
-      seen.push(related);
-      traverseStatuses(related, gameObjectDetails, seen);
-    }
-  }
-};
-
-const UnitDetailsView = ({
-  unit,
-  details,
-  //   TODO handle this in a non trash way
-  gameObjectDetails,
-}: {
-  unit: Unit | null;
-  details: UnitDetails;
-  gameObjectDetails: GameObjectDetails;
-}) => {
-  const relatedStatuses: string[] = [];
-  for (const facetName of details.facets) {
-    for (const status of gameObjectDetails.facets[facetName].related_statuses) {
-      if (!relatedStatuses.includes(status)) {
-        relatedStatuses.push(status);
-        traverseStatuses(status, gameObjectDetails, relatedStatuses);
-      }
-    }
-  }
-  return (
-    <div>
-      <img src={getImageUrl("unit", details.identifier)} />
-
-      <div
-        style={{
-          display: "inline-block",
-          paddingLeft: "5px",
-          verticalAlign: "top",
-        }}
-      >
-        <div>{details.name}</div>
-        {unit ? (
-          <>
-            <div>
-              health: {unit.maxHealth - unit.damage}/
-              <ModifiedValue current={unit.maxHealth} base={details.health} />
-            </div>
-            <div>
-              speed: <ModifiedValue current={unit.speed} base={details.speed} />
-            </div>
-            <div>
-              sight: <ModifiedValue current={unit.sight} base={details.sight} />
-            </div>
-            {(unit || details).armor != 0 ? (
-              <div>
-                armor:{" "}
-                <ModifiedValue current={unit.armor} base={details.armor} />
-              </div>
-            ) : null}
-            {unit.energy != 0 || unit.maxEnergy != 0 ? (
-              <div>
-                energy: {unit.energy}/
-                <ModifiedValue current={unit.maxEnergy} base={details.energy} />
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <>
-            <div>max health: {details.health}</div>
-            <div>speed: {details.speed}</div>
-            <div>sight: {details.sight}</div>
-            {details.armor != 0 ? <div>armor: {details.armor}</div> : null}
-            {details.energy > 0 ? <div>energy: {details.energy}</div> : null}
-          </>
-        )}
-        {/*TODO*/}
-        <div>size: {sizeNames[(unit || details).size.toString()]}</div>
-        <div>price: {details.price}</div>
-      </div>
-
-      {details.facets.map((facet) => (
-        <FacetDetailView facet={gameObjectDetails.facets[facet]} unit={unit} />
-      ))}
-      {relatedStatuses.map((statusIdentifier) => (
-        <StatusDetailView
-          status={null}
-          statusDetails={gameObjectDetails.statuses[statusIdentifier]}
-        />
-      ))}
-    </div>
-  );
-};
-
 const HexDetailView = ({
   hex,
   //   TODO handle this in a non trash way
@@ -512,37 +254,6 @@ const HexDetailView = ({
         />
       ))}
     </div>
-  );
-};
-
-const StatusesDetailView = ({
-  statuses,
-  statusIdentifiers,
-  //   TODO handle this in a non trash way
-  gameObjectDetails,
-}: {
-  statuses: Status[] | UnitStatus[] | null;
-  statusIdentifiers: string[] | null;
-  gameObjectDetails: GameObjectDetails;
-}) => {
-  return (
-    <>
-      {statuses
-        ? statuses.map((status) => (
-            <StatusDetailView
-              status={status}
-              statusDetails={gameObjectDetails.statuses[status.type]}
-            />
-          ))
-        : statusIdentifiers
-          ? statusIdentifiers.map((identifier) => (
-              <StatusDetailView
-                status={null}
-                statusDetails={gameObjectDetails.statuses[identifier]}
-              />
-            ))
-          : null}
-    </>
   );
 };
 

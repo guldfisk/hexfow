@@ -1,4 +1,4 @@
-import { CC } from "../game/interfaces/geometry.ts";
+import { CC } from "../interfaces/geometry.ts";
 
 export const mapCoordinates: CC[] = [
   { r: 0, h: -1 },

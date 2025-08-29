@@ -1,9 +1,11 @@
-import "./style.css";
+import "../../common.css";
+import "./style.css"
+
 import { receivedGameObjectDetails, store } from "./state/store.ts";
 import { createRoot } from "react-dom/client";
 import { StrictMode } from "react";
 import { Provider } from "react-redux";
-import { GameObjectDetails } from "../game/interfaces/gameObjectDetails.ts";
+import { GameObjectDetails } from "../interfaces/gameObjectDetails.ts";
 import { ArmyEditor } from "./components.tsx";
 
 fetch(

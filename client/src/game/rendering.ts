@@ -8,7 +8,7 @@ import {
   TextStyle,
   Texture,
 } from "pixi.js";
-import { GameState, Intention, Status } from "./interfaces/gameState.ts";
+import { GameState, Intention, Status } from "../interfaces/gameState.ts";
 import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
 import {
   addRCs,
@@ -39,7 +39,7 @@ import {
 import { getBaseActionSpace } from "./actions/actionSpace.ts";
 import { selectionIcon } from "./actions/interface.ts";
 import { menuActionSpacers } from "./actions/menues.ts";
-import { HoveredDetails } from "./interfaces/details.ts";
+import { HoveredDetails } from "../interfaces/details.ts";
 import type { ColorSource } from "pixi.js/lib/color/Color";
 import moize from "moize";
 import { ViewContainer } from "pixi.js/lib/scene/view/ViewContainer";

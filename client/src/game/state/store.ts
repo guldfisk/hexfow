@@ -4,10 +4,10 @@ import {
   PayloadAction,
   Tuple,
 } from "@reduxjs/toolkit";
-import { GameState } from "../interfaces/gameState.ts";
-import { GameObjectDetails } from "../interfaces/gameObjectDetails.ts";
+import { GameState } from "../../interfaces/gameState.ts";
+import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
 import { MenuData, selectionIcon } from "../actions/interface.ts";
-import { HoveredDetails } from "../interfaces/details.ts";
+import { HoveredDetails } from "../../interfaces/details.ts";
 import { deepEquals } from "../utils/equals.ts";
 
 const mainSlice = createSlice({

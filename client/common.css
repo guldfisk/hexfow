@@ -1,0 +1,181 @@
+body {
+  margin: 0;
+  display: flex;
+}
+
+button {
+  border: 0;
+  background: #666;
+  box-shadow: none;
+  border-radius: 3px;
+  height: 30px;
+  width: 100%;
+}
+
+.sidebar {
+  height: 100%;
+  width: 400px;
+  position: fixed;
+  background-color: #111;
+  overflow-x: hidden;
+  color: white;
+}
+.sidebar-left {
+  left: 0;
+  padding: 5px;
+}
+.sidebar-right {
+  right: 0;
+  padding: 5px;
+}
+
+.main-content {
+  height: 100%;
+  width: calc(100% - 815px);
+  position: fixed;
+  left: 400px;
+  background-color: #222;
+  padding: 5px;
+  color: white;
+    display: flex;
+  flex-direction: row;
+}
+
+.details-view {
+  /*margin: 3px;*/
+}
+
+.facet-details {
+  border-radius: 8px;
+  background: #333333;
+  padding: 8px;
+  margin-top: 10px;
+  font-size: 0.7em;
+  /*width: 200px;*/
+  /*height: 150px;*/
+}
+.status-details {
+  border-radius: 8px;
+  background: #231828;
+  padding: 8px;
+  margin-top: 10px;
+  font-size: 0.7em;
+}
+
+.facet-header {
+  font-size: 25px;
+}
+
+.facet-stats {
+  font-size: 18px;
+}
+
+.facet-description {
+  font-size: 12px;
+}
+
+.facet-icon {
+  display: inline-block;
+  vertical-align: middle;
+  padding-right: 6px;
+}
+
+.status-icon-unit {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 6px;
+  clip-path: circle(50%);
+}
+
+.status-icon-hex {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 6px;
+  clip-path: polygon(93% 25%, 50% 0, 6% 25%, 6% 75%, 50% 100%, 93% 75%);
+}
+
+.info-window {
+  width: 100%;
+  /*border: 1px solid #ccc;*/
+  overflow: auto;
+  white-space: pre-wrap;
+}
+.event-log {
+  height: 70%;
+}
+
+.log-line {
+  display: flex;
+  flex-wrap: wrap;
+  width: auto;
+  margin-bottom: 8px;
+  background-color: #242424;
+}
+
+.log-component {
+  display: inline;
+  margin-right: 4px;
+  margin-bottom: 2px;
+}
+
+.highlighted-log-component {
+  border: 0;
+  background: #666;
+  border-radius: 3px;
+}
+.allied-highlighted-log-component {
+  background: #2f71e7;
+}
+.enemy-highlighted-log-component {
+  background: #9b1711;
+}
+
+.decision-details {
+  height: 25%;
+  width: 90%;
+  border-width: 2px;
+  border-style: solid;
+  border-color: grey;
+  padding: 10px;
+}
+
+.terrain-image {
+  clip-path: polygon(93% 29%, 50% 9%, 6% 29%, 6% 70%, 50% 90%, 93% 70%);
+}
+
+.increased-modified {
+  color: #2f71e7;
+}
+.decreased-modified {
+  color: #9b1711;
+}
+
+.alert-button {
+  background-color: #9b1711;
+  color: #111111;
+}
+
+.unit-list {
+  width: 100%;
+  overflow-y: scroll;
+  white-space: pre-wrap;
+  /*height: 60%;*/
+}
+
+.unit-list-item {
+  border-radius: 8px;
+  background: #333333;
+  padding: 8px;
+  margin-top: 10px;
+  font-size: 0.7em;
+  display: flex;
+
+  /*width: 200px;*/
+  /*height: 150px;*/
+}
+
+.unit-thumbnail {
+  width: 60px;
+  height: 74px;
+  margin-left: auto;
+}

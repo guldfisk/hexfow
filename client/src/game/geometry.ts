@@ -1,4 +1,4 @@
-import { CC, Corner, RC } from "./interfaces/geometry.ts";
+import { CC, Corner, RC } from "../interfaces/geometry.ts";
 import { mod, range } from "./utils/range.ts";
 
 export const hexSize = 160;
