@@ -88,6 +88,8 @@ async function main() {
   app.stage.eventMode = "static";
   app.stage.hitArea = app.screen;
 
+  // TODO disable normal browser zoom?
+
   // TODO YIKES
   // document.oncontextmenu = document.body.oncontextmenu = function () {
   //   return false;
@@ -97,12 +99,12 @@ async function main() {
   const keyHandler = (event: KeyboardEvent) => {
     const state = store.getState();
     if (
-      event.code == "KeyS" &&
       state.gameState &&
       state.gameState.decision &&
       state.gameState.decision["type"] == "SelectOptionDecisionPoint" &&
-      (state.gameState.decision.explanation != "activate unit?" ||
-        event.key == "S")
+      (state.gameState.decision.explanation == "activate unit?"
+        ? event.code == "KeyW"
+        : event.code == "KeyS")
     ) {
       {
         for (const [idx, option] of state.gameState.decision["payload"][
@@ -125,12 +127,7 @@ async function main() {
 
     if (state.shouldRerender && state.gameState && state.gameObjectDetails) {
       app.stage.removeChild(map);
-      const result = renderMap(
-        app,
-        state,
-        state.gameState,
-        gameConnection,
-      );
+      const result = renderMap(app, state, state.gameState, gameConnection);
       map = result.map;
       app.stage.addChild(map);
       for (const g of previousGraphics) {

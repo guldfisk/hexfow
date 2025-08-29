@@ -531,6 +531,7 @@ def test_ranged_attack(
         ),
     )
     player2_connection.queue_responses(SkipOptionSelector())
+    player2_connection.queue_responses(SkipOptionSelector())
     ES.resolve(Round())
     assert archer.damage == 0
     assert evil_archer.damage == 1
@@ -562,6 +563,7 @@ def test_ranged_attack(
             )
         ),
     )
+    player2_connection.queue_responses(SkipOptionSelector())
     player2_connection.queue_responses(SkipOptionSelector())
     ES.resolve(Round())
     assert archer.damage == 0

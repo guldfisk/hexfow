@@ -68,6 +68,7 @@ class TestGameType(GameType):
                 # OTTER_SCOUT,
                 VELOCIRAPTOR,
                 NOTORIOUS_OUTLAW,
+                FRONTLINE_TACTICIAN,
                 # CRAWLING_URCHIN,
                 # GATE_FIEND,
                 # BUGLING,

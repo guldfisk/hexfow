@@ -14,8 +14,6 @@ army editor
     load
 
 game
-    asker skip
-
     ability target descriptions, prob something like for status stacking
     delayed unit activation ("undo activation")
     linked statuses display

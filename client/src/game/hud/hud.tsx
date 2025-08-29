@@ -615,7 +615,7 @@ const DecisionDetailView = ({
           }}
         >
           {gameState.decision.explanation == "activate unit?"
-            ? "Skip ROUND"
+            ? "Wait"
             : "Skip rest of unit turn"}
         </button>
       );

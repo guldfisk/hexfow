@@ -729,8 +729,7 @@ class Round(Event[None]):
         gs = GS
         gs.round_counter += 1
         skipped_players: set[Player] = set()
-        # TODO asker's shit?
-        round_skipped_players: set[Player] = set()
+        waiting_players: set[Player] = set()
         all_players = set(gs.turn_order)
         last_action_timestamps: dict[Player, int] = {
             player: 0 for player in gs.turn_order
@@ -775,8 +774,6 @@ class Round(Event[None]):
 
                 if activateable_units is None:
                     gs.turn_order.advance()
-                    if player in round_skipped_players:
-                        continue
                     activateable_units = [
                         unit
                         for unit in gs.map.units_controlled_by(player)
@@ -819,6 +816,8 @@ class Round(Event[None]):
                     ),
                 )
                 if isinstance(decision.option, ActivateUnitOption):
+                    waiting_players = set()
+
                     if gs.activation_queued_units:
                         gs.activation_queued_units.discard(decision.target)
 
@@ -830,12 +829,9 @@ class Round(Event[None]):
                         do_state_based_check()
 
                 elif isinstance(decision.option, SkipOption):
-                    skipped_players.add(player)
-                    round_skipped_players.add(player)
-
-                # TODO
-                else:
-                    raise ValueError("AHLO")
+                    with gs.log(LogLine([player, "waits"])):
+                        skipped_players.add(player)
+                        waiting_players.add(player)
 
             # TODO should we trigger turn skip for remaining units or something?
 
