@@ -812,6 +812,11 @@ export const renderMap = (
           detail = { type: "unit", unit: hexData.unit };
           hoverType = "unit";
         }
+      } else if (actionSpace[ccToKey(hexData.cc)]?.blueprintGhost) {
+        detail = {
+          type: "blueprint",
+          blueprint: actionSpace[ccToKey(hexData.cc)].blueprintGhost,
+        };
       }
 
       const hoverTrigger = actionSpace[ccToKey(hexData.cc)]?.hoverTrigger;
