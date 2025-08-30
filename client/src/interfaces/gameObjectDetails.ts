@@ -73,7 +73,6 @@ export interface UnitDetails {
   armor: number;
   energy: number;
   size: number;
-  aquatic: boolean;
   facets: string[];
   price: number;
 }

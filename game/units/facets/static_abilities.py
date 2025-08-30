@@ -9,6 +9,7 @@ from game.core import (
     UnitStatusSignature,
 )
 from game.effects.modifiers import (
+    AquaticModifier,
     CamouflageModifier,
     CrushableModifier,
     FarsightedModifier,
@@ -284,13 +285,26 @@ class ToxicPresence(StaticAbilityFacet):
         self.register_effects(ToxicPresenceTrigger(self.parent, self, 1))
 
 
+class Aquatic(StaticAbilityFacet):
+    """
+    Water is passable to this unit.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(AquaticModifier(self.parent))
+
+
 class Diver(StaticAbilityFacet):
     """
+    Water is passable to this unit.
     +1 terrain protection on water.
     """
 
     def create_effects(self) -> None:
-        self.register_effects(TerrainProtectionModifier(self.parent, Water, 1))
+        self.register_effects(
+            AquaticModifier(self.parent),
+            TerrainProtectionModifier(self.parent, Water, 1),
+        )
 
 
 class Camouflage(StaticAbilityFacet):
@@ -302,13 +316,16 @@ class Camouflage(StaticAbilityFacet):
         self.register_effects(CamouflageModifier(self.parent))
 
 
-class UnwieldySwimmer(StaticAbilityFacet):
+class Swimmer(StaticAbilityFacet):
     """
+    Water is passable to this unit.
     Disarmed and silenced while on water.
     """
 
     def create_effects(self) -> None:
-        self.register_effects(UnwieldySwimmerModifier(self.parent))
+        self.register_effects(
+            AquaticModifier(self.parent), UnwieldySwimmerModifier(self.parent)
+        )
 
 
 class ScurryInTheShadows(StaticAbilityFacet):

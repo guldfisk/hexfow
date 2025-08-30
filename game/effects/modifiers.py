@@ -39,6 +39,20 @@ class LegalOptions(IntEnum):
 
 
 @dataclasses.dataclass(eq=False)
+class AquaticModifier(StateModifierEffect[Unit, None, bool]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.is_aquatic
+
+    unit: Unit
+
+    def should_modify(self, obj: Unit, request: None, value: bool) -> bool:
+        return obj == self.unit
+
+    def modify(self, obj: Unit, request: None, value: bool) -> bool:
+        return True
+
+
+@dataclasses.dataclass(eq=False)
 class RootedModifier(StateModifierEffect[Unit, None, list[Hex]]):
     priority: ClassVar[int] = 1
     target: ClassVar[object] = Unit.get_potential_move_destinations

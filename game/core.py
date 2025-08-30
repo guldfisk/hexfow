@@ -722,8 +722,6 @@ class UnitBlueprint:
         energy: int = 0,
         starting_energy: int | FULL_ENERGY = FULL_ENERGY,
         size: Size = Size.MEDIUM,
-        # TODO should this be a stat?
-        aquatic: bool = False,
         facets: list[type[Facet]] | None = None,
         price: int | None,
         max_count: int = 1,
@@ -737,7 +735,6 @@ class UnitBlueprint:
         self.energy = energy
         self.starting_energy = starting_energy
         self.size = size
-        self.aquatic = aquatic
         self.facets = facets or []
         self.identifier = identifier or re.sub(
             "_+", "_", re.sub("[^a-z]", "_", self.name.lower())
@@ -770,7 +767,6 @@ class UnitBlueprint:
             "armor": self.armor,
             "energy": self.energy,
             "size": self.size.value,
-            "aquatic": self.aquatic,
             "facets": [facet.identifier for facet in self.facets],
             "price": self.price,
         }
@@ -785,7 +781,6 @@ class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Seriali
     energy_regen: ModifiableAttribute[None, int]
     size: ModifiableAttribute[None, Size]
     attack_power: ModifiableAttribute[None, int]
-    aquatic: ModifiableAttribute[None, bool]
     is_broken: ModifiableAttribute[None, bool]
 
     statuses: list[UnitStatus]
@@ -812,7 +807,6 @@ class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Seriali
         )
         self.size.set(blueprint.size)
         self.attack_power.set(0)
-        self.aquatic.set(blueprint.aquatic)
         self.is_broken.set(False)
         self.exhausted = exhausted
 
@@ -838,6 +832,10 @@ class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Seriali
             if of_type is None or isinstance(attack, of_type):
                 return attack
         return None
+
+    @modifiable
+    def is_aquatic(self, _: None) -> bool:
+        return False
 
     @modifiable
     def get_resistance_against(self, signature: DamageSignature) -> Resistance:
@@ -1312,7 +1310,7 @@ class Hex(Modifiable, HasStatuses["HexStatus", "HexStatusSignature"], Serializab
     @modifiable
     def is_passable_to(self, unit: Unit) -> bool:
         if self.terrain.is_water:
-            return unit.aquatic.g()
+            return unit.is_aquatic(None)
         return True
 
     @modifiable

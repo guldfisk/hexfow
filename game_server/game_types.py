@@ -43,10 +43,10 @@ class TestGameType(GameType):
                         [
                             Plains,
                             Plains,
-                            Plains,
+                            # Plains,
                             # Forest,
                             # Hills,
-                            # Water,
+                            Water,
                         ]
                     ),
                     cc.distance_to(CC(0, 0)) <= 1,
@@ -58,10 +58,11 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                BLOOD_FEUD_WARLOCK,
-                WITCH_ENGINE,
+                OTTER_SCOUT,
+                ELITE_COMMANDO,
             ),
             (
+                SNAPPING_TURTLE,
                 LIGHT_ARCHER,
                 LIGHT_ARCHER,
             ),

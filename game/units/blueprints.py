@@ -116,6 +116,7 @@ from game.units.facets.attacks import (
     Wrench,
 )
 from game.units.facets.static_abilities import (
+    Aquatic,
     Automated,
     Camouflage,
     CaughtInTheMatch,
@@ -146,11 +147,11 @@ from game.units.facets.static_abilities import (
     SludgeTrail,
     Stealth,
     StrainedPusher,
+    Swimmer,
     TelepathicSpy,
     TerrainSavvy,
     ToxicPresence,
     ToxicSkin,
-    UnwieldySwimmer,
 )
 from game.values import Size
 
@@ -198,10 +199,8 @@ SNAPPING_TURTLE = UnitBlueprint(
     armor=1,
     sight=1,
     size=Size.SMALL,
-    aquatic=True,
-    facets=[SnappingBeak],
+    facets=[SnappingBeak, Aquatic],
     price=2,
-    max_count=0,
 )
 
 SNAP_JAW = UnitBlueprint(
@@ -259,10 +258,8 @@ OTTER_SCOUT = UnitBlueprint(
     speed=3,
     sight=2,
     size=Size.SMALL,
-    aquatic=True,
     facets=[OtterBite, Diver],
     price=4,
-    max_count=0,
 )
 
 RAT_SCOUT = UnitBlueprint(
@@ -468,14 +465,13 @@ ELITE_COMMANDO = UnitBlueprint(
     speed=3,
     sight=2,
     energy=5,
-    aquatic=True,
     facets=[
         RifleSalvo,
         HandGrenade,
         FlashBang,
         SmokeGrenade,
         TerrainSavvy,
-        UnwieldySwimmer,
+        Swimmer,
         Camouflage,
     ],
     price=9,
