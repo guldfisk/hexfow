@@ -3,17 +3,12 @@ infrastructure
     lobby system
 
 map editor
-    edit deployment zones
     unit details
     add/remove hexes
-
-army editor
-    browse units
-    add/remove
-    save
-    load
+    change meta info, aka point goals, and army max_unit counts and values.
 
 game
+    fix menu deactivation when deploying units
     ability target descriptions, prob something like for status stacking
     delayed unit activation ("undo activation")
     linked statuses display
@@ -30,6 +25,7 @@ game
 
     well-defined effects order
     well-defined order of iterating units on map
+    deployment zone detail view during game
 
 code
     refactor game.core somehow

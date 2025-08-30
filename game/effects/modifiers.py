@@ -33,6 +33,11 @@ class SpeedLayer(IntEnum):
     PROPORTIONAL = auto()
 
 
+class LegalOptions(IntEnum):
+    RESTRICTIVE = auto()
+    MUST_ATTACK = auto()
+
+
 @dataclasses.dataclass(eq=False)
 class RootedModifier(StateModifierEffect[Unit, None, list[Hex]]):
     priority: ClassVar[int] = 1
@@ -139,7 +144,7 @@ class ForestStealthModifier(StateModifierEffect[Unit, Player, bool]):
 class FightFlightFreezeModifier(
     StateModifierEffect[Unit, ActiveUnitContext, list[Option]]
 ):
-    priority: ClassVar[int] = 1
+    priority: ClassVar[int] = LegalOptions.RESTRICTIVE
     target: ClassVar[object] = Unit.get_legal_options
 
     unit: Unit
@@ -185,7 +190,7 @@ class FightFlightFreezeModifier(
 
 @dataclasses.dataclass(eq=False)
 class MustAttackModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]]):
-    priority: ClassVar[int] = 1
+    priority: ClassVar[int] = LegalOptions.MUST_ATTACK
     target: ClassVar[object] = Unit.get_legal_options
 
     unit: Unit
@@ -520,7 +525,7 @@ class UnitSizeFlatModifier(StateModifierEffect[Unit, None, Size]):
 
 @dataclasses.dataclass(eq=False)
 class TerrorModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]]):
-    priority: ClassVar[int] = 1
+    priority: ClassVar[int] = LegalOptions.RESTRICTIVE
     target: ClassVar[object] = Unit.get_legal_options
 
     unit: Unit
@@ -565,7 +570,7 @@ class TerrorModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]])
 
 @dataclasses.dataclass(eq=False)
 class SilencedModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]]):
-    priority: ClassVar[int] = 1
+    priority: ClassVar[int] = LegalOptions.RESTRICTIVE
     target: ClassVar[object] = Unit.get_legal_options
 
     unit: Unit
@@ -590,7 +595,7 @@ class SilencedModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]
 
 @dataclasses.dataclass(eq=False)
 class DisarmedModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]]):
-    priority: ClassVar[int] = 1
+    priority: ClassVar[int] = LegalOptions.RESTRICTIVE
     target: ClassVar[object] = Unit.get_legal_options
 
     unit: Unit
@@ -617,7 +622,7 @@ class DisarmedModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]
 class UnwieldySwimmerModifier(
     StateModifierEffect[Unit, ActiveUnitContext, list[Option]]
 ):
-    priority: ClassVar[int] = 1
+    priority: ClassVar[int] = LegalOptions.RESTRICTIVE
     target: ClassVar[object] = Unit.get_legal_options
 
     unit: Unit

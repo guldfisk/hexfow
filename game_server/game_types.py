@@ -58,27 +58,12 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                CYCLOPS,
-                VILE_TRANSMUTER,
-                # NOTORIOUS_OUTLAW,
-                # INFERNO_TANK,
-                # CAPRICIOUS_TRICKSTER,
-                # LITTLE_ENGINE,
+                BLOOD_FEUD_WARLOCK,
+                WITCH_ENGINE,
             ),
             (
-                # OTTER_SCOUT,
-                VELOCIRAPTOR,
-                LEGENDARY_WRESTLER,
-                # NOTORIOUS_OUTLAW,
-                # FRONTLINE_TACTICIAN,
-                # CRAWLING_URCHIN,
-                # GATE_FIEND,
-                # BUGLING,
-                # CHICKEN,
-                # WITCH_ENGINE,
-                # SHRINE_KEEPER,
-                # BULLDOZER,
-                # CYCLOPS,
+                LIGHT_ARCHER,
+                LIGHT_ARCHER,
             ),
         )
 
