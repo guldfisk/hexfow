@@ -574,17 +574,6 @@ LEGENDARY_WRESTLER = UnitBlueprint(
     price=10,
 )
 
-CAPRICIOUS_TRICKSTER = UnitBlueprint(
-    "Capricious Trickster",
-    health=6,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[Shiv, Vault, Shove, Poof, JukeAndJive],
-    price=11,
-    max_count=0,
-)
-
 CHAINSAW_SADIST = UnitBlueprint(
     "Chainsaw Sadist",
     health=7,
@@ -602,17 +591,6 @@ COMBAT_ENGINEER = UnitBlueprint(
     energy=6,
     facets=[Wrench, ConstructTurret, FixErUp, TurboTune],
     price=11,
-)
-
-DIAMOND_GOLEM = UnitBlueprint(
-    "Diamond Golem",
-    health=1,
-    speed=3,
-    armor=3,
-    sight=2,
-    facets=[DiamondFist, DiamondSkin],
-    price=11,
-    max_count=0,
 )
 
 DIRE_WOLF = UnitBlueprint(
@@ -681,16 +659,6 @@ STAUNCH_IRON_HEART = UnitBlueprint(
     price=11,
 )
 
-WAR_HOG = UnitBlueprint(
-    "War Hog",
-    health=8,
-    speed=3,
-    sight=2,
-    facets=[RazorTusk, Furious],
-    price=11,
-    max_count=0,
-)
-
 INFERNO_TANK = UnitBlueprint(
     "Inferno Tank",
     health=7,
@@ -755,17 +723,6 @@ CYCLOPS = UnitBlueprint(
     sight=1,
     facets=[GiantClub, Sweep, Stare],
     price=15,
-)
-
-RHINO_BEAST = UnitBlueprint(
-    "Rhino",
-    health=10,
-    speed=4,
-    sight=2,
-    size=Size.LARGE,
-    facets=[Gore],
-    price=15,
-    max_count=0,
 )
 
 ZONE_MECH = UnitBlueprint(
@@ -872,4 +829,48 @@ TELEPATH = UnitBlueprint(
     energy=5,
     facets=[TelepathicSpy, Rouse],
     price=None,
+)
+
+
+CAPRICIOUS_TRICKSTER = UnitBlueprint(
+    "Capricious Trickster",
+    health=6,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[Shiv, Vault, Shove, Poof, JukeAndJive],
+    price=11,
+    max_count=0,
+)
+
+DIAMOND_GOLEM = UnitBlueprint(
+    "Diamond Golem",
+    health=1,
+    speed=3,
+    armor=3,
+    sight=2,
+    facets=[DiamondFist, DiamondSkin],
+    price=11,
+    max_count=0,
+)
+
+WAR_HOG = UnitBlueprint(
+    "War Hog",
+    health=8,
+    speed=3,
+    sight=2,
+    facets=[RazorTusk, Furious],
+    price=11,
+    max_count=0,
+)
+
+RHINO_BEAST = UnitBlueprint(
+    "Rhino",
+    health=10,
+    speed=4,
+    sight=2,
+    size=Size.LARGE,
+    facets=[Gore],
+    price=15,
+    max_count=0,
 )
