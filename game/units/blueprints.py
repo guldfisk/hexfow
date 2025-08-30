@@ -118,7 +118,6 @@ from game.units.facets.attacks import (
 from game.units.facets.static_abilities import (
     Aquatic,
     Automated,
-    Camouflage,
     CaughtInTheMatch,
     DiamondSkin,
     Diver,
@@ -435,7 +434,7 @@ BLOOD_FEUD_WARLOCK = UnitBlueprint(
     health=5,
     speed=3,
     sight=2,
-    energy=5,
+    energy=6,
     facets=[SowDiscord, Scorn, SpurIntoRage],
     price=8,
 )
@@ -472,7 +471,6 @@ ELITE_COMMANDO = UnitBlueprint(
         SmokeGrenade,
         TerrainSavvy,
         Swimmer,
-        Camouflage,
     ],
     price=9,
 )
@@ -703,6 +701,7 @@ MAD_SCIENTIST = UnitBlueprint(
     energy=8,
     facets=[ShrinkRay, Translocate, AssembleTheDoombot, Inspiration],
     price=13,
+    max_count=0,
 )
 
 WITCH_ENGINE = UnitBlueprint(

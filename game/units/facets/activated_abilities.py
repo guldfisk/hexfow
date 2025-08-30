@@ -839,7 +839,8 @@ class Translocate(ActivatedAbilityFacet):
 class WringEssence(ActivatedAbilityFacet):
     """
     Target unit within 2 range LoS, and a hex within 1 range of that unit.
-    Spawns an exhausted controller on the selected hex with the same controller as the selected unit.
+    Spawns an exhausted Blood Homunculus (health 3, speed 2, sight 2, medium, 2 damage 1 movement cost melee attack)
+    on the selected hex with the same controller as the selected unit.
     If a unit is spawned this way, this ability deals 4 pure damage to the selected unit.
     """
 
@@ -1069,7 +1070,7 @@ class HandGrenade(TriHexTargetActivatedAbility):
     Deals 3 aoe damage.
     """
 
-    cost = EnergyCost(3) | MovementCost(1)
+    cost = EnergyCost(4) | MovementCost(1)
     range = 2
 
     def perform(self, target: list[Hex]) -> None:

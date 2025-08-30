@@ -287,7 +287,7 @@ class ToxicPresence(StaticAbilityFacet):
 
 class Aquatic(StaticAbilityFacet):
     """
-    Water is passable to this unit.
+    This unit can move on water.
     """
 
     def create_effects(self) -> None:
@@ -296,7 +296,7 @@ class Aquatic(StaticAbilityFacet):
 
 class Diver(StaticAbilityFacet):
     """
-    Water is passable to this unit.
+    This unit can move on water.
     +1 terrain protection on water.
     """
 
@@ -318,7 +318,7 @@ class Camouflage(StaticAbilityFacet):
 
 class Swimmer(StaticAbilityFacet):
     """
-    Water is passable to this unit.
+    This unit can move on water.
     Disarmed and silenced while on water.
     """
 

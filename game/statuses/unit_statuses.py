@@ -371,11 +371,11 @@ class DishonorableCoward(RefreshableMixin, UnitStatus):
 
 
 class SenselessRage(RefreshableMixin, UnitStatus):
-    """+2 attack power. If this unit can attack, it must."""
+    """+1 attack power. If this unit can attack, it must."""
 
     def create_effects(self) -> None:
         self.register_effects(
-            MustAttackModifier(self.parent), UnitAttackPowerFlatModifier(self.parent, 2)
+            MustAttackModifier(self.parent), UnitAttackPowerFlatModifier(self.parent, 1)
         )
 
 
