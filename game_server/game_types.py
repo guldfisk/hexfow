@@ -58,13 +58,14 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                OTTER_SCOUT,
-                ELITE_COMMANDO,
+                # OTTER_SCOUT,
+                # ELITE_COMMANDO,
+                BLOOD_FEUD_WARLOCK,
             ),
             (
-                SNAPPING_TURTLE,
+                # SNAPPING_TURTLE,
                 LIGHT_ARCHER,
-                LIGHT_ARCHER,
+                # LIGHT_ARCHER,
             ),
         )
 

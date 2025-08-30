@@ -9,6 +9,7 @@ map editor
 
 game
     fix menu deactivation when deploying units
+    menu unit ghosts show details
     ability target descriptions, prob something like for status stacking
     delayed unit activation ("undo activation")
     linked statuses display

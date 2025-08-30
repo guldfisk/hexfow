@@ -390,7 +390,11 @@ class MoveUnit(Event[Hex | None]):
                 from_ = None
 
         if from_:
-            if self.to_.captured_by and self.to_.captured_by != self.unit.controller:
+            if (
+                self.to_.captured_by
+                and self.to_.captured_by != self.unit.controller
+                and self.unit.can_capture_objectives_on(self.to_)
+            ):
                 self.to_.captured_by = None
             # TODO hmm
             GS.update_vision()
