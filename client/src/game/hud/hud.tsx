@@ -295,6 +295,7 @@ const DecisionDetailView = ({
   const actionSpace = menu
     ? menuActionSpacers[menu.type](
         gameState,
+        gameObjectDetails,
         (body) => connection.send(JSON.stringify(body)),
         menu,
       )
@@ -347,7 +348,7 @@ const DecisionDetailView = ({
     >
       <div>
         {menu
-          ? menuDescribers[menu.type](gameState, menu)
+          ? menuDescribers[menu.type](gameState, gameObjectDetails, menu)
           : gameState.decision.explanation}
       </div>
       {button}

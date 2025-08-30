@@ -298,6 +298,7 @@ export const renderMap = (
     state.menuData
       ? menuActionSpacers[state.menuData.type](
           gameState,
+          state.gameObjectDetails,
           (body) => gameConnection.send(JSON.stringify(body)),
           state.menuData,
         )
@@ -396,6 +397,7 @@ export const renderMap = (
     // TODO common trigger zone
     if (
       state.menuData &&
+      !state.menuData.uncloseable &&
       !(actionSpace[ccToKey(hexData.cc)]?.actions || []).length
     ) {
       let triggerZone = newGraphic(dividerFrames[0][0]);

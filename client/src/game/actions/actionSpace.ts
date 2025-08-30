@@ -17,6 +17,7 @@ import { ccFromKey, ccToKey } from "../geometry.ts";
 import { Action, ActionSpace } from "./interface.ts";
 import { activateMenu, store } from "../state/store.ts";
 import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
+import { loadArmy } from "./load.ts";
 
 export const getUnitsOfHexes = (gameState: GameState): { [key: string]: Hex } =>
   Object.fromEntries(
@@ -343,25 +344,7 @@ export const getBaseActionSpace = (
       buttonAction: null,
       loadFileAction: {
         description: "load army list",
-        do: (armyContent) => {
-          store.dispatch(
-            activateMenu({
-              type: "ArrangeArmy",
-              decisionPoint: decision,
-              unitPositions: Object.fromEntries(
-                armyContent
-                  .split("\n")
-                  .filter((id) => id in gameObjectDetails.units)
-                  .map((name, idx) => [
-                    name,
-                    decision.payload.deploymentZone[idx],
-                  ]),
-              ),
-              swappingPosition: null,
-              submitted: false,
-            }),
-          );
-        },
+        do: (armyContent) => loadArmy(armyContent, decision, gameObjectDetails),
       },
     };
   }

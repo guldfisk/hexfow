@@ -56,6 +56,7 @@ export interface ActionSpace {
 
 export interface BaseMenuData {
   type: string;
+  uncloseable?: boolean;
 }
 
 export interface NOfUnitsMenu extends BaseMenuData {
@@ -131,7 +132,7 @@ export interface ArrangeArmyMenu extends BaseMenuData {
   decisionPoint: DeployArmyDecisionPoint;
   unitPositions: { [name: string]: CC };
   swappingPosition: CC | null;
-  submitted: boolean
+  submitted: boolean;
 }
 
 export type MenuData =
