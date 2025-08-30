@@ -82,11 +82,20 @@ class SeatInterface(Connection):
         self.in_queue = SimpleQueue()
         self._callbacks: list[Callable[[str], ...]] = []
 
+    def _send_frame_to_callback(
+        self, f: Callable[[str], ...], values: Mapping[str, Any]
+    ) -> None:
+        try:
+            f(json.dumps(values))
+        except Exception:
+            print(traceback.format_exc())
+            self._callbacks.remove(f)
+
     def register_callback(self, f: Callable[[str], ...]) -> None:
         with self._lock:
             self._callbacks.append(f)
             if self._latest_frame is not None:
-                f(json.dumps(self._latest_frame))
+                self._send_frame_to_callback(f, self._latest_frame)
 
     def is_connected(self) -> bool:
         with self._lock:
@@ -94,13 +103,16 @@ class SeatInterface(Connection):
 
     def deregister_callback(self, f: Callable[[str], ...]) -> None:
         with self._lock:
-            self._callbacks.remove(f)
+            try:
+                self._callbacks.remove(f)
+            except (IndexError, ValueError):
+                pass
 
     def _send_frame(self, values: Mapping[str, Any]) -> None:
         with self._lock:
             self._latest_frame = values
-            for f in self._callbacks:
-                f(json.dumps(values))
+            for f in list(self._callbacks):
+                self._send_frame_to_callback(f, values)
 
     def send(self, values: Mapping[str, Any]) -> None:
         self._send_frame(values)
@@ -156,6 +168,7 @@ class GameRunner(Thread):
 
     def stop_if_deserted(self) -> None:
         if not any(interface.is_connected() for interface in self.seat_map.values()):
+            print("cleaning up deserted game")
             self.stop()
 
     def schedule_stop_check(self, delay: int) -> None:

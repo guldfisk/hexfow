@@ -693,10 +693,10 @@ export const renderMap = (
     }
 
     if (
-      ccToKey(hexData.cc) in actionSpace &&
-      (actionSpace[ccToKey(hexData.cc)].highlighted ||
-        (state.highlightedCCs &&
-          state.highlightedCCs.includes(ccToKey(hexData.cc))))
+      (ccToKey(hexData.cc) in actionSpace &&
+        actionSpace[ccToKey(hexData.cc)].highlighted) ||
+      (state.highlightedCCs &&
+        state.highlightedCCs.includes(ccToKey(hexData.cc)))
     ) {
       let highlight = newGraphic(highlightShape);
       hexContainer.addChild(highlight);
