@@ -75,6 +75,7 @@ export interface UnitDetails {
   size: number;
   facets: string[];
   price: number;
+  flavor: string | null;
 }
 
 export interface TerrainDetails {

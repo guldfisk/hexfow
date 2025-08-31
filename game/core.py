@@ -725,6 +725,7 @@ class UnitBlueprint:
         facets: list[type[Facet]] | None = None,
         price: int | None,
         max_count: int = 1,
+        flavor: str | None = None,
         identifier: str | None = None,
     ):
         self.name = name
@@ -736,6 +737,9 @@ class UnitBlueprint:
         self.starting_energy = starting_energy
         self.size = size
         self.facets = facets or []
+
+        self.flavor = flavor
+
         self.identifier = identifier or re.sub(
             "_+", "_", re.sub("[^a-z]", "_", self.name.lower())
         )
@@ -769,6 +773,7 @@ class UnitBlueprint:
             "size": self.size.value,
             "facets": [facet.identifier for facet in self.facets],
             "price": self.price,
+            "flavor": self.flavor,
         }
 
 

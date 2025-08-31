@@ -26,7 +26,6 @@ from game.units.facets.activated_abilities import (
     Lasso,
     LayMine,
     MalevolentStare,
-    NothingStopsTheMail,
     OpenGate,
     Poof,
     RaiseShrine,
@@ -309,6 +308,7 @@ SKITTISH_SOOT_PUFF = UnitBlueprint(
     size=Size.SMALL,
     facets=[SquirtSoot, PuffAway, SootDweller],
     price=3,
+    flavor="OMG, it's literally the fucking puff-puff. Are you fucking kidding me with this shit?",
 )
 
 OTTER_SCOUT = UnitBlueprint(
@@ -351,6 +351,7 @@ STIM_DRONE = UnitBlueprint(
     size=Size.SMALL,
     facets=[StimulatingInjection],
     price=4,
+    flavor="Just the refreshments this time, thanks.",
 )
 
 AP_GUNNER = UnitBlueprint(
@@ -415,8 +416,9 @@ BOMB_TRUCK = UnitBlueprint(
     health=4,
     speed=3,
     sight=1,
-    facets=[NothingStopsTheMail, Explosive],
+    facets=[SelfDestruct, Explosive],
     price=6,
+    flavor="Nothing stops the mail.",
 )
 
 GLASS_GOLEM = UnitBlueprint(
@@ -649,6 +651,7 @@ LEGENDARY_WRESTLER = UnitBlueprint(
         HeelTurn,
     ],
     price=10,
+    flavor="I need justice in my life: Here it comes.",
 )
 
 CHAINSAW_SADIST = UnitBlueprint(

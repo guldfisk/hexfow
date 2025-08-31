@@ -235,7 +235,7 @@ class Terror(RefreshableMixin, UnitStatus):
 
 class DebilitatingVenom(RefreshableMixin, UnitStatus):
     """
-    -1 attack power, and -x speed, where x is this units speed, rounded down.
+    -1 attack power, and -x speed, where x half is this units speed, rounded down.
     """
 
     default_intention = StatusIntention.DEBUFF

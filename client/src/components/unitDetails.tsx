@@ -81,7 +81,11 @@ export const UnitDetailsView = ({
         <div>size: {sizeNames[(unit || details).size.toString()]}</div>
         <div>price: {details.price}</div>
       </div>
-
+      {details.flavor ? (
+        <div className={"facet-details"}>
+          <i>{details.flavor}</i>
+        </div>
+      ) : null}
       {details.facets.map((facet) => (
         <FacetDetailView facet={gameObjectDetails.facets[facet]} unit={unit} />
       ))}

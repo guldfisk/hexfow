@@ -122,13 +122,6 @@ class GreaseTheGears(SingleAllyActivatedAbility):
             ES.resolve(ModifyMovementPoints(self.parent, movement_bonus))
 
 
-class NothingStopsTheMail(NoTargetActivatedAbility):
-    """Kills this unit."""
-
-    def perform(self, target: None) -> None:
-        ES.resolve(Kill(self.parent))
-
-
 class SelfDestruct(NoTargetActivatedAbility):
     """Kills this unit."""
 
