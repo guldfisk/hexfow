@@ -1181,7 +1181,7 @@ class SowDiscord(TriHexTargetActivatedAbility):
 class Scorn(SingleEnemyActivatedAbility):
     """
     Target enemy unit within 2 range LoS.
-    Applies <dishonorable_coward> for 4 rounds.
+    Applies <dishonorable_coward> for 3 rounds.
     """
 
     cost = EnergyCost(2)
@@ -1192,7 +1192,7 @@ class Scorn(SingleEnemyActivatedAbility):
             ApplyStatus(
                 target,
                 UnitStatusSignature(
-                    UnitStatus.get("dishonorable_coward"), self, duration=4
+                    UnitStatus.get("dishonorable_coward"), self, duration=3
                 ),
             )
         )

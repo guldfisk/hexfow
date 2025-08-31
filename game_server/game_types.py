@@ -57,30 +57,8 @@ class TestGameType(GameType):
         )
 
         player_units = (
-            (
-                # OTTER_SCOUT,
-                # ELITE_COMMANDO,
-                # LIGHT_ARCHER,
-                # WITCH_ENGINE,
-                DJINN,
-                VILE_TRANSMUTER,
-                # INFERNO_TANK,
-                # VILE_TRANSMUTER,
-            ),
-            (
-                # UNBLINKING_WATCHER,
-                # RHINO_BEETLE,
-                # STUBBORN_GOAT,
-                SKITTISH_SOOT_PUFF,
-                # STUBBORN_GOAT,
-                CYCLOPS,
-                SHRINE_KEEPER,
-                # INFERNO_TANK,
-                # WEATHERED_ARMADILLO,
-                # SNAPPING_TURTLE,
-                # LIGHT_ARCHER,
-                # LIGHT_ARCHER,
-            ),
+            (BLOOD_FEUD_WARLOCK,),
+            (LIGHT_ARCHER,),
         )
 
         ccs = sorted(
