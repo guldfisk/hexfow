@@ -440,6 +440,8 @@ class SpawnUnit(Event[Unit | None]):
     space: Hex
     exhausted: bool = False
     with_statuses: Iterable[UnitStatusSignature] = ()
+    max_health: int | None = None
+    max_energy: int | None = None
 
     def is_valid(self) -> bool:
         return not self.space.map.unit_on(self.space)
@@ -448,6 +450,10 @@ class SpawnUnit(Event[Unit | None]):
         unit = Unit(self.controller, self.blueprint, exhausted=self.exhausted)
         if not self.space.map.move_unit_to(unit, self.space):
             return None
+        if self.max_health and unit.health > self.max_health:
+            unit.damage = unit.health - self.max_health
+        if self.max_energy and unit.energy > self.max_energy:
+            unit.energy = self.max_energy
         GS.update_vision()
         with GS.log(LogLine([unit, "is spawned in", self.space])):
             for signature in self.with_statuses:

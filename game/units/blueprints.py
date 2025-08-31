@@ -295,16 +295,6 @@ LIGHT_ARCHER = UnitBlueprint(
     price=3,
 )
 
-UNDERHANDED_HEXMAGE = UnitBlueprint(
-    name="Underhanded Hexmage",
-    health=3,
-    speed=3,
-    sight=2,
-    energy=4,
-    facets=[EnfeeblingHex],
-    price=4,
-)
-
 MARSHMALLOW_TITAN = UnitBlueprint(
     name="Marshmallow Titan",
     health=11,
@@ -386,6 +376,16 @@ STIM_DRONE = UnitBlueprint(
     facets=[StimulatingInjection],
     price=4,
     flavor="Just the refreshments this time, thanks.",
+)
+
+UNDERHANDED_HEXMAGE = UnitBlueprint(
+    name="Underhanded Hexmage",
+    health=3,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[EnfeeblingHex],
+    price=4,
 )
 
 AP_GUNNER = UnitBlueprint(
@@ -602,6 +602,17 @@ INK_WITCH = UnitBlueprint(
     price=9,
 )
 
+SLUDGE_SLUG = UnitBlueprint(
+    "Sludge Slug",
+    health=10,
+    speed=1,
+    sight=1,
+    size=Size.LARGE,
+    energy=3,
+    facets=[Spew, SludgeBelch, SludgeTrail, SlimyLocomotion, SlimySkin],
+    price=9,
+)
+
 VELOCIRAPTOR = UnitBlueprint(
     "Velociraptor",
     health=5,
@@ -743,17 +754,6 @@ PESTILENCE_PRIEST = UnitBlueprint(
     price=11,
 )
 
-SLUDGE_SLUG = UnitBlueprint(
-    "Sludge Slug",
-    health=10,
-    speed=1,
-    sight=1,
-    size=Size.LARGE,
-    energy=3,
-    facets=[Spew, SludgeBelch, SludgeTrail, SlimyLocomotion, SlimySkin],
-    price=11,
-)
-
 STAUNCH_IRON_HEART = UnitBlueprint(
     "Staunch Iron-Heart",
     health=7,
@@ -848,7 +848,12 @@ BEE_SWARM = UnitBlueprint(
 )
 
 BLOOD_HOMUNCULUS = UnitBlueprint(
-    "Blood Homunculus", health=4, speed=2, sight=1, facets=[Gnaw], price=None
+    "Blood Homunculus",
+    health=6,
+    speed=2,
+    sight=1,
+    facets=[Gnaw],
+    price=None,
 )
 
 CACTUS = UnitBlueprint(

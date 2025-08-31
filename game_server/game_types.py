@@ -46,7 +46,7 @@ class TestGameType(GameType):
                             # Plains,
                             # Forest,
                             # Hills,
-                            Water,
+                            # Water,
                         ]
                     ),
                     cc.distance_to(CC(0, 0)) <= 1,
@@ -58,14 +58,15 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                OTTER_SCOUT,
-                UNDERHANDED_HEXMAGE,
+                SLUDGE_SLUG,
+                FRONTLINE_TACTICIAN,
                 # CYCLOPS,
                 # BUGLING,
             ),
             (
                 LIGHT_ARCHER,
-                BLITZ_TROOPER,
+                STUBBORN_GOAT,
+                BELL_STRIKER_BRUTE,
                 # SKITTISH_SOOT_PUFF,
             ),
         )
