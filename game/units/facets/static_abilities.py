@@ -46,6 +46,7 @@ from game.effects.triggers import (
     OrneryTrigger,
     PackHunterTrigger,
     PricklyTrigger,
+    PuffAwayTrigger,
     QuickTrigger,
     SchadenfreudeDamageTrigger,
     SchadenfreudeDebuffTrigger,
@@ -270,6 +271,19 @@ class FlameResistant(StaticAbilityFacet):
         )
 
 
+class SootDweller(StaticAbilityFacet):
+    """
+    Immune to damage from the soot status.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            SourceTypeResistanceModifier(
+                self.parent, HexStatus.get("soot"), Resistance.IMMUNE
+            )
+        )
+
+
 class ToughSkin(StaticAbilityFacet):
     """
     Reduce damage dealt to this unit by one third, rounding the reduction down.
@@ -286,6 +300,16 @@ class Ornery(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(OrneryTrigger(self.parent))
+
+
+class PuffAway(StaticAbilityFacet):
+    """
+    When an enemy engages this unit while this unit is ready, you may have this unit move one hex away from the
+    engaging unit. If you do, apply <soot> to the hex this unit previously occupied, and exhaust this unit.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(PuffAwayTrigger(self.parent, self))
 
 
 class LastStand(StaticAbilityFacet):

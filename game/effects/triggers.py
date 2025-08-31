@@ -234,6 +234,59 @@ class GrizzlyMurdererTrigger(TriggerEffect[MeleeAttackAction]):
 
 
 @dataclasses.dataclass(eq=False)
+class PuffAwayTrigger(TriggerEffect[MoveUnit]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+    source: Source
+
+    def should_trigger(self, event: MoveUnit) -> bool:
+        return (
+            event.unit.controller != self.unit.controller
+            and self.unit.ready
+            and event.result
+            and GS.map.distance_between(self.unit, event.to_) <= 1
+            and GS.map.distance_between(self.unit, event.result) > 1
+            and event.unit.is_visible_to(self.unit.controller)
+        )
+
+    def resolve(self, event: MoveUnit) -> None:
+        if moveable_hexes := [
+            h
+            for h in self.unit.get_potential_move_destinations(None)
+            if GS.map.distance_between(h, event.unit) > 1
+        ]:
+            decision = GS.make_decision(
+                self.unit.controller,
+                SelectOptionDecisionPoint(
+                    [
+                        MoveOption(
+                            target_profile=OneOfHexes(
+                                moveable_hexes + [GS.map.hex_off(self.unit)]
+                            )
+                        ),
+                        SkipOption(target_profile=NoTarget()),
+                    ],
+                    explanation="puff away",
+                ),
+            )
+            if isinstance(
+                decision.option, MoveOption
+            ) and decision.target != GS.map.hex_off(self.unit):
+                previous_hex = GS.map.hex_off(self.unit)
+                ES.resolve(MoveUnit(self.unit, to_=decision.target))
+                ES.resolve(
+                    ApplyHexStatus(
+                        previous_hex,
+                        HexStatusSignature(
+                            HexStatus.get("soot"), self.source, duration=2
+                        ),
+                    )
+                )
+                ES.resolve(ExhaustUnit(self.unit))
+
+
+@dataclasses.dataclass(eq=False)
 class CaughtInTheMatchTrigger(TriggerEffect[MoveAction]):
     priority: ClassVar[int] = 0
 

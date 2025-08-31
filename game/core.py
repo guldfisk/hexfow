@@ -833,6 +833,10 @@ class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Seriali
                 return attack
         return None
 
+    @property
+    def ready(self) -> bool:
+        return not self.exhausted
+
     @modifiable
     def is_aquatic(self, _: None) -> bool:
         return False

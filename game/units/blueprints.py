@@ -43,6 +43,7 @@ from game.units.facets.activated_abilities import (
     SmokeGrenade,
     SowDiscord,
     SpurIntoRage,
+    SquirtSoot,
     Stare,
     StimulatingInjection,
     SummonBees,
@@ -142,6 +143,7 @@ from game.units.facets.static_abilities import (
     Ornery,
     PackHunter,
     Prickly,
+    PuffAway,
     Pusher,
     Quick,
     Schadenfreude,
@@ -149,6 +151,7 @@ from game.units.facets.static_abilities import (
     SlimyLocomotion,
     SlimySkin,
     SludgeTrail,
+    SootDweller,
     Stealth,
     StrainedPusher,
     Swimmer,
@@ -298,6 +301,16 @@ MARSHMALLOW_TITAN = UnitBlueprint(
     price=3,
 )
 
+SKITTISH_SOOT_PUFF = UnitBlueprint(
+    "Skittish Soot Puff",
+    health=3,
+    speed=3,
+    sight=1,
+    size=Size.SMALL,
+    facets=[SquirtSoot, PuffAway, SootDweller],
+    price=3,
+)
+
 OTTER_SCOUT = UnitBlueprint(
     "Otter Scout",
     health=5,
@@ -397,15 +410,6 @@ MEDIC = UnitBlueprint(
     price=5,
 )
 
-STUBBORN_GOAT = UnitBlueprint(
-    "Stubborn Goat",
-    health=6,
-    speed=3,
-    sight=2,
-    facets=[CurvedHorns, ToughSkin, Ornery],
-    price=6,
-)
-
 BOMB_TRUCK = UnitBlueprint(
     "Bomb Truck",
     health=4,
@@ -441,6 +445,15 @@ RIFLE_INFANTRY = UnitBlueprint(
     speed=3,
     sight=2,
     facets=[Rifle],
+    price=6,
+)
+
+STUBBORN_GOAT = UnitBlueprint(
+    "Stubborn Goat",
+    health=6,
+    speed=3,
+    sight=2,
+    facets=[CurvedHorns, ToughSkin, Ornery],
     price=6,
 )
 

@@ -1179,6 +1179,23 @@ class SpurIntoRage(SingleTargetActivatedAbility):
         )
 
 
+class SquirtSoot(SingleHexTargetActivatedAbility):
+    """
+    Target hex within 1 range.
+    Applies <soot> for 2 rounds.
+    """
+
+    cost = MovementCost(1)
+
+    def perform(self, target: Hex) -> None:
+        ES.resolve(
+            ApplyHexStatus(
+                target,
+                HexStatusSignature(HexStatus.get("soot"), self, duration=2),
+            )
+        )
+
+
 class ConstructTurret(SingleHexTargetActivatedAbility):
     """
     Target visible empty space within 1 range.
