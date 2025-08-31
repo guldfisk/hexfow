@@ -158,6 +158,22 @@ class DeployArmyDecisionPoint(DecisionPoint[list[tuple["UnitBlueprint", "Hex"]]]
         ]
 
 
+@dataclasses.dataclass
+class SelectOptionAtHexDecisionPoint(DecisionPoint[str]):
+    hex_: Hex
+    options: list[str]
+    explanation: str
+
+    def get_explanation(self) -> str:
+        return self.explanation
+
+    def serialize_payload(self, context: SerializationContext) -> JSON:
+        return {"hex": self.hex_.position.serialize(), "options": self.options}
+
+    def parse_response(self, v: Any) -> str:
+        return self.options[v["index"]]
+
+
 class MoveOption(Option[G_decision_result]):
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {}
@@ -841,6 +857,11 @@ class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Seriali
     @property
     def ready(self) -> bool:
         return not self.exhausted
+
+    @property
+    def is_spawned(self) -> bool:
+        # TODO hmm
+        return self.blueprint.price is None
 
     @modifiable
     def is_aquatic(self, _: None) -> bool:

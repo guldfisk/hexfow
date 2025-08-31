@@ -105,12 +105,19 @@ class GainEnergy(Event[int]):
     unit: Unit
     amount: int
     source: Source
+    allow_overflow: bool = False
 
     def is_valid(self) -> bool:
-        return self.amount > 0 and self.unit.energy < self.unit.max_energy.g()
+        return self.amount > 0 and (
+            self.unit.energy < self.unit.max_energy.g() or self.allow_overflow
+        )
 
     def resolve(self) -> int:
-        amount = max(min(self.amount, self.unit.max_energy.g() - self.unit.energy), 0)
+        amount = (
+            self.amount
+            if self.allow_overflow
+            else max(min(self.amount, self.unit.max_energy.g() - self.unit.energy), 0)
+        )
         with (
             GS.log(LogLine([self.unit, f"gains {amount} energy from", self.source]))
             if get_source_controller(self.source)

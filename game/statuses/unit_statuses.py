@@ -1,6 +1,7 @@
 from events.eventsystem import ES
 from game.core import (
     GS,
+    HighestStackableRefreshableMixin,
     LowestRefreshableMixin,
     RefreshableMixin,
     StackableMixin,
@@ -143,6 +144,17 @@ class TheyVeGotASteelChair(UnitStatus):
         self.register_effects(UnitAttackPowerFlatModifier(self.parent, 2))
 
 
+class SupernaturalStrength(RefreshableMixin, UnitStatus):
+    """
+    +2 attack power.
+    """
+
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(UnitAttackPowerFlatModifier(self.parent, 2))
+
+
 class Staggered(UnitStatus):
     """Removed at the end of the turn."""
 
@@ -177,15 +189,17 @@ class Rooted(RefreshableMixin, UnitStatus):
         self.register_effects(RootedModifier(self.parent))
 
 
-class Fortified(RefreshableMixin, UnitStatus):
+class Fortified(HighestStackableRefreshableMixin, UnitStatus):
     """
-    +1 maximum health.
+    +1 max health per stack.
     """
 
     default_intention = StatusIntention.BUFF
 
     def create_effects(self) -> None:
-        self.register_effects(UnitMaxHealthFlatModifier(self.parent, 1))
+        self.register_effects(
+            UnitMaxHealthFlatModifier(self.parent, lambda: self.stacks)
+        )
 
 
 class LuckyCharm(RefreshableMixin, UnitStatus):

@@ -23,6 +23,7 @@ from game.core import (
     OneOfHexes,
     RadiatingLine,
     RangedAttackFacet,
+    SelectOptionAtHexDecisionPoint,
     SingleAllyActivatedAbility,
     SingleEnemyActivatedAbility,
     SingleHexTargetActivatedAbility,
@@ -127,6 +128,52 @@ class SelfDestruct(NoTargetActivatedAbility):
 
     def perform(self, target: None) -> None:
         ES.resolve(Kill(self.parent))
+
+
+class GrantWish(SingleTargetActivatedAbility):
+    """
+    Target adjacent ready unit. The unit is exhausted, and its controller chooses one:
+    Fortitude - The unit is healed 3, and gains 3 stacks of <fortified> for 3 rounds.
+    Clarity - The unit gains 4 energy, which can exceed its max.
+    Strength - The unit gains <supernatural_strength> for 3 rounds.
+    """
+
+    cost = MovementCost(1) | EnergyCost(3)
+
+    def can_target_unit(self, unit: Unit) -> bool:
+        return unit != self.parent and unit.ready
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(ExhaustUnit(target))
+        match GS.make_decision(
+            target.controller,
+            SelectOptionAtHexDecisionPoint(
+                GS.map.hex_off(target),
+                ["Fortitude", "Clarity", "Strength"],
+                explanation="select wish",
+            ),
+        ):
+            case "Fortitude":
+                ES.resolve(
+                    ApplyStatus(
+                        target,
+                        UnitStatusSignature(
+                            UnitStatus.get("fortified"), self, stacks=3, duration=3
+                        ),
+                    )
+                )
+                ES.resolve(Heal(target, 3))
+            case "Clarity":
+                ES.resolve(GainEnergy(target, 4, self, allow_overflow=True))
+            case "Strength":
+                ES.resolve(
+                    ApplyStatus(
+                        target,
+                        UnitStatusSignature(
+                            UnitStatus.get("supernatural_strength"), self, duration=3
+                        ),
+                    )
+                )
 
 
 class InducePanic(SingleEnemyActivatedAbility):

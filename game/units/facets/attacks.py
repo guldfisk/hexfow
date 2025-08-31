@@ -35,6 +35,19 @@ class CurvedHorns(MeleeAttackFacet):
     damage = 3
 
 
+class DancingSaber(MeleeAttackFacet):
+    """
+    +2 damage against spawned units.
+    """
+
+    cost = MovementCost(1)
+    damage = 3
+
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        if unit.is_spawned:
+            return 2
+
+
 class Gore(MeleeAttackFacet):
     """
     +2 damage against units this unit wasn't adjacent to at the beginning of its turn.

@@ -590,7 +590,7 @@ class ShrineWalkInTrigger(TriggerEffect[MoveUnit]):
             ApplyStatus(
                 event.unit,
                 UnitStatusSignature(
-                    UnitStatus.get("fortified"), self.source, duration=4
+                    UnitStatus.get("fortified"), self.source, stacks=1, duration=4
                 ),
             )
         )

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from game.core import (
+    AttackFacet,
     HexStatus,
     HexStatusSignature,
     StaticAbilityFacet,
@@ -281,6 +282,17 @@ class SootDweller(StaticAbilityFacet):
             SourceTypeResistanceModifier(
                 self.parent, HexStatus.get("soot"), Resistance.IMMUNE
             )
+        )
+
+
+class MagicForm(StaticAbilityFacet):
+    """
+    Reduce damage dealt to this unit by attacks by half, rounding the reduction down.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            SourceTypeResistanceModifier(self.parent, AttackFacet, Resistance.NORMAL)
         )
 
 

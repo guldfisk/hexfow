@@ -204,7 +204,18 @@ export interface DeployArmyDecisionPoint extends BaseDecision {
   };
 }
 
-export type Decision = SelectOptionDecisionPoint | DeployArmyDecisionPoint;
+export interface SelectOptionAtHexDecisionPoint extends BaseDecision {
+  type: "SelectOptionAtHexDecisionPoint";
+  payload: {
+    hex: CC;
+    options: string[];
+  };
+}
+
+export type Decision =
+  | SelectOptionDecisionPoint
+  | DeployArmyDecisionPoint
+  | SelectOptionAtHexDecisionPoint;
 
 export interface LogLineComponentBase {
   type: string;

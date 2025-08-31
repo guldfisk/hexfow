@@ -347,6 +347,20 @@ export const getBaseActionSpace = (
         do: (armyContent) => loadArmy(armyContent, decision, gameObjectDetails),
       },
     };
+  } else if (decision && decision.type == "SelectOptionAtHexDecisionPoint") {
+    return {
+      hexActions: {
+        [ccToKey(decision.payload.hex)]: {
+          actions: [],
+          sideMenuItems: decision.payload.options.map((entry, idx) => ({
+            type: "generic",
+            description: entry,
+            do: () => takeAction({ index: idx }),
+          })),
+        },
+      },
+      buttonAction: null,
+    };
   }
   return { hexActions: {}, buttonAction: null };
 };

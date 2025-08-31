@@ -13,6 +13,7 @@ from game.units.facets.activated_abilities import (
     FlameWall,
     FlashBang,
     GrantCharm,
+    GrantWish,
     GreaseTheGears,
     Grow,
     HandGrenade,
@@ -72,6 +73,7 @@ from game.units.facets.attacks import (
     CommandersPistol,
     CrushingMandibles,
     CurvedHorns,
+    DancingSaber,
     DeathLaser,
     DiamondFist,
     DrainingGrasp,
@@ -138,6 +140,7 @@ from game.units.facets.static_abilities import (
     InspiringPresence,
     JukeAndJive,
     LastStand,
+    MagicForm,
     Nourishing,
     Ornery,
     PackHunter,
@@ -517,6 +520,16 @@ BLOOD_FEUD_WARLOCK = UnitBlueprint(
     sight=2,
     energy=6,
     facets=[SowDiscord, Scorn, SpurIntoRage],
+    price=8,
+)
+
+DJINN = UnitBlueprint(
+    "Djinn",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[DancingSaber, GrantWish, MagicForm],
     price=8,
 )
 
