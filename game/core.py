@@ -850,8 +850,10 @@ class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Seriali
         return GS.map.hex_off(self).get_terrain_protection_for(request)
 
     def suffer_damage(self, signature: DamageSignature) -> int:
-        damage = min(
-            signature.amount, self.health - 1 if not signature.lethal else self.health
+        damage = (
+            signature.amount
+            if signature.lethal
+            else min(signature.amount, self.health - 1)
         )
         self.damage += damage
         return damage

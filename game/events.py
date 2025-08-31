@@ -33,6 +33,7 @@ from game.core import (
     SkipOption,
     Source,
     Status,
+    StatusSignature,
     TerrainProtectionRequest,
     TurnOrder,
     Unit,
@@ -128,17 +129,29 @@ class SufferDamage(Event[int]):
         return self.signature.amount > 0
 
     def resolve(self) -> int:
-        result = self.unit.suffer_damage(self.signature)
-        with GS.log(
-            LogLine(
-                [
-                    self.unit,
-                    f"suffers {result} damage",
-                    *(("from", self.signature.source) if self.signature.source else ()),
-                ]
-            )
-        ):
-            return result
+        health_before = self.unit.health
+        damage_dealt = self.unit.suffer_damage(self.signature)
+        if damage_dealt:
+            with GS.log(
+                LogLine(
+                    [
+                        self.unit,
+                        f"suffers {damage_dealt} damage",
+                        *(
+                            (f"({damage_dealt - health_before} overkill)",)
+                            if damage_dealt > health_before
+                            else ()
+                        ),
+                        *(
+                            ("from", self.signature.source)
+                            if self.signature.source
+                            else ()
+                        ),
+                    ]
+                )
+            ):
+                pass
+        return min(health_before, damage_dealt)
 
 
 @dataclasses.dataclass
@@ -296,11 +309,13 @@ class RangedAttackAction(Event[None]):
         self.attack.get_cost().pay(GS.active_unit_context)
 
 
-def make_status_log_line(status: Status, recipient: Unit | Hex) -> LogLine:
+def make_status_log_line(
+    status: Status, signature: StatusSignature, recipient: Unit | Hex
+) -> LogLine:
     return LogLine(
         [
             *(
-                (f"{status.stacks} stack{'s' if status.stacks > 1 else ''} off",)
+                (f"{signature.stacks} stack{'s' if signature.stacks > 1 else ''} off",)
                 if status.stacks
                 else ()
             ),
@@ -326,7 +341,7 @@ class ApplyStatus(Event[UnitStatus | None]):
 
     def resolve(self) -> UnitStatus | None:
         if status := self.unit.add_status(self.signature):
-            with GS.log(make_status_log_line(status, self.unit)):
+            with GS.log(make_status_log_line(status, self.signature, self.unit)):
                 return status
         return None
 
@@ -338,7 +353,7 @@ class ApplyHexStatus(Event[HexStatus | None]):
 
     def resolve(self) -> HexStatus | None:
         if status := self.space.add_status(self.signature):
-            with GS.log(make_status_log_line(status, self.space)):
+            with GS.log(make_status_log_line(status, self.signature, self.space)):
                 return status
         return None
 
