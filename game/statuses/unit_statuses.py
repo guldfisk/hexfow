@@ -407,3 +407,10 @@ class TaintedBond(UnitStatus):
     Whenever a unit with a linked Tainted Bond status suffers damage not from a Tainted Bond
     status, this status deals that much pure damage to this unit.
     """
+
+
+class Enfeebled(RefreshableMixin, UnitStatus):
+    """-2 attack power."""
+
+    def create_effects(self) -> None:
+        self.register_effects(UnitAttackPowerFlatModifier(self.parent, -2))

@@ -391,6 +391,23 @@ class StimulatingInjection(SingleTargetActivatedAbility):
         ES.resolve(Kill(self.parent))
 
 
+class EnfeeblingHex(SingleEnemyActivatedAbility):
+    """
+    Target enemy unit within 2 range LoS. Applies <enfeebled> for 2 rounds.
+    """
+
+    range = 2
+    cost = MovementCost(1) | EnergyCost(3)
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                target,
+                UnitStatusSignature(UnitStatus.get("enfeebled"), self, duration=2),
+            )
+        )
+
+
 class Suplex(SingleTargetActivatedAbility):
     """
     Target adjacent unit. Deals 3 melee damage, and moves the target to the other side of this unit.

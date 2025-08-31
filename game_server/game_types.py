@@ -59,12 +59,14 @@ class TestGameType(GameType):
         player_units = (
             (
                 OTTER_SCOUT,
+                UNDERHANDED_HEXMAGE,
                 # CYCLOPS,
-                BUGLING,
+                # BUGLING,
             ),
             (
                 LIGHT_ARCHER,
-                SKITTISH_SOOT_PUFF,
+                BLITZ_TROOPER,
+                # SKITTISH_SOOT_PUFF,
             ),
         )
 

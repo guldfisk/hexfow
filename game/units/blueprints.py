@@ -6,6 +6,7 @@ from game.units.facets.activated_abilities import (
     ChokingSoot,
     ConstructTurret,
     CoordinatedManeuver,
+    EnfeeblingHex,
     FalseCure,
     FatalBonding,
     FixErUp,
@@ -292,6 +293,16 @@ LIGHT_ARCHER = UnitBlueprint(
     size=Size.SMALL,
     facets=[LightBow],
     price=3,
+)
+
+UNDERHANDED_HEXMAGE = UnitBlueprint(
+    name="Underhanded Hexmage",
+    health=3,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[EnfeeblingHex],
+    price=4,
 )
 
 MARSHMALLOW_TITAN = UnitBlueprint(

@@ -33,9 +33,9 @@ code
     don't send no change game state updates
     update test framework
     unit tests on core logic
-    move aquatic to ability
     "no effect error"/disable triggers in event resolution
         hard to get right with event result and history
+    get rid of _small unit images suffix
 
 replays
 
