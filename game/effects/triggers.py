@@ -186,6 +186,19 @@ class SchadenfreudeDebuffTrigger(TriggerEffect[ApplyStatus]):
         ES.resolve(GainEnergy(self.unit, 1, source=self.source))
 
 
+@dataclasses.dataclass(eq=False)
+class OrneryTrigger(TriggerEffect[ApplyStatus]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def should_trigger(self, event: ApplyStatus) -> bool:
+        return event.unit == self.unit and event.result
+
+    def resolve(self, event: ApplyStatus) -> None:
+        ES.resolve(Heal(self.unit, 1))
+
+
 # TODO originally this was for all simple attacks, but then the kill event isn't
 #  a child. could of course hack it in some way, or just have multiple triggers,
 #  but it only has a melee attack, and maybe it is more evocative anyways...

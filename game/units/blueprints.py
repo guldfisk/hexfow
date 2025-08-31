@@ -70,6 +70,8 @@ from game.units.facets.attacks import (
     Chainsaw,
     Chomp,
     CommandersPistol,
+    CrushingMandibles,
+    CurvedHorns,
     DeathLaser,
     DiamondFist,
     DrainingGrasp,
@@ -80,6 +82,7 @@ from game.units.facets.attacks import (
     Gnaw,
     GnomeSpear,
     Gore,
+    Grapple,
     HammerBlow,
     HammerCannon,
     HiddenBlade,
@@ -136,6 +139,7 @@ from game.units.facets.static_abilities import (
     JukeAndJive,
     LastStand,
     Nourishing,
+    Ornery,
     PackHunter,
     Prickly,
     Pusher,
@@ -183,6 +187,15 @@ CHICKEN = UnitBlueprint(
     sight=1,
     size=Size.SMALL,
     facets=[Peck],
+    price=1,
+)
+
+UNBLINKING_WATCHER = UnitBlueprint(
+    name="Unblinking Watcher",
+    health=2,
+    speed=1,
+    sight=2,
+    size=Size.SMALL,
     price=1,
 )
 
@@ -384,6 +397,15 @@ MEDIC = UnitBlueprint(
     price=5,
 )
 
+STUBBORN_GOAT = UnitBlueprint(
+    "Stubborn Goat",
+    health=6,
+    speed=3,
+    sight=2,
+    facets=[CurvedHorns, ToughSkin, Ornery],
+    price=6,
+)
+
 BOMB_TRUCK = UnitBlueprint(
     "Bomb Truck",
     health=4,
@@ -400,6 +422,16 @@ GLASS_GOLEM = UnitBlueprint(
     armor=2,
     sight=2,
     facets=[GlassFist, GlassSkin],
+    price=6,
+)
+
+RHINO_BEETLE = UnitBlueprint(
+    "Rhino Beetle",
+    health=5,
+    speed=2,
+    sight=1,
+    facets=[CrushingMandibles, Grapple],
+    armor=1,
     price=6,
 )
 

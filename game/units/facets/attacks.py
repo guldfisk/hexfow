@@ -30,6 +30,11 @@ class GiantClub(MeleeAttackFacet):
     damage = 5
 
 
+class CurvedHorns(MeleeAttackFacet):
+    cost = MovementCost(2)
+    damage = 3
+
+
 class Gore(MeleeAttackFacet):
     """
     +2 damage against units this unit wasn't adjacent to at the beginning of its turn.
@@ -469,3 +474,25 @@ class SlingShot(RangedAttackFacet):
 class Chomp(MeleeAttackFacet):
     cost = ExclusiveCost()
     damage = 4
+
+
+class CrushingMandibles(MeleeAttackFacet):
+    cost = MovementCost(1)
+    damage = 3
+
+
+class Grapple(MeleeAttackFacet):
+    """
+    Applies <rooted> for 1 round.
+    """
+
+    cost = ExclusiveCost()
+    damage = 2
+
+    def resolve_post_damage_effects(self, defender: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                defender,
+                UnitStatusSignature(UnitStatus.get("rooted"), self, duration=1),
+            )
+        )

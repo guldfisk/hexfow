@@ -43,6 +43,7 @@ from game.effects.triggers import (
     HeelTurnTrigger,
     InspirationTrigger,
     JukeAndJiveTrigger,
+    OrneryTrigger,
     PackHunterTrigger,
     PricklyTrigger,
     QuickTrigger,
@@ -276,6 +277,15 @@ class ToughSkin(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(ResistanceModifier(self.parent, Resistance.MINOR))
+
+
+class Ornery(StaticAbilityFacet):
+    """
+    When a debuff is applied to this unit, it heals 1.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(OrneryTrigger(self.parent))
 
 
 class LastStand(StaticAbilityFacet):

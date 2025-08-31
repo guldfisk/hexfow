@@ -46,7 +46,7 @@ class TestGameType(GameType):
                             # Plains,
                             # Forest,
                             # Hills,
-                            Water,
+                            # Water,
                         ]
                     ),
                     cc.distance_to(CC(0, 0)) <= 1,
@@ -59,11 +59,15 @@ class TestGameType(GameType):
         player_units = (
             (
                 # OTTER_SCOUT,
-                ELITE_COMMANDO,
+                # ELITE_COMMANDO,
                 LIGHT_ARCHER,
+                INFERNO_TANK,
             ),
             (
-                WEATHERED_ARMADILLO,
+                UNBLINKING_WATCHER,
+                # RHINO_BEETLE,
+                STUBBORN_GOAT,
+                # WEATHERED_ARMADILLO,
                 # SNAPPING_TURTLE,
                 # LIGHT_ARCHER,
                 # LIGHT_ARCHER,
