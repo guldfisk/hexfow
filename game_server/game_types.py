@@ -46,7 +46,7 @@ class TestGameType(GameType):
                             # Plains,
                             # Forest,
                             # Hills,
-                            # Water,
+                            Water,
                         ]
                     ),
                     cc.distance_to(CC(0, 0)) <= 1,
@@ -57,8 +57,15 @@ class TestGameType(GameType):
         )
 
         player_units = (
-            (BLOOD_FEUD_WARLOCK,),
-            (LIGHT_ARCHER,),
+            (
+                OTTER_SCOUT,
+                # CYCLOPS,
+                BUGLING,
+            ),
+            (
+                LIGHT_ARCHER,
+                SKITTISH_SOOT_PUFF,
+            ),
         )
 
         ccs = sorted(

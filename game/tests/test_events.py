@@ -42,13 +42,8 @@ from game.map.geometry import hex_circle
 from game.map.terrain import Plains, Water
 from game.tests.conftest import TestScope
 from game.tests.test_terrain import InstantDamageMagma
-from game.tests.units import TEST_CHICKEN
-from game.units.blueprints import (
-    CACTUS,
-    LIGHT_ARCHER,
-    LUMBERING_PILLAR,
-    MARSHMALLOW_TITAN,
-)
+from game.tests.units import TEST_CHICKEN, TEST_LIGHT_ARCHER
+from game.units.blueprints import CACTUS, LUMBERING_PILLAR, MARSHMALLOW_TITAN
 from game.values import Size
 
 
@@ -502,9 +497,9 @@ def test_ranged_attack(
     player1_connection: MockConnection,
     player2_connection: MockConnection,
 ) -> None:
-    archer = unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(0, 0))
+    archer = unit_spawner.spawn(TEST_LIGHT_ARCHER, coordinate=CC(0, 0))
     evil_archer = unit_spawner.spawn(
-        LIGHT_ARCHER, coordinate=CC(0, 2), controller=player2
+        TEST_LIGHT_ARCHER, coordinate=CC(0, 2), controller=player2
     )
 
     # Shoots enemy archer.
@@ -523,7 +518,7 @@ def test_ranged_attack(
     # vision of the original enemy archer.
     # We shoot the new one instead.
     different_evil_archer = unit_spawner.spawn(
-        LIGHT_ARCHER, coordinate=CC(0, 1), controller=player2
+        TEST_LIGHT_ARCHER, coordinate=CC(0, 1), controller=player2
     )
     player1_connection.queue_responses(
         ActivateSelector(OneOfUnitsSelector(archer)),
@@ -626,17 +621,17 @@ def test_vision_blocked(
         ES.resolve(Turn(archer))
 
     # Only allied archer, which has a sight 2, and can see the whole map.
-    archer = unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(0, 0))
+    archer = unit_spawner.spawn(TEST_LIGHT_ARCHER, coordinate=CC(0, 0))
     _check(hex_circle(2))
 
     # Spawn adjacent enemy archer which blocks vision of the space
     # immediately behind it.
-    unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(1, 0), controller=player2)
+    unit_spawner.spawn(TEST_LIGHT_ARCHER, coordinate=CC(1, 0), controller=player2)
     _check(set(hex_circle(2, center=CC(0, 0))) - {CC(2, 0)})
 
     # Spawning another enemy archer adjacent to both blocks vision, both behind
     # that one, and the space "in-between" behind the two archers.
-    unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(1, -1), controller=player2)
+    unit_spawner.spawn(TEST_LIGHT_ARCHER, coordinate=CC(1, -1), controller=player2)
     _check(set(hex_circle(2, center=CC(0, 0))) - {CC(2, 0), CC(2, -2), CC(2, -1)})
 
     # Spawning an enemy chicken has no effect, since small units does not block
@@ -645,7 +640,7 @@ def test_vision_blocked(
     _check(set(hex_circle(2, center=CC(0, 0))) - {CC(2, 0), CC(2, -2), CC(2, -1)})
 
     # Spawn allied archer that can see behind one of the enemy ones.
-    different_allied_archer = unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(0, 1))
+    different_allied_archer = unit_spawner.spawn(TEST_LIGHT_ARCHER, coordinate=CC(0, 1))
     _check(set(hex_circle(2, center=CC(0, 0))) - {CC(2, -2), CC(2, -1)})
 
     # Allied large units blocks vision (pillar is itself blind).
@@ -687,7 +682,7 @@ def test_walk_onto_magma(
     unit_spawner, player1_connection: MockConnection, player2: Player
 ) -> None:
     make_hex_terrain(GS.map.hexes[CC(0, 1)], InstantDamageMagma)
-    archer = unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(0, 0))
+    archer = unit_spawner.spawn(TEST_LIGHT_ARCHER, coordinate=CC(0, 0))
     player1_connection.queue_responses(
         ActivateSelector(OneOfUnitsSelector(archer)),
         MoveOptionSelector(OneOfHexesSelector(CC(0, 1))),
@@ -703,7 +698,7 @@ def test_unit_dies_mid_turn(
     unit_spawner: UnitSpawner, player1_connection: MockConnection, player2: Player
 ) -> None:
     make_hex_terrain(GS.map.hexes[CC(0, 1)], InstantDamageMagma)
-    archer = unit_spawner.spawn(LIGHT_ARCHER, coordinate=CC(0, 0))
+    archer = unit_spawner.spawn(TEST_LIGHT_ARCHER, coordinate=CC(0, 0))
     archer.damage = archer.max_health.g() - 1
     player1_connection.queue_responses(
         ActivateSelector(OneOfUnitsSelector(archer)),

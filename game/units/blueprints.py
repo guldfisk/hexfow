@@ -67,7 +67,6 @@ from game.units.facets.attacks import (
     Bite,
     Blaster,
     BloodExpunge,
-    BuglingClaw,
     Chainsaw,
     Chomp,
     CommandersPistol,
@@ -102,6 +101,7 @@ from game.units.facets.attacks import (
     Rifle,
     RifleSalvo,
     RoundhouseKick,
+    Scratch,
     ScratchAndBite,
     SerratedBeak,
     SerratedClaws,
@@ -131,6 +131,7 @@ from game.units.facets.static_abilities import (
     Farsighted,
     FightFlightFreeze,
     FlameResistant,
+    FoulBurst,
     Furious,
     GlassSkin,
     GrizzlyMurderer,
@@ -288,6 +289,7 @@ LIGHT_ARCHER = UnitBlueprint(
     health=4,
     speed=3,
     sight=2,
+    size=Size.SMALL,
     facets=[LightBow],
     price=3,
 )
@@ -309,9 +311,27 @@ SKITTISH_SOOT_PUFF = UnitBlueprint(
     speed=3,
     sight=1,
     size=Size.SMALL,
-    facets=[SquirtSoot, PuffAway, SootDweller],
+    facets=[SquirtSoot, PuffAway, FoulBurst, SootDweller],
     price=3,
     flavor="OMG, it's literally the fucking puff-puff. Are you fucking kidding me with this shit?",
+)
+
+BOMBARD_CANON = UnitBlueprint(
+    "Bombard Canon",
+    health=3,
+    speed=1,
+    sight=1,
+    facets=[SolidMunition],
+    price=4,
+)
+
+LITTLE_ENGINE = UnitBlueprint(
+    "Little Engine",
+    health=6,
+    speed=1,
+    sight=1,
+    facets=[StrainedPusher],
+    price=4,
 )
 
 OTTER_SCOUT = UnitBlueprint(
@@ -359,29 +379,20 @@ STIM_DRONE = UnitBlueprint(
 
 AP_GUNNER = UnitBlueprint(
     "AP Gunner",
-    health=4,
+    health=3,
     speed=2,
     sight=2,
     facets=[APGun],
     price=5,
 )
 
-BOMBARD_CANON = UnitBlueprint(
-    "Bombard Canon",
-    health=4,
-    speed=1,
-    sight=1,
-    facets=[SolidMunition],
-    price=5,
-)
-
 BUGLING = UnitBlueprint(
     "Bugling",
-    health=4,
-    speed=4,
+    health=3,
+    speed=5,
     sight=2,
     size=Size.SMALL,
-    facets=[BuglingClaw],
+    facets=[Scratch],
     price=5,
 )
 
@@ -392,15 +403,6 @@ GOBLIN_ASSASSIN = UnitBlueprint(
     sight=2,
     size=Size.SMALL,
     facets=[HiddenBlade, Stealth],
-    price=5,
-)
-
-LITTLE_ENGINE = UnitBlueprint(
-    "Little Engine",
-    health=6,
-    speed=1,
-    sight=1,
-    facets=[StrainedPusher],
     price=5,
 )
 
@@ -473,6 +475,16 @@ VOID_SPRITE = UnitBlueprint(
     price=6,
 )
 
+BLOOD_FEUD_WARLOCK = UnitBlueprint(
+    "Blood Feud Warlock",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[SowDiscord, Scorn, SpurIntoRage],
+    price=7,
+)
+
 GIANT_SLAYER_MOUSE = UnitBlueprint(
     "Giant Slayer Mouse",
     health=5,
@@ -511,16 +523,6 @@ ZONE_SKIRMISHER = UnitBlueprint(
     sight=2,
     facets=[Blaster, Bayonet],
     price=7,
-)
-
-BLOOD_FEUD_WARLOCK = UnitBlueprint(
-    "Blood Feud Warlock",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=6,
-    facets=[SowDiscord, Scorn, SpurIntoRage],
-    price=8,
 )
 
 DJINN = UnitBlueprint(
@@ -752,6 +754,16 @@ STAUNCH_IRON_HEART = UnitBlueprint(
     price=11,
 )
 
+VILE_TRANSMUTER = UnitBlueprint(
+    "Vile Transmuter",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[DrainingGrasp, WringEssence, FatalBonding, FalseCure],
+    price=11,
+)
+
 INFERNO_TANK = UnitBlueprint(
     "Inferno Tank",
     health=7,
@@ -765,16 +777,6 @@ INFERNO_TANK = UnitBlueprint(
         FlameWall,
         FlameResistant,
     ],
-    price=12,
-)
-
-VILE_TRANSMUTER = UnitBlueprint(
-    "Vile Transmuter",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[DrainingGrasp, WringEssence, FatalBonding, FalseCure],
     price=12,
 )
 
@@ -809,7 +811,7 @@ CYCLOPS = UnitBlueprint(
 )
 
 ZONE_MECH = UnitBlueprint(
-    "Zone Mech",
+    "ZONE Mech",
     health=7,
     speed=2,
     armor=1,

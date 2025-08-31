@@ -93,7 +93,7 @@ class HealBeam(SingleAllyActivatedAbility):
     Target other allied unit within 2 range LoS. Heals 2.
     """
 
-    cost = MovementCost(1) | EnergyCost(3)
+    cost = EnergyCost(3)
     range = 2
     can_target_self = False
 
@@ -999,7 +999,7 @@ class Hitch(SingleAllyActivatedAbility):
 
 class CoordinatedManeuver(ActivatedAbilityFacet[list[Unit]]):
     """
-    Target 1 or 2 other ready allied units within 2 range LoS. Activates them.
+    Target 1 or 2 other ready allied units within 3 range LoS. Activates them.
     """
 
     cost = EnergyCost(3) | MovementCost(1)
@@ -1007,7 +1007,7 @@ class CoordinatedManeuver(ActivatedAbilityFacet[list[Unit]]):
     def get_target_profile(self) -> TargetProfile[list[Unit]] | None:
         if units := [
             unit
-            for unit in GS.map.get_units_within_range_off(self.parent, 2)
+            for unit in GS.map.get_units_within_range_off(self.parent, 3)
             if unit.controller == self.parent.controller
             and unit != self.parent
             and not unit.exhausted

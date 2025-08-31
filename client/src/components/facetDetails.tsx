@@ -38,7 +38,7 @@ const getFacetStatLine = (
     stats.push([
       facet.max_activations === null
         ? "unlimited activations"
-        : `x${facet.max_activations} max activations`,
+        : `${facet.max_activations} max activations`,
     ]);
   }
   if ("cost" in facet && facet.cost.atoms.length) {

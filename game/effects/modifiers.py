@@ -155,6 +155,25 @@ class ForestStealthModifier(StateModifierEffect[Unit, Player, bool]):
 
 
 @dataclasses.dataclass(eq=False)
+class StealthOnTerrainModifier(StateModifierEffect[Unit, Player, bool]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.is_hidden_for
+
+    unit: Unit
+    terrain_type: type[Terrain]
+
+    def should_modify(self, obj: Unit, request: Player, value: bool) -> bool:
+        return (
+            obj == self.unit
+            and isinstance(GS.map.hex_off(obj).terrain, self.terrain_type)
+            and stealth_hidden_for(obj, request)
+        )
+
+    def modify(self, obj: Unit, request: Player, value: bool) -> bool:
+        return True
+
+
+@dataclasses.dataclass(eq=False)
 class FightFlightFreezeModifier(
     StateModifierEffect[Unit, ActiveUnitContext, list[Option]]
 ):

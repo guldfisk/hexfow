@@ -21,8 +21,8 @@ from game.effects.modifiers import (
     RootedModifier,
     SourceTypeResistanceModifier,
     StealthModifier,
+    StealthOnTerrainModifier,
     TelepathicSpyModifier,
-    TerrainProtectionModifier,
     UnitNoCaptureModifier,
     UnwieldySwimmerModifier,
 )
@@ -39,6 +39,7 @@ from game.effects.triggers import (
     CaughtInTheMatchTrigger,
     DebuffOnMeleeAttackTrigger,
     ExplosiveTrigger,
+    FoulBurstTrigger,
     FuriousTrigger,
     GrizzlyMurdererTrigger,
     HeelTurnTrigger,
@@ -296,6 +297,15 @@ class MagicForm(StaticAbilityFacet):
         )
 
 
+class FoulBurst(StaticAbilityFacet):
+    """
+    When this unit dies, apply <soot> to the hex it was on for 2 rounds.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(FoulBurstTrigger(self.parent, self))
+
+
 class ToughSkin(StaticAbilityFacet):
     """
     Reduce damage dealt to this unit by one third, rounding the reduction down.
@@ -355,13 +365,12 @@ class Aquatic(StaticAbilityFacet):
 class Diver(StaticAbilityFacet):
     """
     This unit can move on water.
-    +1 terrain protection on water.
+    Stealth on water.
     """
 
     def create_effects(self) -> None:
         self.register_effects(
-            AquaticModifier(self.parent),
-            TerrainProtectionModifier(self.parent, Water, 1),
+            AquaticModifier(self.parent), StealthOnTerrainModifier(self.parent, Water)
         )
 
 

@@ -20,10 +20,11 @@ class Peck(MeleeAttackFacet):
     damage = 1
 
 
-class BuglingClaw(MeleeAttackFacet):
+class Scratch(MeleeAttackFacet):
     cost = MovementCost(1)
     combinable = True
-    damage = 2
+    max_activations = 2
+    damage = 1
 
 
 class GiantClub(MeleeAttackFacet):
@@ -96,9 +97,9 @@ class Blaster(RangedAttackFacet):
 class BloodExpunge(RangedAttackFacet):
     """+1 damage for each unique debuff the target has."""
 
+    cost = MovementCost(2)
     damage = 2
     range = 3
-    cost = MovementCost(2)
 
     def get_damage_modifier_against(self, unit: Unit) -> int | None:
         return len(
@@ -340,7 +341,6 @@ class RoundhouseKick(MeleeAttackFacet):
 
 
 class ScratchAndBite(MeleeAttackFacet):
-    cost = MovementCost(1)
     damage = 2
 
 

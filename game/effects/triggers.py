@@ -732,6 +732,25 @@ class PanickedTrigger(TriggerEffect[RoundCleanup]):
 
 
 @dataclasses.dataclass(eq=False)
+class FoulBurstTrigger(TriggerEffect[KillUpkeep]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+    source: Source
+
+    def should_trigger(self, event: KillUpkeep) -> bool:
+        return event.unit == self.unit
+
+    def resolve(self, event: KillUpkeep) -> None:
+        ES.resolve(
+            ApplyHexStatus(
+                GS.map.hex_off(event.unit),
+                HexStatusSignature(HexStatus.get("soot"), self.source, duration=2),
+            )
+        )
+
+
+@dataclasses.dataclass(eq=False)
 class ParasiteTrigger(TriggerEffect[KillUpkeep]):
     priority: ClassVar[int] = 0
 

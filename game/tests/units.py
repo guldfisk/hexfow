@@ -1,4 +1,5 @@
 from game.core import MeleeAttackFacet, UnitBlueprint
+from game.units.facets.attacks import LightBow
 from game.values import Size
 
 
@@ -14,4 +15,13 @@ TEST_CHICKEN = UnitBlueprint(
     size=Size.SMALL,
     facets=[Peck],
     price=1,
+)
+
+TEST_LIGHT_ARCHER = UnitBlueprint(
+    name="Light Archer",
+    health=4,
+    speed=3,
+    sight=2,
+    facets=[LightBow],
+    price=3,
 )
