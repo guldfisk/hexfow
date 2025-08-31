@@ -109,6 +109,7 @@ from game.units.facets.attacks import (
     Spew,
     Stinger,
     Strafe,
+    StubbyClaws,
     Tackle,
     TongueLash,
     TwinRevolvers,
@@ -149,6 +150,7 @@ from game.units.facets.static_abilities import (
     Swimmer,
     TelepathicSpy,
     TerrainSavvy,
+    ToughSkin,
     ToxicPresence,
     ToxicSkin,
 )
@@ -156,19 +158,41 @@ from game.values import Size
 
 
 BLIND_GRUB = UnitBlueprint(
-    name="Blind Grub", health=3, speed=3, sight=0, size=Size.SMALL, price=1
+    name="Blind Grub",
+    health=3,
+    speed=3,
+    sight=0,
+    size=Size.SMALL,
+    price=1,
 )
 
 BLIND_ORACLE = UnitBlueprint(
-    "Blind Oracle", health=2, speed=2, sight=0, energy=2, facets=[Scry], price=1
+    "Blind Oracle",
+    health=2,
+    speed=2,
+    sight=0,
+    energy=2,
+    facets=[Scry],
+    price=1,
 )
 
 CHICKEN = UnitBlueprint(
-    name="Chicken", health=2, speed=2, sight=1, size=Size.SMALL, facets=[Peck], price=1
+    name="Chicken",
+    health=2,
+    speed=2,
+    sight=1,
+    size=Size.SMALL,
+    facets=[Peck],
+    price=1,
 )
 
 CRAWLING_URCHIN = UnitBlueprint(
-    name="Crawling Urchin", health=4, speed=1, sight=1, facets=[Prickly], price=2
+    name="Crawling Urchin",
+    health=5,
+    speed=1,
+    sight=1,
+    facets=[Prickly],
+    price=2,
 )
 
 GOBLIN_SLINGSHOT = UnitBlueprint(
@@ -208,6 +232,16 @@ SNAP_JAW = UnitBlueprint(
     speed=1,
     sight=1,
     facets=[Chomp],
+    price=2,
+)
+
+WEATHERED_ARMADILLO = UnitBlueprint(
+    "Weathered Armadillo",
+    health=5,
+    speed=2,
+    sight=1,
+    size=Size.SMALL,
+    facets=[StubbyClaws, ToughSkin],
     price=2,
 )
 
@@ -693,17 +727,6 @@ GATE_FIEND = UnitBlueprint(
     price=13,
 )
 
-MAD_SCIENTIST = UnitBlueprint(
-    "Mad Scientist",
-    health=6,
-    speed=3,
-    sight=2,
-    energy=8,
-    facets=[ShrinkRay, Translocate, AssembleTheDoombot, Inspiration],
-    price=13,
-    max_count=0,
-)
-
 WITCH_ENGINE = UnitBlueprint(
     "Witch Engine",
     health=7,
@@ -830,7 +853,6 @@ TELEPATH = UnitBlueprint(
     price=None,
 )
 
-
 CAPRICIOUS_TRICKSTER = UnitBlueprint(
     "Capricious Trickster",
     health=6,
@@ -860,6 +882,17 @@ WAR_HOG = UnitBlueprint(
     sight=2,
     facets=[RazorTusk, Furious],
     price=11,
+    max_count=0,
+)
+
+MAD_SCIENTIST = UnitBlueprint(
+    "Mad Scientist",
+    health=6,
+    speed=3,
+    sight=2,
+    energy=8,
+    facets=[ShrinkRay, Translocate, AssembleTheDoombot, Inspiration],
+    price=13,
     max_count=0,
 )
 

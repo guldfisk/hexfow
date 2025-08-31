@@ -275,7 +275,28 @@ class UnitNoCaptureModifier(StateModifierEffect[Unit, Hex, bool]):
 
 
 @dataclasses.dataclass(eq=False)
-class SourceTypeResistance(StateModifierEffect[Unit, DamageSignature, Resistance]):
+class ResistanceModifier(StateModifierEffect[Unit, DamageSignature, Resistance]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.get_resistance_against
+
+    unit: Unit
+    resistance: Resistance
+
+    def should_modify(
+        self, obj: Unit, request: DamageSignature, value: Resistance
+    ) -> bool:
+        return obj == self.unit
+
+    def modify(
+        self, obj: Unit, request: DamageSignature, value: Resistance
+    ) -> Resistance:
+        return max(value, self.resistance)
+
+
+@dataclasses.dataclass(eq=False)
+class SourceTypeResistanceModifier(
+    StateModifierEffect[Unit, DamageSignature, Resistance]
+):
     priority: ClassVar[int] = 1
     target: ClassVar[object] = Unit.get_resistance_against
 

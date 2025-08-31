@@ -16,8 +16,9 @@ from game.effects.modifiers import (
     FightFlightFreezeModifier,
     IncreaseSpeedAuraModifier,
     PusherModifier,
+    ResistanceModifier,
     RootedModifier,
-    SourceTypeResistance,
+    SourceTypeResistanceModifier,
     StealthModifier,
     TelepathicSpyModifier,
     TerrainProtectionModifier,
@@ -242,7 +243,7 @@ class GlassSkin(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(
-            SourceTypeResistance(self.parent, Status, Resistance.MAJOR)
+            SourceTypeResistanceModifier(self.parent, Status, Resistance.MAJOR)
         )
 
 
@@ -253,7 +254,7 @@ class DiamondSkin(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(
-            SourceTypeResistance(self.parent, Status, Resistance.IMMUNE)
+            SourceTypeResistanceModifier(self.parent, Status, Resistance.IMMUNE)
         )
 
 
@@ -263,7 +264,18 @@ class FlameResistant(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(SourceTypeResistance(self.parent, Burn, Resistance.MAJOR))
+        self.register_effects(
+            SourceTypeResistanceModifier(self.parent, Burn, Resistance.MAJOR)
+        )
+
+
+class ToughSkin(StaticAbilityFacet):
+    """
+    Reduce damage dealt to this unit by one third, rounding the reduction down.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(ResistanceModifier(self.parent, Resistance.MINOR))
 
 
 class LastStand(StaticAbilityFacet):

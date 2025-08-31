@@ -159,6 +159,11 @@ class SnappingBeak(MeleeAttackFacet):
     cost = MovementCost(1)
 
 
+class StubbyClaws(MeleeAttackFacet):
+    damage = 2
+    cost = ExclusiveCost()
+
+
 class Chainsaw(MeleeAttackFacet):
     """
     +2 damage against unarmored units.
@@ -463,4 +468,4 @@ class SlingShot(RangedAttackFacet):
 
 class Chomp(MeleeAttackFacet):
     cost = ExclusiveCost()
-    damage = 3
+    damage = 4
