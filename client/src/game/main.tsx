@@ -1,6 +1,5 @@
 import "../../common.css";
 
-
 import { Application, Container, Graphics } from "pixi.js";
 import { recursiveCamelCase } from "./utils/case.ts";
 
@@ -48,15 +47,14 @@ async function main() {
   let worldScale = 1;
 
   app.stage.on("pointerdown", (event) => {
-    if (event.button == 1) {
+    console.log(event.ctrlKey, event.button);
+    if (event.button == 1 || (event.button == 0 && event.ctrlKey)) {
       isDragging = true;
     }
   });
 
   app.stage.on("pointerup", (event) => {
-    if (event.button == 1) {
-      isDragging = false;
-    }
+    isDragging = false;
   });
   app.stage.on("pointermove", (event) => {
     if (isDragging) {
