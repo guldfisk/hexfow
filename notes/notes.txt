@@ -1,27 +1,18 @@
 stop movement wall
-allied teleporter
-flag planter
 reactive armor
 exhaust a unit
 delayed aoe damage
-electric eel
 rupture
 blind blood hunter
 isolation hunter
 delayed long range tp
 anti tp aura
 corpses, like homm, cool design space + confirmation things died in fow
-transportation
-    can contain n units
-    contained units die with transport by default
-    by default unit can walk into transport, ending turn
-    by default, units can start their turn in transport. only legal action is move out.
 compulsive impatience, aoe debuff - when player takes action with unit that is not this unit while this unit is ready, this units suffers 1 pure damage, removed when this unit is activated.
 soul tether - debuff two targets, keeps track of maximum seen distance between units, both suffer a pure damage for each distance max seen distance is extended.
 corpse explosion - aoe - multiple corpses same square combined into single damage instance - corpses of dead units explode recursively
 star shaped aoe
 full invisibility - removed on attack until next action - removed when blocking opponent unit?
-OPPONENT OUT OF ACTIONS IN ROUND NOTIFICATION? - prob is, even if opponent has to do a noop pass, this will give them info instead, so maybe just embrace? cool inventive for canon fodder or dumb arms race?
 thoughts about "standard play"
     an army is build for a map pool (prob 5)
     a map is a procedure for generating a symmetrical set of hexes to play on
@@ -41,13 +32,6 @@ unit price resources?
         This prob makes sense as "pure fighting ability", i.e. "damage per turn" * "effective health", so small maps isn't just all the slowest units standing in a clump and hitting each other.
         - purple (p) - support/spells/high synergy
     maybe also a vision one?
-buildings?
-    immovable
-    no terrain protection
-power runes on map
-    move over +1 movement point
-    single vp pickup
-        only for specific player on other side of map?
 stealth while not moving
 map ideas:
 
@@ -80,13 +64,6 @@ map ideas:
         middle capture area surrounded by unpassable mountain ring, with a few gaps. medium elevation, sparse vegetation, except for the middle.
 
 "bat" sight, can only see presence of unit, nothing else.
-orbital strike
-    aoe ability 4 energy
-    aoe type hex range 8 NLoS
-    applies status incoming strike to terrain
-        hidden
-        after 2 rounds remove status and deal 6 aoe damage to any unit on hex
-ability remove energy and apply energy regen preventing debuff 2 rounds
 raise dead - corpse as generic skeleton - merge multiple corpses into more powerful creature?
 energy overcharge
 aquatic only creature
@@ -147,20 +124,10 @@ this one's dumb, like the shrivel idea, though:
         apply shriveled to all units in aoe until they skip
             stackable
             -1 max health
-combinable melee attack only
-not sure how to make this make sense:
-    immolation orb
-    health 8, movement 2, sight 1, S
-    - flying
-    - whenever a unit engages this unit, or ends it movement adjacent to this unit, apply 1 burn to that unit.
-    - at the end of round, apply 2 burn to all adjacent units
 meteor strike jump
 heal to minimum threshold
 greater cleric
 frost archmage
-combat medic
-big turtle
-timed/remote explosives
 illusion
 clone unit
 become copy of unit
@@ -171,7 +138,6 @@ debuff - double damage taken
 corpse explosion
 effect removes stacks/duration of all debuffs
 exhaustion - debuff stack n - when unit ends non skip action, takes n damage. when ends skip action, remove stack of exhaustion
-tough skin - greater resistance to damage from statuses. debuffs with duration applies with half duration, rounded up.
 werewolf
 
 cult warlock {5p} x2
@@ -190,15 +156,6 @@ health 6, movement 3, sight 2, energy 6, M
 aoe entangled doom etc
 
 how reconcile cool use of entangled doom on allied units, if entangled doom is all units, not just of same player, with how stupid the mirror gets?
-
-conqueror gnome {6p} x2
-health 5, movement 3, sight 2, S
-plant flag
-    ability
-    target hex 1 range
-    applies status flagged to hex
-        unstackable
-        hex counts as occupied by allied unit for purposes of capturing points.
 
 force psychic {8rrpp} x1
 health 5, movement 2, sight 2, energy 4, S
@@ -227,14 +184,6 @@ force field
         hex is impassable to ground units
         hex blocks LoS for attacks
 
-physical propagation is a meme
-
-"paranoia" debuff - unit does not provide vision when activated, and when it is is no other units does.
-    bit awkward in current implementation, since you need to have vision of a unit to activate it, so when it's not activated you still
-    need to have vision of the units hex, while you shouldn't have vision of even just the spaces allied units are on when it is activated.
-    maybe this should just be fixed so you can always activate your unit without vision...
-
-must attack / can't skip ability / status
 same but for spells
 
 unit that moves up to 2 spaces with normal moves
@@ -250,3 +199,21 @@ unicorn
 
 babushka
 ready unit only allow movement
+
+frost sprite
+croc
+pharaoh
+sheltering ancient
+spirit guide
+
+artillery
+
+flare - reveal to all
+curse of fleas
+teleport to ally
+move space when attacked
+force unit to attack itself
+puck-ish
+firefly effect / spawns with ephemeral
+climber
+damaged when debuffed
