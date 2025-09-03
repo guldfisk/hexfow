@@ -58,10 +58,11 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                TELEPATH,
+                # TELEPATH,
                 # SLUDGE_SLUG,
                 # FRONTLINE_TACTICIAN,
-                # CYCLOPS,
+                CYCLOPS,
+                INSCRUTABLE_CHIMERA,
                 # BUGLING,
             ),
             (

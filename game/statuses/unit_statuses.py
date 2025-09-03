@@ -18,6 +18,7 @@ from game.effects.modifiers import (
     TerrorModifier,
     UnitArmorFlatModifier,
     UnitAttackPowerFlatModifier,
+    UnitEnergyRegenFlatModifier,
     UnitMaxHealthFlatModifier,
     UnitNoCaptureModifier,
     UnitProportionalSpeedModifier,
@@ -27,6 +28,7 @@ from game.effects.modifiers import (
 )
 from game.effects.replacements import LuckyCharmReplacement, StunnedReplacement
 from game.effects.triggers import (
+    BaffledTrigger,
     BellStruckTrigger,
     BurnTrigger,
     ExpireOnDealDamageStatusTrigger,
@@ -414,3 +416,19 @@ class Enfeebled(RefreshableMixin, UnitStatus):
 
     def create_effects(self) -> None:
         self.register_effects(UnitAttackPowerFlatModifier(self.parent, -2))
+
+
+class Focused(RefreshableMixin, UnitStatus):
+    """+1 energy regen."""
+
+    def create_effects(self) -> None:
+        self.register_effects(UnitEnergyRegenFlatModifier(self.parent, 1))
+
+
+class Baffled(UnitStatus):
+    """
+    When this unit finishes it's turn, if it acted, stun it. Then remove this status.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(BaffledTrigger(self))

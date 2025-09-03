@@ -509,6 +509,21 @@ class UnitAttackPowerFlatModifier(StateModifierEffect[Unit, None, int]):
 
 
 @dataclasses.dataclass(eq=False)
+class UnitEnergyRegenFlatModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.energy_regen
+
+    unit: Unit
+    amount: int | Callable[..., int]
+
+    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+        return obj == self.unit
+
+    def modify(self, obj: Unit, request: None, value: int) -> int:
+        return value + (self.amount if isinstance(self.amount, int) else self.amount())
+
+
+@dataclasses.dataclass(eq=False)
 class UnitArmorFlatModifier(StateModifierEffect[Unit, None, int]):
     priority: ClassVar[int] = 1
     target: ClassVar[object] = Unit.armor

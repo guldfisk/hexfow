@@ -22,6 +22,7 @@ from game.units.facets.activated_abilities import (
     Hitch,
     InducePanic,
     InkRing,
+    InstilFocus,
     InternalStruggle,
     IronBlessing,
     Jaunt,
@@ -31,7 +32,9 @@ from game.units.facets.activated_abilities import (
     MalevolentStare,
     OpenGate,
     Poof,
+    PsychicCommand,
     RaiseShrine,
+    Riddle,
     Scorch,
     Scorn,
     Scry,
@@ -72,6 +75,7 @@ from game.units.facets.attacks import (
     Chomp,
     CommandersPistol,
     CrushingMandibles,
+    CrypticClaws,
     CurvedHorns,
     DancingSaber,
     DeathLaser,
@@ -799,6 +803,16 @@ GATE_FIEND = UnitBlueprint(
     energy=4,
     facets=[InfernalBlade, OpenGate],
     price=13,
+)
+
+INSCRUTABLE_CHIMERA = UnitBlueprint(
+    "Inscrutable Chimera",
+    health=7,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[CrypticClaws, Riddle, PsychicCommand, InstilFocus],
+    price=12,
 )
 
 WITCH_ENGINE = UnitBlueprint(

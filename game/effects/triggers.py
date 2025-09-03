@@ -879,3 +879,25 @@ class WalkInDestroyStatusTrigger(TriggerEffect[MoveUnit]):
 
     def resolve(self, event: MoveUnit) -> None:
         self.status.remove()
+
+
+@dataclasses.dataclass(eq=False)
+class BaffledTrigger(TriggerEffect[Turn]):
+    priority: ClassVar[int] = 0
+
+    status: UnitStatus
+
+    def should_trigger(self, event: Turn) -> bool:
+        return event.unit == self.status.parent
+
+    def resolve(self, event: Turn) -> None:
+        if event.result:
+            ES.resolve(
+                ApplyStatus(
+                    self.status.parent,
+                    UnitStatusSignature(
+                        UnitStatus.get("stunned"), self.status, stacks=1
+                    ),
+                )
+            )
+        self.status.remove()

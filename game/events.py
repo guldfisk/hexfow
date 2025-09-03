@@ -677,7 +677,6 @@ class Turn(Event[bool]):
                         GS.active_unit_context.should_stop = True
                     else:
                         ES.resolve(Rest(self.unit))
-                    do_state_based_check()
                     break
 
                 elif isinstance(decision.option, MoveOption):
@@ -887,7 +886,7 @@ class Round(Event[None]):
                         for turn in ES.resolve(Turn(decision.target)).iter_type(Turn)
                     ):
                         last_action_timestamps[player] = timestamp
-                        do_state_based_check()
+                    do_state_based_check()
 
                 elif isinstance(decision.option, SkipOption):
                     with gs.log(LogLine([player, "waits"])):

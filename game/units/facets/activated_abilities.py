@@ -339,17 +339,44 @@ class Jump(ActivatedAbilityFacet[Hex]):
         ES.resolve(MoveUnit(self.parent, target))
 
 
-class Rouse(SingleTargetActivatedAbility):
-    cost = MovementCost(1) | EnergyCost(3)
+class PsychicCommand(SingleTargetActivatedAbility):
+    """Target other unit within 3 range LoS. Activates it."""
+
+    cost = EnergyCost(2)
     range = 3
-    requires_los = False
+    combinable = True
 
     def can_target_unit(self, unit: Unit) -> bool:
         return unit != self.parent
 
     def perform(self, target: Unit) -> None:
-        # TODO make it not able to skip?
         ES.resolve(QueueUnitForActivation(target))
+
+
+class Riddle(SingleEnemyActivatedAbility):
+    """Target enemy unit within 2 range LoS. Applies <baffled>."""
+
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 2
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(target, UnitStatusSignature(UnitStatus.get("baffled"), self))
+        )
+
+
+class InstilFocus(SingleAllyActivatedAbility):
+    """Target allied unit within 2 range LoS. Applies <focused> for 3 rounds."""
+
+    cost = EnergyCost(2) | MovementCost(1)
+    range = 2
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                target, UnitStatusSignature(UnitStatus.get("focused"), self, duration=2)
+            )
+        )
 
 
 class SummonBees(SingleHexTargetActivatedAbility):
@@ -1062,7 +1089,7 @@ class CoordinatedManeuver(ActivatedAbilityFacet[list[Unit]]):
 
 class LayMine(SingleHexTargetActivatedAbility):
     """
-    Target unoccupied hex within 2 range. Applies <mine>.
+    Target unoccupied hex within 1 range. Applies <mine>.
     """
 
     cost = EnergyCost(2) | MovementCost(1)

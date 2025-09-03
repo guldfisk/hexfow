@@ -1,5 +1,8 @@
+from more_itertools.recipes import is_prime
+
 from events.eventsystem import ES
 from game.core import (
+    GS,
     DamageSignature,
     ExclusiveCost,
     MeleeAttackFacet,
@@ -179,8 +182,21 @@ class SnappingBeak(MeleeAttackFacet):
 
 
 class StubbyClaws(MeleeAttackFacet):
-    damage = 1
     cost = ExclusiveCost()
+    damage = 1
+
+
+class CrypticClaws(MeleeAttackFacet):
+    """
+    +2 damage on prime rounds.
+    """
+
+    cost = MovementCost(1)
+    damage = 2
+
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        if is_prime(GS.round_counter):
+            return 2
 
 
 class Chainsaw(MeleeAttackFacet):
