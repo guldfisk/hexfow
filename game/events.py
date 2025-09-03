@@ -128,6 +128,30 @@ class GainEnergy(Event[int]):
 
 
 @dataclasses.dataclass
+class LoseEnergy(Event[int]):
+    unit: Unit
+    amount: int
+    source: Source
+
+    def is_valid(self) -> bool:
+        return self.amount > 0 and self.unit.energy > 0
+
+    def resolve(self) -> int:
+        amount = min(self.amount, self.unit.energy)
+        with GS.log(
+            LogLine(
+                [
+                    self.unit,
+                    f"loses {amount} energy",
+                    *(("from", self.source) if self.source else ()),
+                ]
+            )
+        ):
+            self.unit.energy -= amount
+        return amount
+
+
+@dataclasses.dataclass
 class SufferDamage(Event[int]):
     unit: Unit
     signature: DamageSignature

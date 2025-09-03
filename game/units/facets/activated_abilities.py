@@ -50,6 +50,7 @@ from game.events import (
     Heal,
     Hit,
     Kill,
+    LoseEnergy,
     ModifyMovementPoints,
     MoveUnit,
     QueueUnitForActivation,
@@ -997,6 +998,23 @@ class IronBlessing(SingleAllyActivatedAbility):
                 target, UnitStatusSignature(UnitStatus.get("armored"), self, duration=2)
             )
         )
+
+
+class InternalStruggle(SingleEnemyActivatedAbility):
+    """
+    Target enemy unit within 2 range NLoS.
+    If the unit has a primary attack, it hits itself with it, otherwise it loses 3 energy.
+    """
+
+    cost = EnergyCost(3) | MovementCost(2)
+    range = 2
+    requires_los = False
+
+    def perform(self, target: Unit) -> None:
+        if attack := target.get_primary_attack():
+            ES.resolve(Hit(target, target, attack))
+        else:
+            ES.resolve(LoseEnergy(target, 3, self))
 
 
 class Hitch(SingleAllyActivatedAbility):

@@ -22,6 +22,7 @@ from game.units.facets.activated_abilities import (
     Hitch,
     InducePanic,
     InkRing,
+    InternalStruggle,
     IronBlessing,
     Jaunt,
     Jump,
@@ -31,7 +32,6 @@ from game.units.facets.activated_abilities import (
     OpenGate,
     Poof,
     RaiseShrine,
-    Rouse,
     Scorch,
     Scorn,
     Scry,
@@ -924,11 +924,11 @@ SENTRY_TURRET = UnitBlueprint(
 
 TELEPATH = UnitBlueprint(
     "Telepath",
-    health=5,
+    health=4,
     speed=3,
-    sight=0,
-    energy=5,
-    facets=[TelepathicSpy, Rouse],
+    sight=1,
+    energy=4,
+    facets=[InternalStruggle, TelepathicSpy],
     price=None,
 )
 

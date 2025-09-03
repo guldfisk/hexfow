@@ -58,15 +58,17 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                SLUDGE_SLUG,
-                FRONTLINE_TACTICIAN,
+                TELEPATH,
+                # SLUDGE_SLUG,
+                # FRONTLINE_TACTICIAN,
                 # CYCLOPS,
                 # BUGLING,
             ),
             (
                 LIGHT_ARCHER,
-                STUBBORN_GOAT,
+                # STUBBORN_GOAT,
                 BELL_STRIKER_BRUTE,
+                BLOOD_FEUD_WARLOCK,
                 # SKITTISH_SOOT_PUFF,
             ),
         )
