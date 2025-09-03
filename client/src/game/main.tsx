@@ -47,8 +47,7 @@ async function main() {
   let worldScale = 1;
 
   app.stage.on("pointerdown", (event) => {
-    console.log(event.ctrlKey, event.button);
-    if (event.button == 1 || (event.button == 0 && event.ctrlKey)) {
+    if (event.button == 1 || (event.button == 2)) {
       isDragging = true;
     }
   });
@@ -90,9 +89,9 @@ async function main() {
   // TODO disable normal browser zoom?
 
   // TODO YIKES
-  // document.oncontextmenu = document.body.oncontextmenu = function () {
-  //   return false;
-  // };
+  document.oncontextmenu = document.body.oncontextmenu = function () {
+    return false;
+  };
 
   // TODO lmao
   const keyHandler = (event: KeyboardEvent) => {

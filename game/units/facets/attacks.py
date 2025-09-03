@@ -179,7 +179,7 @@ class SnappingBeak(MeleeAttackFacet):
 
 
 class StubbyClaws(MeleeAttackFacet):
-    damage = 2
+    damage = 1
     cost = ExclusiveCost()
 
 

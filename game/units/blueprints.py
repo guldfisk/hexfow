@@ -543,7 +543,7 @@ DJINN = UnitBlueprint(
     sight=2,
     energy=4,
     facets=[DancingSaber, GrantWish, MagicForm],
-    price=8,
+    price=5,
 )
 
 BLIND_ABOMINATION = UnitBlueprint(
