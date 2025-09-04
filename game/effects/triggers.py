@@ -499,6 +499,24 @@ class UnitAppliesStatusOnMoveTrigger(TriggerEffect[MoveUnit]):
 
 
 @dataclasses.dataclass(eq=False)
+class ChillTrigger(TriggerEffect[RoundCleanup]):
+    priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
+
+    unit: Unit
+    source: Source
+
+    def should_trigger(self, event: RoundCleanup) -> bool:
+        return not any(
+            GS.map.get_neighboring_units_off(
+                self.unit, controlled_by=self.unit.controller
+            )
+        )
+
+    def resolve(self, event: RoundCleanup) -> None:
+        ES.resolve(Damage(self.unit, DamageSignature(1, self.source, DamageType.PURE)))
+
+
+@dataclasses.dataclass(eq=False)
 class BurnOnCleanup(TriggerEffect[RoundCleanup]):
     priority: ClassVar[int] = TriggerLayers.ROUND_APPLY_DEBUFFS
 

@@ -82,7 +82,9 @@ from game.units.facets.attacks import (
     DiamondFist,
     DrainingGrasp,
     EtherealSting,
+    FinalSting,
     FromTheTopRope,
+    Frostbite,
     GiantClub,
     GlassFist,
     Gnaw,
@@ -201,6 +203,16 @@ CHICKEN = UnitBlueprint(
     price=1,
 )
 
+HIVE_GUARD_GNAT = UnitBlueprint(
+    "Hive-Guard Gnat",
+    health=1,
+    speed=2,
+    sight=1,
+    size=Size.SMALL,
+    facets=[FinalSting],
+    price=1,
+)
+
 UNBLINKING_WATCHER = UnitBlueprint(
     name="Unblinking Watcher",
     health=2,
@@ -276,6 +288,16 @@ BLOOD_CONDUIT = UnitBlueprint(
     sight=2,
     energy=3,
     facets=[VitalityTransfer],
+    price=3,
+)
+
+FROST_SPRITE = UnitBlueprint(
+    "Frost Sprite",
+    health=3,
+    speed=3,
+    sight=1,
+    size=Size.SMALL,
+    facets=[Frostbite],
     price=3,
 )
 
@@ -540,16 +562,6 @@ ZONE_SKIRMISHER = UnitBlueprint(
     price=7,
 )
 
-DJINN = UnitBlueprint(
-    "Djinn",
-    health=4,
-    speed=3,
-    sight=2,
-    energy=4,
-    facets=[DancingSaber, GrantWish, MagicForm],
-    price=5,
-)
-
 BLIND_ABOMINATION = UnitBlueprint(
     "Blind Abomination",
     health=9,
@@ -557,6 +569,16 @@ BLIND_ABOMINATION = UnitBlueprint(
     sight=0,
     size=Size.LARGE,
     facets=[Vomit],
+    price=9,
+)
+
+DJINN = UnitBlueprint(
+    "Djinn",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[DancingSaber, GrantWish, MagicForm],
     price=9,
 )
 
@@ -795,16 +817,6 @@ INFERNO_TANK = UnitBlueprint(
     price=12,
 )
 
-GATE_FIEND = UnitBlueprint(
-    "Gate Fiend",
-    health=8,
-    speed=3,
-    sight=2,
-    energy=4,
-    facets=[InfernalBlade, OpenGate],
-    price=13,
-)
-
 INSCRUTABLE_CHIMERA = UnitBlueprint(
     "Inscrutable Chimera",
     health=7,
@@ -813,6 +825,16 @@ INSCRUTABLE_CHIMERA = UnitBlueprint(
     energy=5,
     facets=[CrypticClaws, Riddle, PsychicCommand, InstilFocus],
     price=12,
+)
+
+GATE_FIEND = UnitBlueprint(
+    "Gate Fiend",
+    health=8,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[InfernalBlade, OpenGate],
+    price=13,
 )
 
 WITCH_ENGINE = UnitBlueprint(

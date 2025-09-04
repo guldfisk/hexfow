@@ -1,13 +1,10 @@
-stop movement wall
 reactive armor
-exhaust a unit
 delayed aoe damage
 rupture
 blind blood hunter
 isolation hunter
 delayed long range tp
 anti tp aura
-corpses, like homm, cool design space + confirmation things died in fow
 compulsive impatience, aoe debuff - when player takes action with unit that is not this unit while this unit is ready, this units suffers 1 pure damage, removed when this unit is activated.
 soul tether - debuff two targets, keeps track of maximum seen distance between units, both suffer a pure damage for each distance max seen distance is extended.
 corpse explosion - aoe - multiple corpses same square combined into single damage instance - corpses of dead units explode recursively
@@ -66,7 +63,6 @@ map ideas:
 "bat" sight, can only see presence of unit, nothing else.
 raise dead - corpse as generic skeleton - merge multiple corpses into more powerful creature?
 energy overcharge
-aquatic only creature
 ambush trapdoor spider
 storm summoner - AA
 day/night cycle?
@@ -81,7 +77,6 @@ weather (bloat, this time for real). but maybe these can just be like global sta
         -1 sight (min 1)
     windy
         -1 movement air units
-like hot/cold as just debuffs also    
 identities?
     could have resource bonuses, like:
         all units below n points -1 point cost
@@ -91,25 +86,14 @@ identities?
         discount units costing certain resources
     opponents hero is visible while deploying
 bog witch
-not really sure what to do with this:
-    warp entity
-    movement 2, health 5, sight 2, S
-    open gate
-        ability
-        target two hexes range 4
-        -1 movement
-        cooldown 4 rounds
-        each hex gets linked status gate for 2 rounds
-            independently stackable
-            when a unit enters, teleport it to linked hex
-    force wall
-        aoe ability
-        aoe type line length 3 range 3
-        cooldown 2 rounds
-        each hex gets force blocked for 2 rounds
-            unstackable, refreshable
-            a unit moving into this hex loses all remaining movement points
-    gate ability makes a lot more sense on the date demon thingy. force wall is cool, but together with what?
+force wall
+    aoe ability
+    aoe type line length 3 range 3
+    cooldown 2 rounds
+    each hex gets force blocked for 2 rounds
+        unstackable, refreshable
+        a unit moving into this hex loses all remaining movement points
+
 this one's dumb, like the shrivel idea, though:
     depressor
     movement 3, health 5, sight 2, S
@@ -140,56 +124,13 @@ effect removes stacks/duration of all debuffs
 exhaustion - debuff stack n - when unit ends non skip action, takes n damage. when ends skip action, remove stack of exhaustion
 werewolf
 
-cult warlock {5p} x2
-health 5, movement 3, sight 2, energy 3, M
-smite
-    ranked attack
-    2 damage, 2 range, -2 movement
-entangle fate
-    ability 2 energy
-    target unit 3 range LoS
-    -1 movement
-    applies entangled doom
-
-cult master
-health 6, movement 3, sight 2, energy 6, M
-aoe entangled doom etc
-
-how reconcile cool use of entangled doom on allied units, if entangled doom is all units, not just of same player, with how stupid the mirror gets?
-
-force psychic {8rrpp} x1
-health 5, movement 2, sight 2, energy 4, S
-force lance
-    ranged attack
-    3 damage, 3 range, no movement
-shield bubble
-    aoe ability 3 energy
-    aoe type hex size 1 unblocked propagation range 3
-    applies shield bubble status to terrain
-        2 round duration
-        unstackable, unrefreshable
-        +2 ranged / aoe protection against attacks made from outside bubble
-
 civilian {4p} x3
 health 3, movement 3, sight 1, M
 - at the end of the round, if this unit is in the middle of the board, sacrifice it. you gain 3 points
 
-force field
-    aoe ability 2 energy
-    aoe type hex range 2 LoS
-    can only target hex empty of ground unit
-    applies force field status to terrain
-        2 round duration
-        unstackable, refreshable
-        hex is impassable to ground units
-        hex blocks LoS for attacks
-
-same but for spells
+must use ability if able
 
 unit that moves up to 2 spaces with normal moves
-
-crawling cactus
-    use energy to move?
 
 unicorn
     non attack damage resistance aura
@@ -199,12 +140,14 @@ unicorn
 
 babushka
 ready unit only allow movement
+bleeding - like poison but with duration.
 
-frost sprite
 croc
 pharaoh
 sheltering ancient
 spirit guide
+clockwork archeologist
+druid thingy
 
 artillery
 
@@ -212,7 +155,6 @@ flare - reveal to all
 curse of fleas
 teleport to ally
 move space when attacked
-force unit to attack itself
 puck-ish
 firefly effect / spawns with ephemeral
 climber

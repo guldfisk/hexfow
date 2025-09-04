@@ -31,6 +31,7 @@ from game.effects.triggers import (
     BaffledTrigger,
     BellStruckTrigger,
     BurnTrigger,
+    ChillTrigger,
     ExpireOnDealDamageStatusTrigger,
     HitchedTrigger,
     OneTimeModifyMovementPointsStatusTrigger,
@@ -432,3 +433,12 @@ class Baffled(UnitStatus):
 
     def create_effects(self) -> None:
         self.register_effects(BaffledTrigger(self))
+
+
+class Chill(RefreshableMixin, UnitStatus):
+    """
+    At the end of each round, if this unit isn't adjacent to an allied unit, it's dealt 1 pure damage.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(ChillTrigger(self.parent, self))

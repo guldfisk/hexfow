@@ -199,6 +199,37 @@ class CrypticClaws(MeleeAttackFacet):
             return 2
 
 
+class Frostbite(MeleeAttackFacet):
+    """
+    Applies <chill> for 3 rounds.
+    """
+
+    cost = MovementCost(1)
+    damage = 1
+
+    def resolve_post_damage_effects(self, defender: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                defender, UnitStatusSignature(UnitStatus.get("chill"), self, duration=3)
+            )
+        )
+
+
+class FinalSting(MeleeAttackFacet):
+    """
+    Applies 1 <poison>. Deals 1 pure damage to this unit.
+    """
+
+    cost = MovementCost(1)
+    damage = 1
+
+    def resolve_post_damage_effects(self, defender: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(defender, UnitStatusSignature(UnitStatus.get("poison"), self))
+        )
+        ES.resolve(Damage(self.parent, DamageSignature(1, self, DamageType.PURE)))
+
+
 class Chainsaw(MeleeAttackFacet):
     """
     +2 damage against unarmored units.

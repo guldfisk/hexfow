@@ -8,17 +8,18 @@ map editor
     change meta info, aka point goals, and army max_unit counts and values.
 
 game
+    unit details include current statuses
     ability target descriptions, prob something like for status stacking
     delayed unit activation ("undo activation")
     linked statuses display
     unit last seen at round counter / ghost fading
     unit additional details
     support facet detail for facet used by multiple units
+    modifiable terrain support
 
     corpses
     chess clock
-    modifiable terrain support
-
+    break
     kill source
     "+2 attack power to melee attacks"
 
@@ -27,15 +28,23 @@ game
     deployment zone detail view during game
 
 code
-    refactor game.core somehow
     response validation
     message ids
+
     don't send no change game state updates
+    get rid of _small unit images suffix
+
+    refactor game.core somehow
     update test framework
     unit tests on core logic
     "no effect error"/disable triggers in event resolution
         hard to get right with event result and history
-    get rid of _small unit images suffix
+
+descriptions
+    align damage terminology
+    alarm aoe types terminology
+
+    aoe type icons
 
 replays
 

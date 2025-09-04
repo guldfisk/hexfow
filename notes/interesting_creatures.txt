@@ -288,29 +288,6 @@ spin web
         to the hex
 - stealth while on web
 
-sphinx {12upp} x1
-health 7, movement 3, sight 2, energy 5, M
-claw
-    melee attack
-    3 damage
-psychic command
-    combinable ability 3 energy
-    target unit 3 range LoS
-    activates target
-riddle
-    ability 3 energy
-    target enemy unit 2 range LoS, -1 movement
-    applies confused for 2 rounds
-        unstackable, refreshable
-        when this unit ends its turn, if it skipped, dispell this debuff, otherwise stun the unit.
-mystic energy
-    ability 2 energy
-    target allied unit 3 range, LoS, -1 movement
-    applies mystic empowerment for 3 rounds
-        unstackable, refreshable
-        +1 energy regen
-- energy cost toggle 1/2 flying
-
 giant turtle {12gggp} x1
 health 10, movement 2, armor 3, sight 2, L
 bite
