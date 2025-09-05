@@ -26,8 +26,7 @@ class Peck(MeleeAttackFacet):
 class Scratch(MeleeAttackFacet):
     cost = MovementCost(1)
     combinable = True
-    max_activations = 2
-    damage = 1
+    damage = 2
 
 
 class GiantClub(MeleeAttackFacet):
@@ -348,7 +347,7 @@ class HammerCannon(RangedAttackFacet):
 
 
 class SerratedClaws(MeleeAttackFacet):
-    """+1 damage against damages units."""
+    """+1 damage against damaged units."""
 
     cost = MovementCost(2)
     damage = 3

@@ -425,8 +425,8 @@ AP_GUNNER = UnitBlueprint(
 
 BUGLING = UnitBlueprint(
     "Bugling",
-    health=3,
-    speed=5,
+    health=4,
+    speed=4,
     sight=2,
     size=Size.SMALL,
     facets=[Scratch],
@@ -562,6 +562,16 @@ ZONE_SKIRMISHER = UnitBlueprint(
     price=7,
 )
 
+GIANT_TOAD = UnitBlueprint(
+    "Giant Toad",
+    health=8,
+    speed=2,
+    sight=2,
+    energy=2,
+    facets=[TongueLash, Jump, ToxicSkin],
+    price=8,
+)
+
 BLIND_ABOMINATION = UnitBlueprint(
     "Blind Abomination",
     health=9,
@@ -605,16 +615,6 @@ ELITE_COMMANDO = UnitBlueprint(
         TerrainSavvy,
         Swimmer,
     ],
-    price=9,
-)
-
-GIANT_TOAD = UnitBlueprint(
-    "Giant Toad",
-    health=8,
-    speed=2,
-    sight=2,
-    energy=2,
-    facets=[TongueLash, Jump, ToxicSkin],
     price=9,
 )
 
@@ -687,16 +687,6 @@ BULLDOZER = UnitBlueprint(
     size=Size.LARGE,
     armor=1,
     facets=[Pusher],
-    price=10,
-)
-
-FRONTLINE_TACTICIAN = UnitBlueprint(
-    "Frontline Tactician",
-    health=6,
-    speed=3,
-    sight=2,
-    energy=4,
-    facets=[CommandersPistol, CoordinatedManeuver, InspiringPresence],
     price=10,
 )
 
@@ -780,17 +770,6 @@ PESTILENCE_PRIEST = UnitBlueprint(
     price=11,
 )
 
-STAUNCH_IRON_HEART = UnitBlueprint(
-    "Staunch Iron-Heart",
-    health=7,
-    speed=2,
-    armor=1,
-    sight=2,
-    energy=4,
-    facets=[HammerBlow, MightyBlow, IronBlessing],
-    price=11,
-)
-
 VILE_TRANSMUTER = UnitBlueprint(
     "Vile Transmuter",
     health=5,
@@ -799,6 +778,26 @@ VILE_TRANSMUTER = UnitBlueprint(
     energy=5,
     facets=[DrainingGrasp, WringEssence, FatalBonding, FalseCure],
     price=11,
+)
+
+FRONTLINE_TACTICIAN = UnitBlueprint(
+    "Frontline Tactician",
+    health=6,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[CommandersPistol, CoordinatedManeuver, InspiringPresence],
+    price=12,
+)
+
+GATE_FIEND = UnitBlueprint(
+    "Gate Fiend",
+    health=8,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[InfernalBlade, OpenGate],
+    price=12,
 )
 
 INFERNO_TANK = UnitBlueprint(
@@ -827,14 +826,15 @@ INSCRUTABLE_CHIMERA = UnitBlueprint(
     price=12,
 )
 
-GATE_FIEND = UnitBlueprint(
-    "Gate Fiend",
-    health=8,
-    speed=3,
+STAUNCH_IRON_HEART = UnitBlueprint(
+    "Staunch Iron-Heart",
+    health=7,
+    speed=2,
+    armor=1,
     sight=2,
     energy=4,
-    facets=[InfernalBlade, OpenGate],
-    price=13,
+    facets=[HammerBlow, MightyBlow, IronBlessing],
+    price=12,
 )
 
 WITCH_ENGINE = UnitBlueprint(
