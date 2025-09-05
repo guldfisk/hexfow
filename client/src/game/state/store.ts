@@ -9,11 +9,13 @@ import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
 import { MenuData, selectionIcon } from "../actions/interface.ts";
 import { HoveredDetails } from "../../interfaces/details.ts";
 import { deepEquals } from "../utils/equals.ts";
+import { GameStateMessage } from "../../interfaces/messages.ts";
 
 const mainSlice = createSlice({
   name: "application",
   initialState: {
     gameState: null,
+    gameStateId: 0,
     shouldRerender: true,
     gameObjectDetails: null,
     detailed: null,
@@ -23,6 +25,7 @@ const mainSlice = createSlice({
     showCoordinates: false,
   } as {
     gameState: GameState | null;
+    gameStateId: number;
     shouldRerender: boolean;
     gameObjectDetails: GameObjectDetails | null;
     detailed: HoveredDetails | null;
@@ -32,8 +35,9 @@ const mainSlice = createSlice({
     showCoordinates: boolean;
   },
   reducers: {
-    receiveGameState: (state, action: PayloadAction<GameState>) => {
-      state.gameState = action.payload;
+    receiveGameState: (state, action: PayloadAction<GameStateMessage>) => {
+      state.gameState = action.payload.gameState;
+      state.gameStateId = action.payload.count;
       state.menuData = null;
       state.actionPreview = null;
       state.highlightedCCs = null;

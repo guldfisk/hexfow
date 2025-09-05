@@ -272,12 +272,12 @@ const GameInfoView = ({ gameState }: { gameState: GameState }) => (
 const DecisionDetailView = ({
   gameState,
   gameObjectDetails,
-  connection,
+  makeDecision,
   menu,
 }: {
   gameState: GameState | null;
   gameObjectDetails: GameObjectDetails | null;
-  connection: WebSocket;
+  makeDecision: (payload: { [key: string]: any }) => void;
   menu: MenuData | null;
 }) => {
   if (!gameState?.decision || !gameObjectDetails) {
@@ -296,12 +296,12 @@ const DecisionDetailView = ({
     ? menuActionSpacers[menu.type](
         gameState,
         gameObjectDetails,
-        (body) => connection.send(JSON.stringify(body)),
+        makeDecision,
         menu,
       )
     : getBaseActionSpace(
         gameState,
-        (body) => connection.send(JSON.stringify(body)),
+        makeDecision,
         gameObjectDetails,
         gameState.decision,
       );
@@ -327,9 +327,7 @@ const DecisionDetailView = ({
               : ""
           }
           onClick={() => {
-            connection.send(
-              JSON.stringify({ index: skipIndexes[0], target: null }),
-            );
+            makeDecision({ index: skipIndexes[0], target: {} });
           }}
         >
           {gameState.decision.explanation == "activate unit?"
@@ -374,7 +372,11 @@ const DecisionDetailView = ({
   );
 };
 
-export const HUD = ({ connection }: { connection: WebSocket }) => {
+export const HUD = ({
+  makeDecision,
+}: {
+  makeDecision: (payload: { [key: string]: any }) => void;
+}) => {
   // TODO fucking LMAO
   const applicationState = useAppSelector((state) => state);
 
@@ -442,7 +444,7 @@ export const HUD = ({ connection }: { connection: WebSocket }) => {
         <DecisionDetailView
           gameState={applicationState.gameState}
           gameObjectDetails={applicationState.gameObjectDetails}
-          connection={connection}
+          makeDecision={makeDecision}
           menu={applicationState.menuData}
         />
       </div>

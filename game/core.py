@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import contextlib
 import dataclasses
-import itertools
 import re
 import threading
 from abc import ABC, abstractmethod
@@ -24,14 +23,31 @@ from typing import (
 )
 
 from bidict import bidict
+from pydantic import BaseModel, ValidationError
 
 from events.eventsystem import Modifiable, ModifiableAttribute, modifiable
 from game.has_effects import HasEffectChildren, HasEffects
 from game.identification import IDMap
 from game.info.registered import Registered, UnknownIdentifierError, get_registered_meta
 from game.map.coordinates import CC, Corner, CornerPosition, line_of_sight_obstructed
-from game.map.geometry import hex_arc, hex_circle, hex_ring
-from game.values import DamageType, Resistance, Size, StatusIntention, VisionObstruction
+from game.map.geometry import hex_circle
+from game.schemas import (
+    DecisionResponseSchema,
+    DecisionValidationError,
+    DeployArmyDecisionPointSchema,
+    EmptySchema,
+    IndexSchema,
+    SelectOptionAtHexDecisionPointSchema,
+    SelectOptionDecisionPointSchema,
+)
+from game.values import (
+    ControllerTargetOption,
+    DamageType,
+    Resistance,
+    Size,
+    StatusIntention,
+    VisionObstruction,
+)
 
 
 G_Status = TypeVar("G_Status", bound="Status")
@@ -58,6 +74,8 @@ class Serializable(ABC):
 
 
 class DecisionPoint(Serializable, Generic[G_decision_result]):
+    response_schema: ClassVar[type[BaseModel]]
+
     @abstractmethod
     def get_explanation(self) -> str: ...
 
@@ -72,10 +90,15 @@ class DecisionPoint(Serializable, Generic[G_decision_result]):
         }
 
     @abstractmethod
-    def parse_response(self, v: Any) -> G_decision_result: ...
+    def parse_response_schema(self, v: BaseModel) -> G_decision_result: ...
+
+    def parse_response(self, v: Mapping[str, Any]) -> G_decision_result:
+        return self.parse_response_schema(self.response_schema.model_validate(v))
 
 
 class TargetProfile(ABC, Generic[G_decision_result]):
+    response_schema: ClassVar[type[BaseModel]]
+
     @abstractmethod
     def serialize_values(self, context: SerializationContext) -> JSON: ...
 
@@ -83,14 +106,19 @@ class TargetProfile(ABC, Generic[G_decision_result]):
         return {"type": type(self).__name__, "values": self.serialize_values(context)}
 
     @abstractmethod
-    def parse_response(self, v: Any) -> G_decision_result: ...
+    def parse_response_schema(self, v: BaseModel) -> G_decision_result: ...
+
+    def parse_response(self, v: Mapping[str, Any]) -> G_decision_result:
+        return self.parse_response_schema(self.response_schema.model_validate(v))
 
 
 class NoTarget(TargetProfile[None]):
+    response_schema = EmptySchema
+
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {}
 
-    def parse_response(self, v: Any) -> None:
+    def parse_response_schema(self, v: EmptySchema) -> None:
         return None
 
 
@@ -117,6 +145,8 @@ class OptionDecision(Generic[G_decision_result]):
 
 @dataclasses.dataclass
 class SelectOptionDecisionPoint(DecisionPoint[OptionDecision]):
+    response_schema: ClassVar[type[BaseModel]] = SelectOptionDecisionPointSchema
+
     options: list[Option]
     explanation: str
 
@@ -126,15 +156,22 @@ class SelectOptionDecisionPoint(DecisionPoint[OptionDecision]):
     def serialize_payload(self, context: SerializationContext) -> JSON:
         return {"options": [option.serialize(context) for option in self.options]}
 
-    def parse_response(self, v: Any) -> OptionDecision:
-        option = self.options[v["index"]]
+    def parse_response_schema(
+        self, v: SelectOptionDecisionPointSchema
+    ) -> OptionDecision:
+        if v.index >= len(self.options):
+            raise DecisionValidationError("invalid index")
+        option = self.options[v.index]
         return OptionDecision(
-            option=option, target=option.target_profile.parse_response(v["target"])
+            option=option,
+            target=option.target_profile.parse_response(v.target),
         )
 
 
 @dataclasses.dataclass
 class DeployArmyDecisionPoint(DecisionPoint[list[tuple["UnitBlueprint", "Hex"]]]):
+    response_schema: ClassVar[type[BaseModel]] = DeployArmyDecisionPointSchema
+
     max_units: int
     max_points: int
     deployment_zone: list[Hex]
@@ -151,15 +188,24 @@ class DeployArmyDecisionPoint(DecisionPoint[list[tuple["UnitBlueprint", "Hex"]]]
             ],
         }
 
-    def parse_response(self, v: dict[str, Any]) -> list[tuple["UnitBlueprint", "Hex"]]:
-        return [
-            (UnitBlueprint.get_class(blueprint_name), GS.map.hexes[CC(**cc)])
-            for blueprint_name, cc in v["deployments"]
-        ]
+    def parse_response_schema(
+        self, v: DeployArmyDecisionPointSchema
+    ) -> list[tuple["UnitBlueprint", "Hex"]]:
+        try:
+            return [
+                (UnitBlueprint.get_class(blueprint_name), GS.map.hexes[CC(cc.r, cc.h)])
+                for blueprint_name, cc in v.deployments
+            ]
+        except UnknownIdentifierError as e:
+            raise DecisionValidationError(f"unknown blueprint {e.identifier}")
+        except IndexError:
+            raise DecisionValidationError("invalid position")
 
 
 @dataclasses.dataclass
 class SelectOptionAtHexDecisionPoint(DecisionPoint[str]):
+    response_schema: ClassVar[type[BaseModel]] = SelectOptionAtHexDecisionPointSchema
+
     hex_: Hex
     options: list[str]
     explanation: str
@@ -170,8 +216,10 @@ class SelectOptionAtHexDecisionPoint(DecisionPoint[str]):
     def serialize_payload(self, context: SerializationContext) -> JSON:
         return {"hex": self.hex_.position.serialize(), "options": self.options}
 
-    def parse_response(self, v: Any) -> str:
-        return self.options[v["index"]]
+    def parse_response_schema(self, v: SelectOptionAtHexDecisionPointSchema) -> str:
+        if v.index >= len(self.options):
+            raise DecisionValidationError("invalid index")
+        return self.options[v.index]
 
 
 class MoveOption(Option[G_decision_result]):
@@ -516,19 +564,12 @@ class RangedAttackFacet(SingleTargetAttackFacet, ABC):
 
     @modifiable
     def get_legal_targets(self, context: ActiveUnitContext) -> list[Unit]:
-        return [
-            unit
-            for unit in GS.map.get_units_within_range_off(self.parent, self.range)
-            if unit.controller != self.parent.controller
-            # TODO test on this
-            and unit.is_visible_to(self.parent.controller)
-            and not line_of_sight_obstructed_for_unit(
-                self.parent,
-                GS.map.position_off(self.parent),
-                GS.map.position_off(unit),
-            )
-            and unit.can_be_attacked_by(self)
-        ]
+        return find_units_within_range(
+            self.parent,
+            self.range,
+            with_controller=ControllerTargetOption.ENEMY,
+            additional_filter=lambda u: u.can_be_attacked_by(self),
+        )
 
     @classmethod
     def serialize_type(cls) -> JSON:
@@ -537,6 +578,9 @@ class RangedAttackFacet(SingleTargetAttackFacet, ABC):
 
 class ActivatedAbilityFacet(EffortFacet, Generic[G_decision_result], ABC):
     category = "activated_ability"
+
+    @classmethod
+    def get_target_explanation(cls) -> str | None: ...
 
     @abstractmethod
     def get_target_profile(self) -> TargetProfile[G_decision_result] | None: ...
@@ -555,6 +599,13 @@ class ActivatedAbilityFacet(EffortFacet, Generic[G_decision_result], ABC):
             and self.get_cost().can_be_paid(context)
             and self.get_target_profile() is not None
         )
+
+    @classmethod
+    def serialize_type(cls) -> JSON:
+        return {
+            **super().serialize_type(),
+            "target_explanation": cls.get_target_explanation(),
+        }
 
 
 class StaticAbilityFacet(Facet, ABC):
@@ -1083,6 +1134,8 @@ class UnitStatusSignature(StatusSignature[Unit, UnitStatus]):
 
 @dataclasses.dataclass
 class OneOfUnits(TargetProfile[Unit]):
+    response_schema: ClassVar[type[BaseModel]] = IndexSchema
+
     units: list[Unit]
 
     def serialize_values(self, context: SerializationContext) -> JSON:
@@ -1092,33 +1145,11 @@ class OneOfUnits(TargetProfile[Unit]):
             ]
         }
 
-    def parse_response(self, v: Any) -> Unit:
-        return self.units[v["index"]]
-
-
-@dataclasses.dataclass
-class NOfUnits(TargetProfile[list[Unit]]):
-    units: list[Unit]
-    select_count: int
-    labels: list[str]
-    min_count: int | None = None
-
-    def serialize_values(self, context: SerializationContext) -> JSON:
-        return {
-            "units": [
-                {"id": context.player.id_map.get_id_for(unit)} for unit in self.units
-            ],
-            "select_count": self.select_count,
-            "min_count": self.min_count,
-            "labels": self.labels,
-        }
-
-    def parse_response(self, v: Any) -> list[Unit]:
-        indexes = v["indexes"]
-        # TODO nice validation LMAO
-        # assert len(indexes) == self.select_count
-        # assert len(indexes) == len(set(indexes))
-        return [self.units[idx] for idx in indexes]
+    def parse_response_schema(self, v: IndexSchema) -> Unit:
+        try:
+            return self.units[v.index]
+        except IndexError:
+            raise DecisionValidationError("invalid index")
 
 
 class StatusMixin:
@@ -1225,50 +1256,6 @@ class PerPlayerUnstackable(StatusMixin):
         if signature.controller == self.controller:
             return MergeResult.REJECTED
         return MergeResult.STACK
-
-
-class NoTargetActivatedAbility(ActivatedAbilityFacet[None], ABC):
-    def get_target_profile(self) -> TargetProfile[None] | None:
-        return NoTarget()
-
-
-class SingleTargetActivatedAbility(ActivatedAbilityFacet[Unit], ABC):
-    range: ClassVar[int] = 1
-    requires_los: ClassVar[bool] = True
-
-    def can_target_unit(self, unit: Unit) -> bool:
-        return True
-
-    def get_target_profile(self) -> TargetProfile[Unit] | None:
-        if units := [
-            unit
-            for unit in GS.map.get_units_within_range_off(self.parent, self.range)
-            if self.can_target_unit(unit)
-            and unit.is_visible_to(self.parent.controller)
-            and (
-                not self.requires_los
-                or not line_of_sight_obstructed_for_unit(
-                    self.parent,
-                    GS.map.position_off(self.parent),
-                    GS.map.position_off(unit),
-                )
-            )
-        ]:
-            return OneOfUnits(units)
-
-
-class SingleAllyActivatedAbility(SingleTargetActivatedAbility, ABC):
-    can_target_self: ClassVar[bool] = True
-
-    def can_target_unit(self, unit: Unit) -> bool:
-        return unit.controller == self.parent.controller and (
-            self.can_target_self or unit != self.parent
-        )
-
-
-class SingleEnemyActivatedAbility(SingleTargetActivatedAbility, ABC):
-    def can_target_unit(self, unit: Unit) -> bool:
-        return unit.controller != self.parent.controller
 
 
 @dataclasses.dataclass
@@ -1527,256 +1514,20 @@ class HexStatusLink(StatusLink[HexStatus], ABC): ...
 class UnitStatusLink(StatusLink[UnitStatus], ABC): ...
 
 
-class SingleHexTargetActivatedAbility(ActivatedAbilityFacet[Hex], ABC):
-    range: ClassVar[int] = 1
-    requires_los: ClassVar[bool] = True
-    requires_vision: ClassVar[bool] = True
-
-    def can_target_hex(self, hex_: Hex) -> bool:
-        return True
-
-    def get_target_profile(self) -> TargetProfile[Hex] | None:
-        if hexes := [
-            _hex
-            for _hex in GS.map.get_hexes_within_range_off(self.parent, self.range)
-            if (not self.requires_vision or _hex.is_visible_to(self.parent.controller))
-            and (
-                not self.requires_los
-                or not line_of_sight_obstructed_for_unit(
-                    self.parent,
-                    GS.map.position_off(self.parent),
-                    _hex.position,
-                )
-            )
-            and self.can_target_hex(_hex)
-        ]:
-            return OneOfHexes(hexes)
-
-
-class TriHexTargetActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
-    range: ClassVar[int]
-
-    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        if corners := list(
-            GS.map.get_corners_within_range_off(self.parent, self.range)
-        ):
-            return TriHex(corners)
-
-
 @dataclasses.dataclass
 class OneOfHexes(TargetProfile[Hex]):
+    response_schema: ClassVar[type[BaseModel]] = IndexSchema
+
     hexes: list[Hex]
 
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {"options": [_hex.position.serialize() for _hex in self.hexes]}
 
-    def parse_response(self, v: Any) -> Hex:
-        return self.hexes[v["index"]]
-
-
-@dataclasses.dataclass
-class NOfHexes(TargetProfile[list[Hex]]):
-    hexes: list[Hex]
-    select_count: int
-    labels: list[str]
-    min_count: int | None = None
-
-    def serialize_values(self, context: SerializationContext) -> JSON:
-        return {
-            "hexes": [{"cc": hex_.position.serialize()} for hex_ in self.hexes],
-            "select_count": self.select_count,
-            "min_count": self.min_count,
-            "labels": self.labels,
-        }
-
-    def parse_response(self, v: Any) -> list[Hex]:
-        indexes = v["indexes"]
-        # TODO nice validation LMAO
-        # assert len(indexes) == self.select_count
-        # assert len(indexes) == len(set(indexes))
-        return [self.hexes[idx] for idx in indexes]
-
-
-# TODO where, maybe in "aoe_target_profiles.py"?
-@dataclasses.dataclass
-class ConsecutiveAdjacentHexes(TargetProfile[list[Hex]]):
-    adjacent_to: Hex
-    arm_length: int
-
-    def serialize_values(self, context: SerializationContext) -> JSON:
-        return {
-            "adjacent_to": self.adjacent_to.position.serialize(),
-            "arm_length": self.arm_length,
-        }
-
-    def parse_response(self, v: Any) -> list[Hex]:
-        return list(
-            GS.map.get_hexes_of_positions(
-                hex_arc(
-                    radius=1,
-                    arm_length=self.arm_length,
-                    stroke_center=CC(**v["cc"]),
-                    arc_center=self.adjacent_to.position,
-                )
-            )
-        )
-
-
-# TODO terrible name
-@dataclasses.dataclass
-class HexHexes(TargetProfile[list[Hex]]):
-    centers: list[Hex]
-    radius: int
-
-    def serialize_values(self, context: SerializationContext) -> JSON:
-        return {
-            "centers": [_hex.position.serialize() for _hex in self.centers],
-            "radius": self.radius,
-        }
-
-    def parse_response(self, v: Any) -> list[Hex]:
-        return list(
-            GS.map.get_hexes_within_range_off(self.centers[v["index"]], self.radius)
-        )
-
-
-@dataclasses.dataclass
-class TriHex(TargetProfile[list[Hex]]):
-    corners: list[Corner]
-
-    def serialize_values(self, context: SerializationContext) -> JSON:
-        return {
-            "corners": [corner.serialize() for corner in self.corners],
-        }
-
-    def parse_response(self, v: Any) -> list[Hex]:
-        return list(
-            GS.map.get_hexes_of_positions(
-                self.corners[v["index"]].get_adjacent_positions()
-            )
-        )
-
-
-@dataclasses.dataclass
-class HexRing(TargetProfile[list[Hex]]):
-    centers: list[Hex]
-    radius: int
-
-    def serialize_values(self, context: SerializationContext) -> JSON:
-        return {
-            "centers": [_hex.position.serialize() for _hex in self.centers],
-            "radius": self.radius,
-        }
-
-    def parse_response(self, v: Any) -> list[Hex]:
-        return list(
-            GS.map.get_hexes_of_positions(
-                hex_ring(self.radius, self.centers[v["index"]].position)
-            )
-        )
-
-
-@dataclasses.dataclass
-class RadiatingLine(TargetProfile[list[Hex]]):
-    from_hex: Hex
-    to_hexes: list[Hex]
-    length: int
-
-    def serialize_values(self, context: SerializationContext) -> JSON:
-        return {
-            "from_hex": self.from_hex.position.serialize(),
-            "to_hexes": [h.position.serialize() for h in self.to_hexes],
-            "length": self.length,
-        }
-
-    def parse_response(self, v: Any) -> list[Hex]:
-        selected_cc = self.to_hexes[v["index"]].position
-        difference = selected_cc - self.from_hex.position
-        return [
-            projected
-            for i in range(self.length)
-            if (projected := GS.map.hexes.get(selected_cc + difference * i))
-        ]
-
-
-@dataclasses.dataclass
-class Cone(TargetProfile[list[Hex]]):
-    from_hex: Hex
-    to_hexes: list[Hex]
-    arm_lengths: list[int]
-
-    def serialize_values(self, context: SerializationContext) -> JSON:
-        return {
-            "from_hex": self.from_hex.position.serialize(),
-            "to_hexes": [h.position.serialize() for h in self.to_hexes],
-            "arm_lengths": self.arm_lengths,
-        }
-
-    def parse_response(self, v: Any) -> list[Hex]:
-        selected_cc = self.to_hexes[v["index"]].position
-        difference = selected_cc - self.from_hex.position
-        return list(
-            GS.map.get_hexes_of_positions(
-                itertools.chain(
-                    *(
-                        hex_arc(
-                            idx + 1,
-                            arm_length=arm_length,
-                            stroke_center=selected_cc + difference * idx,
-                            arc_center=self.from_hex.position,
-                        )
-                        for idx, arm_length in enumerate(self.arm_lengths)
-                    )
-                )
-            )
-        )
-
-
-@dataclasses.dataclass
-class TreeNode:
-    options: list[tuple[Unit | Hex, TreeNode | None]]
-    label: str
-
-    @classmethod
-    def serialize_option(
-        cls, option: Unit | Hex, context: SerializationContext
-    ) -> JSON:
-        if isinstance(option, Unit):
-            return {"type": "unit", "id": context.player.id_map.get_id_for(option)}
-        return {"type": "hex", "cc": option.position.serialize()}
-
-    def serialize(self, context: SerializationContext) -> JSON:
-        return {
-            "label": self.label,
-            "options": [
-                (
-                    self.serialize_option(game_object, context),
-                    sub_tree.serialize(context) if sub_tree else None,
-                )
-                for game_object, sub_tree in self.options
-            ],
-        }
-
-
-@dataclasses.dataclass
-class Tree(TargetProfile[list[Unit | Hex]]):
-    root_node: TreeNode
-
-    def serialize_values(self, context: SerializationContext) -> JSON:
-        return {"root_node": self.root_node.serialize(context)}
-
-    def parse_response(self, v: Any) -> list[Unit | Hex]:
-        indexes = v["indexes"]
-        selected = []
-        current = self.root_node
-        for idx in indexes:
-            obj, node = current.options[idx]
-            selected.append(obj)
-            current = node
-        return selected
-
-
-class MovementException(Exception): ...
+    def parse_response_schema(self, v: IndexSchema) -> Hex:
+        try:
+            return self.hexes[v.index]
+        except IndexError:
+            raise DecisionValidationError("invalid index")
 
 
 CCArg: TypeAlias = CC | Hex | Unit
@@ -1894,6 +1645,79 @@ class HexMap:
 
     def serialize(self, context: SerializationContext) -> JSON:
         return {"hexes": [_hex.serialize(context) for _hex in self.hexes.values()]}
+
+
+def find_units_within_range(
+    from_unit: Unit,
+    within_range: int,
+    *,
+    require_los: bool = True,
+    with_controller: ControllerTargetOption | None = None,
+    can_include_self: bool = True,
+    additional_filter: Callable[[Unit], bool] | None = None,
+) -> list[Unit]:
+    return [
+        unit
+        for unit in GS.map.get_units_within_range_off(from_unit, within_range)
+        if (
+            not with_controller
+            or (
+                (unit.controller == from_unit.controller)
+                if with_controller == ControllerTargetOption.ALLIED
+                else (unit.controller != from_unit.controller)
+            )
+        )
+        and unit.is_visible_to(from_unit.controller)
+        and (
+            not require_los
+            or within_range <= 1
+            or not line_of_sight_obstructed_for_unit(
+                from_unit,
+                GS.map.position_off(from_unit),
+                GS.map.position_off(unit),
+            )
+        )
+        and (can_include_self or unit != from_unit)
+        and (not additional_filter or additional_filter(unit))
+    ]
+
+
+def find_hexs_within_range(
+    from_unit: Unit,
+    within_range: int,
+    *,
+    require_vision: bool = False,
+    require_los: bool = True,
+    require_empty: bool = True,
+    can_include_self: bool = True,
+    additional_filter: Callable[[Hex], bool] | None = None,
+    vision_for_player: Player | None = None,
+) -> list[Hex]:
+    vision_for_player = vision_for_player or from_unit.controller
+    return [
+        _hex
+        for _hex in GS.map.get_hexes_within_range_off(from_unit, within_range)
+        if (not require_vision or _hex.is_visible_to(vision_for_player))
+        and (
+            not require_los
+            or within_range <= 1
+            or not line_of_sight_obstructed_for_unit(
+                from_unit,
+                GS.map.position_off(from_unit),
+                _hex.position,
+            )
+        )
+        and (
+            not require_empty
+            or (
+                (unit := GS.map.unit_on(_hex)) is None
+                or (not require_vision and not _hex.is_visible_to(vision_for_player))
+                or unit.is_hidden_for(vision_for_player)
+            )
+        )
+        and (can_include_self or GS.map.hex_off(from_unit) != _hex)
+        and (not additional_filter or additional_filter(_hex))
+    ]
 
 
 @dataclasses.dataclass
@@ -2019,14 +1843,59 @@ class Connection(ABC):
     def __init__(self, player: Player):
         self.player = player
 
+        self._game_state_counter: int = 0
+        self._waiting_for_decision: DecisionPoint | None = None
+
+    def send_error(self, error_type: str, error_detail: Any = None) -> None:
+        print("error from client", error_type, error_detail)
+        self.send(
+            {
+                "message_type": "error",
+                "error_type": error_type,
+            }
+            | ({"error_detail": error_detail} if error_detail is not None else {})
+        )
+
+    def validate_decision_message(self, v: Mapping[str, Any]) -> Any | None:
+        try:
+            response = DecisionResponseSchema.model_validate(v)
+            if response.count != self._game_state_counter:
+                self.send_error("invalid_response_count")
+                return None
+            return self._waiting_for_decision.parse_response(response.payload)
+        except ValidationError as e:
+            self.send_error("invalid_decision", e.errors())
+        except DecisionValidationError as e:
+            self.send_error("invalid_decision", e.args[0])
+
     @abstractmethod
     def send(self, values: Mapping[str, Any]) -> None: ...
 
-    @abstractmethod
-    def wait_for_response(self) -> Mapping[str, Any]: ...
+    def make_game_state_frame(
+        self, game_state: Mapping[str, Any], decision_point: DecisionPoint | None = None
+    ) -> dict[str, Any]:
+        return {
+            "message_type": "game_state",
+            "count": self._game_state_counter,
+            "game_state": game_state,
+        }
 
-    def get_response(self, values: Mapping[str, Any]) -> Mapping[str, Any]:
-        self.send(values)
+    def send_game_state(
+        self, game_state: Mapping[str, Any], decision_point: DecisionPoint | None = None
+    ) -> None:
+        self._game_state_counter += 1
+        self._waiting_for_decision = decision_point
+        self.send(self.make_game_state_frame(game_state, decision_point))
+
+    @abstractmethod
+    def wait_for_response(self) -> G_decision_result: ...
+
+    def get_response(
+        self,
+        game_state: Mapping[str, Any],
+        decision_point: DecisionPoint[G_decision_result],
+    ) -> G_decision_result:
+        self.send_game_state(game_state, decision_point)
         return self.wait_for_response()
 
 
@@ -2155,8 +2024,8 @@ class GameState:
 
     def send_to_players(self) -> None:
         for _player in self.turn_order:
-            self.connections[_player].send(
-                self.serialize_for(self._get_context_for(_player), None)
+            self.connections[_player].send_game_state(
+                self.serialize_for(self._get_context_for(_player), None), None
             )
 
     def make_decision(
@@ -2164,28 +2033,28 @@ class GameState:
     ) -> G_decision_result:
         for _player in self.turn_order:
             if _player != player:
-                self.connections[_player].send(
-                    self.serialize_for(self._get_context_for(_player), None)
+                self.connections[_player].send_game_state(
+                    self.serialize_for(self._get_context_for(_player), None), None
                 )
-        response = self.connections[player].get_response(
-            self.serialize_for(self._get_context_for(player), decision_point)
+        # TODO very dumb we are specifying decision point twice.
+        return self.connections[player].get_response(
+            self.serialize_for(self._get_context_for(player), decision_point),
+            decision_point,
         )
-        return decision_point.parse_response(response)
 
     def make_parallel_decision(
         self, decision_points: dict[Player, DecisionPoint[G_decision_result]]
     ) -> dict[Player, G_decision_result]:
         for player in self.turn_order:
-            self.connections[player].send(
+            self.connections[player].send_game_state(
                 self.serialize_for(
                     self._get_context_for(player), decision_points.get(player)
-                )
+                ),
+                decision_points.get(player),
             )
         return {
-            player: decision_point.parse_response(
-                self.connections[player].wait_for_response()
-            )
-            for player, decision_point in decision_points.items()
+            player: self.connections[player].wait_for_response()
+            for player in decision_points.keys()
         }
 
 

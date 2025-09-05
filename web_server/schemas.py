@@ -1,6 +1,6 @@
 from typing import Any, Self
 
-from pydantic import AfterValidator, BaseModel, ValidationError, model_validator
+from pydantic import AfterValidator, BaseModel, model_validator
 from typing_extensions import Annotated
 
 from game.info.registered import UnknownIdentifierError
@@ -38,7 +38,7 @@ class CreateMapSchema(BaseModel):
         try:
             self.scenario.get_scenario()
         except UnknownIdentifierError as e:
-            raise ValidationError(
+            raise ValueError(
                 f"invalid identifier {e.identifier} for {e.registered_type.__name__}"
             )
 

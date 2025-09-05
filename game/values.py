@@ -35,3 +35,8 @@ class StatusIntention(StrEnum):
     BUFF = auto()
     DEBUFF = auto()
     NEUTRAL = auto()
+
+
+class ControllerTargetOption(StrEnum):
+    ALLIED = auto()
+    ENEMY = auto()

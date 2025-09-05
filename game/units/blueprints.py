@@ -60,7 +60,7 @@ from game.units.facets.activated_abilities import (
     TurboTune,
     Vault,
     VenomousSpine,
-    VitalityTransfer,
+    VitalityTransfusion,
     Vomit,
     WringEssence,
 )
@@ -287,7 +287,7 @@ BLOOD_CONDUIT = UnitBlueprint(
     speed=3,
     sight=2,
     energy=3,
-    facets=[VitalityTransfer],
+    facets=[VitalityTransfusion],
     price=3,
 )
 

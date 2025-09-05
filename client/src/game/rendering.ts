@@ -268,7 +268,7 @@ export const renderMap = (
   app: Application,
   state: AppState,
   gameState: GameState,
-  gameConnection: WebSocket,
+  makeDecision: (payload: { [key: string]: any }) => void,
 ): { map: Container; graphics: ViewContainer[] } => {
   const createdObjects: ViewContainer[] = [];
 
@@ -299,12 +299,12 @@ export const renderMap = (
       ? menuActionSpacers[state.menuData.type](
           gameState,
           state.gameObjectDetails,
-          (body) => gameConnection.send(JSON.stringify(body)),
+          makeDecision,
           state.menuData,
         )
       : getBaseActionSpace(
           gameState,
-          (body) => gameConnection.send(JSON.stringify(body)),
+          makeDecision,
           state.gameObjectDetails,
           gameState.decision,
         )

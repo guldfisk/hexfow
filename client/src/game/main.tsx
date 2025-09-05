@@ -15,13 +15,21 @@ import {
   toggleShowCoordinates,
   store,
 } from "./state/store.ts";
+import { Message } from "../interfaces/messages.ts";
 
 const gameConnection = new WebSocket(
   `ws://${window.location.hostname}:8765/ws`,
 );
 gameConnection.onmessage = (event) => {
-  console.log(recursiveCamelCase(JSON.parse(event.data)));
-  store.dispatch(receiveGameState(recursiveCamelCase(JSON.parse(event.data))));
+  const result: Message = recursiveCamelCase(JSON.parse(event.data));
+  if (result.messageType == "game_state") {
+    console.log(result);
+    store.dispatch(receiveGameState(result));
+  } else if (result.messageType == "error") {
+    console.log("ERROR!", result);
+  } else {
+    console.log("unknown message", result);
+  }
 };
 gameConnection.onopen = () =>
   gameConnection.send(
@@ -29,6 +37,12 @@ gameConnection.onopen = () =>
       seat_id: new URLSearchParams(window.location.search).get("seat"),
     }),
   );
+
+const makeDecision = (payload: { [key: string]: any }) => {
+  const message = { count: store.getState().gameStateId, payload };
+  console.log("sending", message);
+  gameConnection.send(JSON.stringify(message));
+};
 
 async function main() {
   const app = new Application();
@@ -47,7 +61,7 @@ async function main() {
   let worldScale = 1;
 
   app.stage.on("pointerdown", (event) => {
-    if (event.button == 1 || (event.button == 2)) {
+    if (event.button == 1 || event.button == 2) {
       isDragging = true;
     }
   });
@@ -109,7 +123,7 @@ async function main() {
           "options"
         ].entries()) {
           if (option["type"] == "SkipOption") {
-            gameConnection.send(JSON.stringify({ index: idx, target: null }));
+            makeDecision({ index: idx, target: {} });
           }
         }
       }
@@ -125,7 +139,7 @@ async function main() {
 
     if (state.shouldRerender && state.gameState && state.gameObjectDetails) {
       app.stage.removeChild(map);
-      const result = renderMap(app, state, state.gameState, gameConnection);
+      const result = renderMap(app, state, state.gameState, makeDecision);
       map = result.map;
       app.stage.addChild(map);
       for (const g of previousGraphics) {
@@ -144,7 +158,7 @@ await main();
 createRoot(document.getElementById("hud")!).render(
   <StrictMode>
     <Provider store={store}>
-      <HUD connection={gameConnection} />
+      <HUD makeDecision={makeDecision} />
     </Provider>
   </StrictMode>,
 );

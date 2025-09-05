@@ -21,7 +21,9 @@ from game.core import (
     GS,
     ActivateUnitOption,
     Connection,
+    DecisionPoint,
     EffortOption,
+    G_decision_result,
     GameState,
     Hex,
     HexMap,
@@ -71,18 +73,22 @@ class MockConnection(Connection):
     def wait_for_response(self) -> Mapping[str, Any]:
         raise NotImplementedError()
 
-    def get_response(self, values: Mapping[str, Any]) -> Mapping[str, Any]:
-        self.history.append(values)
+    def get_response(
+        self,
+        game_state: Mapping[str, Any],
+        decision_point: DecisionPoint[G_decision_result],
+    ) -> G_decision_result:
+        self.history.append(game_state)
         if TestScope.log_game_states:
-            dp(values, self.player)
+            dp(game_state, self.player)
         queues_response = self.queued_responses.pop(0)
         if isinstance(queues_response, tuple):
             response, asserter = queues_response
-            asserter(values, self.player)
+            asserter(game_state, self.player)
         else:
             response = queues_response
-        return (
-            response(values, self.player)
+        return decision_point.parse_response(
+            response(game_state, self.player)
             if isinstance(response, Callable)
             else response
         )
@@ -271,7 +277,7 @@ class OptionSelector(DecisionSelector):
                     "target": (
                         self.target_selector.select(option["target_profile"], player)
                         if self.target_selector is not None
-                        else None
+                        else {}
                     ),
                 }
         raise SelectionError()

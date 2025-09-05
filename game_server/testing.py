@@ -10,7 +10,7 @@ from typing import Any, Mapping
 from websockets import ServerConnection
 
 from events.eventsystem import ES, EventSystem
-from game.core import Connection, Player
+from game.core import Connection, G_decision_result, Player
 from game.events import Play
 from game_server.exceptions import GameClosed
 from game_server.game_types import TestGameType
@@ -53,14 +53,20 @@ class TestGameRunner(Thread):
                     super().__init__(player)
 
                 def send(self, values: Mapping[str, Any]) -> None:
-                    if values.get("decision"):
+                    if values.get("message_type") != "game_state" or values.get(
+                        "game_state", {}
+                    ).get("decision"):
                         game.connection.send(json.dumps(values))
 
-                def wait_for_response(self) -> Mapping[str, Any]:
+                def wait_for_response(self) -> G_decision_result:
                     while game.is_running:
                         try:
-                            response = game.in_queue.get(timeout=1)
-                            return response
+                            if (
+                                validated := self.validate_decision_message(
+                                    game.in_queue.get(timeout=1)
+                                )
+                            ) is not None:
+                                return validated
                         except Empty:
                             pass
                     raise GameClosed()

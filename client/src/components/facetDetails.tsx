@@ -82,6 +82,9 @@ export const FacetDetailView = ({
       {facet.name}
     </div>
     <div className={"facet-stats"}>{getFacetStatLine(facet, unit)}</div>
+    {"target_explanation" in facet && facet.target_explanation ? (
+      <div className={"facet-description"}>{facet.target_explanation}</div>
+    ) : null}
     {facet.description ? (
       <div className={"facet-description"}>{facet.description}</div>
     ) : null}

@@ -268,7 +268,7 @@ export const getBaseActions = (
         ].push({
           type: "activated_ability",
           description: option.values?.facet?.name || "activate ability",
-          do: () => takeAction({ index: idx, target: null }),
+          do: () => takeAction({ index: idx, target: {} }),
         });
       }
     }

@@ -14,6 +14,7 @@ from game.core import (
 from game.map.coordinates import CC
 
 
+# TODO where?
 class CCSchema(BaseModel):
     r: int
     h: int

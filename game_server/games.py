@@ -12,7 +12,7 @@ from uuid import UUID
 from sqlalchemy import Exists, select
 
 from events.eventsystem import ES
-from game.core import Connection, Player
+from game.core import Connection, DecisionPoint, G_decision_result, Player
 from game.events import Play
 from game_server.exceptions import GameClosed
 from game_server.game_types import GameType
@@ -77,7 +77,8 @@ class SeatInterface(Connection):
     def __init__(self, player: Player, game_runner: GameRunner):
         super().__init__(player)
         self.game_runner = game_runner
-        self._latest_frame = None
+        self._latest_game_state_frame = None
+        self._latest_game_state_frame_lock = threading.Lock()
         self._lock = threading.Lock()
         self.in_queue = SimpleQueue()
         self._callbacks: list[Callable[[str], ...]] = []
@@ -94,8 +95,9 @@ class SeatInterface(Connection):
     def register_callback(self, f: Callable[[str], ...]) -> None:
         with self._lock:
             self._callbacks.append(f)
-            if self._latest_frame is not None:
-                self._send_frame_to_callback(f, self._latest_frame)
+            with self._latest_game_state_frame_lock:
+                if self._latest_game_state_frame is not None:
+                    self._send_frame_to_callback(f, self._latest_game_state_frame)
 
     def is_connected(self) -> bool:
         with self._lock:
@@ -108,20 +110,28 @@ class SeatInterface(Connection):
             except (IndexError, ValueError):
                 pass
 
-    def _send_frame(self, values: Mapping[str, Any]) -> None:
+    def make_game_state_frame(
+        self, game_state: Mapping[str, Any], decision_point: DecisionPoint | None = None
+    ) -> dict[str, Any]:
+        frame = super().make_game_state_frame(game_state, decision_point)
+        with self._latest_game_state_frame_lock:
+            self._latest_game_state_frame = frame
+        return frame
+
+    def send(self, values: Mapping[str, Any]) -> None:
         with self._lock:
-            self._latest_frame = values
             for f in list(self._callbacks):
                 self._send_frame_to_callback(f, values)
 
-    def send(self, values: Mapping[str, Any]) -> None:
-        self._send_frame(values)
-
-    def wait_for_response(self) -> Mapping[str, Any]:
+    def wait_for_response(self) -> G_decision_result:
         while self.game_runner.is_running:
             try:
-                response = self.in_queue.get(timeout=1)
-                return response
+                if (
+                    validated := self.validate_decision_message(
+                        self.in_queue.get(timeout=1)
+                    )
+                ) is not None:
+                    return validated
             except Empty:
                 pass
         raise GameClosed()
