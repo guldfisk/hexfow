@@ -23,7 +23,7 @@ from typing import (
 )
 
 from bidict import bidict
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from events.eventsystem import Modifiable, ModifiableAttribute, modifiable
 from game.has_effects import HasEffectChildren, HasEffects
@@ -32,6 +32,7 @@ from game.info.registered import Registered, UnknownIdentifierError, get_registe
 from game.map.coordinates import CC, Corner, CornerPosition, line_of_sight_obstructed
 from game.map.geometry import hex_circle
 from game.schemas import (
+    DecisionResponseSchema,
     DecisionValidationError,
     DeployArmyDecisionPointSchema,
     EmptySchema,
@@ -193,7 +194,7 @@ class DeployArmyDecisionPoint(DecisionPoint[list[tuple["UnitBlueprint", "Hex"]]]
         try:
             return [
                 (UnitBlueprint.get_class(blueprint_name), GS.map.hexes[CC(cc.r, cc.h)])
-                for blueprint_name, cc in v.deployment
+                for blueprint_name, cc in v.deployments
             ]
         except UnknownIdentifierError as e:
             raise DecisionValidationError(f"unknown blueprint {e.identifier}")
@@ -1666,7 +1667,7 @@ def find_units_within_range(
                 else (unit.controller != from_unit.controller)
             )
         )
-        and from_unit.is_visible_to(from_unit.controller)
+        and unit.is_visible_to(from_unit.controller)
         and (
             not require_los
             or within_range <= 1
@@ -1842,14 +1843,59 @@ class Connection(ABC):
     def __init__(self, player: Player):
         self.player = player
 
+        self._game_state_counter: int = 0
+        self._waiting_for_decision: DecisionPoint | None = None
+
+    def send_error(self, error_type: str, error_detail: Any = None) -> None:
+        print("error from client", error_type, error_detail)
+        self.send(
+            {
+                "message_type": "error",
+                "error_type": error_type,
+            }
+            | ({"error_detail": error_detail} if error_detail is not None else {})
+        )
+
+    def validate_decision_message(self, v: Mapping[str, Any]) -> Any | None:
+        try:
+            response = DecisionResponseSchema.model_validate(v)
+            if response.count != self._game_state_counter:
+                self.send_error("invalid_response_count")
+                return None
+            return self._waiting_for_decision.parse_response(response.payload)
+        except ValidationError as e:
+            self.send_error("invalid_decision", e.errors())
+        except DecisionValidationError as e:
+            self.send_error("invalid_decision", e.args[0])
+
     @abstractmethod
     def send(self, values: Mapping[str, Any]) -> None: ...
 
-    @abstractmethod
-    def wait_for_response(self) -> Mapping[str, Any]: ...
+    def make_game_state_frame(
+        self, game_state: Mapping[str, Any], decision_point: DecisionPoint | None = None
+    ) -> dict[str, Any]:
+        return {
+            "message_type": "game_state",
+            "count": self._game_state_counter,
+            "game_state": game_state,
+        }
 
-    def get_response(self, values: Mapping[str, Any]) -> Mapping[str, Any]:
-        self.send(values)
+    def send_game_state(
+        self, game_state: Mapping[str, Any], decision_point: DecisionPoint | None = None
+    ) -> None:
+        self._game_state_counter += 1
+        self._waiting_for_decision = decision_point
+        self.send(self.make_game_state_frame(game_state, decision_point))
+
+    @abstractmethod
+    def wait_for_response(self) -> G_decision_result: ...
+
+    def get_response(
+        self,
+        game_state: Mapping[str, Any],
+        decision_point: DecisionPoint[G_decision_result],
+    ) -> G_decision_result:
+        self.send_game_state(game_state, decision_point)
         return self.wait_for_response()
 
 
@@ -1978,8 +2024,8 @@ class GameState:
 
     def send_to_players(self) -> None:
         for _player in self.turn_order:
-            self.connections[_player].send(
-                self.serialize_for(self._get_context_for(_player), None)
+            self.connections[_player].send_game_state(
+                self.serialize_for(self._get_context_for(_player), None), None
             )
 
     def make_decision(
@@ -1987,28 +2033,28 @@ class GameState:
     ) -> G_decision_result:
         for _player in self.turn_order:
             if _player != player:
-                self.connections[_player].send(
-                    self.serialize_for(self._get_context_for(_player), None)
+                self.connections[_player].send_game_state(
+                    self.serialize_for(self._get_context_for(_player), None), None
                 )
-        response = self.connections[player].get_response(
-            self.serialize_for(self._get_context_for(player), decision_point)
+        # TODO very dumb we are specifying decision point twice.
+        return self.connections[player].get_response(
+            self.serialize_for(self._get_context_for(player), decision_point),
+            decision_point,
         )
-        return decision_point.parse_response(response)
 
     def make_parallel_decision(
         self, decision_points: dict[Player, DecisionPoint[G_decision_result]]
     ) -> dict[Player, G_decision_result]:
         for player in self.turn_order:
-            self.connections[player].send(
+            self.connections[player].send_game_state(
                 self.serialize_for(
                     self._get_context_for(player), decision_points.get(player)
-                )
+                ),
+                decision_points.get(player),
             )
         return {
-            player: decision_point.parse_response(
-                self.connections[player].wait_for_response()
-            )
-            for player, decision_point in decision_points.items()
+            player: self.connections[player].wait_for_response()
+            for player in decision_points.keys()
         }
 
 

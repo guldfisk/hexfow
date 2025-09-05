@@ -1,9 +1,19 @@
-from typing import Any
+from typing import Annotated, Any
 
-from pydantic import BaseModel
+from pydantic import AfterValidator, BaseModel
+
+
+def no_duplicates(value: list[int]) -> list[int]:
+    assert len(value) == len(set(value))
+    return value
 
 
 class DecisionValidationError(Exception): ...
+
+
+class DecisionResponseSchema(BaseModel):
+    count: int
+    payload: dict[str, Any]
 
 
 class EmptySchema(BaseModel): ...
@@ -29,12 +39,10 @@ class IndexSchema(BaseModel):
 
 
 class IndexesSchema(BaseModel):
-    # TODO these should be positive
-    indexes: set[int]
+    indexes: Annotated[list[int], AfterValidator(no_duplicates)]
 
 
 class OrderedIndexesSchema(BaseModel):
-    # TODO these should be positive
     indexes: list[int]
 
 
@@ -44,4 +52,4 @@ class SelectOptionAtHexDecisionPointSchema(BaseModel):
 
 
 class DeployArmyDecisionPointSchema(BaseModel):
-    deployment: list[tuple[str, CCSchema]]
+    deployments: list[tuple[str, CCSchema]]

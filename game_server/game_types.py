@@ -44,7 +44,7 @@ class TestGameType(GameType):
                             Plains,
                             Plains,
                             Plains,
-                            Forest,
+                            # Forest,
                             # Hills,
                             # Water,
                         ]
@@ -58,21 +58,11 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                # LOTUS_BUD,
-                # MEDIC,
-                # MAD_SCIENTIST,
-                # CYCLOPS,
-                # WITCH_ENGINE,
-                # VILE_TRANSMUTER,
                 GATE_FIEND,
-                # LIGHT_ARCHER,
-                # VOID_SPRITE,
-                # INK_WITCH,
-                COMBAT_ENGINEER,
-                # FRONTLINE_TACTICIAN,
-                # PESTILENCE_PRIEST,
-                # VOID_SPRITE,
-                # DOOMBOT_3000,
+                BLOOD_FEUD_WARLOCK,
+                VILE_TRANSMUTER,
+                # MAD_SCIENTIST,
+                BLOOD_CONDUIT,
             ),
             (
                 # LIGHT_ARCHER,
@@ -83,6 +73,7 @@ class TestGameType(GameType):
                 # GIANT_TOAD,
                 SLUDGE_SLUG,
                 GIANT_TOAD,
+                INFERNO_TANK,
                 # BELL_STRIKER_BRUTE,
                 # BLOOD_FEUD_WARLOCK,
                 # SKITTISH_SOOT_PUFF,

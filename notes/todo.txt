@@ -1,6 +1,8 @@
-
-infrastructure
+platform
+    sign up
+    authentication
     lobby system
+    edit/load armies
 
 map editor
     unit details
@@ -30,12 +32,10 @@ game
     deployment zone detail view during game
 
 code
-    response validation
-    message ids
-
     don't send no change game state updates
     get rid of _small unit images suffix
 
+    proper parallel decisions support (with immeditate error handling)
     refactor game.core somehow
     update test framework
     unit tests on core logic
@@ -52,3 +52,4 @@ replays
 
 production configuration
     web server behind nginx
+    game server behind nginx
