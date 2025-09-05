@@ -293,7 +293,7 @@ BLOOD_CONDUIT = UnitBlueprint(
 
 FROST_SPRITE = UnitBlueprint(
     "Frost Sprite",
-    health=3,
+    health=4,
     speed=3,
     sight=1,
     size=Size.SMALL,
@@ -404,16 +404,6 @@ STIM_DRONE = UnitBlueprint(
     flavor="Just the refreshments this time, thanks.",
 )
 
-UNDERHANDED_HEXMAGE = UnitBlueprint(
-    name="Underhanded Hexmage",
-    health=3,
-    speed=3,
-    sight=2,
-    energy=4,
-    facets=[EnfeeblingHex],
-    price=4,
-)
-
 AP_GUNNER = UnitBlueprint(
     "AP Gunner",
     health=3,
@@ -453,9 +443,29 @@ MEDIC = UnitBlueprint(
     price=5,
 )
 
+MINE_LAYER_BEETLE = UnitBlueprint(
+    "Mine Layer Beetle",
+    health=5,
+    speed=3,
+    sight=1,
+    energy=3,
+    facets=[Slice, LayMine],
+    price=5,
+)
+
+UNDERHANDED_HEXMAGE = UnitBlueprint(
+    name="Underhanded Hexmage",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[EnfeeblingHex],
+    price=5,
+)
+
 BOMB_TRUCK = UnitBlueprint(
     "Bomb Truck",
-    health=4,
+    health=3,
     speed=3,
     sight=1,
     facets=[SelfDestruct, Explosive],
@@ -532,16 +542,6 @@ GIANT_SLAYER_MOUSE = UnitBlueprint(
     price=7,
 )
 
-MINE_LAYER_BEETLE = UnitBlueprint(
-    "Mine Layer Beetle",
-    health=6,
-    speed=3,
-    sight=1,
-    energy=3,
-    facets=[Slice, LayMine],
-    price=7,
-)
-
 TRACTOR = UnitBlueprint(
     "Tractor",
     health=7,
@@ -562,6 +562,16 @@ ZONE_SKIRMISHER = UnitBlueprint(
     price=7,
 )
 
+BLIND_ABOMINATION = UnitBlueprint(
+    "Blind Abomination",
+    health=9,
+    speed=3,
+    sight=0,
+    size=Size.LARGE,
+    facets=[Vomit],
+    price=8,
+)
+
 GIANT_TOAD = UnitBlueprint(
     "Giant Toad",
     health=8,
@@ -570,16 +580,6 @@ GIANT_TOAD = UnitBlueprint(
     energy=2,
     facets=[TongueLash, Jump, ToxicSkin],
     price=8,
-)
-
-BLIND_ABOMINATION = UnitBlueprint(
-    "Blind Abomination",
-    health=9,
-    speed=3,
-    sight=0,
-    size=Size.LARGE,
-    facets=[Vomit],
-    price=9,
 )
 
 DJINN = UnitBlueprint(
@@ -865,7 +865,7 @@ ZONE_MECH = UnitBlueprint(
     sight=2,
     energy=3,
     size=Size.LARGE,
-    facets=[HammerCannon, SmokeCanister],
+    facets=[HammerCannon, SmokeCanister, TerrainSavvy],
     price=17,
 )
 

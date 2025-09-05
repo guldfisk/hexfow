@@ -37,7 +37,6 @@ services:
 
   db:
     image: postgres:17
-#    TODO
     ports:
       - "5432:5432"
     volumes:

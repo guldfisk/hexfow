@@ -58,11 +58,12 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                GATE_FIEND,
+                # GATE_FIEND,
                 BLOOD_FEUD_WARLOCK,
-                VILE_TRANSMUTER,
+                COMBAT_ENGINEER,
+                # VILE_TRANSMUTER,
                 # MAD_SCIENTIST,
-                BLOOD_CONDUIT,
+                # BLOOD_CONDUIT,
             ),
             (
                 # LIGHT_ARCHER,
@@ -73,7 +74,7 @@ class TestGameType(GameType):
                 # GIANT_TOAD,
                 SLUDGE_SLUG,
                 GIANT_TOAD,
-                INFERNO_TANK,
+                ZONE_MECH,
                 # BELL_STRIKER_BRUTE,
                 # BLOOD_FEUD_WARLOCK,
                 # SKITTISH_SOOT_PUFF,

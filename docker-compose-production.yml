@@ -7,3 +7,9 @@ services:
     volumes:
       - ./nginx/production.conf:/etc/nginx/nginx.conf
       - .:/code
+  game-server:
+    command: "python -u game_server/main.py"
+  web-server:
+    command: "fastapi run web_server/main.py --host 0.0.0.0"
+  db:
+    ports: !override []

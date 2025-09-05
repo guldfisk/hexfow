@@ -109,7 +109,6 @@ class GreaseTheGears(TargetUnitActivatedAbility):
     If the target unit was ready, this unit gains +1 movement point.
     """
 
-    range = 1
     can_target_self = False
     controller_target_option = ControllerTargetOption.ALLIED
     combinable = True
@@ -392,7 +391,6 @@ class StimulatingInjection(TargetUnitActivatedAbility):
     This unit dies.
     """
 
-    range = 1
     cost = EnergyCost(3)
     can_target_self = False
 
@@ -429,7 +427,6 @@ class Suplex(TargetUnitActivatedAbility):
     Deals 3 melee damage, and moves the target to the other side of this unit.
     """
 
-    range = 1
     cost = MovementCost(2) | EnergyCost(3)
     can_target_self = False
 
@@ -538,7 +535,7 @@ class SmokeCanister(TargetHexCircleActivatedAbility):
     """
 
     cost = EnergyCost(3)
-    range = 2
+    range = 3
     combinable = True
 
     def perform(self, target: list[Hex]) -> None:
@@ -1182,7 +1179,7 @@ class SowDiscord(TargetTriHexActivatedAbility):
     """
 
     cost = EnergyCost(3) | MovementCost(1)
-    range = 3
+    range = 4
 
     def perform(self, target: list[Hex]) -> None:
         for unit in GS.map.units_on(target):
@@ -1197,6 +1194,7 @@ class SowDiscord(TargetTriHexActivatedAbility):
 class Scorn(TargetUnitActivatedAbility):
     """
     Applies <dishonorable_coward> for 3 rounds.
+    If the target unit stands on an objective captured by its controller, neutralize it.
     """
 
     cost = EnergyCost(2)
@@ -1212,6 +1210,11 @@ class Scorn(TargetUnitActivatedAbility):
                 ),
             )
         )
+        # TODO event
+        if (
+            _hex := GS.map.hex_off(target)
+        ).is_objective and _hex.captured_by == target.controller:
+            _hex.captured_by = None
 
 
 class SpurIntoRage(TargetUnitActivatedAbility):

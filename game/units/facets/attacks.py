@@ -287,7 +287,7 @@ class TongueLash(RangedAttackFacet):
 
 class Slice(MeleeAttackFacet):
     cost = MovementCost(2)
-    damage = 3
+    damage = 2
 
 
 class Spew(RangedAttackFacet):
@@ -520,8 +520,16 @@ class MiniGun(RangedAttackFacet):
 
 
 class Wrench(MeleeAttackFacet):
-    cost = MovementCost(1)
+    """
+    +2 damage against units with 1 or more base armor.
+    """
+
+    cost = MovementCost(2)
     damage = 2
+
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        if unit.armor.get_base() > 0:
+            return 2
 
 
 class SlingShot(RangedAttackFacet):

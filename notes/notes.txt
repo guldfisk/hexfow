@@ -149,6 +149,8 @@ spirit guide
 clockwork archeologist
 druid thingy
 
+3 cost tough
+more heals / dispells / shields for allied units
 artillery
 
 flare - reveal to all

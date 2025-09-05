@@ -36,6 +36,7 @@ code
     get rid of _small unit images suffix
 
     proper parallel decisions support (with immeditate error handling)
+
     refactor game.core somehow
     update test framework
     unit tests on core logic
