@@ -4,18 +4,20 @@ from typing import ClassVar
 from game.core import (
     GS,
     ActivatedAbilityFacet,
-    ConsecutiveAdjacentHexes,
     Hex,
-    HexHexes,
     NoTarget,
     OneOfHexes,
     OneOfUnits,
-    RadiatingLine,
     TargetProfile,
-    TriHex,
     Unit,
     find_hexs_within_range,
     find_units_within_range,
+)
+from game.target_profiles import (
+    ConsecutiveAdjacentHexes,
+    HexHexes,
+    RadiatingLine,
+    TriHex,
 )
 from game.values import ControllerTargetOption
 
