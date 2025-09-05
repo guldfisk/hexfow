@@ -6,12 +6,10 @@ from game.core import (
     ActivatedAbilityFacet,
     ActiveUnitContext,
     Cone,
-    ConsecutiveAdjacentHexes,
     DamageSignature,
     EnergyCost,
     ExclusiveCost,
     Hex,
-    HexHexes,
     HexRing,
     HexStatus,
     HexStatusSignature,
@@ -19,25 +17,18 @@ from game.core import (
     MovementCost,
     NOfHexes,
     NOfUnits,
-    NoTargetActivatedAbility,
-    OneOfHexes,
-    RadiatingLine,
     RangedAttackFacet,
     SelectOptionAtHexDecisionPoint,
-    SingleAllyActivatedAbility,
-    SingleEnemyActivatedAbility,
-    SingleHexTargetActivatedAbility,
-    SingleTargetActivatedAbility,
     TargetProfile,
     Tree,
     TreeNode,
-    TriHexTargetActivatedAbility,
     Unit,
     UnitBlueprint,
     UnitStatus,
     UnitStatusSignature,
+    find_hexs_within_range,
+    find_units_within_range,
     is_vision_obstructed_for_unit_at,
-    line_of_sight_obstructed_for_unit,
 )
 from game.effects.hooks import AdjacencyHook
 from game.events import (
@@ -70,10 +61,24 @@ from game.statuses.unit_statuses import (
     Staggered,
     Terror,
 )
+from game.targeting import (
+    ControllerTargetOption,
+    NoTargetActivatedAbility,
+    TargetHexActivatedAbility,
+    TargetHexArcActivatedAbility,
+    TargetHexCircleActivatedAbility,
+    TargetRadiatingLineActivatedAbility,
+    TargetTriHexActivatedAbility,
+    TargetUnitActivatedAbility,
+)
 from game.values import DamageType, StatusIntention
 
 
 class Bloom(NoTargetActivatedAbility):
+    """
+    Heals each adjacent allied unit 1. This unit dies.
+    """
+
     cost = EnergyCost(2)
 
     def perform(self, target: None) -> None:
@@ -89,27 +94,29 @@ class Grow(NoTargetActivatedAbility):
         ES.resolve(Heal(self.parent, 1))
 
 
-class HealBeam(SingleAllyActivatedAbility):
+class HealBeam(TargetUnitActivatedAbility):
     """
-    Target other allied unit within 2 range LoS. Heals 2.
+    Heals 2.
     """
 
     cost = EnergyCost(3)
     range = 2
     can_target_self = False
+    controller_target_option = ControllerTargetOption.ALLIED
 
     def perform(self, target: Unit) -> None:
         ES.resolve(Heal(target, 2))
 
 
-class GreaseTheGears(SingleAllyActivatedAbility):
+class GreaseTheGears(TargetUnitActivatedAbility):
     """
-    Target other allied unit 1 range. Kills the target. If it does, heal this unit 2, and it restores 2 energy.
+    Kills the target. If it does, heal this unit 2, and it restores 2 energy.
     If the target unit was ready, this unit gains +1 movement point.
     """
 
     range = 1
     can_target_self = False
+    controller_target_option = ControllerTargetOption.ALLIED
     combinable = True
     max_activations = None
 
@@ -131,15 +138,16 @@ class SelfDestruct(NoTargetActivatedAbility):
         ES.resolve(Kill(self.parent))
 
 
-class GrantWish(SingleTargetActivatedAbility):
+class GrantWish(TargetUnitActivatedAbility):
     """
-    Target adjacent ready unit. The unit is exhausted, and its controller chooses one:
-    Fortitude - The unit is healed 3, and gains 3 stacks of <fortified> for 3 rounds.
-    Clarity - The unit gains 4 energy, which can exceed its max.
-    Strength - The unit gains <supernatural_strength> for 3 rounds.
+    The target is exhausted, and its controller chooses one:
+    Fortitude - It is healed 3, and gains 3 stacks of <fortified> for 3 rounds.
+    Clarity - It gains 4 energy, which can exceed its max.
+    Strength - It gains <supernatural_strength> for 3 rounds.
     """
 
     cost = MovementCost(1) | EnergyCost(3)
+    can_target_self = False
 
     def can_target_unit(self, unit: Unit) -> bool:
         return unit != self.parent and unit.ready
@@ -177,31 +185,29 @@ class GrantWish(SingleTargetActivatedAbility):
                 )
 
 
-class InducePanic(SingleEnemyActivatedAbility):
+class InducePanic(TargetUnitActivatedAbility):
     """
-    Target enemy unit within 2 range LoS. Applies <panicked> for 2 rounds.
+    Applies <panicked> for 2 rounds.
     """
 
     range = 2
     cost = MovementCost(2) | EnergyCost(4)
+    controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: Unit) -> None:
         ES.resolve(ApplyStatus(target, UnitStatusSignature(Panicked, self, duration=2)))
 
 
-class Vault(SingleTargetActivatedAbility):
+class Vault(TargetUnitActivatedAbility):
     """
-    Moves this unit to the other side of target adjacent unit. If it did, and the target unit was
+    Moves this unit to the other side of the target. If it did, and the target unit was
     an enemy, apply <staggered> to it.
     """
 
     cost = MovementCost(1)
-    range = 1
     combinable = True
     max_activations = None
-
-    def can_target_unit(self, unit: Unit) -> bool:
-        return unit != self.parent
+    can_target_self = False
 
     def perform(self, target: Unit) -> None:
         target_position = GS.map.position_off(target)
@@ -220,11 +226,17 @@ class Vault(SingleTargetActivatedAbility):
                 ES.resolve(ApplyStatus(target, UnitStatusSignature(Staggered, self)))
 
 
-class BatonPass(SingleTargetActivatedAbility):
+class BatonPass(TargetUnitActivatedAbility):
     """
-    Target different allied unit within 1 range that wasn't adjacent to this unit
-    at the beginning of this units turn. Applies <burst_of_speed> to the target unit.
+    Applies <burst_of_speed> to the target unit.
     """
+
+    can_target_self = False
+    controller_target_option = ControllerTargetOption.ALLIED
+
+    explain_that_filter = (
+        "that wasn't adjacent to this unit at the beginning of this units turn"
+    )
 
     # TODO really ugly
     def __init__(self, owner: Unit):
@@ -235,12 +247,8 @@ class BatonPass(SingleTargetActivatedAbility):
     def create_effects(self) -> None:
         self.register_effects(self.adjacency_hook)
 
-    def can_target_unit(self, unit: Unit) -> bool:
-        return (
-            unit.controller == self.parent.controller
-            and unit != self.parent
-            and unit not in self.adjacency_hook.adjacent_units
-        )
+    def filter_unit(self, unit: Unit) -> bool:
+        return unit not in self.adjacency_hook.adjacent_units
 
     def perform(self, target: Unit) -> None:
         ES.resolve(
@@ -248,20 +256,14 @@ class BatonPass(SingleTargetActivatedAbility):
         )
 
 
-class SummonScarab(SingleHexTargetActivatedAbility):
+class SummonScarab(TargetHexActivatedAbility):
     """
-    Target visible empty space within 3 range LoS. Summons an exhausted Scarab
-    (2 health, 2 speed, 1 armor, 1 sight, S, 2 attack damage with 1 movement cost) with <ephemeral> for 3 rounds.
+    Summons an exhausted Scarab (2 health, 2 speed, 1 armor, 1 sight, S, 2 attack damage with 1 movement cost) with <ephemeral> for 3 rounds.
     """
 
     cost = MovementCost(2) | EnergyCost(3)
     range = 3
-
-    # TODO common logic? or flag on SingleHexTargetActivatedAbility?
-    def can_target_hex(self, hex_: Hex) -> bool:
-        return (unit := GS.map.unit_on(hex_)) is None or unit.is_hidden_for(
-            self.parent.controller
-        )
+    requires_empty = True
 
     def perform(self, target: Hex) -> None:
         ES.resolve(
@@ -275,15 +277,12 @@ class SummonScarab(SingleHexTargetActivatedAbility):
         )
 
 
-class Sweep(ActivatedAbilityFacet[list[Hex]]):
+class Sweep(TargetHexArcActivatedAbility):
     """
-    Target length 3 adjacent arc. Deals 4 melee damage to units on hexes.
+    Deals 4 melee damage to units on hexes.
     """
 
     cost = MovementCost(1)
-
-    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        return ConsecutiveAdjacentHexes(GS.map.hex_off(self.parent), 1)
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
@@ -291,19 +290,13 @@ class Sweep(ActivatedAbilityFacet[list[Hex]]):
                 ES.resolve(Damage(unit, DamageSignature(4, self, DamageType.MELEE)))
 
 
-class Stare(ActivatedAbilityFacet[list[Hex]]):
+class Stare(TargetRadiatingLineActivatedAbility):
     """
-    Target radiating line length 4. Applies <glimpse> to hexes sequentially, starting from the hex closest to this unit, until a hex blocks vision.
+    Applies <glimpse> to hexes sequentially, starting from the hex closest to this unit, until a hex blocks vision.
     """
 
+    length = 4
     combinable = True
-
-    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        return RadiatingLine(
-            GS.map.hex_off(self.parent),
-            list(GS.map.get_neighbors_off(self.parent)),
-            4,
-        )
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
@@ -312,39 +305,40 @@ class Stare(ActivatedAbilityFacet[list[Hex]]):
                 break
 
 
-class Jaunt(ActivatedAbilityFacet[Hex]):
-    """Teleports to target hex within 4 range NLoS."""
+class Jaunt(TargetHexActivatedAbility):
+    """Moves to the target hex."""
 
     cost = EnergyCost(3)
     combinable = True
-
-    def get_target_profile(self) -> TargetProfile[Hex] | None:
-        if hexes := list(GS.map.get_hexes_within_range_off(self.parent, 4)):
-            return OneOfHexes(hexes)
+    range = 4
+    requires_los = False
+    requires_vision = False
+    requires_empty = True
 
     def perform(self, target: Hex) -> None:
         ES.resolve(MoveUnit(self.parent, target))
 
 
-class Jump(ActivatedAbilityFacet[Hex]):
-    """Teleports to target hex within 2 range NLoS."""
+class Jump(TargetHexActivatedAbility):
+    """Moves to the target hex."""
 
     cost = EnergyCost(2) | ExclusiveCost()
-
-    def get_target_profile(self) -> TargetProfile[Hex] | None:
-        if hexes := list(GS.map.get_hexes_within_range_off(self.parent, 2)):
-            return OneOfHexes(hexes)
+    range = 2
+    requires_los = False
+    requires_vision = False
+    requires_empty = True
 
     def perform(self, target: Hex) -> None:
         ES.resolve(MoveUnit(self.parent, target))
 
 
-class PsychicCommand(SingleTargetActivatedAbility):
-    """Target other unit within 3 range LoS. Activates it."""
+class PsychicCommand(TargetUnitActivatedAbility):
+    """Activates it."""
 
     cost = EnergyCost(2)
     range = 3
     combinable = True
+    can_target_self = False
 
     def can_target_unit(self, unit: Unit) -> bool:
         return unit != self.parent
@@ -353,11 +347,12 @@ class PsychicCommand(SingleTargetActivatedAbility):
         ES.resolve(QueueUnitForActivation(target))
 
 
-class Riddle(SingleEnemyActivatedAbility):
-    """Target enemy unit within 2 range LoS. Applies <baffled>."""
+class Riddle(TargetUnitActivatedAbility):
+    """Applies <baffled>."""
 
     cost = EnergyCost(3) | MovementCost(1)
     range = 2
+    controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: Unit) -> None:
         ES.resolve(
@@ -365,11 +360,12 @@ class Riddle(SingleEnemyActivatedAbility):
         )
 
 
-class InstilFocus(SingleAllyActivatedAbility):
-    """Target allied unit within 2 range LoS. Applies <focused> for 3 rounds."""
+class InstilFocus(TargetUnitActivatedAbility):
+    """Applies <focused> for 3 rounds."""
 
     cost = EnergyCost(2) | MovementCost(1)
     range = 2
+    controller_target_option = ControllerTargetOption.ALLIED
 
     def perform(self, target: Unit) -> None:
         ES.resolve(
@@ -379,14 +375,10 @@ class InstilFocus(SingleAllyActivatedAbility):
         )
 
 
-class SummonBees(SingleHexTargetActivatedAbility):
+class SummonBees(TargetHexActivatedAbility):
     cost = MovementCost(2) | EnergyCost(2)
     range = 2
-
-    def can_target_hex(self, hex_: Hex) -> bool:
-        return (unit := GS.map.unit_on(hex_)) is None or unit.is_hidden_for(
-            self.parent.controller
-        )
+    requires_empty = True
 
     def perform(self, target: Hex) -> None:
         ES.resolve(
@@ -399,15 +391,15 @@ class SummonBees(SingleHexTargetActivatedAbility):
         )
 
 
-class StimulatingInjection(SingleTargetActivatedAbility):
+class StimulatingInjection(TargetUnitActivatedAbility):
     """
-    Target other unit within 1 range.
     Deals 1 pure damage and readies the target.
     This unit dies.
     """
 
     range = 1
     cost = EnergyCost(3)
+    can_target_self = False
 
     def can_target_unit(self, unit: Unit) -> bool:
         return unit != self.parent
@@ -419,13 +411,14 @@ class StimulatingInjection(SingleTargetActivatedAbility):
         ES.resolve(Kill(self.parent))
 
 
-class EnfeeblingHex(SingleEnemyActivatedAbility):
+class EnfeeblingHex(TargetUnitActivatedAbility):
     """
-    Target enemy unit within 2 range LoS. Applies <enfeebled> for 2 rounds.
+    Applies <enfeebled> for 2 rounds.
     """
 
-    range = 2
     cost = MovementCost(1) | EnergyCost(3)
+    range = 2
+    controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: Unit) -> None:
         ES.resolve(
@@ -436,16 +429,14 @@ class EnfeeblingHex(SingleEnemyActivatedAbility):
         )
 
 
-class Suplex(SingleTargetActivatedAbility):
+class Suplex(TargetUnitActivatedAbility):
     """
-    Target adjacent unit. Deals 3 melee damage, and moves the target to the other side of this unit.
+    Deals 3 melee damage, and moves the target to the other side of this unit.
     """
 
     range = 1
     cost = MovementCost(2) | EnergyCost(3)
-
-    def can_target_unit(self, unit: Unit) -> bool:
-        return unit != self.parent
+    can_target_self = False
 
     def perform(self, target: Unit) -> None:
         ES.resolve(Damage(target, DamageSignature(3, self, DamageType.MELEE)))
@@ -456,29 +447,31 @@ class Suplex(SingleTargetActivatedAbility):
             ES.resolve(MoveUnit(target, target_hex, external=True))
 
 
-class Lasso(SingleEnemyActivatedAbility):
+class Lasso(TargetUnitActivatedAbility):
     """
-    Target enemy unit within 2 range. Applies <rooted> for 1 round.
+    Applies <rooted> for 1 round.
     """
 
-    range = 2
     cost = MovementCost(2) | EnergyCost(3)
+    range = 2
+    controller_target_option = ControllerTargetOption.ENEMY
     combinable = True
 
     def perform(self, target: Unit) -> None:
         ES.resolve(ApplyStatus(target, UnitStatusSignature(Rooted, self, duration=1)))
 
 
-class Showdown(SingleEnemyActivatedAbility):
+class Showdown(TargetUnitActivatedAbility):
     """
-    Target enemy unit within 3 range LoS. This unit hits the target with its primary ranged attack twice.
+    This unit hits the target with its primary ranged attack twice.
     If the target isn't exhausted, and it has a primary ranged attack, and it can hit this unit with
     that attack, it does and is exhausted. If it does not have a primary ranged attack, but it has
     a primary melee attack that can hit this unit, it uses that instead.
     """
 
-    range = 3
     cost = ExclusiveCost() | EnergyCost(3)
+    range = 3
+    controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: Unit) -> None:
         if attack := self.parent.get_primary_attack(RangedAttackFacet):
@@ -505,9 +498,9 @@ class Showdown(SingleEnemyActivatedAbility):
                     break
 
 
-class RaiseShrine(SingleHexTargetActivatedAbility):
+class RaiseShrine(TargetHexActivatedAbility):
     """
-    Target hex within 1 range. Applies status <shrine>.
+    Applies status <shrine>.
     """
 
     cost = MovementCost(2) | EnergyCost(3)
@@ -516,13 +509,14 @@ class RaiseShrine(SingleHexTargetActivatedAbility):
         ES.resolve(ApplyHexStatus(target, HexStatusSignature(Shrine, self)))
 
 
-class GrantCharm(SingleAllyActivatedAbility):
+class GrantCharm(TargetUnitActivatedAbility):
     """
-    Target different allied unit within 1 range. Applies <lucky_charm> for 3 rounds.
+    Applies <lucky_charm> for 3 rounds.
     """
 
-    can_target_self = False
     cost = EnergyCost(2)
+    controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
 
     def perform(self, target: Unit) -> None:
         ES.resolve(
@@ -530,39 +524,27 @@ class GrantCharm(SingleAllyActivatedAbility):
         )
 
 
-class ChokingSoot(ActivatedAbilityFacet[list[Hex]]):
+class ChokingSoot(TargetHexCircleActivatedAbility):
     """
-    Target hex circle size 2, center within 2 range NLoS.
     Applies <soot> to hexes for 2 rounds.
     """
 
     cost = MovementCost(1) | EnergyCost(4)
-
-    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        if hexes := [
-            _hex for _hex in GS.map.get_hexes_within_range_off(self.parent, 2)
-        ]:
-            return HexHexes(hexes, 1)
+    range = 2
 
     def perform(self, target: list[Hex]) -> None:
         for _hex in target:
             ES.resolve(ApplyHexStatus(_hex, HexStatusSignature(Soot, self, duration=2)))
 
 
-class SmokeCanister(ActivatedAbilityFacet[list[Hex]]):
+class SmokeCanister(TargetHexCircleActivatedAbility):
     """
-    Target hex circle size 2, center within 2 range NLoS.
     Applies <smoke> for 2 rounds.
     """
 
     cost = EnergyCost(3)
+    range = 2
     combinable = True
-
-    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        if hexes := [
-            _hex for _hex in GS.map.get_hexes_within_range_off(self.parent, 2)
-        ]:
-            return HexHexes(hexes, 1)
 
     def perform(self, target: list[Hex]) -> None:
         for _hex in target:
@@ -571,27 +553,25 @@ class SmokeCanister(ActivatedAbilityFacet[list[Hex]]):
             )
 
 
-class Terrorize(SingleEnemyActivatedAbility):
+class Terrorize(TargetUnitActivatedAbility):
     """
-    Target enemy unit within 4 range LoS. Applies <terror> for 2 rounds.
+    Applies <terror> for 2 rounds.
     """
 
-    range = 4
     cost = MovementCost(2) | EnergyCost(5)
+    range = 4
+    controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: Unit) -> None:
         ES.resolve(ApplyStatus(target, UnitStatusSignature(Terror, self, duration=2)))
 
 
-class Scorch(ActivatedAbilityFacet[list[Hex]]):
+class Scorch(TargetHexArcActivatedAbility):
     """
-    Target length 3 adjacent arc. Deals 3 aoe damage and applies 2 stacks of <burn> to units on hexes.
+    Deals 3 aoe damage and applies 2 stacks of <burn> to units on hexes.
     """
 
     cost = MovementCost(1) | EnergyCost(3)
-
-    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        return ConsecutiveAdjacentHexes(GS.map.hex_off(self.parent), 1)
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
@@ -600,19 +580,13 @@ class Scorch(ActivatedAbilityFacet[list[Hex]]):
                 ES.resolve(ApplyStatus(unit, UnitStatusSignature(Burn, self, stacks=2)))
 
 
-class FlameWall(ActivatedAbilityFacet[list[Hex]]):
+class FlameWall(TargetRadiatingLineActivatedAbility):
     """
-    Target length 3 radiating line. Applies 2 stacks of <burn> to each unit on hexes, and 1 stack of <burning_terrain> to the hex for 3 rounds.
+    Applies 2 stacks of <burn> to each unit on hexes, and 1 stack of <burning_terrain> to the hex for 3 rounds.
     """
 
     cost = MovementCost(1) | EnergyCost(3)
-
-    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        return RadiatingLine(
-            GS.map.hex_off(self.parent),
-            list(GS.map.get_neighbors_off(self.parent)),
-            3,
-        )
+    length = 4
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
@@ -628,11 +602,14 @@ class FlameWall(ActivatedAbilityFacet[list[Hex]]):
 
 class FlameThrower(ActivatedAbilityFacet[list[Hex]]):
     """
-    Target 1-1-3 arc lengths radiating cone.
     Applies 1 stacks of <burn> to each unit on hexes, and 1 stack of <burning_terrain> to the hex for 2 rounds.
     """
 
     cost = EnergyCost(3)
+
+    @classmethod
+    def get_target_explanation(cls) -> str | None:
+        return "Target 1-1-3 arc lengths radiating cone."
 
     # TODO variable length cone?
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
@@ -654,30 +631,24 @@ class FlameThrower(ActivatedAbilityFacet[list[Hex]]):
                 ES.resolve(ApplyStatus(unit, UnitStatusSignature(Burn, self, stacks=1)))
 
 
-class VitalityTransfer(ActivatedAbilityFacet):
+class VitalityTransfusion(ActivatedAbilityFacet[list[Unit]]):
     """
-    Target two allied units within 3 range LoS.
     Transfers health from the second to the first unit.
     Amount transferred is the minimum of 3, how much the recipient is missing, and how much the donor can give without dying.
     """
 
     cost = MovementCost(1) | EnergyCost(2)
 
+    @classmethod
+    def get_target_explanation(cls) -> str | None:
+        return "Target two allied units within 3 range LoS."
+
     def get_target_profile(self) -> TargetProfile[list[Unit]] | None:
         if (
             len(
-                # TODO some common logic for this trash
-                units := [
-                    unit
-                    for unit in GS.map.get_units_within_range_off(self.parent, 3)
-                    if unit.controller == self.parent.controller
-                    and unit.is_visible_to(self.parent.controller)
-                    and not line_of_sight_obstructed_for_unit(
-                        self.parent,
-                        GS.map.position_off(self.parent),
-                        GS.map.position_off(unit),
-                    )
-                ]
+                units := find_units_within_range(
+                    self.parent, 3, with_controller=ControllerTargetOption.ALLIED
+                )
             )
             >= 2
         ):
@@ -701,23 +672,12 @@ class FatalBonding(ActivatedAbilityFacet):
 
     cost = EnergyCost(3) | ExclusiveCost()
 
+    @classmethod
+    def get_target_explanation(cls) -> str | None:
+        return "Target two units within 4 range LoS."
+
     def get_target_profile(self) -> TargetProfile[list[Unit]] | None:
-        if (
-            len(
-                # TODO some common logic for this trash
-                units := [
-                    unit
-                    for unit in GS.map.get_units_within_range_off(self.parent, 4)
-                    if unit.is_visible_to(self.parent.controller)
-                    and not line_of_sight_obstructed_for_unit(
-                        self.parent,
-                        GS.map.position_off(self.parent),
-                        GS.map.position_off(unit),
-                    )
-                ]
-            )
-            >= 2
-        ):
+        if len(units := find_units_within_range(self.parent, 4)) >= 2:
             return NOfUnits(units, 2, ["select unit"] * 2)
 
     def perform(self, target: list[Unit]) -> None:
@@ -748,17 +708,14 @@ class FatalBonding(ActivatedAbilityFacet):
                     status.remove()
 
 
-class Shove(SingleTargetActivatedAbility):
+class Shove(TargetUnitActivatedAbility):
     """
-    Moves target adjacent unit one space away from this unit. If it is staggered, this unit gains 1 movement point.
+    Moves target one space away from this unit. If it is staggered, this unit gains 1 movement point.
     """
 
     cost = MovementCost(1) | EnergyCost(2)
-    range = 1
     combinable = True
-
-    def can_target_unit(self, unit: Unit) -> bool:
-        return unit != self.parent
+    can_target_self = False
 
     def perform(self, target: Unit) -> None:
         target_position = GS.map.position_off(target)
@@ -776,16 +733,14 @@ class Shove(SingleTargetActivatedAbility):
             ES.resolve(ModifyMovementPoints(self.parent, 1))
 
 
-class Poof(SingleHexTargetActivatedAbility):
-    """Applies Smoke to the current position of this unit for 1 round, and moves this unit to target adjacent hex."""
+class Poof(TargetHexActivatedAbility):
+    """Applies Smoke to the current position of this unit for 1 round, and moves this unit to the target hex."""
 
     cost = EnergyCost(2)
     combinable = True
     requires_los = False
     requires_vision = False
-
-    def can_target_hex(self, hex_: Hex) -> bool:
-        return hex_.can_move_into(self.parent)
+    requires_empty = True
 
     def perform(self, target: Hex) -> None:
         ES.resolve(
@@ -797,13 +752,14 @@ class Poof(SingleHexTargetActivatedAbility):
         ES.resolve(MoveUnit(self.parent, target))
 
 
-class VenomousSpine(SingleEnemyActivatedAbility):
+class VenomousSpine(TargetUnitActivatedAbility):
     """
-    Target enemy unit 2 range LoS. Applies <debilitating_venom> for 2 rounds and <parasite>.
+    Applies <debilitating_venom> for 2 rounds and <parasite>.
     """
 
     cost = MovementCost(1) | EnergyCost(3)
     range = 2
+    controller_target_option = ControllerTargetOption.ENEMY
     combinable = True
 
     def perform(self, target: Unit) -> None:
@@ -820,9 +776,9 @@ class VenomousSpine(SingleEnemyActivatedAbility):
         )
 
 
-class Scry(SingleHexTargetActivatedAbility):
+class Scry(TargetHexActivatedAbility):
     """
-    Target hex within 6 range NLoS. Applies <revealed> for 1 round.
+    Applies <revealed> for 1 round.
     """
 
     cost = EnergyCost(2)
@@ -838,9 +794,9 @@ class Scry(SingleHexTargetActivatedAbility):
         )
 
 
-class ShrinkRay(SingleTargetActivatedAbility):
+class ShrinkRay(TargetUnitActivatedAbility):
     """
-    Target unit within 2 range LoS. Deals 1 ranged damage and applies 1 stack of <shrunk> for 2 rounds.
+    Deals 1 ranged damage and applies 1 stack of <shrunk> for 2 rounds.
     """
 
     cost = MovementCost(1) | EnergyCost(3)
@@ -858,19 +814,18 @@ class ShrinkRay(SingleTargetActivatedAbility):
         )
 
 
-class AssembleTheDoombot(SingleHexTargetActivatedAbility):
+class AssembleTheDoombot(TargetHexActivatedAbility):
     """
-    Target adjacent visible empty hex. Applies <doombot_scaffold> to hex.
+    Applies <doombot_scaffold> to hex.
     If it already has <doombot_scaffold>, instead dispel it, and spawn an exhausted Doombot 3000 with <ephemeral> for 4 rounds.
     """
 
     cost = ExclusiveCost() | EnergyCost(4)
-    range = 1
-
-    def can_target_hex(self, hex_: Hex) -> bool:
-        return not GS.map.unit_on(hex_)
+    requires_empty = True
 
     def perform(self, target: Hex) -> None:
+        if GS.map.unit_on(target):
+            return
         if statuses := target.get_statuses(HexStatus.get("doombot_scaffold")):
             for status in statuses:
                 ES.resolve(DispelStatus(target, status))
@@ -895,24 +850,33 @@ class AssembleTheDoombot(SingleHexTargetActivatedAbility):
             )
 
 
-class Translocate(ActivatedAbilityFacet):
+class Translocate(ActivatedAbilityFacet[list[Unit | Hex]]):
     """
-    Target adjacent unit, and a hex within 1 range of that unit. Moves the unit to the hex.
+    Moves the unit to the hex.
     """
 
     cost = EnergyCost(2)
     combinable = True
 
+    @classmethod
+    def get_target_explanation(cls) -> str | None:
+        return "Target unit within 1 range, and an empty hex adjacent to that unit."
+
     def get_target_profile(self) -> TargetProfile[list[Unit | Hex]] | None:
         if units := [
             (
                 unit,
-                TreeNode(
-                    [(h, None) for h in GS.map.get_neighbors_off(unit)], "select hex"
-                ),
+                TreeNode([(h, None) for h in hexes], "select hex"),
             )
-            for unit in GS.map.get_units_within_range_off(self.parent, 1)
-            if unit.is_visible_to(self.parent.controller)
+            for unit in find_units_within_range(self.parent, 1)
+            if (
+                hexes := find_hexs_within_range(
+                    unit,
+                    1,
+                    require_empty=True,
+                    vision_for_player=self.parent.controller,
+                )
+            )
         ]:
             return Tree(TreeNode(units, "select unit"))
 
@@ -923,7 +887,6 @@ class Translocate(ActivatedAbilityFacet):
 
 class WringEssence(ActivatedAbilityFacet):
     """
-    Target unit within 2 range LoS, and a hex within 1 range of that unit.
     Spawns an exhausted Blood Homunculus (health 6, speed 2, sight 2, medium, 2 damage 1 movement cost melee attack)
     with 4 health on the selected hex with the same controller as the selected unit.
     If a unit is spawned this way, this ability deals 4 pure damage to the selected unit.
@@ -931,21 +894,23 @@ class WringEssence(ActivatedAbilityFacet):
 
     cost = EnergyCost(3) | MovementCost(1)
 
+    @classmethod
+    def get_target_explanation(cls) -> str | None:
+        return "Target unit within 2 range LoS, and an empty hex adjacent to that unit."
+
     def get_target_profile(self) -> TargetProfile[list[Unit | Hex]] | None:
         if units := [
             (
                 unit,
-                TreeNode(
-                    [(h, None) for h in GS.map.get_neighbors_off(unit)], "select hex"
-                ),
+                TreeNode([(h, None) for h in hexes], "select hex"),
             )
-            for unit in GS.map.get_units_within_range_off(self.parent, 2)
-            if unit.is_visible_to(self.parent.controller)
-            and (
-                not line_of_sight_obstructed_for_unit(
-                    self.parent,
-                    GS.map.position_off(self.parent),
-                    GS.map.position_off(unit),
+            for unit in find_units_within_range(self.parent, 2)
+            if (
+                hexes := find_hexs_within_range(
+                    unit,
+                    1,
+                    require_empty=True,
+                    vision_for_player=self.parent.controller,
                 )
             )
         ]:
@@ -968,13 +933,16 @@ class WringEssence(ActivatedAbilityFacet):
             ES.resolve(Damage(unit, DamageSignature(4, self, DamageType.PURE)))
 
 
-class InkRing(ActivatedAbilityFacet):
+class InkRing(ActivatedAbilityFacet[list[Hex]]):
     """
-    Target size hex ring size 2, center within 3 range NloS.
     Applies <blinded> for 3 rounds.
     """
 
     cost = EnergyCost(3)
+
+    @classmethod
+    def get_target_explanation(cls) -> str | None:
+        return "Target radius 1 hex ring, center within 3 range NloS."
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
         if hexes := [
@@ -992,13 +960,14 @@ class InkRing(ActivatedAbilityFacet):
             )
 
 
-class MalevolentStare(SingleEnemyActivatedAbility):
+class MalevolentStare(TargetUnitActivatedAbility):
     """
-    Target enemy unit within 3 range LoS. Dispels all buffs and applies <silenced> for 2 rounds.
+    Dispels all buffs and applies <silenced> for 2 rounds.
     """
 
     cost = EnergyCost(3) | MovementCost(2)
     range = 3
+    controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: Unit) -> None:
         dispel_from_unit(target, StatusIntention.BUFF)
@@ -1010,13 +979,13 @@ class MalevolentStare(SingleEnemyActivatedAbility):
         )
 
 
-class IronBlessing(SingleAllyActivatedAbility):
+class IronBlessing(TargetUnitActivatedAbility):
     """
-    Target other allied unit within 1 range. Applies <armored> for 2 rounds.
+    Applies <armored> for 2 rounds.
     """
 
     cost = EnergyCost(3) | MovementCost(1)
-    range = 1
+    controller_target_option = ControllerTargetOption.ALLIED
     can_target_self = False
 
     def perform(self, target: Unit) -> None:
@@ -1027,14 +996,14 @@ class IronBlessing(SingleAllyActivatedAbility):
         )
 
 
-class InternalStruggle(SingleEnemyActivatedAbility):
+class InternalStruggle(TargetUnitActivatedAbility):
     """
-    Target enemy unit within 2 range NLoS.
     If the unit has a primary attack, it hits itself with it, otherwise it loses 3 energy.
     """
 
     cost = EnergyCost(3) | MovementCost(2)
     range = 2
+    controller_target_option = ControllerTargetOption.ENEMY
     requires_los = False
 
     def perform(self, target: Unit) -> None:
@@ -1044,13 +1013,13 @@ class InternalStruggle(SingleEnemyActivatedAbility):
             ES.resolve(LoseEnergy(target, 3, self))
 
 
-class Hitch(SingleAllyActivatedAbility):
+class Hitch(TargetUnitActivatedAbility):
     """
-    Target different adjacent allied unit. Applies <hitched>.
+    Applies <hitched>.
     """
 
     cost = EnergyCost(3)
-    range = 1
+    controller_target_option = ControllerTargetOption.ALLIED
     can_target_self = False
     combinable = True
 
@@ -1062,50 +1031,48 @@ class Hitch(SingleAllyActivatedAbility):
 
 class CoordinatedManeuver(ActivatedAbilityFacet[list[Unit]]):
     """
-    Target 1 or 2 other ready allied units within 3 range LoS. Activates them.
+    Activates them.
     """
 
     cost = EnergyCost(3) | MovementCost(1)
 
+    @classmethod
+    def get_target_explanation(cls) -> str | None:
+        return "Target 1 or 2 other ready allied units within 3 range LoS."
+
     def get_target_profile(self) -> TargetProfile[list[Unit]] | None:
-        if units := [
-            unit
-            for unit in GS.map.get_units_within_range_off(self.parent, 3)
-            if unit.controller == self.parent.controller
-            and unit != self.parent
-            and not unit.exhausted
-            and not line_of_sight_obstructed_for_unit(
-                self.parent,
-                GS.map.position_off(self.parent),
-                GS.map.position_off(unit),
-            )
-        ]:
-            return NOfUnits(units, 2, ["select target", "select target"], min_count=1)
+        if units := find_units_within_range(
+            self.parent,
+            3,
+            with_controller=ControllerTargetOption.ALLIED,
+            can_include_self=False,
+            additional_filter=lambda u: u.ready,
+        ):
+            return NOfUnits(units, 2, ["select target"] * 2, min_count=1)
 
     def perform(self, target: list[Unit]) -> None:
         for unit in target:
             ES.resolve(QueueUnitForActivation(unit))
 
 
-class LayMine(SingleHexTargetActivatedAbility):
+class LayMine(TargetHexActivatedAbility):
     """
-    Target unoccupied hex within 1 range. Applies <mine>.
+    Applies <mine>.
     """
 
     cost = EnergyCost(2) | MovementCost(1)
     combinable = True
-
-    def can_target_hex(self, hex_: Hex) -> bool:
-        return not GS.map.unit_on(hex_)
+    requires_empty = True
 
     def perform(self, target: Hex) -> None:
-        ES.resolve(
-            ApplyHexStatus(target, HexStatusSignature(HexStatus.get("mine"), self))
-        )
+        if not GS.map.unit_on(target):
+            ES.resolve(
+                ApplyHexStatus(target, HexStatusSignature(HexStatus.get("mine"), self))
+            )
 
 
-class TidyUp(SingleHexTargetActivatedAbility):
-    """Target hex within 1 range. Dispels all hex statuses."""
+class TidyUp(TargetHexActivatedAbility):
+    """Dispels all hex statuses."""
 
     cost = EnergyCost(2)
 
@@ -1113,26 +1080,22 @@ class TidyUp(SingleHexTargetActivatedAbility):
         dispel_all(target)
 
 
-class Vomit(SingleHexTargetActivatedAbility):
+class Vomit(TargetHexActivatedAbility):
     """
-    Target adjacent hex. Deals aoe 5 damage.
+    Deals aoe 5 damage.
     """
 
     cost = MovementCost(2)
-
     requires_vision = False
-
-    def can_target_hex(self, hex_: Hex) -> bool:
-        return hex_ != GS.map.hex_off(self.parent)
+    can_target_self = False
 
     def perform(self, target: Hex) -> None:
         if unit := GS.map.unit_on(target):
             ES.resolve(Damage(unit, DamageSignature(5, self, DamageType.AOE)))
 
 
-class SludgeBelch(TriHexTargetActivatedAbility):
+class SludgeBelch(TargetTriHexActivatedAbility):
     """
-    Target tri hex within 2 range NLoS.
     Applies <sludge> for 2 rounds.
     """
 
@@ -1148,9 +1111,8 @@ class SludgeBelch(TriHexTargetActivatedAbility):
             )
 
 
-class FalseCure(TriHexTargetActivatedAbility):
+class FalseCure(TargetTriHexActivatedAbility):
     """
-    Target tri hex within 3 range NLoS.
     Heals units 3 and applies 1 stack of <poison>.
     """
 
@@ -1167,9 +1129,8 @@ class FalseCure(TriHexTargetActivatedAbility):
             )
 
 
-class HandGrenade(TriHexTargetActivatedAbility):
+class HandGrenade(TargetTriHexActivatedAbility):
     """
-    Target tri hex within 2 range NLoS.
     Deals 3 aoe damage.
     """
 
@@ -1182,9 +1143,8 @@ class HandGrenade(TriHexTargetActivatedAbility):
                 ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.AOE)))
 
 
-class FlashBang(TriHexTargetActivatedAbility):
+class FlashBang(TargetTriHexActivatedAbility):
     """
-    Target tri hex within 2 range NLoS.
     Applies <blinded> for 2 rounds.
     """
 
@@ -1204,9 +1164,8 @@ class FlashBang(TriHexTargetActivatedAbility):
                 )
 
 
-class SmokeGrenade(TriHexTargetActivatedAbility):
+class SmokeGrenade(TargetTriHexActivatedAbility):
     """
-    Target tri hex within 2 range NLoS.
     Applies <smoke> for 2 rounds.
     """
 
@@ -1222,9 +1181,8 @@ class SmokeGrenade(TriHexTargetActivatedAbility):
             )
 
 
-class SowDiscord(TriHexTargetActivatedAbility):
+class SowDiscord(TargetTriHexActivatedAbility):
     """
-    Target tri hex within 3 range NLoS.
     Applies <paranoia> for 3 rounds.
     """
 
@@ -1241,14 +1199,14 @@ class SowDiscord(TriHexTargetActivatedAbility):
             )
 
 
-class Scorn(SingleEnemyActivatedAbility):
+class Scorn(TargetUnitActivatedAbility):
     """
-    Target enemy unit within 2 range LoS.
     Applies <dishonorable_coward> for 3 rounds.
     """
 
     cost = EnergyCost(2)
     range = 2
+    controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: Unit) -> None:
         ES.resolve(
@@ -1261,17 +1219,14 @@ class Scorn(SingleEnemyActivatedAbility):
         )
 
 
-class SpurIntoRage(SingleTargetActivatedAbility):
+class SpurIntoRage(TargetUnitActivatedAbility):
     """
-    Target other unit within 2 range LoS.
     Applies <senseless_rage> for 2 rounds.
     """
 
     cost = EnergyCost(3) | MovementCost(2)
     range = 2
-
-    def can_target_unit(self, unit: Unit) -> bool:
-        return unit != self.parent
+    can_target_self = False
 
     def perform(self, target: Unit) -> None:
         ES.resolve(
@@ -1282,9 +1237,8 @@ class SpurIntoRage(SingleTargetActivatedAbility):
         )
 
 
-class SquirtSoot(SingleHexTargetActivatedAbility):
+class SquirtSoot(TargetHexActivatedAbility):
     """
-    Target hex within 1 range.
     Applies <soot> for 2 rounds.
     """
 
@@ -1299,18 +1253,13 @@ class SquirtSoot(SingleHexTargetActivatedAbility):
         )
 
 
-class ConstructTurret(SingleHexTargetActivatedAbility):
+class ConstructTurret(TargetHexActivatedAbility):
     """
-    Target visible empty space within 1 range.
     Summons an exhausted Sentry Turret with <ephemeral> for 4 rounds.
     """
 
     cost = MovementCost(2) | EnergyCost(4)
-
-    def can_target_hex(self, hex_: Hex) -> bool:
-        return (unit := GS.map.unit_on(hex_)) is None or unit.is_hidden_for(
-            self.parent.controller
-        )
+    requires_empty = True
 
     def perform(self, target: Hex) -> None:
         ES.resolve(
@@ -1326,43 +1275,38 @@ class ConstructTurret(SingleHexTargetActivatedAbility):
         )
 
 
-class FixErUp(SingleTargetActivatedAbility):
+class FixErUp(TargetUnitActivatedAbility):
     """
-    Target adjacent allied unit with 1 or more base armor or Sentry Turret.
     Heals 2.
     """
 
     name = "Fix 'er Up"
     cost = EnergyCost(2) | MovementCost(1)
+    controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
+    explain_with_filter = "with 1 or more base armor or Sentry Turret"
 
-    def can_target_unit(self, unit: Unit) -> bool:
-        return (
-            unit != self.parent
-            and unit.controller == self.parent.controller
-            and (
-                unit.armor.get_base() > 0
-                or unit.blueprint == UnitBlueprint.get_class("sentry_turret")
-            )
+    def filter_unit(self, unit: Unit) -> bool:
+        return unit.armor.get_base() > 0 or unit.blueprint == UnitBlueprint.get_class(
+            "sentry_turret"
         )
 
     def perform(self, target: Unit) -> None:
         ES.resolve(Heal(target, 2))
 
 
-class TurboTune(SingleTargetActivatedAbility):
+class TurboTune(TargetUnitActivatedAbility):
     """
-    Target adjacent allied unit with 1 or more base armor.
     Applies <turbo> for 2 rounds.
     """
 
     cost = EnergyCost(2) | MovementCost(2)
+    controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
+    explain_with_filter = "with 1 or more base armor"
 
-    def can_target_unit(self, unit: Unit) -> bool:
-        return (
-            unit != self.parent
-            and unit.controller == self.parent.controller
-            and unit.armor.get_base() > 0
-        )
+    def filter_unit(self, unit: Unit) -> bool:
+        return unit.armor.get_base() > 0
 
     def perform(self, target: Unit) -> None:
         ES.resolve(
@@ -1374,11 +1318,14 @@ class TurboTune(SingleTargetActivatedAbility):
 
 class OpenGate(ActivatedAbilityFacet[list[Hex]]):
     """
-    Target 2 hexes within 3 range NLoS.
     Applies <gate> to both hexes for 3 rounds.
     """
 
     cost = ExclusiveCost() | EnergyCost(4)
+
+    @classmethod
+    def get_target_explanation(cls) -> str | None:
+        return "Target 2 hexes within 3 range NLoS."
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
         if (

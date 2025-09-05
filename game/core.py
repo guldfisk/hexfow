@@ -31,7 +31,14 @@ from game.identification import IDMap
 from game.info.registered import Registered, UnknownIdentifierError, get_registered_meta
 from game.map.coordinates import CC, Corner, CornerPosition, line_of_sight_obstructed
 from game.map.geometry import hex_arc, hex_circle, hex_ring
-from game.values import DamageType, Resistance, Size, StatusIntention, VisionObstruction
+from game.values import (
+    ControllerTargetOption,
+    DamageType,
+    Resistance,
+    Size,
+    StatusIntention,
+    VisionObstruction,
+)
 
 
 G_Status = TypeVar("G_Status", bound="Status")
@@ -516,19 +523,12 @@ class RangedAttackFacet(SingleTargetAttackFacet, ABC):
 
     @modifiable
     def get_legal_targets(self, context: ActiveUnitContext) -> list[Unit]:
-        return [
-            unit
-            for unit in GS.map.get_units_within_range_off(self.parent, self.range)
-            if unit.controller != self.parent.controller
-            # TODO test on this
-            and unit.is_visible_to(self.parent.controller)
-            and not line_of_sight_obstructed_for_unit(
-                self.parent,
-                GS.map.position_off(self.parent),
-                GS.map.position_off(unit),
-            )
-            and unit.can_be_attacked_by(self)
-        ]
+        return find_units_within_range(
+            self.parent,
+            self.range,
+            with_controller=ControllerTargetOption.ENEMY,
+            additional_filter=lambda u: u.can_be_attacked_by(self),
+        )
 
     @classmethod
     def serialize_type(cls) -> JSON:
@@ -537,6 +537,9 @@ class RangedAttackFacet(SingleTargetAttackFacet, ABC):
 
 class ActivatedAbilityFacet(EffortFacet, Generic[G_decision_result], ABC):
     category = "activated_ability"
+
+    @classmethod
+    def get_target_explanation(cls) -> str | None: ...
 
     @abstractmethod
     def get_target_profile(self) -> TargetProfile[G_decision_result] | None: ...
@@ -555,6 +558,13 @@ class ActivatedAbilityFacet(EffortFacet, Generic[G_decision_result], ABC):
             and self.get_cost().can_be_paid(context)
             and self.get_target_profile() is not None
         )
+
+    @classmethod
+    def serialize_type(cls) -> JSON:
+        return {
+            **super().serialize_type(),
+            "target_explanation": cls.get_target_explanation(),
+        }
 
 
 class StaticAbilityFacet(Facet, ABC):
@@ -1232,45 +1242,6 @@ class NoTargetActivatedAbility(ActivatedAbilityFacet[None], ABC):
         return NoTarget()
 
 
-class SingleTargetActivatedAbility(ActivatedAbilityFacet[Unit], ABC):
-    range: ClassVar[int] = 1
-    requires_los: ClassVar[bool] = True
-
-    def can_target_unit(self, unit: Unit) -> bool:
-        return True
-
-    def get_target_profile(self) -> TargetProfile[Unit] | None:
-        if units := [
-            unit
-            for unit in GS.map.get_units_within_range_off(self.parent, self.range)
-            if self.can_target_unit(unit)
-            and unit.is_visible_to(self.parent.controller)
-            and (
-                not self.requires_los
-                or not line_of_sight_obstructed_for_unit(
-                    self.parent,
-                    GS.map.position_off(self.parent),
-                    GS.map.position_off(unit),
-                )
-            )
-        ]:
-            return OneOfUnits(units)
-
-
-class SingleAllyActivatedAbility(SingleTargetActivatedAbility, ABC):
-    can_target_self: ClassVar[bool] = True
-
-    def can_target_unit(self, unit: Unit) -> bool:
-        return unit.controller == self.parent.controller and (
-            self.can_target_self or unit != self.parent
-        )
-
-
-class SingleEnemyActivatedAbility(SingleTargetActivatedAbility, ABC):
-    def can_target_unit(self, unit: Unit) -> bool:
-        return unit.controller != self.parent.controller
-
-
 @dataclasses.dataclass
 class HexSpec:
     terrain_type: type[Terrain]
@@ -1525,32 +1496,6 @@ class HexStatusLink(StatusLink[HexStatus], ABC): ...
 
 
 class UnitStatusLink(StatusLink[UnitStatus], ABC): ...
-
-
-class SingleHexTargetActivatedAbility(ActivatedAbilityFacet[Hex], ABC):
-    range: ClassVar[int] = 1
-    requires_los: ClassVar[bool] = True
-    requires_vision: ClassVar[bool] = True
-
-    def can_target_hex(self, hex_: Hex) -> bool:
-        return True
-
-    def get_target_profile(self) -> TargetProfile[Hex] | None:
-        if hexes := [
-            _hex
-            for _hex in GS.map.get_hexes_within_range_off(self.parent, self.range)
-            if (not self.requires_vision or _hex.is_visible_to(self.parent.controller))
-            and (
-                not self.requires_los
-                or not line_of_sight_obstructed_for_unit(
-                    self.parent,
-                    GS.map.position_off(self.parent),
-                    _hex.position,
-                )
-            )
-            and self.can_target_hex(_hex)
-        ]:
-            return OneOfHexes(hexes)
 
 
 class TriHexTargetActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
@@ -1894,6 +1839,79 @@ class HexMap:
 
     def serialize(self, context: SerializationContext) -> JSON:
         return {"hexes": [_hex.serialize(context) for _hex in self.hexes.values()]}
+
+
+def find_units_within_range(
+    from_unit: Unit,
+    within_range: int,
+    *,
+    require_los: bool = True,
+    with_controller: ControllerTargetOption | None = None,
+    can_include_self: bool = True,
+    additional_filter: Callable[[Unit], bool] | None = None,
+) -> list[Unit]:
+    return [
+        unit
+        for unit in GS.map.get_units_within_range_off(from_unit, within_range)
+        if (
+            not with_controller
+            or (
+                (unit.controller == from_unit.controller)
+                if with_controller == ControllerTargetOption.ALLIED
+                else (unit.controller != from_unit.controller)
+            )
+        )
+        and from_unit.is_visible_to(from_unit.controller)
+        and (
+            not require_los
+            or within_range <= 1
+            or not line_of_sight_obstructed_for_unit(
+                from_unit,
+                GS.map.position_off(from_unit),
+                GS.map.position_off(unit),
+            )
+        )
+        and (can_include_self or unit != from_unit)
+        and (not additional_filter or additional_filter(unit))
+    ]
+
+
+def find_hexs_within_range(
+    from_unit: Unit,
+    within_range: int,
+    *,
+    require_vision: bool = False,
+    require_los: bool = True,
+    require_empty: bool = True,
+    can_include_self: bool = True,
+    additional_filter: Callable[[Hex], bool] | None = None,
+    vision_for_player: Player | None = None,
+) -> list[Hex]:
+    vision_for_player = vision_for_player or from_unit.controller
+    return [
+        _hex
+        for _hex in GS.map.get_hexes_within_range_off(from_unit, within_range)
+        if (not require_vision or _hex.is_visible_to(vision_for_player))
+        and (
+            not require_los
+            or within_range <= 1
+            or not line_of_sight_obstructed_for_unit(
+                from_unit,
+                GS.map.position_off(from_unit),
+                _hex.position,
+            )
+        )
+        and (
+            not require_empty
+            or (
+                (unit := GS.map.unit_on(_hex)) is None
+                or (not require_vision and not _hex.is_visible_to(vision_for_player))
+                or unit.is_hidden_for(vision_for_player)
+            )
+        )
+        and (can_include_self or GS.map.hex_off(from_unit) != _hex)
+        and (not additional_filter or additional_filter(_hex))
+    ]
 
 
 @dataclasses.dataclass

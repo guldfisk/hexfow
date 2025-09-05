@@ -8,20 +8,22 @@ map editor
     change meta info, aka point goals, and army max_unit counts and values.
 
 game
-    unit details include current statuses
-    ability target descriptions, prob something like for status stacking
     delayed unit activation ("undo activation")
+
+    unit details include current statuses
     linked statuses display
     unit last seen at round counter / ghost fading
     unit additional details
     support facet detail for facet used by multiple units
     modifiable terrain support
+    fix human visibility of target icons on spaces without vision
 
     corpses
     chess clock
     break
     kill source
     "+2 attack power to melee attacks"
+    sacrifice cost?
 
     well-defined effects order
     well-defined order of iterating units on map
