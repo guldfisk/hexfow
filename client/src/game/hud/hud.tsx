@@ -328,7 +328,7 @@ const DecisionDetailView = ({
           }
           onClick={() => {
             connection.send(
-              JSON.stringify({ index: skipIndexes[0], target: null }),
+              JSON.stringify({ index: skipIndexes[0], target: {} }),
             );
           }}
         >

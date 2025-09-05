@@ -271,7 +271,7 @@ class OptionSelector(DecisionSelector):
                     "target": (
                         self.target_selector.select(option["target_profile"], player)
                         if self.target_selector is not None
-                        else None
+                        else {}
                     ),
                 }
         raise SelectionError()

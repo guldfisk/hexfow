@@ -109,7 +109,7 @@ async function main() {
           "options"
         ].entries()) {
           if (option["type"] == "SkipOption") {
-            gameConnection.send(JSON.stringify({ index: idx, target: null }));
+            gameConnection.send(JSON.stringify({ index: idx, target: {} }));
           }
         }
       }
