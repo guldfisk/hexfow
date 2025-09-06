@@ -60,7 +60,7 @@ class TestGameType(GameType):
             (
                 # GATE_FIEND,
                 BLOOD_FEUD_WARLOCK,
-                COMBAT_ENGINEER,
+                GNARLED_SHAMAN,
                 # VILE_TRANSMUTER,
                 # MAD_SCIENTIST,
                 # BLOOD_CONDUIT,

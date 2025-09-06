@@ -17,6 +17,7 @@ from game.units.facets.activated_abilities import (
     GrantWish,
     GreaseTheGears,
     Grow,
+    GuidedTrance,
     HandGrenade,
     HealBeam,
     Hitch,
@@ -46,6 +47,7 @@ from game.units.facets.activated_abilities import (
     SmokeCanister,
     SmokeGrenade,
     SowDiscord,
+    SpiritProjection,
     SpurIntoRage,
     SquirtSoot,
     Stare,
@@ -53,6 +55,7 @@ from game.units.facets.activated_abilities import (
     SummonBees,
     SummonScarab,
     Suplex,
+    SweatItOut,
     Sweep,
     Terrorize,
     TidyUp,
@@ -420,6 +423,16 @@ BUGLING = UnitBlueprint(
     sight=2,
     size=Size.SMALL,
     facets=[Scratch],
+    price=5,
+)
+
+GNARLED_SHAMAN = UnitBlueprint(
+    "Gnarled Shaman",
+    health=3,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[SpiritProjection, SweatItOut, GuidedTrance],
     price=5,
 )
 

@@ -13,8 +13,13 @@ from game.core import (
     HexStatusSignature,
     MeleeAttackFacet,
     MovementCost,
+    MoveOption,
+    NoTarget,
+    OneOfHexes,
     RangedAttackFacet,
     SelectOptionAtHexDecisionPoint,
+    SelectOptionDecisionPoint,
+    SkipOption,
     TargetProfile,
     Unit,
     UnitBlueprint,
@@ -248,6 +253,76 @@ class BatonPass(TargetUnitActivatedAbility):
         ES.resolve(
             ApplyStatus(target, UnitStatusSignature(BurstOfSpeed, self, stacks=1))
         )
+
+
+class SweatItOut(TargetUnitActivatedAbility):
+    """Dispels all statuses."""
+
+    cost = EnergyCost(3) | MovementCost(2)
+    can_target_self = False
+
+    def perform(self, target: Unit) -> None:
+        dispel_from_unit(target)
+
+
+class GuidedTrance(TargetUnitActivatedAbility):
+    """Exhausts the target and it gains full energy."""
+
+    cost = EnergyCost(3) | MovementCost(2)
+    controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
+    explain_qualifier_filter = "ready"
+
+    def filter_unit(self, unit: Unit) -> bool:
+        return unit.ready
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(ExhaustUnit(target))
+        ES.resolve(GainEnergy(target, target.max_energy.g() - target.energy, self))
+
+
+class SpiritProjection(TargetHexActivatedAbility):
+    """
+    Apply <glimpse> to the target hex. Then up to 3 times, choose another hex adjacent to the last chosen hex,
+    and apply <glimpse> to that as well.
+    """
+
+    cost = EnergyCost(3) | ExclusiveCost()
+    range = 3
+    requires_los = False
+    requires_vision = False
+
+    def perform(self, target: Hex) -> None:
+        current_hex = target
+        ES.resolve(
+            ApplyHexStatus(
+                current_hex, HexStatusSignature(HexStatus.get("glimpse"), self)
+            )
+        )
+        for _ in range(3):
+            decision = GS.make_decision(
+                self.parent.controller,
+                SelectOptionDecisionPoint(
+                    [
+                        MoveOption(
+                            target_profile=OneOfHexes(
+                                list(GS.map.get_neighbors_off(current_hex))
+                            )
+                        ),
+                        SkipOption(target_profile=NoTarget()),
+                    ],
+                    explanation="spirit walk",
+                ),
+            )
+            if isinstance(decision.option, MoveOption):
+                current_hex = decision.target
+                ES.resolve(
+                    ApplyHexStatus(
+                        current_hex, HexStatusSignature(HexStatus.get("glimpse"), self)
+                    )
+                )
+            else:
+                break
 
 
 class SummonScarab(TargetHexActivatedAbility):

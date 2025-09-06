@@ -12,6 +12,8 @@ map editor
 game
     delayed unit activation ("undo activation")
 
+    hidden ability target option
+    hidden status detail display
     unit details include current statuses
     linked statuses display
     unit last seen at round counter / ghost fading
