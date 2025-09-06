@@ -46,7 +46,7 @@ from game.values import StatusIntention
 
 class Burn(StackableMixin, UnitStatus):
     """
-    At the end of each round, this unit suffers damage equals to its stacks of burn, then remove a stack of burn.
+    At the end of each round, this unit is dealt damage equals to its stacks of burn, then remove a stack of burn.
     """
 
     default_intention = StatusIntention.DEBUFF
@@ -57,7 +57,7 @@ class Burn(StackableMixin, UnitStatus):
 
 class Poison(StackableMixin, UnitStatus):
     """
-    At the end of each round this unit suffers pure damage equals to its stacks of poison.
+    At the end of each round this unit is dealt pure damage equals to its stacks of poison.
     """
 
     default_intention = StatusIntention.DEBUFF
@@ -70,7 +70,7 @@ class Poison(StackableMixin, UnitStatus):
 
 class Panicked(RefreshableMixin, UnitStatus):
     """
-    At the end of eah round, this unit suffers pure damage equal to the number of adjacent units.
+    At the end of eah round, this unit is dealt pure damage equal to the number of adjacent units.
     """
 
     default_intention = StatusIntention.DEBUFF

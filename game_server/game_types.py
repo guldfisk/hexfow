@@ -72,7 +72,7 @@ class TestGameType(GameType):
                 # GIANT_TOAD,
                 # GIANT_TOAD,
                 # GIANT_TOAD,
-                SLUDGE_SLUG,
+                INFERNO_TANK,
                 GIANT_TOAD,
                 ZONE_MECH,
                 # BELL_STRIKER_BRUTE,

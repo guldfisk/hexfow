@@ -67,7 +67,7 @@ class Water(Terrain):
 
 class Magma(Terrain):
     """
-    When a unit moves into this hex, and at the end of the round, units on this hex suffers 1 <burn>.
+    When a unit moves into this hex, and at the end of the round, apply 1 stack of <burn> to units on this hex.
     """
 
     def create_effects(self, space: Hex) -> None:

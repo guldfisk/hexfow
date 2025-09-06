@@ -46,7 +46,7 @@ class Shrine(HexStatus):
 class Soot(RefreshableMixin, HexStatus):
     """
     This hex blocks vision, and units on it has -1 sight, to a minimum of 1.
-    When a unit moves into this hex, and at the end of the round, units on this hex suffers 1 pure damage.
+    When a unit moves into this hex, and at the end of the round, units on this hex are dealt 1 pure damage.
     """
 
     def create_effects(self) -> None:
@@ -72,7 +72,7 @@ class Smoke(RefreshableMixin, HexStatus):
 
 class BurningTerrain(HighestStackableRefreshableMixin, HexStatus):
     """
-    When a unit moves into this hex, and at the end of the round, units on this hex suffers stacks of <burn> equals to the stacks of this status.
+    When a unit moves into this hex, and at the end of the round, apply stacks of <burn> equals to the stacks of this status to unit on this hex.
     """
 
     def create_effects(self) -> None:
@@ -138,7 +138,7 @@ class RuneOfClarity(HexStatus):
 
 class Mine(HexStatus):
     """
-    When a unit moves into this hex, it suffers 2 damage and this status is removed.
+    When a unit moves into this hex, it's dealt 2 damage and this status is removed.
     This status is hidden for opponents.
     """
 

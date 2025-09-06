@@ -63,7 +63,7 @@ from game.values import Resistance
 
 class Prickly(StaticAbilityFacet):
     """
-    When this unit is hit with a melee attack, the attacker suffers 2 damage.
+    When this unit is hit with a melee attack, this ability deals 2 damage to the attacker.
     """
 
     def create_effects(self) -> None:
@@ -72,7 +72,7 @@ class Prickly(StaticAbilityFacet):
 
 class ToxicSkin(StaticAbilityFacet):
     """
-    When this unit is melee attacked, the attacking unit suffers 1 stack of <poison>.
+    When this unit is melee attacked, apply 1 stack of <poison> to the attacking unit.
     """
 
     def create_effects(self) -> None:
@@ -121,7 +121,7 @@ class Nourishing(StaticAbilityFacet):
 class Pusher(StaticAbilityFacet):
     """
     This unit can move into occupied spaces. If it would do so, it first pushes the occupying unit one space, repeating
-    if that unit would be pushed into an occupied space as well. If units can't be pushed back due to being blocked, they suffer 2 damage.
+    if that unit would be pushed into an occupied space as well. If units can't be pushed back due to being blocked, they're dealt 2 damage.
     If this is sufficient to kill them, it does, and the space is freed up to be moved in by the next unit in the chain.
     """
 
@@ -134,7 +134,7 @@ class Pusher(StaticAbilityFacet):
 class StrainedPusher(StaticAbilityFacet):
     """
     This unit can move into occupied spaces. If it would do so, it first pushes the occupying unit one space, repeating
-    if that unit would be pushed into an occupied space as well. This unit suffers 1 pure damage for each unit it attempts to
+    if that unit would be pushed into an occupied space as well. This unit is dealt 1 pure damage for each unit it attempts to
     push this way beyond the first.
     """
 
@@ -200,8 +200,8 @@ class Schadenfreude(StaticAbilityFacet):
 
 class GrizzlyMurderer(StaticAbilityFacet):
     """
-    When this unit kills an opposing unit with a melee attack, each unit allied to
-    the killed units that could see it suffers <shocked> for 2 rounds.
+    When this unit kills an opposing unit with a melee attack, apply <shocked> for
+    2 rounds to each each unit allied to the killed units that could see it.
     """
 
     def create_effects(self) -> None:
@@ -242,7 +242,7 @@ class Quick(StaticAbilityFacet):
 
 class GlassSkin(StaticAbilityFacet):
     """
-    Major resistance to damage from statuses.
+    Reduces damage dealt to this unit by statues by half, rounding the result down.
     """
 
     def create_effects(self) -> None:
@@ -264,7 +264,7 @@ class DiamondSkin(StaticAbilityFacet):
 
 class FlameResistant(StaticAbilityFacet):
     """
-    Reduce damage from the <burn> status by half (after armor), rounding the reduction up.
+    Reduce damage dealt to this unit by the <burn> status by half (after armor), rounding the result down.
     """
 
     def create_effects(self) -> None:
@@ -288,7 +288,7 @@ class SootDweller(StaticAbilityFacet):
 
 class MagicForm(StaticAbilityFacet):
     """
-    Reduce damage dealt to this unit by attacks by half, rounding the reduction down.
+    Reduce damage dealt to this unit by attacks by half, rounding the result up.
     """
 
     def create_effects(self) -> None:
@@ -308,7 +308,7 @@ class FoulBurst(StaticAbilityFacet):
 
 class ToughSkin(StaticAbilityFacet):
     """
-    Reduce damage dealt to this unit by one third, rounding the reduction down.
+    Reduce damage dealt to this unit by one third, rounding the result up.
     """
 
     def create_effects(self) -> None:

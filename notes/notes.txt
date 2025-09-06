@@ -148,8 +148,11 @@ sheltering ancient
 spirit guide
 clockwork archeologist
 druid thingy
+hooded executioner
+ancient samaritan
+sweltering imp
 
-3 cost tough
+3 cost tough - anti magic
 more heals / dispells / shields for allied units
 artillery
 
