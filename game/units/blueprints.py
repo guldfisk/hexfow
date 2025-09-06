@@ -485,7 +485,7 @@ GLASS_GOLEM = UnitBlueprint(
 
 RHINO_BEETLE = UnitBlueprint(
     "Rhino Beetle",
-    health=5,
+    health=4,
     speed=2,
     sight=1,
     facets=[CrushingMandibles, Grapple],
@@ -866,7 +866,7 @@ ZONE_MECH = UnitBlueprint(
     energy=3,
     size=Size.LARGE,
     facets=[HammerCannon, SmokeCanister, TerrainSavvy],
-    price=17,
+    price=18,
 )
 
 BEE_SHAMAN = UnitBlueprint(
