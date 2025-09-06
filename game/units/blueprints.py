@@ -2,17 +2,22 @@ from game.core import UnitBlueprint
 from game.units.facets.activated_abilities import (
     AssembleTheDoombot,
     BatonPass,
+    Binoculars,
     Bloom,
     ChokingSoot,
     ConstructTurret,
     CoordinatedManeuver,
+    CriticalAid,
+    CuringWord,
     EnfeeblingHex,
+    Evacuate,
     FalseCure,
     FatalBonding,
     FixErUp,
     FlameThrower,
     FlameWall,
     FlashBang,
+    GiantPincers,
     GrantCharm,
     GrantWish,
     GreaseTheGears,
@@ -31,15 +36,19 @@ from game.units.facets.activated_abilities import (
     Lasso,
     LayMine,
     MalevolentStare,
+    MapOut,
+    Mortar,
     OpenGate,
     Poof,
     PsychicCommand,
+    PublicExecution,
     RaiseShrine,
     Riddle,
     Scorch,
     Scorn,
     Scry,
     SelfDestruct,
+    ShootFlare,
     Shove,
     Showdown,
     ShrinkRay,
@@ -68,6 +77,7 @@ from game.units.facets.activated_abilities import (
     WringEssence,
 )
 from game.units.facets.attacks import (
+    AnkleBite,
     APGun,
     Bayonet,
     BellHammer,
@@ -94,7 +104,9 @@ from game.units.facets.attacks import (
     Gnaw,
     GnomeSpear,
     Gore,
+    GranGransOlClub,
     Grapple,
+    GuillotineAxe,
     HammerBlow,
     HammerCannon,
     HiddenBlade,
@@ -116,16 +128,20 @@ from game.units.facets.attacks import (
     ScratchAndBite,
     SerratedBeak,
     SerratedClaws,
+    ServicePistol,
     Shiv,
     Slay,
     Slice,
     SlingShot,
     SnappingBeak,
+    SniperRifle,
     SolidMunition,
     Spew,
     Stinger,
     Strafe,
     StubbyClaws,
+    SturdyClaws,
+    Swelter,
     Tackle,
     TongueLash,
     TwinRevolvers,
@@ -133,11 +149,14 @@ from game.units.facets.attacks import (
     Wrench,
 )
 from game.units.facets.static_abilities import (
+    AntiMagicHide,
     Aquatic,
     Automated,
     CaughtInTheMatch,
+    CrabShuffle,
     DiamondSkin,
     Diver,
+    DreadfulVisage,
     Explosive,
     Farsighted,
     FightFlightFreeze,
@@ -155,6 +174,7 @@ from game.units.facets.static_abilities import (
     LastStand,
     MagicForm,
     Nourishing,
+    OldBones,
     Ornery,
     PackHunter,
     Prickly,
@@ -167,6 +187,7 @@ from game.units.facets.static_abilities import (
     SlimySkin,
     SludgeTrail,
     SootDweller,
+    Stakeout,
     Stealth,
     StrainedPusher,
     Swimmer,
@@ -188,16 +209,6 @@ BLIND_GRUB = UnitBlueprint(
     price=1,
 )
 
-FIREFLY = UnitBlueprint(
-    "Firefly",
-    health=2,
-    speed=3,
-    sight=1,
-    size=Size.SMALL,
-    facets=[BurningSting, Fleeting],
-    price=1,
-)
-
 BLIND_ORACLE = UnitBlueprint(
     "Blind Oracle",
     health=2,
@@ -215,6 +226,16 @@ CHICKEN = UnitBlueprint(
     sight=1,
     size=Size.SMALL,
     facets=[Peck],
+    price=1,
+)
+
+FIREFLY = UnitBlueprint(
+    "Firefly",
+    health=2,
+    speed=3,
+    sight=1,
+    size=Size.SMALL,
+    facets=[BurningSting, Fleeting],
     price=1,
 )
 
@@ -326,6 +347,16 @@ GNOME_COMMANDO = UnitBlueprint(
     price=3,
 )
 
+INFERNAL_IMP = UnitBlueprint(
+    "Infernal Imp",
+    health=3,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    facets=[Swelter],
+    price=3,
+)
+
 LIGHT_ARCHER = UnitBlueprint(
     name="Light Archer",
     health=4,
@@ -347,6 +378,27 @@ MARSHMALLOW_TITAN = UnitBlueprint(
     price=3,
 )
 
+PANGOLIN_FAMILIAR = UnitBlueprint(
+    "Pangolin Familiar",
+    health=5,
+    speed=2,
+    sight=1,
+    size=Size.SMALL,
+    facets=[SturdyClaws, AntiMagicHide],
+    price=3,
+)
+
+SHRINE_KEEPER = UnitBlueprint(
+    "Shrine Keeper",
+    health=3,
+    speed=3,
+    sight=2,
+    energy=4,
+    size=Size.SMALL,
+    facets=[RaiseShrine, GrantCharm, TidyUp],
+    price=3,
+)
+
 SKITTISH_SOOT_PUFF = UnitBlueprint(
     "Skittish Soot Puff",
     health=3,
@@ -356,6 +408,26 @@ SKITTISH_SOOT_PUFF = UnitBlueprint(
     facets=[SquirtSoot, PuffAway, FoulBurst, SootDweller],
     price=3,
     flavor="OMG, it's literally the fucking puff-puff. Are you fucking kidding me with this shit?",
+)
+
+ANKLE_BITER_NUISANCE = UnitBlueprint(
+    "Ankle Biter Nuisance",
+    health=3,
+    speed=3,
+    sight=1,
+    size=Size.SMALL,
+    facets=[AnkleBite],
+    price=4,
+)
+
+ARTHRITIC_GIANT = UnitBlueprint(
+    "Arthritic Giant",
+    health=7,
+    speed=2,
+    sight=1,
+    size=Size.LARGE,
+    facets=[GranGransOlClub, OldBones],
+    price=4,
 )
 
 BOMBARD_CANON = UnitBlueprint(
@@ -393,17 +465,6 @@ RAT_SCOUT = UnitBlueprint(
     sight=2,
     size=Size.SMALL,
     facets=[ScratchAndBite, ScurryInTheShadows],
-    price=4,
-)
-
-SHRINE_KEEPER = UnitBlueprint(
-    "Shrine Keeper",
-    health=3,
-    speed=3,
-    sight=2,
-    energy=4,
-    size=Size.SMALL,
-    facets=[RaiseShrine, GrantCharm, TidyUp],
     price=4,
 )
 
@@ -478,6 +539,16 @@ MINE_LAYER_BEETLE = UnitBlueprint(
     price=5,
 )
 
+MORTAR_SQUAD = UnitBlueprint(
+    "Mortar Squad",
+    health=3,
+    speed=2,
+    sight=2,
+    facets=[Mortar],
+    price=5,
+    flavor="MOOORTAR COOOMBAT",
+)
+
 UNDERHANDED_HEXMAGE = UnitBlueprint(
     name="Underhanded Hexmage",
     health=5,
@@ -486,6 +557,16 @@ UNDERHANDED_HEXMAGE = UnitBlueprint(
     energy=4,
     facets=[EnfeeblingHex],
     price=5,
+)
+
+ANCIENT_ALTRUIST = UnitBlueprint(
+    "Ancient Altruist",
+    health=4,
+    speed=2,
+    sight=2,
+    energy=5,
+    facets=[CriticalAid, Evacuate, CuringWord],
+    price=6,
 )
 
 BOMB_TRUCK = UnitBlueprint(
@@ -505,6 +586,16 @@ GLASS_GOLEM = UnitBlueprint(
     armor=2,
     sight=2,
     facets=[GlassFist, GlassSkin],
+    price=6,
+)
+
+RECON_SPECIALIST = UnitBlueprint(
+    "Recon Specialist",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[ServicePistol, ShootFlare, MapOut, TerrainSavvy],
     price=6,
 )
 
@@ -604,6 +695,15 @@ GIANT_TOAD = UnitBlueprint(
     sight=2,
     energy=2,
     facets=[TongueLash, Jump, ToxicSkin],
+    price=8,
+)
+
+REMORSELESS_SNIPER = UnitBlueprint(
+    "Remorseless Sniper",
+    health=2,
+    speed=2,
+    sight=2,
+    facets=[SniperRifle, Binoculars, Stakeout],
     price=8,
 )
 
@@ -712,6 +812,15 @@ BULLDOZER = UnitBlueprint(
     size=Size.LARGE,
     armor=1,
     facets=[Pusher],
+    price=10,
+)
+
+HOODED_EXECUTIONER = UnitBlueprint(
+    "Hooded Executioner",
+    health=6,
+    speed=3,
+    sight=2,
+    facets=[GuillotineAxe, PublicExecution, DreadfulVisage],
     price=10,
 )
 
@@ -879,6 +988,16 @@ CYCLOPS = UnitBlueprint(
     size=Size.LARGE,
     sight=1,
     facets=[GiantClub, Sweep, Stare],
+    price=15,
+)
+
+GIANT_BATTLE_CRAB = UnitBlueprint(
+    "Giant Battle Crab",
+    health=9,
+    speed=2,
+    sight=1,
+    armor=2,
+    facets=[GiantPincers, Aquatic, CrabShuffle],
     price=15,
 )
 

@@ -682,6 +682,7 @@ class Turn(Event[bool]):
                         GS.active_unit_context.should_stop = True
                     else:
                         ES.resolve(Rest(self.unit))
+                        do_state_based_check()
                     break
 
                 elif isinstance(decision.option, MoveOption):

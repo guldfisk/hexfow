@@ -199,6 +199,25 @@ class StubbyClaws(MeleeAttackFacet):
     damage = 1
 
 
+class SturdyClaws(MeleeAttackFacet):
+    cost = ExclusiveCost()
+    damage = 2
+
+
+class GranGransOlClub(MeleeAttackFacet):
+    """
+    +1 damage against units with 2 or less speed, or who doesn't have any legal move options.
+    """
+
+    name = "Gran Grans Ol' Club"
+    cost = ExclusiveCost()
+    damage = 3
+
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        if unit.speed.g() <= 2 or not unit.get_potential_move_destinations(None):
+            return 1
+
+
 class CrypticClaws(MeleeAttackFacet):
     """
     +2 damage on prime rounds.
@@ -210,6 +229,33 @@ class CrypticClaws(MeleeAttackFacet):
     def get_damage_modifier_against(self, unit: Unit) -> int | None:
         if is_prime(GS.round_counter):
             return 2
+
+
+class GuillotineAxe(MeleeAttackFacet):
+    """
+    +3 damage against units with less than or equal health to half their max health, rounded down.
+    """
+
+    cost = MovementCost(1)
+    damage = 3
+
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        if unit.health <= unit.max_health.g() // 2:
+            return 3
+
+
+class AnkleBite(MeleeAttackFacet):
+    """Applies <stumbling>."""
+
+    damage = 1
+    combinable = True
+
+    def resolve_post_damage_effects(self, defender: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                defender, UnitStatusSignature(UnitStatus.get("stumbling"), self)
+            )
+        )
 
 
 class Frostbite(MeleeAttackFacet):
@@ -323,6 +369,12 @@ class Spew(RangedAttackFacet):
 
 
 class CommandersPistol(RangedAttackFacet):
+    cost = MovementCost(1)
+    range = 2
+    damage = 2
+
+
+class ServicePistol(RangedAttackFacet):
     cost = MovementCost(1)
     range = 2
     damage = 2
@@ -550,6 +602,36 @@ class SlingShot(RangedAttackFacet):
     cost = MovementCost(1)
     damage = 2
     range = 1
+
+
+class Swelter(RangedAttackFacet):
+    """Applies <parched> for 2 rounds."""
+
+    cost = MovementCost(2)
+    damage = 2
+    range = 2
+
+    def resolve_post_damage_effects(self, defender: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                defender,
+                UnitStatusSignature(UnitStatus.get("parched"), self, duration=2),
+            )
+        )
+
+
+class SniperRifle(RangedAttackFacet):
+    """
+    +2 damage against exhausted units.
+    """
+
+    cost = ExclusiveCost()
+    damage = 2
+    range = 4
+
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        if unit.exhausted:
+            return 2
 
 
 class Chomp(MeleeAttackFacet):

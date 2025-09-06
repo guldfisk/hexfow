@@ -60,6 +60,9 @@ class TriggerLayers(IntEnum):
     ROUND_APPLY_DEBUFFS = auto()
     FLEETING = auto()
 
+    TIRED = auto()
+    OLD_BONES = auto()
+
     READY = auto()
     EXHAUST = auto()
 
@@ -356,6 +359,66 @@ class TaintedBondTrigger(TriggerEffect[SufferDamage]):
 
 
 @dataclasses.dataclass(eq=False)
+class ParchedTrigger(TriggerEffect[TurnCleanup]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+    source: Source
+
+    def should_trigger(self, event: TurnCleanup) -> bool:
+        return (
+            self.unit == event.unit
+            and GS.active_unit_context
+            and GS.active_unit_context.has_acted
+            and GS.active_unit_context.movement_points <= 0
+        )
+
+    def resolve(self, event: TurnCleanup) -> None:
+        ES.resolve(Damage(event.unit, DamageSignature(1, self.source, DamageType.PURE)))
+
+
+@dataclasses.dataclass(eq=False)
+class OldBonesTrigger(TriggerEffect[TurnCleanup]):
+    priority: ClassVar[int] = TriggerLayers.OLD_BONES
+
+    unit: Unit
+    source: Source
+
+    def should_trigger(self, event: TurnCleanup) -> bool:
+        return (
+            self.unit == event.unit
+            and GS.active_unit_context
+            and GS.active_unit_context.has_acted
+        )
+
+    def resolve(self, event: TurnCleanup) -> None:
+        ES.resolve(
+            ApplyStatus(
+                self.unit,
+                UnitStatusSignature(UnitStatus.get("tired"), self.source, stacks=1),
+            )
+        )
+
+
+@dataclasses.dataclass(eq=False)
+class TiredDamageTrigger(TriggerEffect[TurnCleanup]):
+    priority: ClassVar[int] = TriggerLayers.TIRED
+
+    status: UnitStatus
+
+    def should_trigger(self, event: TurnCleanup) -> bool:
+        return event.unit == self.status.parent
+
+    def resolve(self, event: TurnCleanup) -> None:
+        ES.resolve(
+            Damage(
+                self.status.parent,
+                DamageSignature(self.status.stacks, self.status, DamageType.PURE),
+            )
+        )
+
+
+@dataclasses.dataclass(eq=False)
 class QuickTrigger(TriggerEffect[TurnCleanup]):
     priority: ClassVar[int] = 0
 
@@ -627,6 +690,19 @@ class ShrineWalkInTrigger(TriggerEffect[MoveUnit]):
                 ),
             )
         )
+
+
+@dataclasses.dataclass(eq=False)
+class TiredRestTrigger(TriggerEffect[Rest]):
+    priority: ClassVar[int] = 0
+
+    status: Status
+
+    def should_trigger(self, event: Rest) -> bool:
+        return event.unit == self.status.parent
+
+    def resolve(self, event: Rest) -> None:
+        self.status.remove()
 
 
 @dataclasses.dataclass(eq=False)

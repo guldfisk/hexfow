@@ -3,7 +3,7 @@ import math
 from enum import IntEnum, auto
 from typing import Callable, ClassVar
 
-from events.eventsystem import StateModifierEffect
+from events.eventsystem import StateModifierEffect, hook_on
 from events.tests.game_objects.advanced_units import Player
 from game.core import (
     GS,
@@ -25,6 +25,8 @@ from game.core import (
     TerrainProtectionRequest,
     Unit,
 )
+from game.events import MoveUnit, TurnUpkeep
+from game.map.coordinates import CC
 from game.values import DamageType, Resistance, Size, VisionObstruction
 
 
@@ -64,6 +66,38 @@ class RootedModifier(StateModifierEffect[Unit, None, list[Hex]]):
 
     def modify(self, obj: Unit, request: None, value: list[Hex]) -> list[Hex]:
         return []
+
+
+class CrabShuffleModifier(StateModifierEffect[Unit, None, list[Hex]]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.get_potential_move_destinations
+
+    def __init__(self, unit: Unit):
+        self.unit = unit
+        self._last_direction: CC | None = None
+
+    @hook_on(TurnUpkeep)
+    def on_turn_upkeep(self, event: TurnUpkeep) -> None:
+        self._last_direction = None
+
+    @hook_on(MoveUnit)
+    def on_move(self, event: MoveUnit) -> None:
+        if (
+            event.unit == self.unit
+            and event.result
+            and (vector := event.to_.position - event.result.position).length == 1
+        ):
+            self._last_direction = vector
+
+    def should_modify(self, obj: Unit, request: None, value: list[Hex]) -> bool:
+        return obj == self.unit and self._last_direction
+
+    def modify(self, obj: Unit, request: None, value: list[Hex]) -> list[Hex]:
+        return [
+            h
+            for h in value
+            if not h.position == GS.map.position_off(self.unit) + self._last_direction
+        ]
 
 
 @dataclasses.dataclass(eq=False)
@@ -131,6 +165,34 @@ class StealthModifier(StateModifierEffect[Unit, Player, bool]):
 
     def should_modify(self, obj: Unit, request: Player, value: bool) -> bool:
         return obj == self.unit and stealth_hidden_for(obj, request)
+
+    def modify(self, obj: Unit, request: Player, value: bool) -> bool:
+        return True
+
+
+class NotMovedStealthModifier(StateModifierEffect[Unit, Player, bool]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.is_hidden_for
+
+    def __init__(self, unit: Unit):
+        self.unit = unit
+        self._has_moved = False
+
+    @hook_on(TurnUpkeep)
+    def on_turn_upkeep(self, event: TurnUpkeep):
+        self._has_moved = False
+
+    @hook_on(MoveUnit)
+    def on_move(self, event: MoveUnit):
+        if event.unit == self.unit and event.result:
+            self._has_moved = True
+
+    def should_modify(self, obj: Unit, request: Player, value: bool) -> bool:
+        return (
+            obj == self.unit
+            and not self._has_moved
+            and stealth_hidden_for(obj, request)
+        )
 
     def modify(self, obj: Unit, request: Player, value: bool) -> bool:
         return True
@@ -320,7 +382,7 @@ class SourceTypeResistanceModifier(
     target: ClassVar[object] = Unit.get_resistance_against
 
     unit: Unit
-    source_type: type[Source]
+    source_type: type[Source] | list[type[Source]]
     resistance: Resistance
 
     def should_modify(
@@ -484,13 +546,30 @@ class HexRevealedModifier(StateModifierEffect[Hex, Player, bool]):
     target: ClassVar[object] = Hex.is_visible_to
 
     space: Hex
-    controller: Player
+    controller: Player | None
 
     def should_modify(self, obj: Hex, request: Player, value: bool) -> bool:
-        return obj == self.space and request == self.controller
+        return obj == self.space and (
+            request == self.controller or self.controller is None
+        )
 
     def modify(self, obj: Hex, request: Player, value: bool) -> bool:
         return True
+
+
+@dataclasses.dataclass(eq=False)
+class MappedOutModifier(StateModifierEffect[Hex, Unit, int]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Hex.get_move_in_penalty_for
+
+    space: Hex
+    controller: Player
+
+    def should_modify(self, obj: Hex, request: Unit, value: int) -> bool:
+        return obj == self.space and request.controller == self.controller
+
+    def modify(self, obj: Hex, request: Unit, value: int) -> int:
+        return 0
 
 
 @dataclasses.dataclass(eq=False)
@@ -506,6 +585,24 @@ class UnitAttackPowerFlatModifier(StateModifierEffect[Unit, None, int]):
 
     def modify(self, obj: Unit, request: None, value: int) -> int:
         return value + (self.amount if isinstance(self.amount, int) else self.amount())
+
+
+@dataclasses.dataclass(eq=False)
+class NegativeAttackPowerAuraModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.attack_power
+
+    unit: Unit
+    amount: int
+
+    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+        return (
+            obj.controller != self.unit.controller
+            and GS.map.distance_between(obj, self.unit) == 1
+        )
+
+    def modify(self, obj: Unit, request: None, value: int) -> int:
+        return value - self.amount
 
 
 @dataclasses.dataclass(eq=False)

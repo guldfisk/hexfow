@@ -28,6 +28,7 @@ from game.core import (
     find_hexs_within_range,
     find_units_within_range,
     is_vision_obstructed_for_unit_at,
+    line_of_sight_obstructed_for_unit,
 )
 from game.effects.hooks import AdjacencyHook
 from game.events import (
@@ -223,6 +224,28 @@ class Vault(TargetUnitActivatedAbility):
                 and target.controller != self.parent.controller
             ):
                 ES.resolve(ApplyStatus(target, UnitStatusSignature(Staggered, self)))
+
+
+class PublicExecution(TargetUnitActivatedAbility):
+    """
+    Kills the target. Each allied unit that could see the target unit gains 2 energy.
+    """
+
+    cost = ExclusiveCost()
+    can_target_self = False
+    explain_qualifier_filter = "exhausted"
+    explain_with_filter = "with 5 or less health"
+
+    def filter_unit(self, unit: Unit) -> bool:
+        return unit.exhausted and unit.health <= 5
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(Kill(target))
+        for unit in GS.map.units:
+            if unit.controller == self.parent.controller and unit.can_see(
+                GS.map.hex_off(target)
+            ):
+                ES.resolve(GainEnergy(unit, 2, self))
 
 
 class BatonPass(TargetUnitActivatedAbility):
@@ -1165,6 +1188,80 @@ class Vomit(TargetHexActivatedAbility):
             ES.resolve(Damage(unit, DamageSignature(5, self, DamageType.AOE)))
 
 
+class Mortar(TargetHexActivatedAbility):
+    """Deals 3 aoe damage to any unit on the target hex."""
+
+    cost = ExclusiveCost()
+    range = 3
+    requires_los = False
+    requires_vision = False
+    explain_that_filter = "and at least 2 hexes away"
+
+    def filter_hex(self, hex_: Hex) -> bool:
+        return GS.map.distance_between(hex_, self.parent) > 1
+
+    def perform(self, target: Hex) -> None:
+        if unit := GS.map.unit_on(target):
+            ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.AOE)))
+
+
+class Binoculars(TargetHexActivatedAbility):
+    """
+    If this unit has LoS to the target hex, apply <revealed> for 2 rounds.
+    """
+
+    cost = ExclusiveCost()
+    range = 4
+    requires_vision = False
+    requires_los = False
+
+    def perform(self, target: Hex) -> None:
+        if not line_of_sight_obstructed_for_unit(
+            self.parent,
+            GS.map.position_off(self.parent),
+            target.position,
+        ):
+            ES.resolve(
+                ApplyHexStatus(
+                    target,
+                    HexStatusSignature(HexStatus.get("revealed"), self, duration=2),
+                )
+            )
+
+
+class MapOut(TargetHexActivatedAbility):
+    """
+    Applies <mapped_out>.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+    hidden_target = True
+
+    def perform(self, target: Hex) -> None:
+        ES.resolve(
+            ApplyHexStatus(
+                target, HexStatusSignature(HexStatus.get("mapped_out"), self)
+            )
+        )
+
+
+class ShootFlare(TargetTriHexActivatedAbility):
+    """
+    Applies <flare> for 1 round.
+    """
+
+    cost = EnergyCost(3)
+    range = 3
+
+    def perform(self, target: list[Hex]) -> None:
+        for _hex in target:
+            ES.resolve(
+                ApplyHexStatus(
+                    _hex, HexStatusSignature(HexStatus.get("flare"), self, duration=1)
+                )
+            )
+
+
 class SludgeBelch(TargetTriHexActivatedAbility):
     """
     Applies <sludge> for 2 rounds.
@@ -1391,6 +1488,126 @@ class TurboTune(TargetUnitActivatedAbility):
                 target, UnitStatusSignature(UnitStatus.get("turbo"), self, duration=2)
             )
         )
+
+
+class GiantPincers(ActivatedAbilityFacet[list[Hex]]):
+    """Deals 5 melee damage to units on the target hexes."""
+
+    cost = MovementCost(1)
+
+    @classmethod
+    def get_target_explanation(cls) -> str | None:
+        return "Target two adjacent hexes with one hex between them."
+
+    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
+        # TODO edge??
+        all_hexes = list(GS.map.get_neighbors_off(self.parent))
+        return Tree(
+            TreeNode(
+                [
+                    (
+                        _hex,
+                        TreeNode(
+                            [
+                                (all_hexes[(idx + offset) % len(all_hexes)], None)
+                                for offset in (-2, 2)
+                            ],
+                            "select second hex",
+                        ),
+                    )
+                    for idx, _hex in enumerate(all_hexes)
+                ],
+                "select first hex",
+            )
+        )
+
+    def perform(self, target: list[Hex]) -> None:
+        for h in target:
+            if unit := GS.map.unit_on(h):
+                ES.resolve(Damage(unit, DamageSignature(5, self, DamageType.MELEE)))
+
+
+class Evacuate(TargetUnitActivatedAbility):
+    """
+    Teleports the target unit to the target hex.
+    """
+
+    cost = EnergyCost(3) | ExclusiveCost()
+
+    @classmethod
+    def get_target_explanation(cls) -> str | None:
+        return "Target other allied unit within 4 range NLoS, and an empty hex adjacent to this unit."
+
+    def get_target_profile(self) -> TargetProfile[list[Unit | Hex]] | None:
+        if (hexes := find_hexs_within_range(self.parent, 1, require_empty=True)) and (
+            units := [
+                (
+                    unit,
+                    TreeNode([(h, None) for h in hexes], "select hex"),
+                )
+                for unit in find_units_within_range(
+                    self.parent,
+                    4,
+                    require_los=False,
+                    with_controller=ControllerTargetOption.ALLIED,
+                    can_include_self=False,
+                )
+            ]
+        ):
+            return Tree(TreeNode(units, "select unit"))
+
+    def perform(self, target: list[Hex | Unit]) -> None:
+        unit, to_ = target
+        ES.resolve(MoveUnit(unit, to_, external=unit != self.parent))
+
+
+class CriticalAid(TargetUnitActivatedAbility):
+    """
+    Heals the target unit to 4 health.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 2
+    controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(Heal(target, 4 - target.health))
+
+
+class CuringWord(TargetUnitActivatedAbility):
+    """
+    Dispels one debuff.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 3
+    controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
+
+    def perform(self, target: Unit) -> None:
+        if available_options := [
+            status
+            for status in target.statuses
+            if status.intention == StatusIntention.DEBUFF and status.dispellable
+        ]:
+            # TODO can be auto resolved choice logic
+            if len(available_options) == 1:
+                choice = available_options[0]
+            else:
+                # TODO mapping support in SelectOptionAtHexDecisionPoint
+                name_map = {status.name: status for status in available_options}
+                choice = name_map[
+                    GS.make_decision(
+                        target.controller,
+                        SelectOptionAtHexDecisionPoint(
+                            GS.map.hex_off(target),
+                            list(name_map.keys()),
+                            explanation="select debuff",
+                        ),
+                    )
+                ]
+            ES.resolve(DispelStatus(target, choice))
 
 
 class OpenGate(ActivatedAbilityFacet[list[Hex]]):

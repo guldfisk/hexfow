@@ -12,6 +12,7 @@ from game.effects.modifiers import (
     HexIncreasesEnergyRegenModifier,
     HexMoveOutPenaltyModifier,
     HexRevealedModifier,
+    MappedOutModifier,
 )
 from game.effects.triggers import (
     BurnOnCleanup,
@@ -94,6 +95,15 @@ class Revealed(PerPlayerRefreshable, HexStatus):
         self.register_effects(HexRevealedModifier(self.parent, self.controller))
 
 
+class Flare(PerPlayerRefreshable, HexStatus):
+    """
+    All players have vision of this hex
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(HexRevealedModifier(self.parent, None))
+
+
 class Glimpse(PerPlayerUnstackable, HexStatus):
     """
     This hex is visible to the controller of this status. Expires at the end of the turn.
@@ -108,6 +118,19 @@ class Glimpse(PerPlayerUnstackable, HexStatus):
             HexRevealedModifier(self.parent, self.controller),
             TurnExpiringStatusTrigger(self),
         )
+
+
+class MappedOut(PerPlayerUnstackable, HexStatus):
+    """
+    Units with the same controller as this status ignore move in penalties on this hex.
+    This status is hidden for opponents.
+    """
+
+    def is_hidden_for(self, player: Player) -> bool:
+        return player != self.controller
+
+    def create_effects(self) -> None:
+        self.register_effects(MappedOutModifier(self.parent, self.controller))
 
 
 class DoombotScaffold(HexStatus):

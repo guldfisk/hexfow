@@ -42,8 +42,8 @@ class TestGameType(GameType):
                     random.choice(
                         [
                             Plains,
-                            Plains,
-                            Plains,
+                            # Plains,
+                            # Plains,
                             # Forest,
                             # Hills,
                             # Water,
@@ -52,16 +52,22 @@ class TestGameType(GameType):
                     cc.distance_to(CC(0, 0)) <= 1,
                     deployment_zone_of=0 if cc.r & 1 else 1,
                 )
-                for cc in hex_circle(4)
+                for cc in hex_circle(2)
             }
         )
 
         player_units = (
             (
                 # GATE_FIEND,
-                MINE_LAYER_BEETLE,
-                GNARLED_SHAMAN,
-                CYCLOPS,
+                # MINE_LAYER_BEETLE,
+                # GNARLED_SHAMAN,
+                # CYCLOPS,
+                ARTHRITIC_GIANT,
+                GIANT_BATTLE_CRAB,
+                # PANGOLIN_FAMILIAR,
+                # HOODED_EXECUTIONER,
+                # GIANT_BATTLE_CRAB,
+                RECON_SPECIALIST,
                 # VILE_TRANSMUTER,
                 # MAD_SCIENTIST,
                 # BLOOD_CONDUIT,
@@ -74,9 +80,10 @@ class TestGameType(GameType):
                 # GIANT_TOAD,
                 # GIANT_TOAD,
                 INFERNO_TANK,
-                GIANT_TOAD,
-                ZONE_MECH,
-                # BELL_STRIKER_BRUTE,
+                FROST_SPRITE,
+                # GIANT_TOAD,
+                # ZONE_MECH,
+                BELL_STRIKER_BRUTE,
                 # BLOOD_FEUD_WARLOCK,
                 # SKITTISH_SOOT_PUFF,
             ),

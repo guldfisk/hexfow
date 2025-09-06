@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from game.core import (
+    ActivatedAbilityFacet,
     AttackFacet,
     HexStatus,
     HexStatusSignature,
@@ -12,10 +13,13 @@ from game.core import (
 from game.effects.modifiers import (
     AquaticModifier,
     CamouflageModifier,
+    CrabShuffleModifier,
     CrushableModifier,
     FarsightedModifier,
     FightFlightFreezeModifier,
     IncreaseSpeedAuraModifier,
+    NegativeAttackPowerAuraModifier,
+    NotMovedStealthModifier,
     PusherModifier,
     ResistanceModifier,
     RootedModifier,
@@ -46,6 +50,7 @@ from game.effects.triggers import (
     HeelTurnTrigger,
     InspirationTrigger,
     JukeAndJiveTrigger,
+    OldBonesTrigger,
     OrneryTrigger,
     PackHunterTrigger,
     PricklyTrigger,
@@ -241,6 +246,24 @@ class Fleeting(StaticAbilityFacet):
         self.register_effects(FleetingTrigger(self.parent, 2))
 
 
+class CrabShuffle(StaticAbilityFacet):
+    """
+    This unit can't move in the same direction two times in a row in the same turn.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(CrabShuffleModifier(self.parent))
+
+
+class DreadfulVisage(StaticAbilityFacet):
+    """
+    Adjacent enemy units have -1 attack power.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(NegativeAttackPowerAuraModifier(self.parent, 1))
+
+
 class Quick(StaticAbilityFacet):
     """
     At the end of this units turn, it may move one hex (unaffected by movement points).
@@ -292,6 +315,41 @@ class SootDweller(StaticAbilityFacet):
         self.register_effects(
             SourceTypeResistanceModifier(
                 self.parent, HexStatus.get("soot"), Resistance.IMMUNE
+            )
+        )
+
+
+class OldBones(StaticAbilityFacet):
+    """
+    When this unit ends its turn, if it acted, apply 1 stack of <tired> to it.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(OldBonesTrigger(self.parent, self))
+
+
+class Stakeout(StaticAbilityFacet):
+    """
+    Stealth while this unit hasn't moved this turn.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(NotMovedStealthModifier(self.parent))
+
+
+class AntiMagicHide(StaticAbilityFacet):
+    """
+    Reduce damage dealt to this unit not by abilities and statuses by half, rounding the result down.
+    """
+
+    name = "Anti-Magic Hide"
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            SourceTypeResistanceModifier(
+                self.parent,
+                (ActivatedAbilityFacet, StaticAbilityFacet, Status),
+                Resistance.MAJOR,
             )
         )
 

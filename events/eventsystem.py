@@ -186,8 +186,9 @@ class EventSystem:
         # # TODO after instead?
         # self.check_triggers_against(event, self._effect_set)
 
-        for hook in self._effect_set.get_effects(HookEffect, event.name):
-            hook.resolve_hook_call(event)
+        # TODO allow before as well?
+        # for hook in self._effect_set.get_effects(HookEffect, event.name):
+        #     hook.resolve_hook_call(event)
 
         previous_active_replacement_effect = self._active_replacement_effect
         previous_active_event = self._active_event
@@ -199,6 +200,9 @@ class EventSystem:
             callback(event, True)
 
         event.result = event.resolve()
+
+        for hook in self._effect_set.get_effects(HookEffect, event.name):
+            hook.resolve_hook_call(event)
 
         for callback in self._event_callbacks:
             callback(event, False)

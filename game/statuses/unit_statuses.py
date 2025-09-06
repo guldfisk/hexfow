@@ -37,7 +37,10 @@ from game.effects.triggers import (
     OneTimeModifyMovementPointsStatusTrigger,
     PanickedTrigger,
     ParasiteTrigger,
+    ParchedTrigger,
     RoundDamageTrigger,
+    TiredDamageTrigger,
+    TiredRestTrigger,
     TurnExpiringStatusTrigger,
 )
 from game.events import ExhaustUnit, Kill
@@ -240,6 +243,18 @@ class MortallyWounded(UnitStatus):
 
     def on_expires(self) -> None:
         ES.resolve(Kill(self.parent))
+
+
+class Tired(StackableMixin, UnitStatus):
+    """
+    When this unit ends its turn, it's dealt pure damage equals to the stacks of this status.
+    When this unit rests, remove this status.
+    """
+
+    default_intention = StatusIntention.DEBUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(TiredDamageTrigger(self), TiredRestTrigger(self))
 
 
 class Terror(RefreshableMixin, UnitStatus):
@@ -445,3 +460,13 @@ class Chill(RefreshableMixin, UnitStatus):
 
     def create_effects(self) -> None:
         self.register_effects(ChillTrigger(self.parent, self))
+
+
+class Parched(RefreshableMixin, UnitStatus):
+    """
+    At the end of this units turn, if it acted and doesn't have any remaining movement points,
+    deal 1 pure damage to it.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(ParchedTrigger(self.parent, self))

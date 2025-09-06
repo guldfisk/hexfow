@@ -142,16 +142,18 @@ babushka
 ready unit only allow movement
 bleeding - like poison but with duration.
 
+round bound objectives
+
+update engineer
+
 croc
 pharaoh
-sheltering ancient
 clockwork archeologist
-druid thingy
-hooded executioner
-ancient samaritan
-sweltering imp
 
-3 cost tough - anti magic
+sheltering ancient
+druid thingy
+accelerator
+
 more heals / dispells / shields for allied units
 artillery
 
@@ -162,3 +164,5 @@ move space when attacked
 puck-ish
 climber
 damaged when debuffed
+shake it off
+all units immune to damage grace
