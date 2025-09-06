@@ -58,6 +58,7 @@ class TriggerLayers(IntEnum):
     ROUND_STATUSES_TICK = auto()
     PANIC = auto()
     ROUND_APPLY_DEBUFFS = auto()
+    FLEETING = auto()
 
     READY = auto()
     EXHAUST = auto()
@@ -542,6 +543,20 @@ class BurnOnCleanup(TriggerEffect[RoundCleanup]):
                     ),
                 )
             )
+
+
+@dataclasses.dataclass(eq=False)
+class FleetingTrigger(TriggerEffect[RoundCleanup]):
+    priority: ClassVar[int] = TriggerLayers.FLEETING
+
+    unit: Unit
+    round: int
+
+    def should_trigger(self, event: RoundCleanup) -> bool:
+        return GS.round_counter >= self.round
+
+    def resolve(self, event: RoundCleanup) -> None:
+        ES.resolve(Kill(self.unit))
 
 
 @dataclasses.dataclass(eq=False)

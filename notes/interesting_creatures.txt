@@ -1,11 +1,3 @@
-frost sprite {3} x1
-health 3, movement 3, sight 2, S
-chilling bite
-    melee attack
-    1 damage
-    applies chilled for 3 rounds
-- ignores 1 move out penalties on snow terrain
-
 imp {3} x1
 health 2, movement 3, sight 2, S
 heatwave

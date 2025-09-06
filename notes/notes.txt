@@ -145,7 +145,6 @@ bleeding - like poison but with duration.
 croc
 pharaoh
 sheltering ancient
-spirit guide
 clockwork archeologist
 druid thingy
 hooded executioner
@@ -161,6 +160,5 @@ curse of fleas
 teleport to ally
 move space when attacked
 puck-ish
-firefly effect / spawns with ephemeral
 climber
 damaged when debuffed

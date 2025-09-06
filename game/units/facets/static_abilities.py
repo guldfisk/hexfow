@@ -39,6 +39,7 @@ from game.effects.triggers import (
     CaughtInTheMatchTrigger,
     DebuffOnMeleeAttackTrigger,
     ExplosiveTrigger,
+    FleetingTrigger,
     FoulBurstTrigger,
     FuriousTrigger,
     GrizzlyMurdererTrigger,
@@ -229,6 +230,15 @@ class HeelTurn(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(HeelTurnTrigger(self.parent, self))
+
+
+class Fleeting(StaticAbilityFacet):
+    """
+    At the end of the second round, this unit dies.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(FleetingTrigger(self.parent, 2))
 
 
 class Quick(StaticAbilityFacet):

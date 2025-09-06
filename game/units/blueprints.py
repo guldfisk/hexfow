@@ -74,6 +74,7 @@ from game.units.facets.attacks import (
     Bite,
     Blaster,
     BloodExpunge,
+    BurningSting,
     Chainsaw,
     Chomp,
     CommandersPistol,
@@ -141,6 +142,7 @@ from game.units.facets.static_abilities import (
     Farsighted,
     FightFlightFreeze,
     FlameResistant,
+    Fleeting,
     FoulBurst,
     Furious,
     GlassSkin,
@@ -183,6 +185,16 @@ BLIND_GRUB = UnitBlueprint(
     speed=3,
     sight=0,
     size=Size.SMALL,
+    price=1,
+)
+
+FIREFLY = UnitBlueprint(
+    "Firefly",
+    health=2,
+    speed=3,
+    sight=1,
+    size=Size.SMALL,
+    facets=[BurningSting, Fleeting],
     price=1,
 )
 

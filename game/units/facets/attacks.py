@@ -23,6 +23,20 @@ class Peck(MeleeAttackFacet):
     damage = 1
 
 
+class BurningSting(MeleeAttackFacet):
+    """Applies 1 stack of <burn>."""
+
+    cost = MovementCost(1)
+    damage = 1
+
+    def resolve_post_damage_effects(self, defender: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                defender, UnitStatusSignature(UnitStatus.get("burn"), self, stacks=1)
+            )
+        )
+
+
 class Scratch(MeleeAttackFacet):
     cost = MovementCost(1)
     combinable = True
