@@ -578,6 +578,7 @@ class RangedAttackFacet(SingleTargetAttackFacet, ABC):
 
 class ActivatedAbilityFacet(EffortFacet, Generic[G_decision_result], ABC):
     category = "activated_ability"
+    hidden_target: ClassVar[bool] = False
 
     @classmethod
     def get_target_explanation(cls) -> str | None: ...
@@ -605,6 +606,7 @@ class ActivatedAbilityFacet(EffortFacet, Generic[G_decision_result], ABC):
         return {
             **super().serialize_type(),
             "target_explanation": cls.get_target_explanation(),
+            "hidden_target": cls.hidden_target,
         }
 
 
@@ -1741,8 +1743,11 @@ class ActiveUnitContext(Serializable):
 @dataclasses.dataclass
 class LogLine:
     elements: list[str | Unit | Hex | list[Hex | Unit] | Facet | Status | Player]
+    valid_for_players: set[Player] | None = None
 
     def is_visible_to(self, player: Player) -> bool:
+        if self.valid_for_players and player not in self.valid_for_players:
+            return False
         for element in self.elements:
             if isinstance(element, list) and not any(
                 e.is_visible_to(player) for e in element

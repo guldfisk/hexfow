@@ -56,6 +56,9 @@ const getFacetStatLine = (
   if ("range" in facet) {
     stats.push([`range: ${facet.range}`]);
   }
+  if ("hidden_target" in facet && facet.hidden_target) {
+    stats.push(["hidden target"]);
+  }
 
   const atoms = [];
 

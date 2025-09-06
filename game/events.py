@@ -415,7 +415,12 @@ class ActivateAbilityAction(Event[None]):
 
     def resolve(self) -> None:
         with GS.log(
-            LogLine([self.unit, "activates", self.ability, "targeting", self.target]),
+            LogLine(
+                [self.unit, "activates", self.ability, "targeting", self.target],
+                valid_for_players=(
+                    {self.unit.controller} if self.ability.hidden_target else None
+                ),
+            ),
             LogLine([self.unit, "activates", self.ability]),
         ):
             self.ability.perform(self.target)

@@ -51,6 +51,7 @@ export interface RangedAttackFacetDetails extends SingleTargetAttackDetails {
 export interface ActivatedAbilityFacetDetails extends EffortFacetDetailsBase {
   category: "activated_ability";
   target_explanation: string | null;
+  hidden_target: boolean;
 }
 
 export interface StaticAbilityFacetDetails extends BaseFacetDetails {

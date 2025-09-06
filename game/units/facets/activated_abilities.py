@@ -291,6 +291,7 @@ class SpiritProjection(TargetHexActivatedAbility):
     range = 3
     requires_los = False
     requires_vision = False
+    hidden_target = True
 
     def perform(self, target: Hex) -> None:
         current_hex = target
@@ -366,6 +367,7 @@ class Stare(TargetRadiatingLineActivatedAbility):
 
     length = 4
     combinable = True
+    hidden_target = True
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
@@ -852,6 +854,7 @@ class Scry(TargetHexActivatedAbility):
     range = 6
     requires_los = False
     requires_vision = False
+    hidden_target = True
 
     def perform(self, target: Hex) -> None:
         ES.resolve(
@@ -1130,6 +1133,7 @@ class LayMine(TargetHexActivatedAbility):
     cost = EnergyCost(2) | MovementCost(1)
     combinable = True
     requires_empty = True
+    hidden_target = True
 
     def perform(self, target: Hex) -> None:
         if not GS.map.unit_on(target):
