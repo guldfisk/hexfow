@@ -98,6 +98,7 @@ export interface StatusDetails {
   description: string | null;
   related_statuses: string[];
   stacking_info: string;
+  dispellable: boolean;
 }
 
 export interface GameObjectDetails {

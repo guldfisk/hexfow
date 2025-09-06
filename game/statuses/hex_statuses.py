@@ -97,6 +97,7 @@ class Revealed(PerPlayerRefreshable, HexStatus):
 class Glimpse(PerPlayerUnstackable, HexStatus):
     """
     This hex is visible to the controller of this status. Expires at the end of the turn.
+    This status is hidden for opponents.
     """
 
     def is_hidden_for(self, player: Player) -> bool:
@@ -123,6 +124,8 @@ class RuneOfHealing(HexStatus):
     At the end of each round, units on this hex are healed 1.
     """
 
+    dispellable = False
+
     def create_effects(self) -> None:
         self.register_effects(HexRoundHealTrigger(self.parent, 1))
 
@@ -131,6 +134,8 @@ class RuneOfClarity(HexStatus):
     """
     Units on this hex has +1 energy regeneration.
     """
+
+    dispellable = False
 
     def create_effects(self) -> None:
         self.register_effects(HexIncreasesEnergyRegenModifier(self.parent, 1))

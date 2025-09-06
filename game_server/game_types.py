@@ -59,7 +59,7 @@ class TestGameType(GameType):
         player_units = (
             (
                 # GATE_FIEND,
-                FIREFLY,
+                PESTILENCE_PRIEST,
                 GNARLED_SHAMAN,
                 # VILE_TRANSMUTER,
                 # MAD_SCIENTIST,

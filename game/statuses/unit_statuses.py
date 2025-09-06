@@ -85,6 +85,7 @@ class Ephemeral(LowestRefreshableMixin, UnitStatus):
     """
 
     default_intention = StatusIntention.DEBUFF
+    dispellable = False
 
     def on_expires(self) -> None:
         ES.resolve(Kill(self.parent))
@@ -109,6 +110,7 @@ class Parasite(UnitStatus):
     """
 
     default_intention = StatusIntention.DEBUFF
+    # TODO effect when dispelled would be pretty cool?
 
     def create_effects(self) -> None:
         self.register_effects(ParasiteTrigger(self))
@@ -140,8 +142,8 @@ class TheyVeGotASteelChair(UnitStatus):
     """
 
     name = "They've Got A Steel Chair"
-
     default_intention = StatusIntention.BUFF
+    dispellable = False
 
     def create_effects(self) -> None:
         self.register_effects(UnitAttackPowerFlatModifier(self.parent, 2))
@@ -234,6 +236,7 @@ class MortallyWounded(UnitStatus):
     """
 
     default_intention = StatusIntention.DEBUFF
+    dispellable = False
 
     def on_expires(self) -> None:
         ES.resolve(Kill(self.parent))

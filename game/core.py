@@ -628,7 +628,7 @@ class Status(
 ):
     registry: ClassVar[dict[str, Status]]
     # TODO should prob be modifiable, and also something something dispel costs.
-    dispelable: ClassVar[bool] = True
+    dispellable: ClassVar[bool] = True
 
     def __init__(
         self,
@@ -676,6 +676,7 @@ class Status(
             "description": cls.description,
             "related_statuses": cls.related_statuses,
             "stacking_info": cls.get_stacking_info(),
+            "dispellable": cls.dispellable,
         }
 
     def serialize(self, context: SerializationContext) -> JSON:
@@ -1042,7 +1043,6 @@ class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Seriali
             "sight": self.sight.g(),
             "max_energy": self.max_energy.g(),
             "energy": self.energy,
-            # TODO
             "size": self.size.g().value,
             "armor": self.armor.g(),
             "attack_power": self.attack_power.g(),

@@ -395,7 +395,7 @@ class DispelStatus(Event[None]):
     status: Status
 
     def is_valid(self) -> bool:
-        return self.status.dispelable and any(
+        return self.status.dispellable and any(
             s == self.status for s in self.owner.statuses
         )
 

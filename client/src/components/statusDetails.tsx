@@ -1,6 +1,9 @@
 import React from "react";
 import { Status, UnitStatus } from "../interfaces/gameState.ts";
-import {GameObjectDetails, StatusDetails} from "../interfaces/gameObjectDetails.ts";
+import {
+  GameObjectDetails,
+  StatusDetails,
+} from "../interfaces/gameObjectDetails.ts";
 import { getImageUrl } from "../image/images.ts";
 
 const getStatusStatLine = (status: Status | UnitStatus): string => {
@@ -40,16 +43,18 @@ export const StatusDetailView = ({
       />
       {statusDetails.name}
     </div>
-    <div className={"facet-stats"}>{statusDetails.stacking_info}</div>
+    <div className={"status-stats"}>{statusDetails.stacking_info}</div>
+    {!statusDetails.dispellable ? (
+      <div className={"status-stats"}>undispellable</div>
+    ) : null}
     {status ? (
-      <div className={"facet-stats"}>{getStatusStatLine(status)}</div>
+      <div className={"status-stats"}>{getStatusStatLine(status)}</div>
     ) : null}
     {statusDetails.description ? (
       <div className={"facet-description"}>{statusDetails.description}</div>
     ) : null}
   </div>
 );
-
 
 export const StatusesDetailView = ({
   statuses,

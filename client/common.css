@@ -67,7 +67,11 @@ button {
 }
 
 .facet-stats {
-  font-size: 18px;
+  font-size: 16px;
+}
+
+.status-stats {
+  font-size: 14px;
 }
 
 .facet-description {
