@@ -21,6 +21,7 @@ from game.core import (
     SelectOptionDecisionPoint,
     SkipOption,
     TargetProfile,
+    Terrain,
     Unit,
     UnitBlueprint,
     UnitStatus,
@@ -34,6 +35,7 @@ from game.effects.hooks import AdjacencyHook
 from game.events import (
     ApplyHexStatus,
     ApplyStatus,
+    ChangeHexTerrain,
     Damage,
     DispelStatus,
     ExhaustUnit,
@@ -864,6 +866,111 @@ class VenomousSpine(TargetUnitActivatedAbility):
                 UnitStatusSignature(
                     UnitStatus.get("debilitating_venom"), self, duration=2
                 ),
+            )
+        )
+
+
+class NaturalBlessing(TargetUnitActivatedAbility):
+    """
+    Applies <natures_grace> for 3 rounds.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+    controller_target_option = ControllerTargetOption.ALLIED
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                target,
+                UnitStatusSignature(UnitStatus.get("natures_grace"), self, duration=3),
+            )
+        )
+
+
+class VerdantFlash(TargetHexActivatedAbility):
+    """
+    Turns the terrain into Forest.
+    """
+
+    cost = EnergyCost(3) | MovementCost(2)
+    explain_hex_alias = "plains"
+
+    def filter_hex(self, hex_: Hex) -> bool:
+        return isinstance(hex_.terrain, Terrain.get_class("plains"))
+
+    def perform(self, target: Hex) -> None:
+        ES.resolve(ChangeHexTerrain(target, Terrain.get_class("forest")))
+
+
+class RaiseGround(TargetHexActivatedAbility):
+    """
+    Turns the terrain into Hills.
+    """
+
+    cost = EnergyCost(3) | MovementCost(2)
+    range = 3
+
+    explain_qualifier_filter = "non-elevated"
+
+    def filter_hex(self, hex_: Hex) -> bool:
+        return not hex_.terrain.is_high_ground
+
+    def perform(self, target: Hex) -> None:
+        ES.resolve(ChangeHexTerrain(target, Terrain.get_class("hills")))
+
+
+class FlattenGround(TargetHexActivatedAbility):
+    """Turns the terrain into Plains"""
+
+    cost = EnergyCost(3) | MovementCost(2)
+    range = 3
+
+    explain_qualifier_filter = "elevated"
+
+    def filter_hex(self, hex_: Hex) -> bool:
+        return hex_.terrain.is_high_ground
+
+    def perform(self, target: Hex) -> None:
+        ES.resolve(ChangeHexTerrain(target, Terrain.get_class("plains")))
+
+
+class DrawSpring(TargetHexActivatedAbility):
+    """
+    Applies <underground_spring> for 2 rounds.
+    """
+
+    cost = EnergyCost(3) | MovementCost(2)
+    range = 3
+
+    explain_qualifier_filter = "non-elevated"
+
+    def filter_hex(self, hex_: Hex) -> bool:
+        return not hex_.terrain.is_high_ground
+
+    def perform(self, target: Hex) -> None:
+        ES.resolve(
+            ApplyHexStatus(
+                target,
+                HexStatusSignature(
+                    HexStatus.get("underground_spring"), self, duration=2
+                ),
+            )
+        )
+
+
+class MagmaFissure(TargetHexActivatedAbility):
+    """
+    Applies 2 stacks of <burning_terrain>.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 2
+
+    def perform(self, target: Hex) -> None:
+        ES.resolve(
+            ApplyHexStatus(
+                target,
+                HexStatusSignature(HexStatus.get("burning_terrain"), self, stacks=2),
             )
         )
 

@@ -39,6 +39,7 @@ from game.effects.triggers import (
     ParasiteTrigger,
     ParchedTrigger,
     RoundDamageTrigger,
+    RoundHealTrigger,
     TiredDamageTrigger,
     TiredRestTrigger,
     TurnExpiringStatusTrigger,
@@ -451,6 +452,15 @@ class Baffled(UnitStatus):
 
     def create_effects(self) -> None:
         self.register_effects(BaffledTrigger(self))
+
+
+class NaturesGrace(RefreshableMixin, UnitStatus):
+    """
+    At the end of each round, this unit heals 1.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(RoundHealTrigger(self.parent, 1))
 
 
 class Chill(RefreshableMixin, UnitStatus):

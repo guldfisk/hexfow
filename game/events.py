@@ -34,6 +34,7 @@ from game.core import (
     Source,
     Status,
     StatusSignature,
+    Terrain,
     TerrainProtectionRequest,
     TurnOrder,
     Unit,
@@ -599,6 +600,22 @@ class QueueUnitForActivation(Event[None]):
     def resolve(self) -> None:
         # TODO log ?
         GS.activation_queued_units.add(self.unit)
+
+
+@dataclasses.dataclass
+class ChangeHexTerrain(Event[Terrain]):
+    hex_: Hex
+    terrain_type: type[Terrain]
+
+    def is_valid(self) -> bool:
+        return not isinstance(self.hex_.terrain, self.terrain_type)
+
+    def resolve(self) -> Terrain:
+        previous_terrain = self.hex_.terrain
+        self.hex_.terrain.deregister()
+        self.hex_.terrain = self.terrain_type()
+        self.hex_.terrain.create_effects(self.hex_)
+        return previous_terrain
 
 
 # TODO IDK

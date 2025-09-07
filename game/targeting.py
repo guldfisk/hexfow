@@ -94,6 +94,7 @@ class TargetHexActivatedAbility(ActivatedAbilityFacet[Hex], ABC):
     explain_qualifier_filter: ClassVar[str | None] = None
     explain_with_filter: ClassVar[str | None] = None
     explain_that_filter: ClassVar[str | None] = None
+    explain_hex_alias: ClassVar[str | None] = None
 
     def filter_hex(self, hex_: Hex) -> bool:
         return True
@@ -112,7 +113,7 @@ class TargetHexActivatedAbility(ActivatedAbilityFacet[Hex], ABC):
             fragments.append("empty")
         if cls.explain_qualifier_filter:
             fragments.append(cls.explain_qualifier_filter)
-        fragments.append("hex")
+        fragments.append(cls.explain_hex_alias or "hex")
         if cls.explain_with_filter:
             fragments.append(cls.explain_with_filter)
         if not adjacent:

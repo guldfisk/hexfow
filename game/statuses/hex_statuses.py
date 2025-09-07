@@ -1,10 +1,13 @@
+from events.eventsystem import ES
 from events.tests.game_objects.advanced_units import Player
 from game.core import (
     HexStatus,
     HighestStackableRefreshableMixin,
+    LowestRefreshableMixin,
     PerPlayerRefreshable,
     PerPlayerUnstackable,
     RefreshableMixin,
+    Terrain,
 )
 from game.effects.modifiers import (
     HexBlocksVisionModifier,
@@ -27,6 +30,7 @@ from game.effects.triggers import (
     TurnExpiringStatusTrigger,
     WalkInDestroyStatusTrigger,
 )
+from game.events import ChangeHexTerrain
 
 
 class Shrine(HexStatus):
@@ -151,6 +155,15 @@ class RuneOfHealing(HexStatus):
 
     def create_effects(self) -> None:
         self.register_effects(HexRoundHealTrigger(self.parent, 1))
+
+
+class UndergroundSpring(LowestRefreshableMixin, HexStatus):
+    """
+    When this status expires, change the terrain of this hex to Water.
+    """
+
+    def on_expires(self) -> None:
+        ES.resolve(ChangeHexTerrain(self.parent, Terrain.get_class("water")))
 
 
 class RuneOfClarity(HexStatus):

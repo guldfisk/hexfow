@@ -47,12 +47,13 @@ class TestGameType(GameType):
                             # Forest,
                             # Hills,
                             # Water,
+                            # Magma,
                         ]
                     ),
                     cc.distance_to(CC(0, 0)) <= 1,
                     deployment_zone_of=0 if cc.r & 1 else 1,
                 )
-                for cc in hex_circle(2)
+                for cc in hex_circle(4)
             }
         )
 
@@ -63,11 +64,12 @@ class TestGameType(GameType):
                 # GNARLED_SHAMAN,
                 # CYCLOPS,
                 ARTHRITIC_GIANT,
-                GNARLED_SHAMAN,
+                HARMONIOUS_DRUID,
                 # PANGOLIN_FAMILIAR,
                 # HOODED_EXECUTIONER,
                 # GIANT_BATTLE_CRAB,
-                RECON_SPECIALIST,
+                TERRAFORMER_MAGE,
+                # RECON_SPECIALIST,
                 # VILE_TRANSMUTER,
                 # MAD_SCIENTIST,
                 # BLOOD_CONDUIT,

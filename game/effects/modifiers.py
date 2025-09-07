@@ -558,6 +558,21 @@ class HexRevealedModifier(StateModifierEffect[Hex, Player, bool]):
 
 
 @dataclasses.dataclass(eq=False)
+class IgnoreMoveInOnTerrainModifier(StateModifierEffect[Hex, Unit, int]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Hex.get_move_in_penalty_for
+
+    unit: Unit
+    terrain_type: type[Terrain]
+
+    def should_modify(self, obj: Hex, request: Unit, value: int) -> bool:
+        return request == self.unit and isinstance(obj.terrain, self.terrain_type)
+
+    def modify(self, obj: Hex, request: Unit, value: int) -> int:
+        return 0
+
+
+@dataclasses.dataclass(eq=False)
 class MappedOutModifier(StateModifierEffect[Hex, Unit, int]):
     priority: ClassVar[int] = 1
     target: ClassVar[object] = Hex.get_move_in_penalty_for
@@ -603,6 +618,25 @@ class NegativeAttackPowerAuraModifier(StateModifierEffect[Unit, None, int]):
 
     def modify(self, obj: Unit, request: None, value: int) -> int:
         return value - self.amount
+
+
+@dataclasses.dataclass(eq=False)
+class SoilCommunionModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.energy_regen
+
+    unit: Unit
+    amount: int
+
+    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+        return (
+            obj.controller == self.unit.controller
+            and GS.map.distance_between(obj, self.unit) <= 1
+            and isinstance(GS.map.hex_off(obj).terrain, Terrain.get_class("forest"))
+        )
+
+    def modify(self, obj: Unit, request: None, value: int) -> int:
+        return value + self.amount
 
 
 @dataclasses.dataclass(eq=False)

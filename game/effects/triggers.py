@@ -56,6 +56,7 @@ from game.values import DamageType, StatusIntention
 
 class TriggerLayers(IntEnum):
     ROUND_STATUSES_TICK = auto()
+    ROUND_HEAL_TICK = auto()
     PANIC = auto()
     ROUND_APPLY_DEBUFFS = auto()
     FLEETING = auto()
@@ -657,8 +658,19 @@ class SludgeTrigger(TriggerEffect[RoundCleanup]):
 
 
 @dataclasses.dataclass(eq=False)
+class RoundHealTrigger(TriggerEffect[RoundCleanup]):
+    priority: ClassVar[int] = TriggerLayers.ROUND_HEAL_TICK
+
+    unit: Unit
+    amount: int
+
+    def resolve(self, event: RoundCleanup) -> None:
+        ES.resolve(Heal(self.unit, self.amount))
+
+
+@dataclasses.dataclass(eq=False)
 class HexRoundHealTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
+    priority: ClassVar[int] = TriggerLayers.ROUND_HEAL_TICK
 
     hex: Hex
     amount: int

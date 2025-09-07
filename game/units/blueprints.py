@@ -9,6 +9,7 @@ from game.units.facets.activated_abilities import (
     CoordinatedManeuver,
     CriticalAid,
     CuringWord,
+    DrawSpring,
     EnfeeblingHex,
     Evacuate,
     FalseCure,
@@ -17,6 +18,7 @@ from game.units.facets.activated_abilities import (
     FlameThrower,
     FlameWall,
     FlashBang,
+    FlattenGround,
     GiantPincers,
     GrantCharm,
     GrantWish,
@@ -35,13 +37,16 @@ from game.units.facets.activated_abilities import (
     Jump,
     Lasso,
     LayMine,
+    MagmaFissure,
     MalevolentStare,
     MapOut,
     Mortar,
+    NaturalBlessing,
     OpenGate,
     Poof,
     PsychicCommand,
     PublicExecution,
+    RaiseGround,
     RaiseShrine,
     Riddle,
     Scorch,
@@ -72,6 +77,7 @@ from game.units.facets.activated_abilities import (
     TurboTune,
     Vault,
     VenomousSpine,
+    VerdantFlash,
     VitalityTransfusion,
     Vomit,
     WringEssence,
@@ -162,6 +168,7 @@ from game.units.facets.static_abilities import (
     FightFlightFreeze,
     FlameResistant,
     Fleeting,
+    ForestNative,
     FoulBurst,
     Furious,
     GlassSkin,
@@ -186,6 +193,7 @@ from game.units.facets.static_abilities import (
     SlimyLocomotion,
     SlimySkin,
     SludgeTrail,
+    SoilCommunion,
     SootDweller,
     Stakeout,
     Stealth,
@@ -658,6 +666,16 @@ GIANT_SLAYER_MOUSE = UnitBlueprint(
     price=7,
 )
 
+HARMONIOUS_DRUID = UnitBlueprint(
+    "Harmonious Druid",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[NaturalBlessing, VerdantFlash, ForestNative, SoilCommunion],
+    price=7,
+)
+
 TRACTOR = UnitBlueprint(
     "Tractor",
     health=7,
@@ -901,6 +919,16 @@ PESTILENCE_PRIEST = UnitBlueprint(
     sight=2,
     energy=6,
     facets=[SummonScarab, InducePanic, Schadenfreude],
+    price=11,
+)
+
+TERRAFORMER_MAGE = UnitBlueprint(
+    "Terraformer Mage",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[RaiseGround, FlattenGround, DrawSpring, MagmaFissure],
     price=11,
 )
 

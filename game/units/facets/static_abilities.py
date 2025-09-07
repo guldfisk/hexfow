@@ -7,6 +7,7 @@ from game.core import (
     HexStatusSignature,
     StaticAbilityFacet,
     Status,
+    Terrain,
     UnitStatus,
     UnitStatusSignature,
 )
@@ -17,12 +18,14 @@ from game.effects.modifiers import (
     CrushableModifier,
     FarsightedModifier,
     FightFlightFreezeModifier,
+    IgnoreMoveInOnTerrainModifier,
     IncreaseSpeedAuraModifier,
     NegativeAttackPowerAuraModifier,
     NotMovedStealthModifier,
     PusherModifier,
     ResistanceModifier,
     RootedModifier,
+    SoilCommunionModifier,
     SourceTypeResistanceModifier,
     StealthModifier,
     StealthOnTerrainModifier,
@@ -326,6 +329,26 @@ class OldBones(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(OldBonesTrigger(self.parent, self))
+
+
+class SoilCommunion(StaticAbilityFacet):
+    """
+    Allied units with 1 range on forests have +1 energy regen.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(SoilCommunionModifier(self.parent, 1))
+
+
+class ForestNative(StaticAbilityFacet):
+    """
+    Ignores move in penalties on Forests.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            IgnoreMoveInOnTerrainModifier(self.parent, Terrain.get_class("forest"))
+        )
 
 
 class Stakeout(StaticAbilityFacet):

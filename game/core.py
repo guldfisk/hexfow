@@ -1324,6 +1324,9 @@ class Hex(Modifiable, HasStatuses["HexStatus", "HexStatusSignature"], Serializab
         self.position = position
         self.terrain = terrain
         self.is_objective = is_objective
+
+        self.original_terrain_type = type(terrain)
+
         self.captured_by: Player | None = None
         # TODO name?
         self.map = map_
@@ -1396,12 +1399,12 @@ class Hex(Modifiable, HasStatuses["HexStatus", "HexStatusSignature"], Serializab
         old_hex = (context.last_hex_states or {}).get(self.position)
         return {
             "cc": self.position.serialize(),
-            "terrain": self.terrain.__class__.identifier,
             "is_objective": self.is_objective,
             **(
                 {
                     "visible": True,
                     "last_visible_round": GS.round_counter,
+                    "terrain": self.terrain.identifier,
                     "captured_by": self.captured_by.name if self.captured_by else None,
                     "unit": (
                         unit.serialize(context)
@@ -1428,6 +1431,7 @@ class Hex(Modifiable, HasStatuses["HexStatus", "HexStatusSignature"], Serializab
                     {
                         "visible": False,
                         "last_visible_round": old_hex["last_visible_round"],
+                        "terrain": old_hex["terrain"],
                         "captured_by": old_hex["captured_by"],
                         "unit": (
                             old_hex["unit"] | {"is_ghost": True}
@@ -1443,6 +1447,7 @@ class Hex(Modifiable, HasStatuses["HexStatus", "HexStatusSignature"], Serializab
                     else {
                         "visible": False,
                         "last_visible_round": None,
+                        "terrain": self.original_terrain_type.identifier,
                         "captured_by": None,
                         "unit": None,
                         "statuses": [],
