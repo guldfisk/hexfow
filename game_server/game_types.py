@@ -63,7 +63,7 @@ class TestGameType(GameType):
                 # GNARLED_SHAMAN,
                 # CYCLOPS,
                 ARTHRITIC_GIANT,
-                GIANT_BATTLE_CRAB,
+                GNARLED_SHAMAN,
                 # PANGOLIN_FAMILIAR,
                 # HOODED_EXECUTIONER,
                 # GIANT_BATTLE_CRAB,

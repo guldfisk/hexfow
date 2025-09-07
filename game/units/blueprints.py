@@ -279,7 +279,7 @@ GOBLIN_SLINGSHOT = UnitBlueprint(
 
 LUMBERING_PILLAR = UnitBlueprint(
     name="Lumbering Pillar",
-    health=7,
+    health=6,
     speed=1,
     sight=0,
     armor=1,
@@ -804,17 +804,6 @@ BOULDER_HURLER_OAF = UnitBlueprint(
     price=10,
 )
 
-BULLDOZER = UnitBlueprint(
-    "Bulldozer",
-    health=9,
-    speed=2,
-    sight=1,
-    size=Size.LARGE,
-    armor=1,
-    facets=[Pusher],
-    price=10,
-)
-
 HOODED_EXECUTIONER = UnitBlueprint(
     "Hooded Executioner",
     health=6,
@@ -839,6 +828,17 @@ LEGENDARY_WRESTLER = UnitBlueprint(
     ],
     price=10,
     flavor="I need justice in my life: Here it comes.",
+)
+
+BULLDOZER = UnitBlueprint(
+    "Bulldozer",
+    health=9,
+    speed=2,
+    sight=1,
+    size=Size.LARGE,
+    armor=1,
+    facets=[Pusher],
+    price=11,
 )
 
 CHAINSAW_SADIST = UnitBlueprint(

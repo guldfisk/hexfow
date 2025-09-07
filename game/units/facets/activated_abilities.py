@@ -306,11 +306,11 @@ class GuidedTrance(TargetUnitActivatedAbility):
 
 class SpiritProjection(TargetHexActivatedAbility):
     """
-    Apply <glimpse> to the target hex. Then up to 3 times, choose another hex adjacent to the last chosen hex,
+    Apply <glimpse> to the target hex. Then up to 2 times, choose another hex adjacent to the last chosen hex,
     and apply <glimpse> to that as well.
     """
 
-    cost = EnergyCost(3) | ExclusiveCost()
+    cost = EnergyCost(4) | MovementCost(1)
     range = 3
     requires_los = False
     requires_vision = False
@@ -323,7 +323,7 @@ class SpiritProjection(TargetHexActivatedAbility):
                 current_hex, HexStatusSignature(HexStatus.get("glimpse"), self)
             )
         )
-        for _ in range(3):
+        for _ in range(2):
             decision = GS.make_decision(
                 self.parent.controller,
                 SelectOptionDecisionPoint(
@@ -870,7 +870,7 @@ class VenomousSpine(TargetUnitActivatedAbility):
 
 class Scry(TargetHexActivatedAbility):
     """
-    Applies <revealed> for 1 round.
+    Applies <revealed> for 2 round.
     """
 
     cost = EnergyCost(2)
@@ -882,7 +882,7 @@ class Scry(TargetHexActivatedAbility):
     def perform(self, target: Hex) -> None:
         ES.resolve(
             ApplyHexStatus(
-                target, HexStatusSignature(HexStatus.get("revealed"), self, duration=1)
+                target, HexStatusSignature(HexStatus.get("revealed"), self, duration=2)
             )
         )
 
