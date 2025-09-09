@@ -10,7 +10,7 @@ export const getImageUrl = (
     case "icon":
       return `/src/images/icons/${resourceIdentifier}_icon.png`;
     case "unit":
-      return `/src/images/units/${resourceIdentifier}_small.png`;
+      return `/src/images/units/${resourceIdentifier}.png`;
     case "status":
       return `/src/images/statuses/${resourceIdentifier}.png`;
     case "terrain":

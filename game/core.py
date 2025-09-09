@@ -833,8 +833,6 @@ class UnitBlueprint:
         return {
             "identifier": self.identifier,
             "name": self.name,
-            # TODO how should this work?
-            "small_image": f"/src/images/units/{self.identifier}_small.png",
             "health": self.health,
             "speed": self.speed,
             "sight": self.sight,

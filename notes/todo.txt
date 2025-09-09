@@ -32,7 +32,6 @@ game
 
 code
     don't send no change game state updates
-    get rid of _small unit images suffix
 
     proper parallel decisions support (with immediate error handling)
 

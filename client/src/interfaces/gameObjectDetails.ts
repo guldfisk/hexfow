@@ -68,7 +68,6 @@ export type FacetDetails = EffortFacetDetails | StaticAbilityFacetDetails;
 export interface UnitDetails {
   identifier: string;
   name: string;
-  small_image: string;
   health: number;
   speed: number;
   sight: number;
