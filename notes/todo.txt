@@ -13,13 +13,12 @@ game
     delayed unit activation ("undo activation")
 
     unit details include current statuses
-    linked statuses display
     unit last seen at round counter / ghost fading
     unit additional details
     support facet detail for facet used by multiple units
-    modifiable terrain support
     fix human visibility of target icons on spaces without vision
 
+    linked statuses display
     corpses
     chess clock
     break
@@ -35,7 +34,7 @@ code
     don't send no change game state updates
     get rid of _small unit images suffix
 
-    proper parallel decisions support (with immeditate error handling)
+    proper parallel decisions support (with immediate error handling)
 
     refactor game.core somehow
     update test framework

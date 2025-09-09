@@ -151,13 +151,11 @@ pharaoh
 clockwork archeologist
 
 sheltering ancient
-druid thingy
 accelerator
 
 more heals / dispells / shields for allied units
 artillery
 
-flare - reveal to all
 curse of fleas
 teleport to ally
 move space when attacked
