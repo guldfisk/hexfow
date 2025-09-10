@@ -143,12 +143,27 @@ ready unit only allow movement
 bleeding - like poison but with duration.
 
 round bound objectives
+ranged attacks attack power cap?
+
+applies tired
+gas like soot only damage ends turn / end of round for active units
+ink cloud - like smoke but hard -1 sight
+
+unit types? - mechanical, biological, magical?
 
 update engineer
+pangolin roll up
+
+demonic oppressor
+hedgehog beast
+inferno canon
+inkling
+snack
 
 croc
 pharaoh
 clockwork archeologist
+mammoth tank
 
 sheltering ancient
 accelerator

@@ -1,24 +1,21 @@
 platform
+    replays
+
     sign up
     authentication
     lobby system
     edit/load armies
 
 map editor
+    single mirror axis mode
     unit details
     add/remove hexes
     change meta info, aka point goals, and army max_unit counts and values.
 
 game
     delayed unit activation ("undo activation")
+    round restricted objectives
 
-    unit details include current statuses
-    unit last seen at round counter / ghost fading
-    unit additional details
-    support facet detail for facet used by multiple units
-    fix human visibility of target icons on spaces without vision
-
-    linked statuses display
     corpses
     chess clock
     break
@@ -30,9 +27,24 @@ game
     well-defined order of iterating units on map
     deployment zone detail view during game
 
+ui
+    unit additional details
+        press d to cycle, and specific keys for specific detail types
+
+    select facet with num key
+    better indication of which facet will be used to perform action
+    dedicated movement action icon?
+    unit details include current statuses
+    support facet detail for facet used by multiple units
+
+    unit last seen at round counter / ghost fading
+    fix human visibility of target icons on spaces without vision
+    linked statuses display
+
 code
     don't send no change game state updates
 
+    common target profile interface for effort facets
     proper parallel decisions support (with immediate error handling)
 
     refactor game.core somehow
@@ -42,12 +54,10 @@ code
         hard to get right with event result and history
 
 descriptions
-    align damage terminology
     alarm aoe types terminology
 
     aoe type icons
 
-replays
 
 production configuration
     web server behind nginx
