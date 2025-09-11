@@ -1480,7 +1480,7 @@ class Scorn(TargetUnitActivatedAbility):
     If the target unit stands on an objective captured by its controller, neutralize it.
     """
 
-    cost = EnergyCost(2)
+    cost = EnergyCost(3)
     range = 2
     controller_target_option = ControllerTargetOption.ENEMY
 
@@ -1505,8 +1505,8 @@ class SpurIntoRage(TargetUnitActivatedAbility):
     Applies <senseless_rage> for 2 rounds.
     """
 
-    cost = EnergyCost(3) | MovementCost(2)
-    range = 2
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 3
     can_target_self = False
 
     def perform(self, target: Unit) -> None:
@@ -1598,13 +1598,13 @@ class TurboTune(TargetUnitActivatedAbility):
 
 
 class GiantPincers(ActivatedAbilityFacet[list[Hex]]):
-    """Deals 5 melee damage to units on the target hexes."""
+    """Deals 5 + attack power melee damage to units on the target hexes."""
 
     cost = MovementCost(1)
 
     @classmethod
     def get_target_explanation(cls) -> str | None:
-        return "Target two adjacent hexes with one hex between them."
+        return "Target two hexes adjacent to this unit, with one hex also adjacent to this unit between them."
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
         # TODO edge??
@@ -1631,7 +1631,14 @@ class GiantPincers(ActivatedAbilityFacet[list[Hex]]):
     def perform(self, target: list[Hex]) -> None:
         for h in target:
             if unit := GS.map.unit_on(h):
-                ES.resolve(Damage(unit, DamageSignature(5, self, DamageType.MELEE)))
+                ES.resolve(
+                    Damage(
+                        unit,
+                        DamageSignature(
+                            5 + self.parent.attack_power.g(), self, DamageType.MELEE
+                        ),
+                    )
+                )
 
 
 class Evacuate(TargetUnitActivatedAbility):

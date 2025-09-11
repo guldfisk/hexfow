@@ -154,7 +154,7 @@ class StrainedPusher(StaticAbilityFacet):
 
 
 class TerrainSavvy(StaticAbilityFacet):
-    """Ignores the first movement penalty each turn."""
+    """Ignores the first movement penalty (not additional move in costs) each turn."""
 
     def create_effects(self) -> None:
         self.register_effects(PerTurnMovePenaltyIgnoreReplacement(self.parent, 1))

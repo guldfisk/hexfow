@@ -34,3 +34,10 @@ per unit reminder text
 dumb that units aren't exhausted when round skipping
 
 push should deal damage to all units when unit is squished
+
+terrain savy ignore additional move costs as well?
+apple status log show source
+same for healing
+bug i movement options
+
+cost on action indicators?

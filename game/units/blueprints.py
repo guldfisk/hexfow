@@ -1026,7 +1026,7 @@ GIANT_BATTLE_CRAB = UnitBlueprint(
     sight=1,
     armor=2,
     facets=[GiantPincers, Aquatic, CrabShuffle],
-    price=15,
+    price=17,
 )
 
 ZONE_MECH = UnitBlueprint(

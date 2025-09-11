@@ -47,6 +47,7 @@ code
     common target profile interface for effort facets
     proper parallel decisions support (with immediate error handling)
 
+    clean up ap
     refactor game.core somehow
     update test framework
     unit tests on core logic
