@@ -10,6 +10,7 @@ import { DelayedActivation, MenuData } from "../actions/interface.ts";
 import { HoveredDetails } from "../../interfaces/details.ts";
 import { deepEquals } from "../utils/equals.ts";
 import { GameStateMessage } from "../../interfaces/messages.ts";
+import { getAdditionalDetails } from "../../details/additional.ts";
 
 const mainSlice = createSlice({
   name: "application",
@@ -23,6 +24,7 @@ const mainSlice = createSlice({
     delayedActivation: null,
     highlightedCCs: null,
     showCoordinates: false,
+    additionalDetailsIndex: null,
   } as {
     gameState: GameState | null;
     gameStateId: number;
@@ -33,6 +35,7 @@ const mainSlice = createSlice({
     delayedActivation: DelayedActivation | null;
     highlightedCCs: string[] | null;
     showCoordinates: boolean;
+    additionalDetailsIndex: number | null;
   },
   reducers: {
     receiveGameState: (state, action: PayloadAction<GameStateMessage>) => {
@@ -57,6 +60,7 @@ const mainSlice = createSlice({
     },
     hoverDetail: (state, action: PayloadAction<HoveredDetails>) => {
       state.detailed = action.payload;
+      state.additionalDetailsIndex = null;
     },
     activateMenu: (state, action: PayloadAction<MenuData>) => {
       state.menuData = action.payload;
@@ -91,6 +95,30 @@ const mainSlice = createSlice({
       state.showCoordinates = !state.showCoordinates;
       state.shouldRerender = true;
     },
+    incrementAdditionalDetailsIndex: (state) => {
+      if (state.gameObjectDetails && state.detailed) {
+        const amount = getAdditionalDetails(
+          state.detailed,
+          state.gameObjectDetails,
+        ).length;
+        if (!amount) {
+          return;
+        }
+        if (state.additionalDetailsIndex === null) {
+          state.additionalDetailsIndex = 0;
+        } else if (state.additionalDetailsIndex >= amount - 1) {
+          state.additionalDetailsIndex = null;
+        } else {
+          state.additionalDetailsIndex += 1;
+        }
+      }
+    },
+    setAdditionalDetailsIndex: (
+      state,
+      action: PayloadAction<number | null>,
+    ) => {
+      state.additionalDetailsIndex = action.payload;
+    },
   },
 });
 
@@ -107,6 +135,8 @@ export const {
   removeCCHighlight,
   setDelayedActivation,
   toggleShowCoordinates,
+  setAdditionalDetailsIndex,
+  incrementAdditionalDetailsIndex,
 } = mainSlice.actions;
 
 export const store = configureStore({

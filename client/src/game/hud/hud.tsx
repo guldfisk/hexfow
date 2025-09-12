@@ -9,7 +9,6 @@ import {
   Unit,
 } from "../../interfaces/gameState.ts";
 import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
-import { getImageUrl } from "../../image/images.ts";
 import { DelayedActivation, MenuData } from "../actions/interface.ts";
 import { menuActionSpacers, menuDescribers } from "../actions/menues.ts";
 import { ccToKey } from "../geometry.ts";
@@ -20,12 +19,8 @@ import {
   store,
 } from "../state/store.ts";
 import { getBaseActionSpace } from "../actions/actionSpace.ts";
-import { traverseStatuses } from "../../components/statuses.ts";
-import {
-  StatusDetailView,
-  StatusesDetailView,
-} from "../../components/statusDetails.tsx";
-import { UnitDetailsView } from "../../components/unitDetails.tsx";
+import { getAdditionalDetails } from "../../details/additional.ts";
+import { DetailView } from "../../components/details.tsx";
 
 const LogLineComponentView = ({
   element,
@@ -197,69 +192,6 @@ const LogList = ({ logLines }: { logLines: LogLine[] }) => {
   );
 };
 
-const HexDetailView = ({
-  hex,
-  //   TODO handle this in a non trash way
-  gameObjectDetails,
-  gameState,
-}: {
-  hex: Hex;
-  gameObjectDetails: GameObjectDetails;
-  gameState: GameState;
-}) => {
-  const terrainDetails = gameObjectDetails.terrain[hex.terrain];
-  const relatedStatuses: string[] = [];
-  for (const status of terrainDetails.related_statuses) {
-    if (!relatedStatuses.includes(status)) {
-      relatedStatuses.push(status);
-      traverseStatuses(status, gameObjectDetails, relatedStatuses);
-    }
-  }
-  return (
-    <div>
-      <div
-        style={{
-          fontSize: "18px",
-        }}
-      >
-        {terrainDetails.name}
-      </div>
-      <img
-        src={getImageUrl("terrain", hex.terrain)}
-        className={"terrain-image"}
-      />
-      <div className={"facet-details"}>
-        {hex.visible
-          ? "visible"
-          : "not visible" +
-            (hex.last_visible_round !== null &&
-            gameState.round - hex.last_visible_round > 0
-              ? ` - last visible ${gameState.round - hex.last_visible_round} rounds ago`
-              : "")}
-      </div>
-      {terrainDetails.is_water ||
-      terrainDetails.blocks_vision ||
-      terrainDetails.is_high_ground ? (
-        <div className={"facet-details"}>
-          {terrainDetails.blocks_vision ? <div>Blocks vision</div> : null}
-          {terrainDetails.is_water ? <div>Water</div> : null}
-          {terrainDetails.is_high_ground ? <div>High ground</div> : null}
-        </div>
-      ) : null}
-      {terrainDetails.description ? (
-        <div className={"facet-details"}>{terrainDetails.description}</div>
-      ) : null}
-
-      {relatedStatuses.map((statusIdentifier) => (
-        <StatusDetailView
-          status={null}
-          statusDetails={gameObjectDetails.statuses[statusIdentifier]}
-        />
-      ))}
-    </div>
-  );
-};
-
 const GameInfoView = ({ gameState }: { gameState: GameState }) => (
   <div>
     {gameState.players.map((player) => (
@@ -387,60 +319,6 @@ export const HUD = ({
   // TODO fucking LMAO
   const applicationState = useAppSelector((state) => state);
 
-  let detailView = null;
-  if (
-    applicationState.gameObjectDetails &&
-    applicationState.gameState &&
-    applicationState.detailed
-  ) {
-    if (
-      applicationState.detailed.type == "unit" ||
-      applicationState.detailed.type == "blueprint"
-    ) {
-      detailView = (
-        <UnitDetailsView
-          unit={
-            applicationState.detailed.type == "unit"
-              ? applicationState.detailed.unit
-              : null
-          }
-          details={
-            applicationState.gameObjectDetails.units[
-              applicationState.detailed.type == "unit"
-                ? applicationState.detailed.unit.blueprint
-                : applicationState.detailed.blueprint
-            ]
-          }
-          gameObjectDetails={applicationState.gameObjectDetails}
-        />
-      );
-    } else if (applicationState.detailed.type == "hex") {
-      detailView = (
-        <HexDetailView
-          hex={applicationState.detailed.hex}
-          gameObjectDetails={applicationState.gameObjectDetails}
-          gameState={applicationState.gameState}
-        />
-      );
-    } else if (applicationState.detailed.type == "statuses") {
-      detailView = (
-        <StatusesDetailView
-          statuses={applicationState.detailed.statuses}
-          statusIdentifiers={null}
-          gameObjectDetails={applicationState.gameObjectDetails}
-        />
-      );
-    } else if (applicationState.detailed.type == "statusTypes") {
-      detailView = (
-        <StatusesDetailView
-          statuses={null}
-          statusIdentifiers={applicationState.detailed.statuses}
-          gameObjectDetails={applicationState.gameObjectDetails}
-        />
-      );
-    }
-  }
-
   return (
     <div>
       <div className={"sidebar sidebar-left"}>
@@ -457,8 +335,31 @@ export const HUD = ({
         />
       </div>
 
+      {applicationState.gameObjectDetails &&
+      applicationState.detailed &&
+      applicationState.additionalDetailsIndex !== null ? (
+        <div className={"sidebar sidebar-details"}>
+          <DetailView
+            applicationState={applicationState}
+            detail={
+              getAdditionalDetails(
+                applicationState.detailed,
+                applicationState.gameObjectDetails,
+              )[applicationState.additionalDetailsIndex]
+            }
+            main={false}
+          />
+        </div>
+      ) : null}
+
       <div className={"sidebar sidebar-right"}>
-        <div className={"details-view"}>{detailView}</div>
+        {applicationState.detailed ? (
+          <DetailView
+            applicationState={applicationState}
+            detail={applicationState.detailed}
+            main={true}
+          />
+        ) : null}
       </div>
     </div>
   );

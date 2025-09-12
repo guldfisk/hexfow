@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import functools
 import re
 from abc import ABC
 from typing import Any, ClassVar, Self
@@ -41,18 +42,28 @@ def get_registered_meta():
                 metacls.registry[cls.identifier] = cls
                 if "description" not in attributes and cls.__doc__:
                     cls.description = description_from_docstring(cls.__doc__)
+
+                # TODO
+                def _sub(related_values: list[str], match: re.Match) -> str:
+                    if match.group(1) not in related_values:
+                        related_values.append(match.group(1))
+
+                    return " ".join(e.capitalize() for e in match.group(1).split("_"))
+
                 cls.related_statuses = list(cls.related_statuses)
+                cls.related_units = list(cls.related_units)
                 if cls.description:
-                    # TODO
-                    def _sub(match: re.Match) -> str:
-                        if match.group(1) not in cls.related_statuses:
-                            cls.related_statuses.append(match.group(1))
+                    cls.description = re.sub(
+                        r"<([^<>]+)>",
+                        functools.partial(_sub, cls.related_statuses),
+                        cls.description,
+                    )
+                    cls.description = re.sub(
+                        r"\[([^<>]+)]",
+                        functools.partial(_sub, cls.related_units),
+                        cls.description,
+                    )
 
-                        return " ".join(
-                            e.capitalize() for e in match.group(1).split("_")
-                        )
-
-                    cls.description = re.sub("<([^<>]+)>", _sub, cls.description)
             return cls
 
     return _RegisteredMeta
@@ -64,6 +75,7 @@ class Registered(ABC):
     category: ClassVar[str]
     description: ClassVar[str | None] = None
     related_statuses: ClassVar[list[str]] = []
+    related_units: ClassVar[list[str]] = []
 
     # TODO name
     @classmethod

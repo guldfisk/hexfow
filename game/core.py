@@ -313,6 +313,7 @@ class Facet(HasEffects["Unit"], Registered, ABC, metaclass=get_registered_meta()
             "category": cls.category,
             "description": cls.description,
             "related_statuses": cls.related_statuses,
+            "related_units": cls.related_units,
         }
 
 
@@ -679,6 +680,7 @@ class Status(
             "category": cls.category,
             "description": cls.description,
             "related_statuses": cls.related_statuses,
+            "related_units": cls.related_units,
             "stacking_info": cls.get_stacking_info(),
             "dispellable": cls.dispellable,
         }
@@ -843,6 +845,7 @@ class UnitBlueprint:
             "size": self.size.value,
             "facets": [facet.identifier for facet in self.facets],
             "price": self.price,
+            "max_count": self.max_count,
             "flavor": self.flavor,
         }
 

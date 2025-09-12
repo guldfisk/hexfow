@@ -28,6 +28,19 @@ button {
   right: 0;
   padding: 5px;
 }
+.sidebar-details {
+  right: 420px;
+  padding: 5px;
+}
+
+.details-indicator {
+  position: fixed;
+  bottom: 0;
+  border-radius: 8px;
+  background: #222;
+  padding: 5px;
+  width: 390px;
+}
 
 .main-content {
   height: 100%;
@@ -37,7 +50,7 @@ button {
   background-color: #222;
   padding: 5px;
   color: white;
-    display: flex;
+  display: flex;
   flex-direction: row;
 }
 

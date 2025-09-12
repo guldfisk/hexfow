@@ -9,6 +9,8 @@ import { StrictMode } from "react";
 import { HUD } from "./hud/hud.tsx";
 import { Provider } from "react-redux";
 import {
+  deactivateMenu,
+  incrementAdditionalDetailsIndex,
   receiveGameState,
   renderedGameState,
   store,
@@ -150,6 +152,10 @@ async function main() {
       store.dispatch(toggleShowCoordinates());
     } else if (event.key == "a" && state.delayedActivation) {
       makeDecision({});
+    } else if (event.key == "Escape") {
+      store.dispatch(deactivateMenu());
+    } else if (event.key == "d") {
+      store.dispatch(incrementAdditionalDetailsIndex());
     }
   };
 

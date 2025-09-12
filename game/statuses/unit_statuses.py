@@ -108,8 +108,8 @@ class Shocked(RefreshableMixin, UnitStatus):
 
 class Parasite(UnitStatus):
     """
-    When this unit dies, an exhausted Horror Spawn (3 health, 2 speed, 1 sight, Small, 2 damage melee attack) controlled
-    by the owner of this debuff is spawned on the space this unit occupied. If the space is occupied by an attacker having
+    When this unit dies, an exhausted [horror_spawn] controlled by the owner of this debuff is spawned on
+    the space this unit occupied. If the space is occupied by an attacker having
     killed this unit with a melee attack, it is instead spawned on the space the attacker attacked from.
     """
 

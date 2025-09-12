@@ -1,0 +1,47 @@
+import { HoveredDetails } from "../interfaces/details.ts";
+import { GameObjectDetails } from "../interfaces/gameObjectDetails.ts";
+
+const findRelatedUnits = (
+  blueprintIdentifier: string,
+  gameObjectDetails: GameObjectDetails,
+  seen: string[],
+): string[] => {
+  const ids: string[] = [];
+  for (const facetIdentifier of gameObjectDetails.units[blueprintIdentifier]
+    .facets) {
+    for (const unitIdentifier of gameObjectDetails.facets[facetIdentifier]
+      .related_units) {
+      if (!seen.includes(unitIdentifier)) {
+        ids.push(unitIdentifier);
+        findRelatedUnits(unitIdentifier, gameObjectDetails, seen);
+      }
+    }
+    for (const statusIdentifier of gameObjectDetails.facets[facetIdentifier]
+      .related_statuses) {
+      for (const unitIdentifier of gameObjectDetails.statuses[statusIdentifier]
+        .related_units)
+        if (!seen.includes(unitIdentifier)) {
+          ids.push(unitIdentifier);
+          findRelatedUnits(unitIdentifier, gameObjectDetails, seen);
+        }
+    }
+  }
+  return ids;
+};
+
+export const getAdditionalDetails = (
+  detail: HoveredDetails,
+  gameObjectDetails: GameObjectDetails,
+): HoveredDetails[] => {
+  const details: HoveredDetails[] = [];
+  if (detail.type == "unit" || detail.type == "blueprint") {
+    for (const relatedId of findRelatedUnits(
+      detail.type == "unit" ? detail.unit.blueprint : detail.blueprint,
+      gameObjectDetails,
+      [],
+    )) {
+      details.push({ type: "blueprint", blueprint: relatedId });
+    }
+  }
+  return details;
+};

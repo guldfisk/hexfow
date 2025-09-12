@@ -4,6 +4,7 @@ export interface BaseFacetDetails {
   category: string;
   description: string | null;
   related_statuses: string[];
+  related_units: string[];
 }
 
 export interface AbstractCostAtom {
@@ -75,7 +76,8 @@ export interface UnitDetails {
   energy: number;
   size: number;
   facets: string[];
-  price: number;
+  price: number | null;
+  max_count: number;
   flavor: string | null;
 }
 
@@ -97,6 +99,7 @@ export interface StatusDetails {
   category: StatusCategory;
   description: string | null;
   related_statuses: string[];
+  related_units: string[];
   stacking_info: string;
   dispellable: boolean;
 }

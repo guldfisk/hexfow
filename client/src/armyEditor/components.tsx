@@ -6,6 +6,9 @@ import {
 import { getImageUrl } from "../image/images.ts";
 import { addUnit, hoverUnit, removeUnit, setUnits } from "./state/store.ts";
 import { UnitDetailsView } from "../components/unitDetails.tsx";
+import { DetailsIndicator } from "../details/components.tsx";
+import React from "react";
+import { getAdditionalDetails } from "../details/additional.ts";
 
 const UnitListItem = ({
   unit,
@@ -53,17 +56,47 @@ const DetailsView = ({
   gameObjectDetails: GameObjectDetails | null;
 }) => {
   const detailed = useArmyEditorState((state) => state.detailed);
+  const additionalDetailsIndex = useArmyEditorState(
+    (state) => state.additionalDetailsIndex,
+  );
+
+  if (!gameObjectDetails || !detailed) {
+    return <div className={"sidebar sidebar-right"}></div>;
+  }
 
   return (
-    <div className={"sidebar sidebar-right"}>
-      {gameObjectDetails && detailed ? (
+    <>
+      {gameObjectDetails && additionalDetailsIndex !== null ? (
+        <div className={"sidebar sidebar-details"}>
+          <UnitDetailsView
+            unit={null}
+            details={
+              gameObjectDetails.units[
+                getAdditionalDetails(
+                  { type: "blueprint", blueprint: detailed.identifier },
+                  gameObjectDetails,
+                )[additionalDetailsIndex].blueprint
+              ]
+            }
+            gameObjectDetails={gameObjectDetails}
+          />
+        </div>
+      ) : null}
+      <div className={"sidebar sidebar-right"}>
         <UnitDetailsView
           unit={null}
           details={detailed}
           gameObjectDetails={gameObjectDetails}
         />
-      ) : null}
-    </div>
+        {gameObjectDetails ? (
+          <DetailsIndicator
+            gameObjectDetails={gameObjectDetails}
+            detail={{ type: "blueprint", blueprint: detailed.identifier }}
+            additionalDetailsIndex={additionalDetailsIndex}
+          />
+        ) : null}
+      </div>
+    </>
   );
 };
 
@@ -87,7 +120,8 @@ export const ArmyEditor = ({}: {}) => {
             units={Object.values(state.gameObjectDetails.units).filter(
               (unit) =>
                 !state.armyList.includes(unit.identifier) &&
-                unit.price !== null,
+                unit.price !== null &&
+                unit.max_count > 0,
             )}
             onClick={(unit) => dispatch(addUnit(unit.identifier))}
           />

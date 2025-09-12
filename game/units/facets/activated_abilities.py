@@ -353,7 +353,7 @@ class SpiritProjection(TargetHexActivatedAbility):
 
 class SummonScarab(TargetHexActivatedAbility):
     """
-    Summons an exhausted Scarab (2 health, 2 speed, 1 armor, 1 sight, S, 2 attack damage with 1 movement cost) with <ephemeral> for 3 rounds.
+    Summons an exhausted [scarab] with <ephemeral> for 3 rounds.
     """
 
     cost = MovementCost(2) | EnergyCost(3)
@@ -1017,7 +1017,7 @@ class ShrinkRay(TargetUnitActivatedAbility):
 class AssembleTheDoombot(TargetHexActivatedAbility):
     """
     Applies <doombot_scaffold> to hex.
-    If it already has <doombot_scaffold>, instead dispel it, and spawn an exhausted Doombot 3000 with <ephemeral> for 4 rounds.
+    If it already has <doombot_scaffold>, instead dispel it, and spawn an exhausted [doombot_3000] with <ephemeral> for 4 rounds.
     """
 
     cost = ExclusiveCost() | EnergyCost(4)
@@ -1087,8 +1087,7 @@ class Translocate(ActivatedAbilityFacet[list[Unit | Hex]]):
 
 class WringEssence(ActivatedAbilityFacet):
     """
-    Spawns an exhausted Blood Homunculus (health 6, speed 2, sight 2, medium, 2 damage 1 movement cost melee attack)
-    with 4 health on the selected hex with the same controller as the selected unit.
+    Spawns an exhausted [blood_homunculus] with 4 health on the selected hex with the same controller as the selected unit.
     If a unit is spawned this way, this ability deals 4 pure damage to the selected unit.
     """
 
@@ -1536,7 +1535,7 @@ class SquirtSoot(TargetHexActivatedAbility):
 
 class ConstructTurret(TargetHexActivatedAbility):
     """
-    Summons an exhausted Sentry Turret with <ephemeral> for 4 rounds.
+    Summons an exhausted [sentry_turret] with <ephemeral> for 4 rounds.
     """
 
     cost = MovementCost(2) | EnergyCost(4)

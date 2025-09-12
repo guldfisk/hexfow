@@ -27,9 +27,7 @@ game
     deployment zone detail view during game
 
 ui
-    unit additional details
-        press d to cycle, and specific keys for specific detail types
-
+    facet overflow details
     select facet with num key
     better indication of which facet will be used to perform action
     dedicated movement action icon?
@@ -47,6 +45,7 @@ code
     common target profile interface for effort facets
     proper parallel decisions support (with immediate error handling)
 
+    related units / statuses post parse
     clean up ap
     refactor game.core somehow
     update test framework

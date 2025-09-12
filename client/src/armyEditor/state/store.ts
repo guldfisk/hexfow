@@ -8,16 +8,19 @@ import {
   GameObjectDetails,
   UnitDetails,
 } from "../../interfaces/gameObjectDetails.ts";
+import { getAdditionalDetails } from "../../details/additional.ts";
 
 const mainSlice = createSlice({
   name: "armyEditor",
   initialState: {
     gameObjectDetails: null,
     detailed: null,
+    additionalDetailsIndex: null,
     armyList: [],
   } as {
     gameObjectDetails: GameObjectDetails | null;
     detailed: UnitDetails | null;
+    additionalDetailsIndex: number | null;
     armyList: string[];
   },
   reducers: {
@@ -40,6 +43,25 @@ const mainSlice = createSlice({
     },
     hoverUnit: (state, action: PayloadAction<UnitDetails>) => {
       state.detailed = action.payload;
+      state.additionalDetailsIndex = null;
+    },
+    incrementAdditionalDetailsIndex: (state) => {
+      if (state.gameObjectDetails && state.detailed) {
+        const amount = getAdditionalDetails(
+          { type: "blueprint", blueprint: state.detailed.identifier },
+          state.gameObjectDetails,
+        ).length;
+        if (!amount) {
+          return;
+        }
+        if (state.additionalDetailsIndex === null) {
+          state.additionalDetailsIndex = 0;
+        } else if (state.additionalDetailsIndex >= amount - 1) {
+          state.additionalDetailsIndex = null;
+        } else {
+          state.additionalDetailsIndex += 1;
+        }
+      }
     },
   },
 });
@@ -47,6 +69,7 @@ const mainSlice = createSlice({
 export const {
   receivedGameObjectDetails,
   hoverUnit,
+  incrementAdditionalDetailsIndex,
   setUnits,
   addUnit,
   removeUnit,
