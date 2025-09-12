@@ -1,4 +1,4 @@
-from game.core import Hex, Terrain, TerrainProtectionRequest, Unit
+from game.core import GS, Hex, Terrain, TerrainProtectionRequest, Unit
 from game.effects.modifiers import ForestStealthModifier
 from game.effects.triggers import BurnOnCleanup, BurnOnWalkIn
 from game.values import DamageType, Size
@@ -9,8 +9,8 @@ class Plains(Terrain): ...
 
 class Forest(Terrain):
     """
-    1/2/2 melee/ranged/aoe protection for small and medium units.
     1 move in penalty.
+    1 terrain protection for small and medium units.
     Small units have stealth.
     """
 
@@ -21,10 +21,11 @@ class Forest(Terrain):
 
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
         if request.unit.size.g() < Size.LARGE:
-            if request.damage_signature.type in (DamageType.RANGED, DamageType.AOE):
-                return 2
-            if request.damage_signature.type == DamageType.MELEE:
-                return 1
+            return 1
+            # if request.damage_signature.type in (DamageType.RANGED, DamageType.AOE):
+            #     return 2
+            # if request.damage_signature.type == DamageType.MELEE:
+            #     return 1
 
         # if request.damage_signature.type in (DamageType.RANGED, DamageType.AOE):
         #     return 1
@@ -51,12 +52,15 @@ class Shrubs(Terrain):
 
 class Hills(Terrain):
     """
-    +1 move in cost for units moving in from non high-ground spaces (can still move in with 1 movement point if it's the first action).
-    +1 terrain protection against attacks from units not on high-ground.
+    1 move in penalty for units not moving in from high-ground.
+    1 terrain protection against attacks from units not on high-ground.
     Blocks vision for units not on high-ground.
     """
 
     is_high_ground = True
+
+    def get_move_in_penalty_for(self, unit: Unit) -> int:
+        return 0 if GS.map.hex_off(unit).terrain.is_high_ground else 1
 
 
 class Water(Terrain):

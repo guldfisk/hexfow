@@ -1351,11 +1351,11 @@ class Hex(Modifiable, HasStatuses["HexStatus", "HexStatusSignature"], Serializab
 
     @modifiable
     def get_move_in_cost_for(self, unit: Unit) -> int:
-        if (
-            self.terrain.is_high_ground
-            and not GS.map.hex_off(unit).terrain.is_high_ground
-        ):
-            return 2
+        # if (
+        #     self.terrain.is_high_ground
+        #     and not GS.map.hex_off(unit).terrain.is_high_ground
+        # ):
+        #     return 2
         return 1
 
     @modifiable
