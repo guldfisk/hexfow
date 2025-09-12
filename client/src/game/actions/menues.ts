@@ -1,8 +1,8 @@
 import { GameState, Hex, TreeNode } from "../../interfaces/gameState.ts";
-import { getBaseActions, getUnitsOfHexes } from "./actionSpace.ts";
+import { getBaseActions, getUnitIdHexMap } from "./actionSpace.ts";
 import {
   ActionSpace,
-  ArrangeArmyMenu, BaseMenuData,
+  ArrangeArmyMenu,
   ConeMenu,
   ConsecutiveAdjacentHexesMenu,
   HexActions,
@@ -13,6 +13,7 @@ import {
   NOfHexesMenu,
   NOfUnitsMenu,
   RadiatingLineMenu,
+  TakeAction,
   TreeMenu,
   TriHexMenu,
 } from "./interface.ts";
@@ -42,7 +43,7 @@ import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
 const getArrangeArmiesActionSpace = (
   gameState: GameState,
   gameObjectDetails: GameObjectDetails,
-  takeAction: (body: { [key: string]: any }) => void,
+  takeAction: TakeAction,
   menu: ArrangeArmyMenu,
 ): ActionSpace => {
   const positionsMap: { [key: string]: string } = Object.fromEntries(
@@ -55,7 +56,7 @@ const getArrangeArmiesActionSpace = (
       {
         actions:
           !(menu.swappingPosition && ccEquals(hex.cc, menu.swappingPosition)) &&
-          menu.decisionPoint.payload.deploymentZone.some((v) =>
+          menu.decisionPoint.payload.deployment_zone.some((v) =>
             ccEquals(v, hex.cc),
           ) &&
           !menu.submitted
@@ -130,7 +131,7 @@ const getArrangeArmiesDescription = (
 const getNOfHexesActionSpace = (
   gameState: GameState,
   gameObjectDetails: GameObjectDetails,
-  takeAction: (body: { [key: string]: any }) => void,
+  takeAction: TakeAction,
   menu: NOfHexesMenu,
 ): ActionSpace => {
   const hexActions: { [key: string]: HexActions } = Object.fromEntries(
@@ -148,7 +149,9 @@ const getNOfHexesActionSpace = (
           menu.targetProfile.values.labels[menu.selectedIndexes.length],
         do: () => {
           const selectedIndexes = menu.selectedIndexes.concat([idx]);
-          if (selectedIndexes.length >= menu.targetProfile.values.selectCount) {
+          if (
+            selectedIndexes.length >= menu.targetProfile.values.select_count
+          ) {
             takeAction({
               index: menu.optionIndex,
               target: {
@@ -167,8 +170,8 @@ const getNOfHexesActionSpace = (
   return {
     hexActions,
     buttonAction:
-      menu.targetProfile.values.minCount !== null &&
-      menu.selectedIndexes.length >= menu.targetProfile.values.minCount
+      menu.targetProfile.values.min_count !== null &&
+      menu.selectedIndexes.length >= menu.targetProfile.values.min_count
         ? {
             description: "finish selection",
             do: () => {
@@ -195,10 +198,10 @@ const getNOfHexesDescription = (
 const getNOfUnitsActionSpace = (
   gameState: GameState,
   gameObjectDetails: GameObjectDetails,
-  takeAction: (body: { [key: string]: any }) => void,
+  takeAction: TakeAction,
   menu: NOfUnitsMenu,
 ): ActionSpace => {
-  const unitHexes: { [key: string]: Hex } = getUnitsOfHexes(gameState);
+  const unitHexes: { [key: string]: Hex } = getUnitIdHexMap(gameState);
   const hexActions: { [key: string]: HexActions } = Object.fromEntries(
     gameState.map.hexes.map((hex) => [
       ccToKey(hex.cc),
@@ -214,7 +217,9 @@ const getNOfUnitsActionSpace = (
           menu.targetProfile.values.labels[menu.selectedUnits.length],
         do: () => {
           const selectedUnitIds = menu.selectedUnits.concat([unit.id]);
-          if (selectedUnitIds.length >= menu.targetProfile.values.selectCount) {
+          if (
+            selectedUnitIds.length >= menu.targetProfile.values.select_count
+          ) {
             takeAction({
               index: menu.optionIndex,
               target: {
@@ -239,8 +244,8 @@ const getNOfUnitsActionSpace = (
   return {
     hexActions,
     buttonAction:
-      menu.targetProfile.values.minCount !== null &&
-      menu.selectedUnits.length >= menu.targetProfile.values.minCount
+      menu.targetProfile.values.min_count !== null &&
+      menu.selectedUnits.length >= menu.targetProfile.values.min_count
         ? {
             description: "finish selection",
             do: () => {
@@ -271,10 +276,10 @@ const getNOfUnitsDescription = (
 const getTreeActionSpace = (
   gameState: GameState,
   gameObjectDetails: GameObjectDetails,
-  takeAction: (body: { [key: string]: any }) => void,
+  takeAction: TakeAction,
   menu: TreeMenu,
 ): ActionSpace => {
-  const unitHexes: { [key: string]: Hex } = getUnitsOfHexes(gameState);
+  const unitHexes: { [key: string]: Hex } = getUnitIdHexMap(gameState);
   const hexActions: { [key: string]: HexActions } = Object.fromEntries(
     gameState.map.hexes.map((hex) => [
       ccToKey(hex.cc),
@@ -282,7 +287,7 @@ const getTreeActionSpace = (
     ]),
   );
 
-  let currentNode = menu.targetProfile.values.rootNode;
+  let currentNode = menu.targetProfile.values.root_node;
   for (const idx of menu.selectedIndexes) {
     const [treeOption, child] = currentNode.options[idx];
     hexActions[
@@ -329,7 +334,7 @@ const getTreeDescription = (
   gameObjectDetails: GameObjectDetails,
   menu: TreeMenu,
 ): string => {
-  let currentNode = menu.targetProfile.values.rootNode;
+  let currentNode = menu.targetProfile.values.root_node;
   for (const idx of menu.selectedIndexes) {
     const [treeOption, child] = currentNode.options[idx];
     currentNode = child as TreeNode;
@@ -340,7 +345,7 @@ const getTreeDescription = (
 const getConsecutiveAdjacentHexesActionSpace = (
   gameState: GameState,
   gameObjectDetails: GameObjectDetails,
-  takeAction: (body: { [key: string]: any }) => void,
+  takeAction: TakeAction,
   menu: ConsecutiveAdjacentHexesMenu,
 ): ActionSpace => {
   const hexActions: { [key: string]: HexActions } = Object.fromEntries(
@@ -354,13 +359,13 @@ const getConsecutiveAdjacentHexesActionSpace = (
       },
     ]),
   );
-  const options = getNeighborsOffCC(menu.targetProfile.values.adjacentTo);
+  const options = getNeighborsOffCC(menu.targetProfile.values.adjacent_to);
   const highlighted = menu.hovering
     ? hexArc(
         1,
-        menu.targetProfile.values.armLength,
+        menu.targetProfile.values.arm_length,
         menu.hovering,
-        menu.targetProfile.values.adjacentTo,
+        menu.targetProfile.values.adjacent_to,
       ).map(ccToKey)
     : [];
 
@@ -395,7 +400,7 @@ const getConsecutiveAdjacentHexesDescription = (
 const getHexHexesActionSpace = (
   gameState: GameState,
   gameObjectDetails: GameObjectDetails,
-  takeAction: (body: { [key: string]: any }) => void,
+  takeAction: TakeAction,
   menu: HexHexesMenu,
 ): ActionSpace => {
   const hexActions: { [key: string]: HexActions } = Object.fromEntries(
@@ -452,7 +457,7 @@ interface CornerOption {
 const getTriHexActionSpace = (
   gameState: GameState,
   gameObjectDetails: GameObjectDetails,
-  takeAction: (body: { [key: string]: any }) => void,
+  takeAction: TakeAction,
   menu: TriHexMenu,
 ): ActionSpace => {
   const cornerOptions: { [key: string]: CornerOption[] } = Object.fromEntries(
@@ -531,7 +536,7 @@ const getTriHexDescription = (
 const getHexRingActionSpace = (
   gameState: GameState,
   gameObjectDetails: GameObjectDetails,
-  takeAction: (body: { [key: string]: any }) => void,
+  takeAction: TakeAction,
   menu: HexRingMenu,
 ): ActionSpace => {
   const hexActions: { [key: string]: HexActions } = Object.fromEntries(
@@ -582,7 +587,7 @@ const getHexRingDescription = (
 const getRadiatingLineActionSpace = (
   gameState: GameState,
   gameObjectDetails: GameObjectDetails,
-  takeAction: (body: { [key: string]: any }) => void,
+  takeAction: TakeAction,
   menu: RadiatingLineMenu,
 ): ActionSpace => {
   const highlightedCCs = menu.hovering
@@ -591,7 +596,7 @@ const getRadiatingLineActionSpace = (
           addCCs(
             menu.hovering,
             constMultCC(
-              subCCs(menu.hovering, menu.targetProfile.values.fromHex),
+              subCCs(menu.hovering, menu.targetProfile.values.from_hex),
               i,
             ),
           ),
@@ -612,7 +617,7 @@ const getRadiatingLineActionSpace = (
     ]),
   );
 
-  for (const [targetIdx, cc] of menu.targetProfile.values.toHexes.entries()) {
+  for (const [targetIdx, cc] of menu.targetProfile.values.to_hexes.entries()) {
     hexActions[ccToKey(cc)] = {
       actions: [
         {
@@ -649,22 +654,25 @@ const getRadiatingLineDescription = (
 const getConeActionSpace = (
   gameState: GameState,
   gameObjectDetails: GameObjectDetails,
-  takeAction: (body: { [key: string]: any }) => void,
+  takeAction: TakeAction,
   menu: ConeMenu,
 ): ActionSpace => {
   let highlightedCCs: CC[] = [];
   if (menu.hovering) {
-    const difference = subCCs(menu.hovering, menu.targetProfile.values.fromHex);
+    const difference = subCCs(
+      menu.hovering,
+      menu.targetProfile.values.from_hex,
+    );
     for (const [
       idx,
       armLength,
-    ] of menu.targetProfile.values.armLengths.entries()) {
+    ] of menu.targetProfile.values.arm_lengths.entries()) {
       highlightedCCs = highlightedCCs.concat(
         hexArc(
           idx + 1,
           armLength,
           addCCs(menu.hovering, constMultCC(difference, idx)),
-          menu.targetProfile.values.fromHex,
+          menu.targetProfile.values.from_hex,
         ),
       );
     }
@@ -685,7 +693,7 @@ const getConeActionSpace = (
     ]),
   );
 
-  for (const [targetIdx, cc] of menu.targetProfile.values.toHexes.entries()) {
+  for (const [targetIdx, cc] of menu.targetProfile.values.to_hexes.entries()) {
     hexActions[ccToKey(cc)] = {
       actions: [
         {
@@ -722,10 +730,17 @@ const getConeDescription = (
 const getListMenuActionSpace = (
   gameState: GameState,
   gameObjectDetails: GameObjectDetails,
-  takeAction: (body: { [key: string]: any }) => void,
+  takeAction: TakeAction,
   menu: ListMenu,
 ): ActionSpace => {
-  const actions = getBaseActions(gameState, takeAction, gameState.decision);
+  const actions = getBaseActions(
+    gameState,
+    takeAction,
+    gameState.decision,
+    gameState.active_unit_context,
+    // TODO yikes
+    store.getState().delayedActivation,
+  );
   return {
     hexActions: Object.fromEntries(
       gameState.map.hexes.map((hex) => [
@@ -754,7 +769,7 @@ export const menuActionSpacers: {
   [key: string]: (
     gameState: GameState,
     gameObjectDetails: GameObjectDetails,
-    takeAction: (body: { [key: string]: any }) => void,
+    takeAction: TakeAction,
     menu: MenuData,
   ) => ActionSpace;
 } = {

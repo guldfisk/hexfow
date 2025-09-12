@@ -13,7 +13,6 @@ map editor
     change meta info, aka point goals, and army max_unit counts and values.
 
 game
-    delayed unit activation ("undo activation")
     round restricted objectives
 
     corpses
@@ -42,6 +41,7 @@ ui
     linked statuses display
 
 code
+    clean up action space interface
     don't send no change game state updates
 
     common target profile interface for effort facets

@@ -10,9 +10,19 @@ import {
   RadiatingLine,
   Tree,
   TriHex,
+  Unit,
   UnitOption,
 } from "../../interfaces/gameState.ts";
 import { CC, Corner, RC } from "../../interfaces/geometry.ts";
+
+export type TakeAction = (body: { [key: string]: any }) => void;
+
+export interface DelayedActivation {
+  optionIndex: number;
+  targetIndex: number;
+  unit: Unit;
+  options: UnitOption[];
+}
 
 export type selectionIcon =
   | "ranged_attack"

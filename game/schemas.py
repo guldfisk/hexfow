@@ -11,9 +11,15 @@ def no_duplicates(value: list[int]) -> list[int]:
 class DecisionValidationError(Exception): ...
 
 
+class PremoveSchema(BaseModel):
+    for_options: list[dict[str, Any]]
+    payload: dict[str, Any]
+
+
 class DecisionResponseSchema(BaseModel):
     count: int
     payload: dict[str, Any]
+    premove: PremoveSchema | None = None
 
 
 class EmptySchema(BaseModel): ...

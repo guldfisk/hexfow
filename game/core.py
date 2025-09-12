@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import dataclasses
+import json
 import re
 import threading
 from abc import ABC, abstractmethod
@@ -37,6 +38,7 @@ from game.schemas import (
     DeployArmyDecisionPointSchema,
     EmptySchema,
     IndexSchema,
+    PremoveSchema,
     SelectOptionAtHexDecisionPointSchema,
     SelectOptionDecisionPointSchema,
 )
@@ -1852,6 +1854,7 @@ class Connection(ABC):
         self.player = player
 
         self._game_state_counter: int = 0
+        self._premove: PremoveSchema | None = None
         self._waiting_for_decision: DecisionPoint | None = None
 
     def send_error(self, error_type: str, error_detail: Any = None) -> None:
@@ -1870,11 +1873,15 @@ class Connection(ABC):
             if response.count != self._game_state_counter:
                 self.send_error("invalid_response_count")
                 return None
-            return self._waiting_for_decision.parse_response(response.payload)
+            result = self._waiting_for_decision.parse_response(response.payload)
         except ValidationError as e:
             self.send_error("invalid_decision", e.errors())
         except DecisionValidationError as e:
             self.send_error("invalid_decision", e.args[0])
+        else:
+            if response.premove:
+                self._premove = response.premove
+            return result
 
     @abstractmethod
     def send(self, values: Mapping[str, Any]) -> None: ...
@@ -1891,6 +1898,7 @@ class Connection(ABC):
     def send_game_state(
         self, game_state: Mapping[str, Any], decision_point: DecisionPoint | None = None
     ) -> None:
+        self._premove = None
         self._game_state_counter += 1
         self._waiting_for_decision = decision_point
         self.send(self.make_game_state_frame(game_state, decision_point))
@@ -1903,6 +1911,21 @@ class Connection(ABC):
         game_state: Mapping[str, Any],
         decision_point: DecisionPoint[G_decision_result],
     ) -> G_decision_result:
+        if (
+            self._premove
+            and isinstance(decision_point, SelectOptionDecisionPoint)
+            and self._premove.for_options
+            == json.loads(json.dumps(game_state["decision"]["payload"]["options"]))
+        ):
+            try:
+                validated_premove = decision_point.parse_response(self._premove.payload)
+            except ValidationError as e:
+                self.send_error("invalid_decision", e.errors())
+            except DecisionValidationError as e:
+                self.send_error("invalid_decision", e.args[0])
+            else:
+                self._premove = None
+                return validated_premove
         self.send_game_state(game_state, decision_point)
         return self.wait_for_response()
 

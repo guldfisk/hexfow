@@ -46,8 +46,8 @@ export const UnitDetailsView = ({
         {unit ? (
           <>
             <div>
-              health: {unit.maxHealth - unit.damage}/
-              <ModifiedValue current={unit.maxHealth} base={details.health} />
+              health: {unit.max_health - unit.damage}/
+              <ModifiedValue current={unit.max_health} base={details.health} />
             </div>
             <div>
               speed: <ModifiedValue current={unit.speed} base={details.speed} />
@@ -61,10 +61,10 @@ export const UnitDetailsView = ({
                 <ModifiedValue current={unit.armor} base={details.armor} />
               </div>
             ) : null}
-            {unit.energy != 0 || unit.maxEnergy != 0 ? (
+            {unit.energy != 0 || unit.max_energy != 0 ? (
               <div>
                 energy: {unit.energy}/
-                <ModifiedValue current={unit.maxEnergy} base={details.energy} />
+                <ModifiedValue current={unit.max_energy} base={details.energy} />
               </div>
             ) : null}
           </>

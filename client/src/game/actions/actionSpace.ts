@@ -1,4 +1,5 @@
 import {
+  ActiveUnitContext,
   Cone,
   ConsecutiveAdjacentHexes,
   Decision,
@@ -11,28 +12,55 @@ import {
   RadiatingLine,
   Tree,
   TriHex,
-  UnitOption,
+  Unit,
 } from "../../interfaces/gameState.ts";
 import { ccFromKey, ccToKey } from "../geometry.ts";
-import { Action, ActionSpace } from "./interface.ts";
-import { activateMenu, store } from "../state/store.ts";
+import {
+  Action,
+  ActionSpace,
+  DelayedActivation,
+  TakeAction,
+} from "./interface.ts";
+import { activateMenu, setDelayedActivation, store } from "../state/store.ts";
 import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
 import { loadArmy } from "./load.ts";
 
-export const getUnitsOfHexes = (gameState: GameState): { [key: string]: Hex } =>
+export const getUnitIdHexMap = (gameState: GameState): { [key: string]: Hex } =>
   Object.fromEntries(
     gameState.map.hexes
       .filter((h) => h.unit && h.visible)
       .map((h) => [h.unit.id, h]),
   );
+export const getUnitIdMap = (
+  gameState: GameState,
+): { [key: string]: { unit: Unit; hex: Hex } } =>
+  Object.fromEntries(
+    gameState.map.hexes
+      .filter((h) => h.unit && h.visible)
+      .map((h) => [h.unit.id, { unit: h.unit, hex: h }]),
+  );
 
 export const getBaseActions = (
   gameState: GameState,
-  takeAction: (body: { [key: string]: any }) => void,
+  takeAction: TakeAction,
   // TODO
   decision: Decision | null,
+  activeUnitContext: ActiveUnitContext | null,
+  delayedActivation: DelayedActivation | null,
 ): { [key: string]: Action[] } => {
-  const unitHexes: { [key: string]: Hex } = getUnitsOfHexes(gameState);
+  if (delayedActivation) {
+    decision = {
+      type: "SelectOptionDecisionPoint",
+      explanation: "preview",
+      payload: { options: delayedActivation.options },
+    };
+    activeUnitContext = {
+      unit: delayedActivation.unit,
+      movement_points: 1,
+    };
+  }
+
+  const unitHexes: { [key: string]: Hex } = getUnitIdHexMap(gameState);
 
   const actions: { [key: string]: Action[] } = Object.fromEntries(
     gameState.map.hexes.map((hex) => [ccToKey(hex.cc), []]),
@@ -40,11 +68,11 @@ export const getBaseActions = (
 
   if (decision && decision["type"] == "SelectOptionDecisionPoint") {
     for (const [idx, option] of decision.payload.options.entries()) {
-      if (option.targetProfile.type == "OneOfUnits") {
+      if (option.target_profile.type == "OneOfUnits") {
         for (const [
           targetIdx,
           unit,
-        ] of option.targetProfile.values.units.entries()) {
+        ] of option.target_profile.values.units.entries()) {
           actions[ccToKey(unitHexes[unit["id"]].cc)].push({
             type: option.values?.facet?.category || "generic",
             description: option.values?.facet?.name || "select unit",
@@ -57,11 +85,11 @@ export const getBaseActions = (
               }),
           });
         }
-      } else if (option.targetProfile.type == "OneOfHexes") {
+      } else if (option.target_profile.type == "OneOfHexes") {
         for (const [
           targetIdx,
           cc,
-        ] of option.targetProfile.values.options.entries()) {
+        ] of option.target_profile.values.options.entries()) {
           actions[ccToKey(cc)].push({
             type: option.values?.facet?.category || "generic",
             sourceOption: option,
@@ -78,50 +106,50 @@ export const getBaseActions = (
               }),
           });
         }
-      } else if (option.targetProfile.type == "NOfHexes") {
+      } else if (option.target_profile.type == "NOfHexes") {
         for (const [
           hexIdx,
           hex,
-        ] of option.targetProfile.values.hexes.entries()) {
+        ] of option.target_profile.values.hexes.entries()) {
           actions[ccToKey(hex.cc)].push({
             type: "activated_ability",
             description:
               option.values?.facet?.name ||
-              (option.targetProfile as NOfHexes).values.labels[0],
+              (option.target_profile as NOfHexes).values.labels[0],
             do: () =>
               store.dispatch(
                 activateMenu({
                   type: "NOfHexes",
                   selectedIndexes: [hexIdx],
-                  targetProfile: option.targetProfile as NOfHexes,
+                  targetProfile: option.target_profile as NOfHexes,
                   optionIndex: idx,
                 }),
               ),
           });
         }
-      } else if (option.targetProfile.type == "NOfUnits") {
-        for (const unit of option.targetProfile.values.units) {
+      } else if (option.target_profile.type == "NOfUnits") {
+        for (const unit of option.target_profile.values.units) {
           actions[ccToKey(unitHexes[unit.id].cc)].push({
             type: "activated_ability",
             description:
               option.values?.facet?.name ||
-              (option.targetProfile as NOfUnits).values.labels[0],
+              (option.target_profile as NOfUnits).values.labels[0],
             do: () =>
               store.dispatch(
                 activateMenu({
                   type: "NOfUnits",
                   selectedUnits: [unit.id],
-                  targetProfile: option.targetProfile as NOfUnits,
+                  targetProfile: option.target_profile as NOfUnits,
                   optionIndex: idx,
                 }),
               ),
           });
         }
-      } else if (option.targetProfile.type == "Tree") {
+      } else if (option.target_profile.type == "Tree") {
         for (const [
           targetIdx,
           [treeOption, child],
-        ] of option.targetProfile.values.rootNode.options.entries()) {
+        ] of option.target_profile.values.root_node.options.entries()) {
           actions[
             ccToKey(
               treeOption.type == "unit"
@@ -132,25 +160,23 @@ export const getBaseActions = (
             type: "activated_ability",
             description:
               option.values?.facet?.name ||
-              option.targetProfile.values.rootNode.label,
+              option.target_profile.values.root_node.label,
             do: () =>
               store.dispatch(
                 activateMenu({
                   type: "Tree",
                   optionIndex: idx,
-                  targetProfile: option.targetProfile as Tree,
+                  targetProfile: option.target_profile as Tree,
                   selectedIndexes: [targetIdx],
                 }),
               ),
           });
         }
       } else if (
-        option.targetProfile.type == "ConsecutiveAdjacentHexes" &&
-        gameState.activeUnitContext
+        option.target_profile.type == "ConsecutiveAdjacentHexes" &&
+        activeUnitContext
       ) {
-        actions[
-          ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
-        ].push({
+        actions[ccToKey(unitHexes[activeUnitContext.unit.id].cc)].push({
           type: "menu",
           description: option.values?.facet?.name || "select hexes",
           do: () =>
@@ -158,18 +184,17 @@ export const getBaseActions = (
               activateMenu({
                 type: "ConsecutiveAdjacentHexes",
                 optionIndex: idx,
-                targetProfile: option.targetProfile as ConsecutiveAdjacentHexes,
+                targetProfile:
+                  option.target_profile as ConsecutiveAdjacentHexes,
                 hovering: null,
               }),
             ),
         });
       } else if (
-        option.targetProfile.type == "HexHexes" &&
-        gameState.activeUnitContext
+        option.target_profile.type == "HexHexes" &&
+        activeUnitContext
       ) {
-        actions[
-          ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
-        ].push({
+        actions[ccToKey(unitHexes[activeUnitContext.unit.id].cc)].push({
           type: "menu",
           description: option.values?.facet?.name || "select hexes",
           do: () =>
@@ -177,18 +202,13 @@ export const getBaseActions = (
               activateMenu({
                 type: "HexHexes",
                 optionIndex: idx,
-                targetProfile: option.targetProfile as HexHexes,
+                targetProfile: option.target_profile as HexHexes,
                 hovering: null,
               }),
             ),
         });
-      } else if (
-        option.targetProfile.type == "TriHex" &&
-        gameState.activeUnitContext
-      ) {
-        actions[
-          ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
-        ].push({
+      } else if (option.target_profile.type == "TriHex" && activeUnitContext) {
+        actions[ccToKey(unitHexes[activeUnitContext.unit.id].cc)].push({
           type: "menu",
           description: option.values?.facet?.name || "select hexes",
           do: () =>
@@ -196,18 +216,13 @@ export const getBaseActions = (
               activateMenu({
                 type: "TriHex",
                 optionIndex: idx,
-                targetProfile: option.targetProfile as TriHex,
+                targetProfile: option.target_profile as TriHex,
                 hovering: null,
               }),
             ),
         });
-      } else if (
-        option.targetProfile.type == "HexRing" &&
-        gameState.activeUnitContext
-      ) {
-        actions[
-          ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
-        ].push({
+      } else if (option.target_profile.type == "HexRing" && activeUnitContext) {
+        actions[ccToKey(unitHexes[activeUnitContext.unit.id].cc)].push({
           type: "menu",
           description: option.values?.facet?.name || "select hexes",
           do: () =>
@@ -215,18 +230,16 @@ export const getBaseActions = (
               activateMenu({
                 type: "HexRing",
                 optionIndex: idx,
-                targetProfile: option.targetProfile as HexRing,
+                targetProfile: option.target_profile as HexRing,
                 hovering: null,
               }),
             ),
         });
       } else if (
-        option.targetProfile.type == "RadiatingLine" &&
-        gameState.activeUnitContext
+        option.target_profile.type == "RadiatingLine" &&
+        activeUnitContext
       ) {
-        actions[
-          ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
-        ].push({
+        actions[ccToKey(unitHexes[activeUnitContext.unit.id].cc)].push({
           type: "menu",
           description: option.values?.facet?.name || "select hexes",
           do: () =>
@@ -234,18 +247,13 @@ export const getBaseActions = (
               activateMenu({
                 type: "RadiatingLine",
                 optionIndex: idx,
-                targetProfile: option.targetProfile as RadiatingLine,
+                targetProfile: option.target_profile as RadiatingLine,
                 hovering: null,
               }),
             ),
         });
-      } else if (
-        option.targetProfile.type == "Cone" &&
-        gameState.activeUnitContext
-      ) {
-        actions[
-          ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
-        ].push({
+      } else if (option.target_profile.type == "Cone" && activeUnitContext) {
+        actions[ccToKey(unitHexes[activeUnitContext.unit.id].cc)].push({
           type: "menu",
           description: option.values?.facet?.name || "select hexes",
           do: () =>
@@ -253,19 +261,17 @@ export const getBaseActions = (
               activateMenu({
                 type: "Cone",
                 optionIndex: idx,
-                targetProfile: option.targetProfile as Cone,
+                targetProfile: option.target_profile as Cone,
                 hovering: null,
               }),
             ),
         });
       } else if (
         option.type == "EffortOption" &&
-        option.targetProfile.type == "NoTarget" &&
-        gameState.activeUnitContext
+        option.target_profile.type == "NoTarget" &&
+        activeUnitContext
       ) {
-        actions[
-          ccToKey(unitHexes[gameState.activeUnitContext.unit.id].cc)
-        ].push({
+        actions[ccToKey(unitHexes[activeUnitContext.unit.id].cc)].push({
           type: "activated_ability",
           description: option.values?.facet?.name || "activate ability",
           do: () => takeAction({ index: idx, target: {} }),
@@ -278,26 +284,49 @@ export const getBaseActions = (
 
 export const getBaseActionSpace = (
   gameState: GameState,
-  takeAction: (body: { [key: string]: any }) => void,
+  takeAction: TakeAction,
   gameObjectDetails: GameObjectDetails,
   decision: Decision | null,
+  activeUnitContext: ActiveUnitContext | null,
+  delayedActivation: DelayedActivation | null,
 ): ActionSpace => {
   if (decision && decision.type == "SelectOptionDecisionPoint") {
-    const actions = getBaseActions(gameState, takeAction, decision);
-
-    const previewMap: { [key: string]: UnitOption[] } = {};
-
-    const activationOption = decision.payload.options.find(
-      (option) => option.type == "ActivateUnitOption",
+    const actions = getBaseActions(
+      gameState,
+      takeAction,
+      decision,
+      activeUnitContext,
+      delayedActivation,
     );
-    if (
-      activationOption &&
-      activationOption.targetProfile.type == "OneOfUnits"
-    ) {
-      const unitHexes: { [key: string]: Hex } = getUnitsOfHexes(gameState);
-      for (const unit of activationOption.targetProfile.values.units) {
-        previewMap[ccToKey(unitHexes[unit["id"]].cc)] =
-          activationOption.values.actionsPreview[unit["id"]];
+
+    if (!delayedActivation) {
+      for (const [idx, option] of decision.payload.options.entries()) {
+        if (
+          option.type == "ActivateUnitOption" &&
+          option.target_profile.type == "OneOfUnits"
+        ) {
+          const unitIdMap = getUnitIdMap(gameState);
+          for (const [
+            targetIdx,
+            unit,
+          ] of option.target_profile.values.units.entries()) {
+            actions[ccToKey(unitIdMap[unit.id].hex.cc)] = [
+              {
+                type: "generic",
+                description: "activate unit",
+                do: () =>
+                  store.dispatch(
+                    setDelayedActivation({
+                      optionIndex: idx,
+                      targetIndex: targetIdx,
+                      unit: unitIdMap[unit.id].unit,
+                      options: option.values.actions_preview[unit.id],
+                    }),
+                  ),
+              },
+            ];
+          }
+        }
       }
     }
 
@@ -332,7 +361,6 @@ export const getBaseActionSpace = (
             : {
                 actions: _actions,
                 highlighted: false,
-                previewOptions: previewMap[cc],
               },
         ]),
       ),

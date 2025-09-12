@@ -15,7 +15,7 @@ export const loadArmy = (
         armyContent
           .split("\n")
           .filter((id) => id in gameObjectDetails.units)
-          .map((name, idx) => [name, decision.payload.deploymentZone[idx]]),
+          .map((name, idx) => [name, decision.payload.deployment_zone[idx]]),
       ),
       swappingPosition: null,
       submitted: false,

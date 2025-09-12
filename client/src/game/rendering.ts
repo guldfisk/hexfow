@@ -29,13 +29,7 @@ import {
 } from "./geometry.ts";
 import { getTexture, textureMap } from "./textures.ts";
 import { range } from "./utils/range.ts";
-import {
-  AppState,
-  deactivateMenu,
-  hoverDetail,
-  setActionPreview,
-  store,
-} from "./state/store.ts";
+import { AppState, deactivateMenu, hoverDetail, store } from "./state/store.ts";
 import { getBaseActionSpace } from "./actions/actionSpace.ts";
 import { selectionIcon } from "./actions/interface.ts";
 import { menuActionSpacers } from "./actions/menues.ts";
@@ -307,6 +301,8 @@ export const renderMap = (
           makeDecision,
           state.gameObjectDetails,
           gameState.decision,
+          gameState.active_unit_context,
+          state.delayedActivation,
         )
   ).hexActions;
 
@@ -344,43 +340,21 @@ export const renderMap = (
 
     const actionTriggerZones = [];
 
-    if (state.actionPreview) {
-      for (const [idx, icon] of state.actionPreview[
-        ccToKey(hexData.cc)
-      ].entries()) {
-        const selectionSprite = newSprite(textureMap[selectionIconMap[icon]]);
-        selectionSprite.anchor = 0.5;
-        selectionSprite.alpha = 0.5;
-        hexContainer.addChild(selectionSprite);
-        let mask = newGraphic(
-          dividerFrames[state.actionPreview[ccToKey(hexData.cc)].length - 1][
-            idx
-          ],
-        );
-        hexContainer.addChild(mask);
-        selectionSprite.mask = mask;
-      }
-    }
-
     for (const [idx, action] of (ccToKey(hexData.cc) in actionSpace
       ? actionSpace[ccToKey(hexData.cc)].actions
       : []
     ).entries()) {
-      if (!state.actionPreview) {
-        const selectionSprite = newSprite(
-          textureMap[selectionIconMap[action.type]],
-        );
-        selectionSprite.anchor = 0.5;
-        selectionSprite.alpha = 0.75;
-        hexContainer.addChild(selectionSprite);
-        let mask = newGraphic(
-          dividerFrames[actionSpace[ccToKey(hexData.cc)].actions.length - 1][
-            idx
-          ],
-        );
-        hexContainer.addChild(mask);
-        selectionSprite.mask = mask;
-      }
+      const selectionSprite = newSprite(
+        textureMap[selectionIconMap[action.type]],
+      );
+      selectionSprite.anchor = 0.5;
+      selectionSprite.alpha = 0.75;
+      hexContainer.addChild(selectionSprite);
+      let mask = newGraphic(
+        dividerFrames[actionSpace[ccToKey(hexData.cc)].actions.length - 1][idx],
+      );
+      hexContainer.addChild(mask);
+      selectionSprite.mask = mask;
 
       let triggerZone = newGraphic(
         dividerFrames[actionSpace[ccToKey(hexData.cc)].actions.length - 1][idx],
@@ -396,8 +370,8 @@ export const renderMap = (
 
     // TODO common trigger zone
     if (
-      state.menuData &&
-      !state.menuData.uncloseable &&
+      (state.delayedActivation ||
+        (state.menuData && !state.menuData.uncloseable)) &&
       !(actionSpace[ccToKey(hexData.cc)]?.actions || []).length
     ) {
       let triggerZone = newGraphic(dividerFrames[0][0]);
@@ -498,11 +472,11 @@ export const renderMap = (
       }
 
       if (
-        gameState.activeUnitContext &&
-        gameState.activeUnitContext.unit.id == hexData.unit.id
+        gameState.active_unit_context &&
+        gameState.active_unit_context.unit.id == hexData.unit.id
       ) {
         const movementPoints = newText({
-          text: `${gameState.activeUnitContext.movementPoints}`,
+          text: `${gameState.active_unit_context.movement_points}`,
           style: largeTextStyle,
         });
         movementPoints.anchor = 0.5;
@@ -565,8 +539,8 @@ export const renderMap = (
       };
 
       const healthIndicatorContainer = makeIndicatorDisplay(
-        hexData.unit.maxHealth - hexData.unit.damage,
-        hexData.unit.maxHealth,
+        hexData.unit.max_health - hexData.unit.damage,
+        hexData.unit.max_health,
         colors.fullHealth,
         colors.noHealth,
       );
@@ -581,10 +555,10 @@ export const renderMap = (
       };
       unitContainer.addChild(healthIndicatorContainer);
 
-      if (hexData.unit.energy > 0 || hexData.unit.maxEnergy > 0) {
+      if (hexData.unit.energy > 0 || hexData.unit.max_energy > 0) {
         const energyIndicatorContainer = makeIndicatorDisplay(
           hexData.unit.energy,
-          hexData.unit.maxEnergy,
+          hexData.unit.max_energy,
           colors.fullEnergy,
           colors.noEnergy,
         );
@@ -618,16 +592,16 @@ export const renderMap = (
         healthIndicatorContainer.addChild(shieldContainer);
       }
 
-      if (hexData.unit.isGhost) {
+      if (hexData.unit.is_ghost) {
         const unitSprite = newSprite(
           app.renderer.generateTexture(unitContainer),
         );
         unitSprite.alpha =
           (hexData.visible ? 0.5 : 0.6) -
           Math.min(
-            hexData.lastVisibleRound === null
+            hexData.last_visible_round === null
               ? 0
-              : (gameState.round - hexData.lastVisibleRound) * 0.15,
+              : (gameState.round - hexData.last_visible_round) * 0.15,
             0.4,
           );
         unitSprite.anchor = 0.5;
@@ -637,16 +611,16 @@ export const renderMap = (
       }
     }
 
-    if (hexData.isObjective) {
+    if (hexData.is_objective) {
       const flagContainer = new Container();
 
       flagContainer.x = -hexWidth / 2 + 30;
       flagContainer.y = -hexSize / 2 + 20;
 
-      if (hexData.capturedBy) {
+      if (hexData.captured_by) {
         flagContainer.addChild(
           newGraphic(
-            getFlagCapturedIndicator(hexData.capturedBy == gameState.player),
+            getFlagCapturedIndicator(hexData.captured_by == gameState.player),
           ),
         );
       }
@@ -662,15 +636,15 @@ export const renderMap = (
       if (
         !hexData.visible &&
         status.duration !== null &&
-        hexData.lastVisibleRound !== null
+        hexData.last_visible_round !== null
       ) {
-        if (gameState.round - hexData.lastVisibleRound >= status.duration) {
+        if (gameState.round - hexData.last_visible_round >= status.duration) {
           continue;
         }
         status = {
           ...status,
           duration:
-            status.duration - (gameState.round - hexData.lastVisibleRound),
+            status.duration - (gameState.round - hexData.last_visible_round),
         };
       }
       const statusContainer = makeStatusIndicator(status, null);
@@ -832,31 +806,6 @@ export const renderMap = (
       }
 
       store.dispatch(hoverDetail(detail));
-
-      const previewOptions = actionSpace[ccToKey(hexData.cc)]?.previewOptions;
-      store.dispatch(
-        setActionPreview(
-          previewOptions && hoverType == "unit"
-            ? Object.fromEntries(
-                Object.entries(
-                  getBaseActionSpace(
-                    gameState,
-                    () => null,
-                    state.gameObjectDetails,
-                    {
-                      type: "SelectOptionDecisionPoint",
-                      explanation: "preview",
-                      payload: { options: previewOptions },
-                    },
-                  ).hexActions,
-                ).map(([cc, hexActions]) => [
-                  cc,
-                  hexActions.actions.map((action) => action.type),
-                ]),
-              )
-            : null,
-        ),
-      );
     }
   });
 

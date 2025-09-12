@@ -21,27 +21,27 @@ export interface Unit {
   id: string;
   blueprint: string;
   controller: string;
-  maxHealth: number;
+  max_health: number;
   damage: number;
   speed: number;
   sight: number;
-  maxEnergy: number;
+  max_energy: number;
   energy: number;
   armor: number;
-  attackPower: number;
+  attack_power: number;
   size: Size;
   exhausted: boolean;
-  isGhost: boolean;
+  is_ghost: boolean;
   statuses: UnitStatus[];
 }
 
 export interface Hex {
   cc: CC;
   terrain: string;
-  isObjective: boolean;
-  capturedBy: string | boolean;
+  is_objective: boolean;
+  captured_by: string | boolean;
   visible: boolean;
-  lastVisibleRound: number | null;
+  last_visible_round: number | null;
   unit: Unit | null;
   statuses: Status[];
 }
@@ -52,7 +52,7 @@ export interface Map {
 
 export interface ActiveUnitContext {
   unit: Unit;
-  movementPoints: number;
+  movement_points: number;
 }
 
 export interface BaseDecision {
@@ -85,8 +85,8 @@ export interface NOfUnits extends TargetProfileBase {
   type: "NOfUnits";
   values: {
     units: { id: string }[];
-    selectCount: number;
-    minCount: number | null;
+    select_count: number;
+    min_count: number | null;
     labels: string[];
   };
 }
@@ -95,15 +95,15 @@ export interface NOfHexes extends TargetProfileBase {
   type: "NOfHexes";
   values: {
     hexes: { cc: CC }[];
-    selectCount: number;
-    minCount: number | null;
+    select_count: number;
+    min_count: number | null;
     labels: string[];
   };
 }
 
 export interface ConsecutiveAdjacentHexes extends TargetProfileBase {
   type: "ConsecutiveAdjacentHexes";
-  values: { adjacentTo: CC; armLength: number };
+  values: { adjacent_to: CC; arm_length: number };
 }
 
 export interface HexHexes extends TargetProfileBase {
@@ -118,12 +118,12 @@ export interface HexRing extends TargetProfileBase {
 
 export interface RadiatingLine extends TargetProfileBase {
   type: "RadiatingLine";
-  values: { fromHex: CC; toHexes: CC[]; length: number };
+  values: { from_hex: CC; to_hexes: CC[]; length: number };
 }
 
 export interface Cone extends TargetProfileBase {
   type: "Cone";
-  values: { fromHex: CC; toHexes: CC[]; armLengths: number[] };
+  values: { from_hex: CC; to_hexes: CC[]; arm_lengths: number[] };
 }
 
 export interface TreeNode {
@@ -136,7 +136,7 @@ export interface TreeNode {
 
 export interface Tree extends TargetProfileBase {
   type: "Tree";
-  values: { rootNode: TreeNode };
+  values: { root_node: TreeNode };
 }
 
 export interface TriHex extends TargetProfileBase {
@@ -161,7 +161,7 @@ export type TargetProfile =
 export interface OptionBase {
   type: string;
   values: { [key: string]: any };
-  targetProfile: TargetProfile;
+  target_profile: TargetProfile;
 }
 
 export interface SkipOption extends OptionBase {
@@ -184,7 +184,7 @@ export type UnitOption = SkipOption | MoveOption | EffortOption;
 export interface ActivateUnitOption extends OptionBase {
   type: "ActivateUnitOption";
   values: {
-    actionsPreview: { [key: string]: UnitOption[] };
+    actions_preview: { [key: string]: UnitOption[] };
   };
 }
 
@@ -198,9 +198,9 @@ export interface SelectOptionDecisionPoint extends BaseDecision {
 export interface DeployArmyDecisionPoint extends BaseDecision {
   type: "DeployArmyDecisionPoint";
   payload: {
-    maxUnits: number;
-    maxPoints: number;
-    deploymentZone: CC[];
+    max_units: number;
+    max_points: number;
+    deployment_zone: CC[];
   };
 }
 
@@ -277,12 +277,12 @@ export interface Player {
 
 export interface GameState {
   player: string;
-  targetPoints: number;
+  target_points: number;
   players: Player[];
   round: number;
   map: Map;
-  eventLog: string[];
+  event_log: string[];
   decision: Decision | null;
-  activeUnitContext: ActiveUnitContext | null;
+  active_unit_context: ActiveUnitContext | null;
   logs: LogLine[];
 }

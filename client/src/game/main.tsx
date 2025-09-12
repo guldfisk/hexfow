@@ -1,7 +1,6 @@
 import "../../common.css";
 
 import { Application, Container, Graphics } from "pixi.js";
-import { recursiveCamelCase } from "./utils/case.ts";
 
 import { loadGameTextures } from "./textures.ts";
 import { renderMap } from "./rendering.ts";
@@ -12,20 +11,21 @@ import { Provider } from "react-redux";
 import {
   receiveGameState,
   renderedGameState,
-  toggleShowCoordinates,
   store,
+  toggleShowCoordinates,
 } from "./state/store.ts";
 import { Message } from "../interfaces/messages.ts";
+import { TakeAction } from "./actions/interface.ts";
 
 const gameConnection = new WebSocket(
   `ws://${window.location.hostname}:8765/ws`,
 );
 gameConnection.onmessage = (event) => {
-  const result: Message = recursiveCamelCase(JSON.parse(event.data));
-  if (result.messageType == "game_state") {
+  const result: Message = JSON.parse(event.data);
+  if (result.message_type == "game_state") {
     console.log(result);
     store.dispatch(receiveGameState(result));
-  } else if (result.messageType == "error") {
+  } else if (result.message_type == "error") {
     console.log("ERROR!", result);
   } else {
     console.log("unknown message", result);
@@ -38,8 +38,25 @@ gameConnection.onopen = () =>
     }),
   );
 
-const makeDecision = (payload: { [key: string]: any }) => {
-  const message = { count: store.getState().gameStateId, payload };
+const makeDecision: TakeAction = (payload) => {
+  const state = store.getState();
+  const message = state.delayedActivation
+    ? {
+        count: state.gameStateId,
+        payload: {
+          index: state.delayedActivation.optionIndex,
+          target: {
+            index: state.delayedActivation.targetIndex,
+          },
+        },
+        premove: Object.keys(payload).length
+          ? {
+              for_options: state.delayedActivation.options,
+              payload: payload,
+            }
+          : null,
+      }
+    : { count: state.gameStateId, payload };
   console.log("sending", message);
   gameConnection.send(JSON.stringify(message));
 };
@@ -114,21 +131,25 @@ async function main() {
       state.gameState &&
       state.gameState.decision &&
       state.gameState.decision["type"] == "SelectOptionDecisionPoint" &&
-      (state.gameState.decision.explanation == "activate unit?"
+      (state.gameState.decision.explanation == "activate unit?" &&
+      !state.delayedActivation
         ? event.code == "KeyW"
         : event.code == "KeyS")
     ) {
       {
-        for (const [idx, option] of state.gameState.decision["payload"][
-          "options"
-        ].entries()) {
-          if (option["type"] == "SkipOption") {
+        for (const [idx, option] of (state.delayedActivation
+          ? state.delayedActivation.options
+          : state.gameState.decision.payload.options
+        ).entries()) {
+          if (option.type == "SkipOption") {
             makeDecision({ index: idx, target: {} });
           }
         }
       }
     } else if (event.key == "c") {
       store.dispatch(toggleShowCoordinates());
+    } else if (event.key == "a" && state.delayedActivation) {
+      makeDecision({});
     }
   };
 

@@ -1,17 +1,17 @@
 import { GameState } from "./gameState.ts";
 
 export interface BaseMessage {
-  messageType: string;
+  message_type: string;
 }
 
 export interface ErrorMessage extends BaseMessage {
-  messageType: "error";
+  message_type: "error";
 }
 
 export interface GameStateMessage extends BaseMessage {
-  messageType: "game_state";
+  message_type: "game_state";
   count: number;
-  gameState: GameState;
+  game_state: GameState;
 }
 
 export type Message = ErrorMessage | GameStateMessage;

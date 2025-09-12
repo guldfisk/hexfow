@@ -10,7 +10,7 @@ import {
 } from "../../interfaces/gameState.ts";
 import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
 import { getImageUrl } from "../../image/images.ts";
-import { MenuData } from "../actions/interface.ts";
+import { DelayedActivation, MenuData } from "../actions/interface.ts";
 import { menuActionSpacers, menuDescribers } from "../actions/menues.ts";
 import { ccToKey } from "../geometry.ts";
 import {
@@ -232,9 +232,9 @@ const HexDetailView = ({
         {hex.visible
           ? "visible"
           : "not visible" +
-            (hex.lastVisibleRound !== null &&
-            gameState.round - hex.lastVisibleRound > 0
-              ? ` - last visible ${gameState.round - hex.lastVisibleRound} rounds ago`
+            (hex.last_visible_round !== null &&
+            gameState.round - hex.last_visible_round > 0
+              ? ` - last visible ${gameState.round - hex.last_visible_round} rounds ago`
               : "")}
       </div>
       {terrainDetails.is_water ||
@@ -263,7 +263,7 @@ const HexDetailView = ({
 const GameInfoView = ({ gameState }: { gameState: GameState }) => (
   <div>
     {gameState.players.map((player) => (
-      <div>{`${player.name}${player.name == gameState.player ? " (you)" : ""}: ${player.points}/${gameState.targetPoints} points`}</div>
+      <div>{`${player.name}${player.name == gameState.player ? " (you)" : ""}: ${player.points}/${gameState.target_points} points`}</div>
     ))}
     {`round: ${gameState.round}/10`}
   </div>
@@ -274,11 +274,13 @@ const DecisionDetailView = ({
   gameObjectDetails,
   makeDecision,
   menu,
+  delayedActivation,
 }: {
   gameState: GameState | null;
   gameObjectDetails: GameObjectDetails | null;
   makeDecision: (payload: { [key: string]: any }) => void;
   menu: MenuData | null;
+  delayedActivation: DelayedActivation | null;
 }) => {
   if (!gameState?.decision || !gameObjectDetails) {
     return (
@@ -304,37 +306,42 @@ const DecisionDetailView = ({
         makeDecision,
         gameObjectDetails,
         gameState.decision,
+        delayedActivation,
       );
 
-  if (actionSpace.buttonAction) {
-    button = (
-      <button onClick={actionSpace.buttonAction.do}>
-        {actionSpace.buttonAction.description}
-      </button>
-    );
-  } else if (gameState.decision.type == "SelectOptionDecisionPoint") {
-    const skipIndexes = gameState.decision.payload.options
-      .map((option, idx) => [option, idx] as [OptionBase, number])
-      .filter(([option]) => option.type == "SkipOption")
-      .map(([_, idx]) => idx);
-
-    if (skipIndexes.length) {
+  if (delayedActivation) {
+    button = <button onClick={() => makeDecision({})}>Activate unit</button>;
+  } else {
+    if (actionSpace.buttonAction) {
       button = (
-        <button
-          className={
-            gameState.decision.explanation == "activate unit?"
-              ? "alert-button"
-              : ""
-          }
-          onClick={() => {
-            makeDecision({ index: skipIndexes[0], target: {} });
-          }}
-        >
-          {gameState.decision.explanation == "activate unit?"
-            ? "Wait"
-            : "Skip rest of unit turn"}
+        <button onClick={actionSpace.buttonAction.do}>
+          {actionSpace.buttonAction.description}
         </button>
       );
+    } else if (gameState.decision.type == "SelectOptionDecisionPoint") {
+      const skipIndexes = gameState.decision.payload.options
+        .map((option, idx) => [option, idx] as [OptionBase, number])
+        .filter(([option]) => option.type == "SkipOption")
+        .map(([_, idx]) => idx);
+
+      if (skipIndexes.length) {
+        button = (
+          <button
+            className={
+              gameState.decision.explanation == "activate unit?"
+                ? "alert-button"
+                : ""
+            }
+            onClick={() => {
+              makeDecision({ index: skipIndexes[0], target: {} });
+            }}
+          >
+            {gameState.decision.explanation == "activate unit?"
+              ? "Wait"
+              : "Skip rest of unit turn"}
+          </button>
+        );
+      }
     }
   }
 
@@ -446,6 +453,7 @@ export const HUD = ({
           gameObjectDetails={applicationState.gameObjectDetails}
           makeDecision={makeDecision}
           menu={applicationState.menuData}
+          delayedActivation={applicationState.delayedActivation}
         />
       </div>
 

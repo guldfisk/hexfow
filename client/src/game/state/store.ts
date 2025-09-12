@@ -6,7 +6,7 @@ import {
 } from "@reduxjs/toolkit";
 import { GameState } from "../../interfaces/gameState.ts";
 import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
-import { MenuData, selectionIcon } from "../actions/interface.ts";
+import { DelayedActivation, MenuData } from "../actions/interface.ts";
 import { HoveredDetails } from "../../interfaces/details.ts";
 import { deepEquals } from "../utils/equals.ts";
 import { GameStateMessage } from "../../interfaces/messages.ts";
@@ -20,7 +20,7 @@ const mainSlice = createSlice({
     gameObjectDetails: null,
     detailed: null,
     menuData: null,
-    actionPreview: null,
+    delayedActivation: null,
     highlightedCCs: null,
     showCoordinates: false,
   } as {
@@ -30,16 +30,16 @@ const mainSlice = createSlice({
     gameObjectDetails: GameObjectDetails | null;
     detailed: HoveredDetails | null;
     menuData: MenuData | null;
-    actionPreview: { [key: string]: selectionIcon[] } | null;
+    delayedActivation: DelayedActivation | null;
     highlightedCCs: string[] | null;
     showCoordinates: boolean;
   },
   reducers: {
     receiveGameState: (state, action: PayloadAction<GameStateMessage>) => {
-      state.gameState = action.payload.gameState;
+      state.gameState = action.payload.game_state;
       state.gameStateId = action.payload.count;
       state.menuData = null;
-      state.actionPreview = null;
+      state.delayedActivation = null;
       state.highlightedCCs = null;
       state.shouldRerender = true;
     },
@@ -72,6 +72,7 @@ const mainSlice = createSlice({
     },
     deactivateMenu: (state) => {
       state.menuData = null;
+      state.delayedActivation = null;
       state.shouldRerender = true;
     },
     highlightCCs: (state, action: PayloadAction<string[]>) => {
@@ -82,14 +83,9 @@ const mainSlice = createSlice({
       state.highlightedCCs = null;
       state.shouldRerender = true;
     },
-    setActionPreview: (
-      state,
-      action: PayloadAction<{ [key: string]: selectionIcon[] } | null>,
-    ) => {
-      if (!!action.payload || !!state.actionPreview) {
-        state.shouldRerender = true;
-      }
-      state.actionPreview = action.payload;
+    setDelayedActivation: (state, action: PayloadAction<DelayedActivation>) => {
+      state.delayedActivation = action.payload;
+      state.shouldRerender = true;
     },
     toggleShowCoordinates: (state) => {
       state.showCoordinates = !state.showCoordinates;
@@ -109,7 +105,7 @@ export const {
   deactivateMenu,
   highlightCCs,
   removeCCHighlight,
-  setActionPreview,
+  setDelayedActivation,
   toggleShowCoordinates,
 } = mainSlice.actions;
 
