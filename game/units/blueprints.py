@@ -443,6 +443,7 @@ BOMBARD_CANON = UnitBlueprint(
     health=3,
     speed=1,
     sight=1,
+    size=Size.LARGE,
     facets=[SolidMunition],
     price=4,
 )
@@ -782,6 +783,16 @@ SLUDGE_SLUG = UnitBlueprint(
     price=9,
 )
 
+TERRAFORMER_MAGE = UnitBlueprint(
+    "Terraformer Mage",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[RaiseGround, FlattenGround, DrawSpring, MagmaFissure],
+    price=9,
+)
+
 VELOCIRAPTOR = UnitBlueprint(
     "Velociraptor",
     health=5,
@@ -919,16 +930,6 @@ PESTILENCE_PRIEST = UnitBlueprint(
     sight=2,
     energy=6,
     facets=[SummonScarab, InducePanic, Schadenfreude],
-    price=11,
-)
-
-TERRAFORMER_MAGE = UnitBlueprint(
-    "Terraformer Mage",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=6,
-    facets=[RaiseGround, FlattenGround, DrawSpring, MagmaFissure],
     price=11,
 )
 

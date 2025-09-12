@@ -892,7 +892,7 @@ class VerdantFlash(TargetHexActivatedAbility):
     Turns the terrain into Forest.
     """
 
-    cost = EnergyCost(3) | MovementCost(2)
+    cost = EnergyCost(3) | MovementCost(1)
     explain_hex_alias = "plains"
 
     def filter_hex(self, hex_: Hex) -> bool:
@@ -1406,16 +1406,16 @@ class FalseCure(TargetTriHexActivatedAbility):
 
 class HandGrenade(TargetTriHexActivatedAbility):
     """
-    Deals 3 aoe damage.
+    Deals 2 aoe damage.
     """
 
-    cost = EnergyCost(4) | MovementCost(1)
+    cost = EnergyCost(3) | MovementCost(1)
     range = 2
 
     def perform(self, target: list[Hex]) -> None:
         for _hex in target:
             if unit := GS.map.unit_on(_hex):
-                ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.AOE)))
+                ES.resolve(Damage(unit, DamageSignature(2, self, DamageType.AOE)))
 
 
 class FlashBang(TargetTriHexActivatedAbility):
@@ -1604,29 +1604,38 @@ class GiantPincers(ActivatedAbilityFacet[list[Hex]]):
 
     @classmethod
     def get_target_explanation(cls) -> str | None:
-        return "Target two hexes adjacent to this unit, with one hex also adjacent to this unit between them."
+        return "Target two visible hexes adjacent to this unit, with one hex also adjacent to this unit between them."
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
         # TODO edge??
-        all_hexes = list(GS.map.get_neighbors_off(self.parent))
-        return Tree(
-            TreeNode(
-                [
-                    (
-                        _hex,
-                        TreeNode(
-                            [
-                                (all_hexes[(idx + offset) % len(all_hexes)], None)
-                                for offset in (-2, 2)
-                            ],
-                            "select second hex",
-                        ),
-                    )
-                    for idx, _hex in enumerate(all_hexes)
-                ],
-                "select first hex",
+        if (
+            len(
+                hexes := [
+                    h
+                    for h in GS.map.get_neighbors_off(self.parent)
+                    if h.is_visible_to(self.parent.controller)
+                ]
             )
-        )
+            >= 2
+        ):
+            return Tree(
+                TreeNode(
+                    [
+                        (
+                            _hex,
+                            TreeNode(
+                                [
+                                    (hexes[(idx + offset) % len(hexes)], None)
+                                    for offset in (-2, 2)
+                                ],
+                                "select second hex",
+                            ),
+                        )
+                        for idx, _hex in enumerate(hexes)
+                    ],
+                    "select first hex",
+                )
+            )
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:

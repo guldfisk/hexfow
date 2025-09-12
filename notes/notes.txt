@@ -172,6 +172,9 @@ more heals / dispells / shields for allied units
 artillery
 
 curse of fleas
+zap area
+tired aoe
+
 teleport to ally
 move space when attacked
 puck-ish
@@ -179,3 +182,4 @@ climber
 damaged when debuffed
 shake it off
 all units immune to damage grace
+keen senses
