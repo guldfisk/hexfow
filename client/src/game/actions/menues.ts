@@ -748,7 +748,13 @@ const getListMenuActionSpace = (
         {
           actions: [],
           sideMenuItems: ccEquals(hex.cc, menu.cc)
-            ? actions[ccToKey(hex.cc)]
+            ? actions[ccToKey(hex.cc)].filter(
+                (action) =>
+                  !(
+                    action.sourceOption &&
+                    action.sourceOption.type == "MoveOption"
+                  ),
+              )
             : [],
         },
       ]),
