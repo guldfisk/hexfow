@@ -123,7 +123,7 @@ class PackHunter(StaticAbilityFacet):
 class Nourishing(StaticAbilityFacet):
     def create_effects(self) -> None:
         self.register_effects(
-            CrushableReplacement(self.parent), CrushableModifier(self.parent)
+            CrushableReplacement(self.parent, self), CrushableModifier(self.parent)
         )
 
 
@@ -412,7 +412,7 @@ class Ornery(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(OrneryTrigger(self.parent))
+        self.register_effects(OrneryTrigger(self.parent, self))
 
 
 class PuffAway(StaticAbilityFacet):

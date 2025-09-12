@@ -460,7 +460,7 @@ class NaturesGrace(RefreshableMixin, UnitStatus):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(RoundHealTrigger(self.parent, 1))
+        self.register_effects(RoundHealTrigger(self.parent, 1, self))
 
 
 class Chill(RefreshableMixin, UnitStatus):

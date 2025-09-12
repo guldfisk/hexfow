@@ -196,12 +196,13 @@ class OrneryTrigger(TriggerEffect[ApplyStatus]):
     priority: ClassVar[int] = 0
 
     unit: Unit
+    source: Source
 
     def should_trigger(self, event: ApplyStatus) -> bool:
         return event.unit == self.unit and event.result
 
     def resolve(self, event: ApplyStatus) -> None:
-        ES.resolve(Heal(self.unit, 1))
+        ES.resolve(Heal(self.unit, 1, self.source))
 
 
 # TODO originally this was for all simple attacks, but then the kill event isn't
@@ -663,9 +664,10 @@ class RoundHealTrigger(TriggerEffect[RoundCleanup]):
 
     unit: Unit
     amount: int
+    source: Source
 
     def resolve(self, event: RoundCleanup) -> None:
-        ES.resolve(Heal(self.unit, self.amount))
+        ES.resolve(Heal(self.unit, self.amount, self.source))
 
 
 @dataclasses.dataclass(eq=False)
@@ -674,13 +676,14 @@ class HexRoundHealTrigger(TriggerEffect[RoundCleanup]):
 
     hex: Hex
     amount: int
+    source: Source
 
     def should_trigger(self, event: RoundCleanup) -> bool:
         return GS.map.unit_on(self.hex) is not None
 
     def resolve(self, event: RoundCleanup) -> None:
         if unit := GS.map.unit_on(self.hex):
-            ES.resolve(Heal(unit, self.amount))
+            ES.resolve(Heal(unit, self.amount, self.source))
 
 
 @dataclasses.dataclass(eq=False)
@@ -722,12 +725,13 @@ class ShrineSkipTrigger(TriggerEffect[Rest]):
     priority: ClassVar[int] = 0
 
     hex: Hex
+    source: Source
 
     def should_trigger(self, event: Rest) -> bool:
         return GS.map.distance_between(event.unit, self.hex) <= 1
 
     def resolve(self, event: Rest) -> None:
-        ES.resolve(Heal(event.unit, 1))
+        ES.resolve(Heal(event.unit, 1, self.source))
 
 
 @dataclasses.dataclass(eq=False)

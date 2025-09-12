@@ -42,6 +42,20 @@ export const getAdditionalDetails = (
     )) {
       details.push({ type: "blueprint", blueprint: relatedId });
     }
+  } else if (detail.type == "statuses") {
+    const seen: string[] = [];
+    for (const status of detail.statuses) {
+      for (const unitIdentifier of gameObjectDetails.statuses[status.type]
+        .related_units) {
+        if (!seen.includes(unitIdentifier)) {
+          seen.push(unitIdentifier);
+          findRelatedUnits(unitIdentifier, gameObjectDetails, seen);
+        }
+      }
+    }
+    for (const unitIdentifier of seen) {
+      details.push({ type: "blueprint", blueprint: unitIdentifier });
+    }
   }
   return details;
 };

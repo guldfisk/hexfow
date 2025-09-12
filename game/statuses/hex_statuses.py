@@ -44,7 +44,7 @@ class Shrine(HexStatus):
         self.register_effects(
             HexIncreasesEnergyRegenModifier(self.parent, 1),
             ShrineWalkInTrigger(self.parent, self),
-            ShrineSkipTrigger(self.parent),
+            ShrineSkipTrigger(self.parent, self),
         )
 
 
@@ -154,7 +154,7 @@ class RuneOfHealing(HexStatus):
     dispellable = False
 
     def create_effects(self) -> None:
-        self.register_effects(HexRoundHealTrigger(self.parent, 1))
+        self.register_effects(HexRoundHealTrigger(self.parent, 1, self))
 
 
 class UndergroundSpring(LowestRefreshableMixin, HexStatus):

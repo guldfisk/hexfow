@@ -86,7 +86,7 @@ class Bloom(NoTargetActivatedAbility):
 
     def perform(self, target: None) -> None:
         for unit in GS.map.get_neighboring_units_off(self.parent):
-            ES.resolve(Heal(unit, 1))
+            ES.resolve(Heal(unit, 1, self))
         ES.resolve(Kill(self.parent))
 
 
@@ -94,7 +94,7 @@ class Grow(NoTargetActivatedAbility):
     cost = EnergyCost(2)
 
     def perform(self, target: None) -> None:
-        ES.resolve(Heal(self.parent, 1))
+        ES.resolve(Heal(self.parent, 1, self))
 
 
 class HealBeam(TargetUnitActivatedAbility):
@@ -108,7 +108,7 @@ class HealBeam(TargetUnitActivatedAbility):
     controller_target_option = ControllerTargetOption.ALLIED
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(Heal(target, 2))
+        ES.resolve(Heal(target, 2, self))
 
 
 class GreaseTheGears(TargetUnitActivatedAbility):
@@ -128,7 +128,7 @@ class GreaseTheGears(TargetUnitActivatedAbility):
             kill_event.unit == target
             for kill_event in ES.resolve(Kill(target)).iter_type(Kill)
         ):
-            ES.resolve(Heal(self.parent, 2))
+            ES.resolve(Heal(self.parent, 2, self))
             ES.resolve(GainEnergy(self.parent, 2, source=self))
             ES.resolve(ModifyMovementPoints(self.parent, movement_bonus))
 
@@ -173,7 +173,7 @@ class GrantWish(TargetUnitActivatedAbility):
                         ),
                     )
                 )
-                ES.resolve(Heal(target, 3))
+                ES.resolve(Heal(target, 3, self))
             case "Clarity":
                 ES.resolve(GainEnergy(target, 4, self, allow_overflow=True))
             case "Strength":
@@ -755,7 +755,7 @@ class VitalityTransfusion(ActivatedAbilityFacet[list[Unit]]):
             # TODO yikes should be an event, but unclear what it should be,
             #  since we don't want it to be damage i think.
             donor.damage += available_health
-            ES.resolve(Heal(recipient, available_health))
+            ES.resolve(Heal(recipient, available_health, self))
 
 
 class FatalBonding(ActivatedAbilityFacet):
@@ -1395,7 +1395,7 @@ class FalseCure(TargetTriHexActivatedAbility):
 
     def perform(self, target: list[Hex]) -> None:
         for unit in GS.map.units_on(target):
-            ES.resolve(Heal(unit, 3))
+            ES.resolve(Heal(unit, 3, self))
             ES.resolve(
                 ApplyStatus(
                     unit, UnitStatusSignature(UnitStatus.get("poison"), self, stacks=1)
@@ -1572,7 +1572,7 @@ class FixErUp(TargetUnitActivatedAbility):
         )
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(Heal(target, 2))
+        ES.resolve(Heal(target, 2, self))
 
 
 class TurboTune(TargetUnitActivatedAbility):
@@ -1694,7 +1694,7 @@ class CriticalAid(TargetUnitActivatedAbility):
     can_target_self = False
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(Heal(target, 4 - target.health))
+        ES.resolve(Heal(target, 4 - target.health, self))
 
 
 class CuringWord(TargetUnitActivatedAbility):

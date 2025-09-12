@@ -40,6 +40,7 @@ class CrushableReplacement(ReplacementEffect[MoveUnit]):
     priority: ClassVar[int] = 0
 
     unit: Unit
+    source: Source
 
     def can_replace(self, event: MoveUnit) -> bool:
         return (
@@ -49,7 +50,7 @@ class CrushableReplacement(ReplacementEffect[MoveUnit]):
 
     def resolve(self, event: MoveUnit) -> None:
         ES.resolve(Kill(self.unit))
-        ES.resolve(Heal(event.unit, 1))
+        ES.resolve(Heal(event.unit, 1, self.source))
         ES.resolve(event)
 
 

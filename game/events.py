@@ -90,13 +90,22 @@ class CheckAlive(Event[bool]):
 class Heal(Event[int]):
     unit: Unit
     amount: int
+    source: Source
 
     def is_valid(self) -> bool:
         return self.amount > 0 and self.unit.damage > 0
 
     def resolve(self) -> int:
         heal_amount = min(self.amount, self.unit.damage)
-        with GS.log(LogLine([self.unit, f"is healed {heal_amount}"])):
+        with GS.log(
+            LogLine(
+                [
+                    self.unit,
+                    f"is healed {heal_amount}",
+                    *(("by", self.source) if self.source else ()),
+                ]
+            )
+        ):
             self.unit.damage -= heal_amount
         return heal_amount
 
@@ -359,6 +368,7 @@ def make_status_log_line(
                 if status.duration
                 else ()
             ),
+            *(("by", signature.source) if signature.source else ()),
         ]
     )
 

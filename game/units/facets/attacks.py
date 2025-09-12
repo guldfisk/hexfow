@@ -556,7 +556,7 @@ class DrainingGrasp(MeleeAttackFacet):
     damage = 2
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(Heal(self.parent, 1))
+        ES.resolve(Heal(self.parent, 1, self))
 
 
 class BellHammer(MeleeAttackFacet):
