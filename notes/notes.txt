@@ -172,6 +172,7 @@ accelerator
 
 more heals / dispells / shields for allied units
 artillery
+small healer
 
 teleport to ally
 move space when attacked

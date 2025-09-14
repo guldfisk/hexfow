@@ -53,6 +53,7 @@ from game.units.facets.activated_abilities import (
     RaiseGround,
     RaiseShrine,
     Riddle,
+    RoyalJelly,
     Scorch,
     Scorn,
     Scry,
@@ -215,6 +216,7 @@ from game.units.facets.static_abilities import (
     ToughSkin,
     ToxicPresence,
     ToxicSkin,
+    Wild,
 )
 from game.values import Size
 
@@ -747,6 +749,16 @@ REMORSELESS_SNIPER = UnitBlueprint(
     price=8,
 )
 
+BEE_SHAMAN = UnitBlueprint(
+    "Bee Shaman",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[SummonBees, RoyalJelly],
+    price=9,
+)
+
 DJINN = UnitBlueprint(
     "Djinn",
     health=4,
@@ -1041,6 +1053,15 @@ INSCRUTABLE_CHIMERA = UnitBlueprint(
     price=12,
 )
 
+WAR_HOG = UnitBlueprint(
+    "War Hog",
+    health=7,
+    speed=3,
+    sight=2,
+    facets=[RazorTusk, Furious],
+    price=12,
+)
+
 GRANITE_GOLEM = UnitBlueprint(
     "Granite Golem",
     health=9,
@@ -1094,6 +1115,16 @@ ZONE_MECH = UnitBlueprint(
     price=18,
 )
 
+RHINO_BEAST = UnitBlueprint(
+    "Rhino",
+    health=10,
+    speed=4,
+    sight=2,
+    size=Size.LARGE,
+    facets=[Gore],
+    price=22,
+)
+
 ANNOYING_FLEA = UnitBlueprint(
     "Annoying Flea",
     health=1,
@@ -1104,17 +1135,13 @@ ANNOYING_FLEA = UnitBlueprint(
     price=None,
 )
 
-BEE_SHAMAN = UnitBlueprint(
-    "Bee Shaman", health=4, speed=3, sight=2, energy=3, facets=[SummonBees], price=None
-)
-
 BEE_SWARM = UnitBlueprint(
     "Bee Swarm",
     health=2,
-    speed=3,
+    speed=2,
     sight=1,
     size=Size.SMALL,
-    facets=[Stinger],
+    facets=[Stinger, Wild],
     price=None,
 )
 
@@ -1235,16 +1262,6 @@ DIAMOND_GOLEM = UnitBlueprint(
     max_count=0,
 )
 
-WAR_HOG = UnitBlueprint(
-    "War Hog",
-    health=8,
-    speed=3,
-    sight=2,
-    facets=[RazorTusk, Furious],
-    price=11,
-    max_count=0,
-)
-
 MAD_SCIENTIST = UnitBlueprint(
     "Mad Scientist",
     health=6,
@@ -1253,16 +1270,5 @@ MAD_SCIENTIST = UnitBlueprint(
     energy=8,
     facets=[ShrinkRay, Translocate, AssembleTheDoombot, Inspiration],
     price=13,
-    max_count=0,
-)
-
-RHINO_BEAST = UnitBlueprint(
-    "Rhino",
-    health=10,
-    speed=4,
-    sight=2,
-    size=Size.LARGE,
-    facets=[Gore],
-    price=15,
     max_count=0,
 )

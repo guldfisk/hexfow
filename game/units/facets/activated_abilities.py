@@ -479,8 +479,25 @@ class InstilFocus(TargetUnitActivatedAbility):
         )
 
 
+class RoyalJelly(TargetUnitActivatedAbility):
+    """
+    The target unit is healed 1 and gains 1 energy.
+    """
+
+    cost = MovementCost(1) | EnergyCost(2)
+    controller_target_option = ControllerTargetOption.ALLIED
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(Heal(target, 1, self))
+        ES.resolve(GainEnergy(target, 1, self))
+
+
 class SummonBees(TargetHexActivatedAbility):
-    cost = MovementCost(2) | EnergyCost(2)
+    """
+    Spawns a [bee_swarm] on the target hex.
+    """
+
+    cost = MovementCost(2) | EnergyCost(3)
     range = 2
     requires_empty = True
 

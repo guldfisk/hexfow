@@ -174,6 +174,15 @@ class RockSteady(StaticAbilityFacet):
         )
 
 
+class Wild(StaticAbilityFacet):
+    """
+    This unit can't capture objectives.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(UnitNoCaptureModifier(self.parent))
+
+
 class Furious(StaticAbilityFacet):
     """
     When this unit is hit by an attack, it is readied.

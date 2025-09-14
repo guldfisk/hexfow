@@ -101,6 +101,7 @@ class SerratedBeak(MeleeAttackFacet):
 
 
 class RazorTusk(MeleeAttackFacet):
+    cost = MovementCost(1)
     damage = 3
 
 

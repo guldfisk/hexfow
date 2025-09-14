@@ -60,10 +60,12 @@ class TestGameType(GameType):
         player_units = (
             (
                 # MEDIC,
-                BULLDOZER,
-                GIANT_TOAD,
+                GRANITE_GOLEM,
+                # GIANT_TOAD,
+                # WAR_HOG,
+                BEE_SHAMAN,
                 MISCHIEVOUS_GODMOTHER,
-                RANK_DEFILER,
+                # RANK_DEFILER,
                 # VILE_TRANSMUTER,
                 # GNARLED_SHAMAN,
                 # MAD_SCIENTIST,
@@ -71,12 +73,11 @@ class TestGameType(GameType):
                 # PYROMANCER_ARTILLERIST,
             ),
             (
-                ANCIENT_ALTRUIST,
-                GRANITE_GOLEM,
-                # FRONTLINE_TACTICIAN,
+                # ANCIENT_ALTRUIST,
+                FRONTLINE_TACTICIAN,
                 FROST_SPRITE,
                 # CYCLOPS,
-                # ELITE_COMMANDO,
+                ELITE_COMMANDO,
             ),
         )
 
