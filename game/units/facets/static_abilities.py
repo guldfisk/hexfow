@@ -30,11 +30,13 @@ from game.effects.modifiers import (
     StealthModifier,
     StealthOnTerrainModifier,
     TelepathicSpyModifier,
+    UnitCapSpeedModifier,
     UnitNoCaptureModifier,
     UnwieldySwimmerModifier,
 )
 from game.effects.replacements import (
     CrushableReplacement,
+    ExternallyImmobileReplacement,
     IgnoresMoveOutPenaltyReplacement,
     LastStandReplacement,
     PerTurnMovePenaltyIgnoreReplacement,
@@ -158,6 +160,18 @@ class TerrainSavvy(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(PerTurnMovePenaltyIgnoreReplacement(self.parent, 1))
+
+
+class RockSteady(StaticAbilityFacet):
+    """
+    This unit can't be moved by other units, and it's speed can't be more than 1.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            ExternallyImmobileReplacement(self.parent),
+            UnitCapSpeedModifier(self.parent, 1),
+        )
 
 
 class Furious(StaticAbilityFacet):
@@ -362,7 +376,7 @@ class Stakeout(StaticAbilityFacet):
 
 class AntiMagicHide(StaticAbilityFacet):
     """
-    Reduce damage dealt to this unit not by abilities and statuses by half, rounding the result down.
+    Reduce damage dealt to this unit by abilities and statuses by half, rounding the result down.
     """
 
     name = "Anti-Magic Hide"
@@ -373,6 +387,21 @@ class AntiMagicHide(StaticAbilityFacet):
                 self.parent,
                 (ActivatedAbilityFacet, StaticAbilityFacet, Status),
                 Resistance.MAJOR,
+            )
+        )
+
+
+class ResistantSkin(StaticAbilityFacet):
+    """
+    Reduce damage dealt to this unit by abilities and statuses by one third, rounding the result up.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            SourceTypeResistanceModifier(
+                self.parent,
+                (ActivatedAbilityFacet, StaticAbilityFacet, Status),
+                Resistance.MINOR,
             )
         )
 

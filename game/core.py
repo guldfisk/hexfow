@@ -263,7 +263,7 @@ class HasStatuses(HasEffects, Generic[G_Status, G_StatusSignature]):
         self.statuses: list[G_Status] = []
 
     def add_status(self, signature: G_StatusSignature) -> G_Status | None:
-        if not (signature := signature.status_type.on_apply(signature, self)):
+        if not (signature := signature.status_type.pre_merge(signature, self)):
             return None
         for existing_status in self.statuses:
             if type(existing_status) is signature.status_type:
@@ -277,6 +277,7 @@ class HasStatuses(HasEffects, Generic[G_Status, G_StatusSignature]):
         status = signature.realize(self)
         self.statuses.append(status)
         status.create_effects()
+        status.on_apply()
         return status
 
     def get_statuses(self, status_type: type[G_Status]) -> list[G_Status]:
@@ -659,7 +660,7 @@ class Status(
         return "unstackable"
 
     @classmethod
-    def on_apply(
+    def pre_merge(
         cls, signature: G_StatusSignature, to: G_HasStatuses
     ) -> G_StatusSignature | None:
         return signature
@@ -692,11 +693,14 @@ class Status(
             "stacks": self.stacks,
         }
 
-    def on_expires(self) -> None:
-        # TODO blah
-        pass
+    def on_apply(self) -> None: ...
+
+    def on_expires(self) -> None: ...
+
+    def on_remove(self) -> None: ...
 
     def remove(self) -> None:
+        self.on_remove()
         for link in list(self.links):
             link.remove_status(self)
         # TODO is this all?
@@ -870,20 +874,16 @@ class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Seriali
 
         self.controller = controller
         self.blueprint = blueprint
+        self.original_blueprint = blueprint
 
         self.damage: int = 0
-        self.max_health.set(blueprint.health)
-        self.speed.set(blueprint.speed)
-        self.sight.set(blueprint.sight)
-        self.armor.set(blueprint.armor)
-        self.max_energy.set(blueprint.energy)
+
         self.energy_regen.set(1)
         self.energy: int = (
             blueprint.starting_energy
             if isinstance(blueprint.starting_energy, int)
             else blueprint.energy
         )
-        self.size.set(blueprint.size)
         self.attack_power.set(0)
         self.is_broken.set(False)
         self.exhausted = exhausted
@@ -892,13 +892,34 @@ class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Seriali
         self.activated_abilities: list[ActivatedAbilityFacet] = []
         self.static_abilities: list[StaticAbilityFacet] = []
 
-        for facet in blueprint.facets:
-            if issubclass(facet, AttackFacet):
-                self.attacks.append(facet(self))
-            elif issubclass(facet, ActivatedAbilityFacet):
-                self.activated_abilities.append(facet(self))
-            elif issubclass(facet, StaticAbilityFacet):
-                self.static_abilities.append(facet(self))
+        self.set_blueprint(blueprint)
+
+    def set_blueprint(self, blueprint: UnitBlueprint) -> None:
+        for facet in self.attacks + self.activated_abilities + self.static_abilities:
+            facet.deregister()
+
+        self.blueprint = blueprint
+
+        self.max_health.set(blueprint.health)
+        self.speed.set(blueprint.speed)
+        self.sight.set(blueprint.sight)
+        self.armor.set(blueprint.armor)
+        self.max_energy.set(blueprint.energy)
+        self.size.set(blueprint.size)
+
+        self.attacks = [
+            facet(self) for facet in blueprint.facets if issubclass(facet, AttackFacet)
+        ]
+        self.activated_abilities = [
+            facet(self)
+            for facet in blueprint.facets
+            if issubclass(facet, ActivatedAbilityFacet)
+        ]
+        self.static_abilities = [
+            facet(self)
+            for facet in blueprint.facets
+            if issubclass(facet, StaticAbilityFacet)
+        ]
 
         for facet in self.attacks + self.activated_abilities + self.static_abilities:
             facet.create_effects()

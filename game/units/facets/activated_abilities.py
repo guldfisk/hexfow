@@ -63,7 +63,15 @@ from game.statuses.unit_statuses import (
     Staggered,
     Terror,
 )
-from game.target_profiles import Cone, HexRing, NOfHexes, NOfUnits, Tree, TreeNode
+from game.target_profiles import (
+    Cone,
+    HexRing,
+    NOfHexes,
+    NOfUnits,
+    Tree,
+    TreeNode,
+    TriHex,
+)
 from game.targeting import (
     ControllerTargetOption,
     NoTargetActivatedAbility,
@@ -150,9 +158,10 @@ class GrantWish(TargetUnitActivatedAbility):
 
     cost = MovementCost(1) | EnergyCost(3)
     can_target_self = False
+    explain_qualifier_filter = "ready"
 
-    def can_target_unit(self, unit: Unit) -> bool:
-        return unit != self.parent and unit.ready
+    def filter_unit(self, unit: Unit) -> bool:
+        return unit.ready
 
     def perform(self, target: Unit) -> None:
         ES.resolve(ExhaustUnit(target))
@@ -1596,6 +1605,175 @@ class TurboTune(TargetUnitActivatedAbility):
         )
 
 
+class TurnToRabbit(TargetUnitActivatedAbility):
+    """
+    Applies <critterized> for 1 round.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 2
+    controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                target,
+                UnitStatusSignature(UnitStatus.get("critterized"), self, duration=1),
+            )
+        )
+
+
+class TugIn(TargetUnitActivatedAbility):
+    """
+    Applies <beauty_sleep> for 1 round.
+    """
+
+    cost = EnergyCost(4) | MovementCost(1)
+    can_target_self = False
+    explain_qualifier_filter = "ready"
+
+    def filter_unit(self, unit: Unit) -> bool:
+        return unit.ready
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                target,
+                UnitStatusSignature(UnitStatus.get("beauty_sleep"), self, duration=1),
+            )
+        )
+
+
+class FaerieDust(TargetUnitActivatedAbility):
+    """
+    Applies <magic_strength> for 1 round.
+    """
+
+    cost = EnergyCost(2)
+    controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                target,
+                UnitStatusSignature(UnitStatus.get("magic_strength"), self, duration=1),
+            )
+        )
+
+
+class FleaSwarm(TargetUnitActivatedAbility):
+    """
+    Applies <flea_infested> for 3 rounds.
+    """
+
+    cost = EnergyCost(4) | MovementCost(1)
+    range = 2
+    controller_target_option = ControllerTargetOption.ENEMY
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                target,
+                UnitStatusSignature(UnitStatus.get("flea_infested"), self, duration=3),
+            )
+        )
+
+
+class Disempower(TargetTriHexActivatedAbility):
+    """
+    Applies <sapping_field> for 2 rounds.
+    """
+
+    cost = EnergyCost(3)
+    range = 3
+
+    def perform(self, target: list[Hex]) -> None:
+        for h in target:
+            ES.resolve(
+                ApplyHexStatus(
+                    h,
+                    HexStatusSignature(
+                        HexStatus.get("sapping_field"), self, duration=2
+                    ),
+                )
+            )
+
+
+class Torpor(TargetTriHexActivatedAbility):
+    """
+    Applies 2 stacks of <tired> to units on target hexes.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 2
+
+    def perform(self, target: list[Hex]) -> None:
+        for unit in GS.map.units_on(target):
+            ES.resolve(
+                ApplyStatus(
+                    unit,
+                    UnitStatusSignature(UnitStatus.get("tired"), self, stacks=2),
+                )
+            )
+
+
+class FireStorm(ActivatedAbilityFacet[list[Hex]]):
+    """
+    For each target hex, if it has <burning_terrain>, apply 2 stacks of <burning_terrain> for 2 rounds, and 2 <burn> to any
+    unit on it, otherwise apply 1 stack of those statuses.
+    """
+
+    cost = EnergyCost(3) | ExclusiveCost()
+
+    @classmethod
+    def get_target_explanation(cls) -> str | None:
+        return "Target tri hex within 3 range and at least 2 hexes away NLoS."
+
+    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
+        if corners := [
+            corner
+            for corner in GS.map.get_corners_within_range_off(self.parent, 3)
+            if all(
+                GS.map.distance_between(cc, self.parent) >= 2
+                for cc in corner.get_adjacent_positions()
+            )
+        ]:
+            return TriHex(corners)
+
+    def perform(self, target: list[Hex]) -> None:
+        for h in target:
+            ES.resolve(
+                ApplyHexStatus(
+                    h,
+                    HexStatusSignature(
+                        HexStatus.get("burning_terrain"),
+                        self,
+                        stacks=(
+                            2
+                            if (
+                                is_burning := h.has_status(
+                                    HexStatus.get("burning_terrain")
+                                )
+                            )
+                            else 1
+                        ),
+                        duration=2,
+                    ),
+                )
+            )
+            if unit := GS.map.unit_on(h):
+                ES.resolve(
+                    ApplyStatus(
+                        unit,
+                        UnitStatusSignature(
+                            UnitStatus.get("burn"), self, stacks=2 if is_burning else 1
+                        ),
+                    )
+                )
+
+
 class GiantPincers(ActivatedAbilityFacet[list[Hex]]):
     """Deals 5 + attack power melee damage to units on the target hexes."""
 
@@ -1680,7 +1858,7 @@ class Evacuate(TargetUnitActivatedAbility):
 
     def perform(self, target: list[Hex | Unit]) -> None:
         unit, to_ = target
-        ES.resolve(MoveUnit(unit, to_, external=unit != self.parent))
+        ES.resolve(MoveUnit(unit, to_, external=True))
 
 
 class CriticalAid(TargetUnitActivatedAbility):

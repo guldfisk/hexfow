@@ -33,6 +33,7 @@ from game.values import DamageType, Resistance, Size, VisionObstruction
 class SpeedLayer(IntEnum):
     FLAT = auto()
     PROPORTIONAL = auto()
+    CAP = auto()
 
 
 class LegalOptions(IntEnum):
@@ -496,7 +497,22 @@ class UnitProportionalSpeedModifier(StateModifierEffect[Unit, None, int]):
 
 
 @dataclasses.dataclass(eq=False)
-class HexIncreasesEnergyRegenModifier(StateModifierEffect[Unit, None, int]):
+class UnitCapSpeedModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = SpeedLayer.CAP
+    target: ClassVar[object] = Unit.speed
+
+    unit: Unit
+    value: int
+
+    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+        return obj == self.unit
+
+    def modify(self, obj: Unit, request: None, value: int) -> int:
+        return min(value, self.value)
+
+
+@dataclasses.dataclass(eq=False)
+class HexFlatEnergyRegenModifier(StateModifierEffect[Unit, None, int]):
     priority: ClassVar[int] = 1
     target: ClassVar[object] = Unit.energy_regen
 
@@ -603,6 +619,21 @@ class UnitAttackPowerFlatModifier(StateModifierEffect[Unit, None, int]):
 
 
 @dataclasses.dataclass(eq=False)
+class HexAttackPowerFlatModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.attack_power
+
+    hex_: Hex
+    amount: int | Callable[..., int]
+
+    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+        return GS.map.hex_off(obj) == self.hex_
+
+    def modify(self, obj: Unit, request: None, value: int) -> int:
+        return value + (self.amount if isinstance(self.amount, int) else self.amount())
+
+
+@dataclasses.dataclass(eq=False)
 class NegativeAttackPowerAuraModifier(StateModifierEffect[Unit, None, int]):
     priority: ClassVar[int] = 1
     target: ClassVar[object] = Unit.attack_power
@@ -618,6 +649,20 @@ class NegativeAttackPowerAuraModifier(StateModifierEffect[Unit, None, int]):
 
     def modify(self, obj: Unit, request: None, value: int) -> int:
         return value - self.amount
+
+
+@dataclasses.dataclass(eq=False)
+class UnactivateableModifier(StateModifierEffect[Unit, None, bool]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.can_be_activated
+
+    unit: Unit
+
+    def should_modify(self, obj: Unit, request: None, value: bool) -> bool:
+        return obj == self.unit
+
+    def modify(self, obj: Unit, request: None, value: bool) -> bool:
+        return False
 
 
 @dataclasses.dataclass(eq=False)

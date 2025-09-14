@@ -10,9 +10,10 @@ from game.core import (
     Terrain,
 )
 from game.effects.modifiers import (
+    HexAttackPowerFlatModifier,
     HexBlocksVisionModifier,
     HexDecreaseSightCappedModifier,
-    HexIncreasesEnergyRegenModifier,
+    HexFlatEnergyRegenModifier,
     HexMoveOutPenaltyModifier,
     HexRevealedModifier,
     MappedOutModifier,
@@ -42,7 +43,7 @@ class Shrine(HexStatus):
 
     def create_effects(self) -> None:
         self.register_effects(
-            HexIncreasesEnergyRegenModifier(self.parent, 1),
+            HexFlatEnergyRegenModifier(self.parent, 1),
             ShrineWalkInTrigger(self.parent, self),
             ShrineSkipTrigger(self.parent, self),
         )
@@ -166,6 +167,18 @@ class UndergroundSpring(LowestRefreshableMixin, HexStatus):
         ES.resolve(ChangeHexTerrain(self.parent, Terrain.get_class("water")))
 
 
+class SappingField(RefreshableMixin, HexStatus):
+    """
+    Units on this hex has -1 attack power and energy regeneration.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            HexFlatEnergyRegenModifier(self.parent, -1),
+            HexAttackPowerFlatModifier(self.parent, -1),
+        )
+
+
 class RuneOfClarity(HexStatus):
     """
     Units on this hex has +1 energy regeneration.
@@ -174,7 +187,7 @@ class RuneOfClarity(HexStatus):
     dispellable = False
 
     def create_effects(self) -> None:
-        self.register_effects(HexIncreasesEnergyRegenModifier(self.parent, 1))
+        self.register_effects(HexFlatEnergyRegenModifier(self.parent, 1))
 
 
 class Mine(HexStatus):

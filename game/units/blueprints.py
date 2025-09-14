@@ -9,16 +9,20 @@ from game.units.facets.activated_abilities import (
     CoordinatedManeuver,
     CriticalAid,
     CuringWord,
+    Disempower,
     DrawSpring,
     EnfeeblingHex,
     Evacuate,
+    FaerieDust,
     FalseCure,
     FatalBonding,
+    FireStorm,
     FixErUp,
     FlameThrower,
     FlameWall,
     FlashBang,
     FlattenGround,
+    FleaSwarm,
     GiantPincers,
     GrantCharm,
     GrantWish,
@@ -73,8 +77,11 @@ from game.units.facets.activated_abilities import (
     Sweep,
     Terrorize,
     TidyUp,
+    Torpor,
     Translocate,
+    TugIn,
     TurboTune,
+    TurnToRabbit,
     Vault,
     VenomousSpine,
     VerdantFlash,
@@ -94,6 +101,7 @@ from game.units.facets.attacks import (
     Chainsaw,
     Chomp,
     CommandersPistol,
+    CrushingFists,
     CrushingMandibles,
     CrypticClaws,
     CurvedHorns,
@@ -103,6 +111,7 @@ from game.units.facets.attacks import (
     DrainingGrasp,
     EtherealSting,
     FinalSting,
+    FleaBite,
     FromTheTopRope,
     Frostbite,
     GiantClub,
@@ -188,6 +197,8 @@ from game.units.facets.static_abilities import (
     PuffAway,
     Pusher,
     Quick,
+    ResistantSkin,
+    RockSteady,
     Schadenfreude,
     ScurryInTheShadows,
     SlimyLocomotion,
@@ -717,6 +728,16 @@ GIANT_TOAD = UnitBlueprint(
     price=8,
 )
 
+MISCHIEVOUS_GODMOTHER = UnitBlueprint(
+    "Mischievous Godmother",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[TurnToRabbit, TugIn, FaerieDust],
+    price=7,
+)
+
 REMORSELESS_SNIPER = UnitBlueprint(
     "Remorseless Sniper",
     health=2,
@@ -770,6 +791,16 @@ INK_WITCH = UnitBlueprint(
     energy=5,
     facets=[BloodExpunge, InkRing, MalevolentStare],
     price=9,
+)
+
+PYROMANCER_ARTILLERIST = UnitBlueprint(
+    "Pyromancer Artillerist",
+    health=4,
+    speed=2,
+    sight=1,
+    energy=5,
+    facets=[FireStorm],
+    price=11,
 )
 
 SLUDGE_SLUG = UnitBlueprint(
@@ -933,6 +964,16 @@ PESTILENCE_PRIEST = UnitBlueprint(
     price=11,
 )
 
+RANK_DEFILER = UnitBlueprint(
+    "Rank Defiler",
+    health=6,
+    speed=2,
+    sight=1,
+    energy=6,
+    facets=[FleaSwarm, Torpor, Disempower],
+    price=11,
+)
+
 VILE_TRANSMUTER = UnitBlueprint(
     "Vile Transmuter",
     health=5,
@@ -1000,6 +1041,17 @@ STAUNCH_IRON_HEART = UnitBlueprint(
     price=12,
 )
 
+GRANITE_GOLEM = UnitBlueprint(
+    "Granite Golem",
+    health=9,
+    speed=1,
+    sight=2,
+    size=Size.LARGE,
+    armor=1,
+    facets=[CrushingFists, RockSteady, ResistantSkin],
+    price=13,
+)
+
 WITCH_ENGINE = UnitBlueprint(
     "Witch Engine",
     health=7,
@@ -1022,7 +1074,7 @@ CYCLOPS = UnitBlueprint(
 
 GIANT_BATTLE_CRAB = UnitBlueprint(
     "Giant Battle Crab",
-    health=9,
+    health=8,
     speed=2,
     sight=1,
     armor=2,
@@ -1040,6 +1092,16 @@ ZONE_MECH = UnitBlueprint(
     size=Size.LARGE,
     facets=[HammerCannon, SmokeCanister, TerrainSavvy],
     price=18,
+)
+
+ANNOYING_FLEA = UnitBlueprint(
+    "Annoying Flea",
+    health=1,
+    speed=1,
+    size=Size.SMALL,
+    sight=1,
+    facets=[FleaBite],
+    price=None,
 )
 
 BEE_SHAMAN = UnitBlueprint(
@@ -1108,6 +1170,16 @@ LOTUS_BUD = UnitBlueprint(
     starting_energy=0,
     size=Size.SMALL,
     facets=[Immobile, Nourishing, Bloom],
+    price=None,
+)
+
+RABBIT = UnitBlueprint(
+    "Rabbit",
+    health=4,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    facets=[TerrainSavvy],
     price=None,
 )
 

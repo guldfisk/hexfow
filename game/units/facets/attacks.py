@@ -190,8 +190,25 @@ class Pinch(MeleeAttackFacet):
 
 
 class SnappingBeak(MeleeAttackFacet):
-    damage = 2
     cost = MovementCost(1)
+    damage = 2
+
+
+class FleaBite(MeleeAttackFacet):
+    damage = 1
+
+
+class CrushingFists(MeleeAttackFacet):
+    """
+    +2 damage against exhausted units.
+    """
+
+    cost = ExclusiveCost()
+    damage = 4
+
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        if unit.exhausted:
+            return 2
 
 
 class StubbyClaws(MeleeAttackFacet):

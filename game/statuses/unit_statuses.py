@@ -7,6 +7,7 @@ from game.core import (
     StackableMixin,
     StackableRefreshableMixin,
     Unit,
+    UnitBlueprint,
     UnitStatus,
     UnitStatusSignature,
 )
@@ -16,6 +17,7 @@ from game.effects.modifiers import (
     RootedModifier,
     SilencedModifier,
     TerrorModifier,
+    UnactivateableModifier,
     UnitArmorFlatModifier,
     UnitAttackPowerFlatModifier,
     UnitEnergyRegenFlatModifier,
@@ -33,6 +35,8 @@ from game.effects.triggers import (
     BurnTrigger,
     ChillTrigger,
     ExpireOnDealDamageStatusTrigger,
+    ExpireOnSufferDamageStatusTrigger,
+    FleaInfestedTrigger,
     HitchedTrigger,
     OneTimeModifyMovementPointsStatusTrigger,
     PanickedTrigger,
@@ -44,7 +48,7 @@ from game.effects.triggers import (
     TiredRestTrigger,
     TurnExpiringStatusTrigger,
 )
-from game.events import ExhaustUnit, Kill
+from game.events import ExhaustUnit, Heal, Kill
 from game.values import StatusIntention
 
 
@@ -331,7 +335,7 @@ class Stunned(StackableMixin, UnitStatus):
     default_intention = StatusIntention.DEBUFF
 
     @classmethod
-    def on_apply(
+    def pre_merge(
         cls, signature: UnitStatusSignature, to: Unit
     ) -> UnitStatusSignature | None:
         if (context := GS.active_unit_context) and context.unit == to:
@@ -461,6 +465,55 @@ class NaturesGrace(RefreshableMixin, UnitStatus):
 
     def create_effects(self) -> None:
         self.register_effects(RoundHealTrigger(self.parent, 1, self))
+
+
+class Critterized(RefreshableMixin, UnitStatus):
+    """
+    This unit is turned into a [rabbit] (it keeps its damage and energy).
+    """
+
+    def on_apply(self) -> None:
+        self.parent.set_blueprint(UnitBlueprint.get_class("rabbit"))
+
+    def on_remove(self) -> None:
+        self.parent.set_blueprint(self.parent.original_blueprint)
+
+
+class BeautySleep(RefreshableMixin, UnitStatus):
+    """
+    This unit can't be activated. Remove this status when this unit suffers damage.
+    When this status expires (not from being removed from damage), heal this unit 3.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            UnactivateableModifier(self.parent), ExpireOnSufferDamageStatusTrigger(self)
+        )
+
+    def on_expires(self) -> None:
+        ES.resolve(Heal(self.parent, 3, self))
+
+
+class MagicStrength(RefreshableMixin, UnitStatus):
+    """
+    +1 attack power and energy regeneration.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            UnitEnergyRegenFlatModifier(self.parent, 1),
+            UnitAttackPowerFlatModifier(self.parent, 1),
+        )
+
+
+class FleaInfested(RefreshableMixin, UnitStatus):
+    """
+    At the end of each round, this status controller chooses an unoccupied space adjacent to this unit.
+    They spawn an [annoying_flea] there.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(FleaInfestedTrigger(self.parent, self.controller))
 
 
 class Chill(RefreshableMixin, UnitStatus):

@@ -42,10 +42,10 @@ class TestGameType(GameType):
                     random.choice(
                         [
                             Plains,
-                            Plains,
                             # Plains,
-                            Forest,
-                            Hills,
+                            # # Plains,
+                            # Forest,
+                            # Hills,
                             # Water,
                             # Magma,
                         ]
@@ -59,14 +59,24 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                MEDIC,
-                MAD_SCIENTIST,
-                SHRINE_KEEPER,
-                RECON_SPECIALIST,
+                # MEDIC,
+                BULLDOZER,
+                DJINN,
+                MISCHIEVOUS_GODMOTHER,
+                RANK_DEFILER,
+                # VILE_TRANSMUTER,
+                # GNARLED_SHAMAN,
+                # MAD_SCIENTIST,
+                # SHRINE_KEEPER,
+                # PYROMANCER_ARTILLERIST,
             ),
             (
-                FROST_SPRITE,
-                ELITE_COMMANDO,
+                ANCIENT_ALTRUIST,
+                GRANITE_GOLEM,
+                FRONTLINE_TACTICIAN,
+                # FROST_SPRITE,
+                # CYCLOPS,
+                # ELITE_COMMANDO,
             ),
         )
 

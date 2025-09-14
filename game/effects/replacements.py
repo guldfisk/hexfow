@@ -31,13 +31,27 @@ from game.values import DamageType, StatusIntention
 
 
 class MoveUnitLayers(IntEnum):
-    PUSH_LAYER = auto()
-    PORTAL_LAYER = auto()
+    IMMOBILE = auto()
+    CRUSH = auto()
+    PUSH = auto()
+    PORTAL = auto()
+
+
+@dataclasses.dataclass(eq=False)
+class ExternallyImmobileReplacement(ReplacementEffect[MoveUnit]):
+    priority: ClassVar[int] = MoveUnitLayers.IMMOBILE
+
+    unit: Unit
+
+    def can_replace(self, event: MoveUnit) -> bool:
+        return event.unit == self.unit and event.external
+
+    def resolve(self, event: MoveUnit) -> None: ...
 
 
 @dataclasses.dataclass(eq=False)
 class CrushableReplacement(ReplacementEffect[MoveUnit]):
-    priority: ClassVar[int] = 0
+    priority: ClassVar[int] = MoveUnitLayers.CRUSH
 
     unit: Unit
     source: Source
@@ -56,7 +70,7 @@ class CrushableReplacement(ReplacementEffect[MoveUnit]):
 
 @dataclasses.dataclass(eq=False)
 class GateReplacement(ReplacementEffect[MoveUnit]):
-    priority: ClassVar[int] = MoveUnitLayers.PORTAL_LAYER
+    priority: ClassVar[int] = MoveUnitLayers.PORTAL
 
     link: HexStatusLink
 
@@ -101,7 +115,7 @@ def get_push_chain(from_: CC, direction: CC) -> list[tuple[Unit, Hex | None]]:
 
 @dataclasses.dataclass(eq=False)
 class PusherReplacement(ReplacementEffect[MoveUnit]):
-    priority: ClassVar[int] = MoveUnitLayers.PUSH_LAYER
+    priority: ClassVar[int] = MoveUnitLayers.PUSH
 
     unit: Unit
     source: Source
@@ -135,7 +149,7 @@ class PusherReplacement(ReplacementEffect[MoveUnit]):
 
 @dataclasses.dataclass(eq=False)
 class StrainedPusherReplacement(ReplacementEffect[MoveUnit]):
-    priority: ClassVar[int] = MoveUnitLayers.PUSH_LAYER
+    priority: ClassVar[int] = MoveUnitLayers.PUSH
 
     unit: Unit
     source: Source

@@ -14,6 +14,7 @@ from game.core import (
     MoveOption,
     NoTarget,
     OneOfHexes,
+    Player,
     SelectOptionDecisionPoint,
     SkipOption,
     Source,
@@ -770,6 +771,34 @@ class HitchedTrigger(TriggerEffect[MoveUnit]):
 
 
 @dataclasses.dataclass(eq=False)
+class FleaInfestedTrigger(TriggerEffect[RoundCleanup]):
+    priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
+
+    unit: Unit
+    controller: Player
+
+    def resolve(self, event: RoundCleanup) -> None:
+        if hexes := [
+            h for h in GS.map.get_neighbors_off(self.unit) if not GS.map.unit_on(h)
+        ]:
+            ES.resolve(
+                SpawnUnit(
+                    UnitBlueprint.get_class("annoying_flea"),
+                    self.controller,
+                    GS.make_decision(
+                        self.controller,
+                        SelectOptionDecisionPoint(
+                            [
+                                MoveOption(target_profile=OneOfHexes(hexes)),
+                            ],
+                            explanation="Flea Infested",
+                        ),
+                    ).target,
+                )
+            )
+
+
+@dataclasses.dataclass(eq=False)
 class HexRoundDamageTrigger(TriggerEffect[RoundCleanup]):
     priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
 
@@ -813,6 +842,19 @@ class ExpireOnDealDamageStatusTrigger(TriggerEffect[Damage]):
         )
 
     def resolve(self, event: Damage) -> None:
+        self.status.remove()
+
+
+@dataclasses.dataclass(eq=False)
+class ExpireOnSufferDamageStatusTrigger(TriggerEffect[SufferDamage]):
+    priority: ClassVar[int] = 0
+
+    status: Status
+
+    def should_trigger(self, event: SufferDamage) -> bool:
+        return event.unit == self.status.parent
+
+    def resolve(self, event: SufferDamage) -> None:
         self.status.remove()
 
 

@@ -6,6 +6,9 @@ platform
     lobby system
     edit/load armies
 
+army editor
+    search/filter units
+
 map editor
     round restricted objectives
     single mirror axis mode
@@ -46,6 +49,7 @@ code
     clean up action space interface
     don't send no change game state updates
 
+    registered get classes clean up
     common target profile interface for effort facets
     proper parallel decisions support (with immediate error handling)
 
