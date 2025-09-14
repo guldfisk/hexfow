@@ -13,6 +13,7 @@ from game.units.facets.activated_abilities import (
     DrawSpring,
     EnfeeblingHex,
     Evacuate,
+    Exorcise,
     FaerieDust,
     FalseCure,
     FatalBonding,
@@ -34,6 +35,7 @@ from game.units.facets.activated_abilities import (
     Hitch,
     InducePanic,
     InkRing,
+    InkScreen,
     InstilFocus,
     InternalStruggle,
     IronBlessing,
@@ -53,6 +55,7 @@ from game.units.facets.activated_abilities import (
     RaiseGround,
     RaiseShrine,
     Riddle,
+    RollUp,
     RoyalJelly,
     Scorch,
     Scorn,
@@ -88,6 +91,8 @@ from game.units.facets.activated_abilities import (
     VerdantFlash,
     VitalityTransfusion,
     Vomit,
+    WardEvil,
+    WishHarm,
     WringEssence,
 )
 from game.units.facets.attacks import (
@@ -127,6 +132,7 @@ from game.units.facets.attacks import (
     HiddenBlade,
     HurlBoulder,
     InfernalBlade,
+    Lance,
     LightBlaster,
     LightBow,
     MarshmallowFist,
@@ -183,6 +189,7 @@ from game.units.facets.static_abilities import (
     Furious,
     GlassSkin,
     GrizzlyMurderer,
+    Hardy,
     HeelTurn,
     Immobile,
     Inspiration,
@@ -208,10 +215,12 @@ from game.units.facets.static_abilities import (
     SoilCommunion,
     SootDweller,
     Stakeout,
+    StayingPower,
     Stealth,
     StrainedPusher,
     Structure,
     Swimmer,
+    TactileSensing,
     TelepathicSpy,
     TerrainSavvy,
     ToughSkin,
@@ -384,7 +393,6 @@ LIGHT_ARCHER = UnitBlueprint(
     health=4,
     speed=3,
     sight=2,
-    size=Size.SMALL,
     facets=[LightBow],
     price=3,
 )
@@ -402,11 +410,11 @@ MARSHMALLOW_TITAN = UnitBlueprint(
 
 PANGOLIN_FAMILIAR = UnitBlueprint(
     "Pangolin Familiar",
-    health=6,
+    health=4,
     speed=2,
     sight=1,
     size=Size.SMALL,
-    facets=[SturdyClaws, AntiMagicHide],
+    facets=[SturdyClaws, RollUp, AntiMagicHide],
     price=3,
 )
 
@@ -542,6 +550,16 @@ GOBLIN_ASSASSIN = UnitBlueprint(
     price=5,
 )
 
+HARROWED_MYSTICIST = UnitBlueprint(
+    "Harrowed Mysticist",
+    health=4,
+    speed=3,
+    sight=1,
+    energy=5,
+    facets=[WardEvil, Exorcise, WishHarm],
+    price=5,
+)
+
 MEDIC = UnitBlueprint(
     "Medic",
     health=3,
@@ -570,6 +588,16 @@ MORTAR_SQUAD = UnitBlueprint(
     facets=[Mortar],
     price=5,
     flavor="MOOORTAR COOOMBAT",
+)
+
+SQUIRMING_SQUID = UnitBlueprint(
+    "Squirming Squid",
+    health=5,
+    speed=2,
+    sight=1,
+    energy=4,
+    facets=[Grapple, InkScreen, Aquatic, TactileSensing],
+    price=5,
 )
 
 UNDERHANDED_HEXMAGE = UnitBlueprint(
@@ -609,6 +637,16 @@ GLASS_GOLEM = UnitBlueprint(
     armor=2,
     sight=2,
     facets=[GlassFist, GlassSkin],
+    price=6,
+)
+
+HARMONIOUS_DRUID = UnitBlueprint(
+    "Harmonious Druid",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[NaturalBlessing, VerdantFlash, ForestDweller, SoilCommunion],
     price=6,
 )
 
@@ -681,16 +719,6 @@ GIANT_SLAYER_MOUSE = UnitBlueprint(
     price=7,
 )
 
-HARMONIOUS_DRUID = UnitBlueprint(
-    "Harmonious Druid",
-    health=4,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[NaturalBlessing, VerdantFlash, ForestDweller, SoilCommunion],
-    price=7,
-)
-
 MISCHIEVOUS_GODMOTHER = UnitBlueprint(
     "Mischievous Godmother",
     health=5,
@@ -728,6 +756,15 @@ BLIND_ABOMINATION = UnitBlueprint(
     sight=0,
     size=Size.LARGE,
     facets=[Vomit],
+    price=8,
+)
+
+CAMELBACK_OUTRIDER = UnitBlueprint(
+    "Camelback Outrider",
+    health=6,
+    speed=4,
+    sight=2,
+    facets=[Lance, Hardy, StayingPower],
     price=8,
 )
 

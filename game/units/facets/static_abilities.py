@@ -32,6 +32,7 @@ from game.effects.modifiers import (
     TelepathicSpyModifier,
     UnitCapSpeedModifier,
     UnitNoCaptureModifier,
+    UnitSightMinModifier,
     UnwieldySwimmerModifier,
 )
 from game.effects.replacements import (
@@ -41,6 +42,7 @@ from game.effects.replacements import (
     LastStandReplacement,
     PerTurnMovePenaltyIgnoreReplacement,
     PusherReplacement,
+    StayingPowerReplacement,
     StrainedPusherReplacement,
     UnitImmuneToStatusReplacement,
 )
@@ -53,6 +55,7 @@ from game.effects.triggers import (
     FoulBurstTrigger,
     FuriousTrigger,
     GrizzlyMurdererTrigger,
+    HardyTrigger,
     HeelTurnTrigger,
     InspirationTrigger,
     JukeAndJiveTrigger,
@@ -580,6 +583,33 @@ class SlimySkin(StaticAbilityFacet):
         self.register_effects(
             UnitImmuneToStatusReplacement(self.parent, UnitStatus.get("slimed"))
         )
+
+
+class Hardy(StaticAbilityFacet):
+    """
+    At the beginning of each round, if this unit doesn't have a stack of <vigor>, apply 1 stack of vigor to it.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(HardyTrigger(self.parent, self))
+
+
+class StayingPower(StaticAbilityFacet):
+    """
+    If this unit would suffer damage while it has more than 1 health, that damage is non-lethal.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(StayingPowerReplacement(self.parent))
+
+
+class TactileSensing(StaticAbilityFacet):
+    """
+    This unit has at least 1 sight.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(UnitSightMinModifier(self.parent, 1))
 
 
 class SludgeTrail(StaticAbilityFacet):

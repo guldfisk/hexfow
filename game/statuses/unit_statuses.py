@@ -1,11 +1,14 @@
 from events.eventsystem import ES
 from game.core import (
     GS,
+    ActivatedAbilityFacet,
     HighestStackableRefreshableMixin,
     LowestRefreshableMixin,
     RefreshableMixin,
     StackableMixin,
     StackableRefreshableMixin,
+    StaticAbilityFacet,
+    Status,
     Unit,
     UnitBlueprint,
     UnitStatus,
@@ -16,6 +19,7 @@ from game.effects.modifiers import (
     ParanoiaModifier,
     RootedModifier,
     SilencedModifier,
+    SourceTypeResistanceModifier,
     TerrorModifier,
     UnactivateableModifier,
     UnitArmorFlatModifier,
@@ -28,12 +32,18 @@ from game.effects.modifiers import (
     UnitSizeFlatModifier,
     UnitSpeedModifier,
 )
-from game.effects.replacements import LuckyCharmReplacement, StunnedReplacement
+from game.effects.replacements import (
+    FrailReplacement,
+    LuckyCharmReplacement,
+    StunnedReplacement,
+    VigorReplacement,
+)
 from game.effects.triggers import (
     BaffledTrigger,
     BellStruckTrigger,
     BurnTrigger,
     ChillTrigger,
+    ExpireOnActivatedTrigger,
     ExpireOnDealDamageStatusTrigger,
     ExpireOnSufferDamageStatusTrigger,
     FleaInfestedTrigger,
@@ -49,7 +59,7 @@ from game.effects.triggers import (
     TurnExpiringStatusTrigger,
 )
 from game.events import ExhaustUnit, Heal, Kill
-from game.values import StatusIntention
+from game.values import Resistance, StatusIntention
 
 
 class Burn(StackableMixin, UnitStatus):
@@ -438,12 +448,16 @@ class TaintedBond(UnitStatus):
 class Enfeebled(RefreshableMixin, UnitStatus):
     """-2 attack power."""
 
+    default_intention = StatusIntention.DEBUFF
+
     def create_effects(self) -> None:
         self.register_effects(UnitAttackPowerFlatModifier(self.parent, -2))
 
 
 class Focused(RefreshableMixin, UnitStatus):
     """+1 energy regen."""
+
+    default_intention = StatusIntention.BUFF
 
     def create_effects(self) -> None:
         self.register_effects(UnitEnergyRegenFlatModifier(self.parent, 1))
@@ -454,6 +468,8 @@ class Baffled(UnitStatus):
     When this unit finishes it's turn, if it acted, stun it. Then remove this status.
     """
 
+    default_intention = StatusIntention.DEBUFF
+
     def create_effects(self) -> None:
         self.register_effects(BaffledTrigger(self))
 
@@ -462,6 +478,8 @@ class NaturesGrace(RefreshableMixin, UnitStatus):
     """
     At the end of each round, this unit heals 1.
     """
+
+    default_intention = StatusIntention.BUFF
 
     def create_effects(self) -> None:
         self.register_effects(RoundHealTrigger(self.parent, 1, self))
@@ -499,6 +517,8 @@ class MagicStrength(RefreshableMixin, UnitStatus):
     +1 attack power and energy regeneration.
     """
 
+    default_intention = StatusIntention.BUFF
+
     def create_effects(self) -> None:
         self.register_effects(
             UnitEnergyRegenFlatModifier(self.parent, 1),
@@ -512,6 +532,8 @@ class FleaInfested(RefreshableMixin, UnitStatus):
     They spawn an [annoying_flea] there.
     """
 
+    default_intention = StatusIntention.DEBUFF
+
     def create_effects(self) -> None:
         self.register_effects(FleaInfestedTrigger(self.parent, self.controller))
 
@@ -521,8 +543,63 @@ class Chill(RefreshableMixin, UnitStatus):
     At the end of each round, if this unit isn't adjacent to an allied unit, it's dealt 1 pure damage.
     """
 
+    default_intention = StatusIntention.DEBUFF
+
     def create_effects(self) -> None:
         self.register_effects(ChillTrigger(self.parent, self))
+
+
+class MagicWard(RefreshableMixin, UnitStatus):
+    """
+    Reduce damage dealt to this unit by abilities and statuses by one third, rounding the result up.
+    """
+
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            SourceTypeResistanceModifier(
+                self.parent,
+                (ActivatedAbilityFacet, StaticAbilityFacet, Status),
+                Resistance.MINOR,
+            )
+        )
+
+
+class Vigor(StackableRefreshableMixin, UnitStatus):
+    """
+    If a debuff would be applied to this unit, instead remove a stack of this status.
+    """
+
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(VigorReplacement(self))
+
+
+class RolledUp(UnitStatus):
+    """
+    +1 armor. Remove this status when this unit is activated.
+    """
+
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            UnitArmorFlatModifier(self.parent, 1), ExpireOnActivatedTrigger(self)
+        )
+
+
+class Frail(HighestStackableRefreshableMixin, UnitStatus):
+    """
+    If this unit would suffer damage less than the amount of stacks of this debuff, it suffers damage
+    equal to the stacks of this debuff instead.
+    """
+
+    default_intention = StatusIntention.DEBUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(FrailReplacement(self))
 
 
 class Parched(RefreshableMixin, UnitStatus):
@@ -530,6 +607,8 @@ class Parched(RefreshableMixin, UnitStatus):
     At the end of this units turn, if it acted and doesn't have any remaining movement points,
     deal 1 pure damage to it.
     """
+
+    default_intention = StatusIntention.DEBUFF
 
     def create_effects(self) -> None:
         self.register_effects(ParchedTrigger(self.parent, self))

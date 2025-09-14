@@ -59,25 +59,16 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                # MEDIC,
-                # GRANITE_GOLEM,
-                # GIANT_TOAD,
-                # WAR_HOG,
-                BEE_SHAMAN,
-                COMBAT_ENGINEER,
-                MISCHIEVOUS_GODMOTHER,
-                # RANK_DEFILER,
-                # VILE_TRANSMUTER,
-                # GNARLED_SHAMAN,
-                # MAD_SCIENTIST,
-                # SHRINE_KEEPER,
-                # PYROMANCER_ARTILLERIST,
+                PANGOLIN_FAMILIAR,
+                MAD_SCIENTIST,
+                # HARROWED_MYSTICIST,
+                # FROST_SPRITE,
+                SQUIRMING_SQUID,
+                CAMELBACK_OUTRIDER,
             ),
             (
                 # ANCIENT_ALTRUIST,
-                FRONTLINE_TACTICIAN,
-                FROST_SPRITE,
-                # CYCLOPS,
+                CYCLOPS,
                 ELITE_COMMANDO,
             ),
         )

@@ -1096,22 +1096,10 @@ class UnitStatus(Status[Unit, "UnitStatusSignature"], ABC):
         duration: int | None = None,
         stacks: int | None = None,
         parent: Unit,
-        intention: StatusIntention | None = None,
+        intention: StatusIntention,
     ):
         super().__init__(source=source, duration=duration, stacks=stacks, parent=parent)
-        self.intention = (
-            intention
-            or self.default_intention
-            or (
-                (
-                    StatusIntention.BUFF
-                    if parent.controller == self.controller
-                    else StatusIntention.DEBUFF
-                )
-                if self.source
-                else StatusIntention.NEUTRAL
-            )
-        )
+        self.intention = intention
 
     @classmethod
     def get(cls, identifier: str) -> type[UnitStatus]:
@@ -1148,13 +1136,28 @@ class StatusSignature(Generic[G_HasStatuses, G_Status]):
 class UnitStatusSignature(StatusSignature[Unit, UnitStatus]):
     intention: StatusIntention | None = None
 
-    def realize(self, for_: Unit) -> UnitStatus:
+    def get_intention(self, unit: Unit) -> StatusIntention:
+        return (
+            self.intention
+            or self.status_type.default_intention
+            or (
+                (
+                    StatusIntention.BUFF
+                    if unit.controller == get_source_controller(self.source)
+                    else StatusIntention.DEBUFF
+                )
+                if self.source
+                else StatusIntention.NEUTRAL
+            )
+        )
+
+    def realize(self, unit: Unit) -> UnitStatus:
         return self.status_type(
             source=self.source,
             duration=self.duration,
             stacks=self.stacks,
-            parent=for_,
-            intention=self.intention,
+            parent=unit,
+            intention=self.get_intention(unit),
         )
 
 

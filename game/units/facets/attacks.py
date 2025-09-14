@@ -627,6 +627,11 @@ class SlingShot(RangedAttackFacet):
     range = 1
 
 
+class Lance(MeleeAttackFacet):
+    cost = MovementCost(3)
+    damage = 3
+
+
 class Swelter(RangedAttackFacet):
     """Applies <parched> for 2 rounds."""
 

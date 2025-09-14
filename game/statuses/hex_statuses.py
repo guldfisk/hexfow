@@ -12,8 +12,9 @@ from game.core import (
 from game.effects.modifiers import (
     HexAttackPowerFlatModifier,
     HexBlocksVisionModifier,
-    HexDecreaseSightCappedModifier,
+    HexCappedFlatSightModifier,
     HexFlatEnergyRegenModifier,
+    HexFlatSightModifier,
     HexMoveOutPenaltyModifier,
     HexRevealedModifier,
     MappedOutModifier,
@@ -59,7 +60,7 @@ class Soot(RefreshableMixin, HexStatus):
         self.register_effects(
             HexWalkInDamageTrigger(self.parent, self, 1),
             HexRoundDamageTrigger(self.parent, self, 1),
-            HexDecreaseSightCappedModifier(self.parent),
+            HexCappedFlatSightModifier(self.parent),
             HexBlocksVisionModifier(self.parent),
         )
 
@@ -71,7 +72,19 @@ class Smoke(RefreshableMixin, HexStatus):
 
     def create_effects(self) -> None:
         self.register_effects(
-            HexDecreaseSightCappedModifier(self.parent),
+            HexCappedFlatSightModifier(self.parent),
+            HexBlocksVisionModifier(self.parent),
+        )
+
+
+class InkCloud(RefreshableMixin, HexStatus):
+    """
+    This hex blocks vision, and units on it has -1 sight.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            HexFlatSightModifier(self.parent, -1),
             HexBlocksVisionModifier(self.parent),
         )
 

@@ -299,6 +299,70 @@ class SweatItOut(TargetUnitActivatedAbility):
         dispel_from_unit(target)
 
 
+class Exorcise(TargetUnitActivatedAbility):
+    """
+    Dispels all statuses from the target unit. For each debuff dispelled this way,
+    the unit is dealt 1 damage, and for each buff it is healed 1.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 2
+    can_target_self = False
+
+    def perform(self, target: Unit) -> None:
+        heal = 0
+        damage = 0
+        for status in list(target.statuses):
+            for event in ES.resolve(DispelStatus(target, status)).iter_type(
+                DispelStatus
+            ):
+                if event.owner == target and isinstance(event.status, UnitStatus):
+                    if event.status.intention == StatusIntention.DEBUFF:
+                        damage += 1
+                    elif event.status.intention == StatusIntention.BUFF:
+                        heal += 1
+        ES.resolve(Damage(target, DamageSignature(damage, self, DamageType.PURE)))
+        ES.resolve(Heal(target, heal, self))
+
+
+class WardEvil(TargetUnitActivatedAbility):
+    """
+    Applies <magic_ward> for 3 rounds.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+    controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                target,
+                UnitStatusSignature(UnitStatus.get("magic_ward"), self, duration=3),
+            )
+        )
+
+
+class WishHarm(TargetUnitActivatedAbility):
+    """
+    Applies 2 stacks of <frail> for 2 rounds.
+    """
+
+    cost = EnergyCost(2) | MovementCost(1)
+    range = 2
+    controller_target_option = ControllerTargetOption.ENEMY
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(
+            ApplyStatus(
+                target,
+                UnitStatusSignature(
+                    UnitStatus.get("frail"), self, stacks=2, duration=2
+                ),
+            )
+        )
+
+
 class GuidedTrance(TargetUnitActivatedAbility):
     """Exhausts the target and it gains full energy."""
 
@@ -683,6 +747,35 @@ class Terrorize(TargetUnitActivatedAbility):
 
     def perform(self, target: Unit) -> None:
         ES.resolve(ApplyStatus(target, UnitStatusSignature(Terror, self, duration=2)))
+
+
+class RollUp(NoTargetActivatedAbility):
+    """Applies <rolled_up> to this unit."""
+
+    cost = MovementCost(1)
+
+    def perform(self, target: None) -> None:
+        ES.resolve(
+            ApplyStatus(
+                self.parent, UnitStatusSignature(UnitStatus.get("rolled_up"), self)
+            )
+        )
+
+
+class InkScreen(TargetHexArcActivatedAbility):
+    """
+    Applies <ink_cloud> for 2 rounds to the target hexes.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+
+    def perform(self, target: list[Hex]) -> None:
+        for h in target:
+            ES.resolve(
+                ApplyHexStatus(
+                    h, HexStatusSignature(HexStatus.get("ink_cloud"), self, duration=2)
+                )
+            )
 
 
 class Scorch(TargetHexArcActivatedAbility):

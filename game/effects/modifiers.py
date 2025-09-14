@@ -36,6 +36,13 @@ class SpeedLayer(IntEnum):
     CAP = auto()
 
 
+class SightLayer(IntEnum):
+    FLAT = auto()
+    CAPPED_FLAT = auto()
+    MIN = auto()
+    CAP = auto()
+
+
 class LegalOptions(IntEnum):
     RESTRICTIVE = auto()
     MUST_ATTACK = auto()
@@ -527,8 +534,8 @@ class HexFlatEnergyRegenModifier(StateModifierEffect[Unit, None, int]):
 
 
 @dataclasses.dataclass(eq=False)
-class HexDecreaseSightCappedModifier(StateModifierEffect[Unit, None, int]):
-    priority: ClassVar[int] = 1
+class HexCappedFlatSightModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = SightLayer.CAPPED_FLAT
     target: ClassVar[object] = Unit.sight
 
     space: Hex
@@ -538,6 +545,21 @@ class HexDecreaseSightCappedModifier(StateModifierEffect[Unit, None, int]):
 
     def modify(self, obj: Unit, request: None, value: int) -> int:
         return min(max(value - 1, 1), value)
+
+
+@dataclasses.dataclass(eq=False)
+class HexFlatSightModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = SightLayer.FLAT
+    target: ClassVar[object] = Unit.sight
+
+    space: Hex
+    amount: int
+
+    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+        return GS.map.hex_off(obj) == self.space
+
+    def modify(self, obj: Unit, request: None, value: int) -> int:
+        return value + self.amount
 
 
 @dataclasses.dataclass(eq=False)
@@ -716,7 +738,7 @@ class UnitArmorFlatModifier(StateModifierEffect[Unit, None, int]):
 
 @dataclasses.dataclass(eq=False)
 class UnitSightFlatModifier(StateModifierEffect[Unit, None, int]):
-    priority: ClassVar[int] = 1
+    priority: ClassVar[int] = SightLayer.FLAT
     target: ClassVar[object] = Unit.sight
 
     unit: Unit
@@ -727,6 +749,21 @@ class UnitSightFlatModifier(StateModifierEffect[Unit, None, int]):
 
     def modify(self, obj: Unit, request: None, value: int) -> int:
         return value + (self.amount if isinstance(self.amount, int) else self.amount())
+
+
+@dataclasses.dataclass(eq=False)
+class UnitSightMinModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = SightLayer.MIN
+    target: ClassVar[object] = Unit.sight
+
+    unit: Unit
+    amount: int
+
+    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+        return obj == self.unit
+
+    def modify(self, obj: Unit, request: None, value: int) -> int:
+        return max(value, self.amount)
 
 
 @dataclasses.dataclass(eq=False)

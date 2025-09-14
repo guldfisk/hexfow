@@ -235,6 +235,22 @@ class UnitImmuneToStatusReplacement(ReplacementEffect[ApplyStatus]):
 
 
 @dataclasses.dataclass(eq=False)
+class VigorReplacement(ReplacementEffect[ApplyStatus]):
+    priority: ClassVar[int] = 0
+
+    status: UnitStatus
+
+    def can_replace(self, event: ApplyStatus) -> bool:
+        return (
+            event.unit == self.status.parent
+            and event.signature.get_intention(event.unit) == StatusIntention.DEBUFF
+        )
+
+    def resolve(self, event: ApplyStatus) -> None:
+        self.status.decrement_stacks()
+
+
+@dataclasses.dataclass(eq=False)
 class LastStandReplacement(ReplacementEffect[Kill]):
     priority: ClassVar[int] = 0
 
@@ -257,6 +273,37 @@ class LastStandReplacement(ReplacementEffect[Kill]):
                     UnitStatus.get("mortally_wounded"), self.source, duration=1
                 ),
             )
+        )
+
+
+@dataclasses.dataclass(eq=False)
+class StayingPowerReplacement(ReplacementEffect[SufferDamage]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def can_replace(self, event: SufferDamage) -> bool:
+        return event.unit == self.unit and self.unit.health > 1
+
+    def resolve(self, event: SufferDamage) -> None:
+        ES.resolve(SufferDamage(event.unit, event.signature.branch(lethal=False)))
+
+
+@dataclasses.dataclass(eq=False)
+class FrailReplacement(ReplacementEffect[SufferDamage]):
+    priority: ClassVar[int] = 0
+
+    status: UnitStatus
+
+    def can_replace(self, event: SufferDamage) -> bool:
+        return (
+            event.unit == self.status.parent
+            and event.signature.amount < self.status.stacks
+        )
+
+    def resolve(self, event: SufferDamage) -> None:
+        ES.resolve(
+            SufferDamage(event.unit, event.signature.branch(amount=self.status.stacks))
         )
 
 

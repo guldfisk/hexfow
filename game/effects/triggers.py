@@ -47,6 +47,7 @@ from game.events import (
     ReceiveDamage,
     Rest,
     RoundCleanup,
+    RoundUpkeep,
     SpawnUnit,
     SufferDamage,
     Turn,
@@ -772,6 +773,25 @@ class HitchedTrigger(TriggerEffect[MoveUnit]):
 
 
 @dataclasses.dataclass(eq=False)
+class HardyTrigger(TriggerEffect[RoundUpkeep]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+    source: Source
+
+    def should_trigger(self, event: RoundUpkeep) -> bool:
+        return not self.unit.has_status("vigor")
+
+    def resolve(self, event: RoundUpkeep) -> None:
+        ES.resolve(
+            ApplyStatus(
+                self.unit,
+                UnitStatusSignature(UnitStatus.get("vigor"), self.source, stacks=1),
+            )
+        )
+
+
+@dataclasses.dataclass(eq=False)
 class FleaInfestedTrigger(TriggerEffect[RoundCleanup]):
     priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
 
@@ -818,6 +838,19 @@ class HexRoundDamageTrigger(TriggerEffect[RoundCleanup]):
                     DamageSignature(self.amount, self.source, type=DamageType.PURE),
                 )
             )
+
+
+@dataclasses.dataclass(eq=False)
+class ExpireOnActivatedTrigger(TriggerEffect[TurnUpkeep]):
+    priority: ClassVar[int] = 0
+
+    status: Status
+
+    def should_trigger(self, event: TurnUpkeep) -> bool:
+        return event.unit == self.status.parent
+
+    def resolve(self, event: TurnUpkeep) -> None:
+        self.status.remove()
 
 
 @dataclasses.dataclass(eq=False)
