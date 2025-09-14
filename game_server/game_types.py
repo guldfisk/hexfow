@@ -60,10 +60,11 @@ class TestGameType(GameType):
         player_units = (
             (
                 # MEDIC,
-                GRANITE_GOLEM,
+                # GRANITE_GOLEM,
                 # GIANT_TOAD,
                 # WAR_HOG,
                 BEE_SHAMAN,
+                COMBAT_ENGINEER,
                 MISCHIEVOUS_GODMOTHER,
                 # RANK_DEFILER,
                 # VILE_TRANSMUTER,

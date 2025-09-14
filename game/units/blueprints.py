@@ -210,6 +210,7 @@ from game.units.facets.static_abilities import (
     Stakeout,
     Stealth,
     StrainedPusher,
+    Structure,
     Swimmer,
     TelepathicSpy,
     TerrainSavvy,
@@ -912,16 +913,6 @@ CHAINSAW_SADIST = UnitBlueprint(
     price=11,
 )
 
-COMBAT_ENGINEER = UnitBlueprint(
-    "Combat Engineer",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=6,
-    facets=[Wrench, ConstructTurret, FixErUp, TurboTune],
-    price=11,
-)
-
 DIRE_WOLF = UnitBlueprint(
     "Dire Wolf",
     health=7,
@@ -1005,6 +996,16 @@ VILE_TRANSMUTER = UnitBlueprint(
     energy=5,
     facets=[DrainingGrasp, WringEssence, FatalBonding, FalseCure],
     price=11,
+)
+
+COMBAT_ENGINEER = UnitBlueprint(
+    "Combat Engineer",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[Wrench, ConstructTurret, FixErUp, TurboTune],
+    price=12,
 )
 
 FRONTLINE_TACTICIAN = UnitBlueprint(
@@ -1117,12 +1118,12 @@ ZONE_MECH = UnitBlueprint(
 
 RHINO_BEAST = UnitBlueprint(
     "Rhino",
-    health=10,
+    health=9,
     speed=4,
     sight=2,
     size=Size.LARGE,
     facets=[Gore],
-    price=22,
+    price=21,
 )
 
 ANNOYING_FLEA = UnitBlueprint(
@@ -1226,7 +1227,7 @@ SENTRY_TURRET = UnitBlueprint(
     health=4,
     speed=0,
     sight=2,
-    facets=[MiniGun, Immobile, Automated],
+    facets=[MiniGun, Structure, Automated],
     price=None,
 )
 

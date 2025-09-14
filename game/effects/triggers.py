@@ -5,6 +5,7 @@ from typing import Callable, ClassVar
 from events.eventsystem import ES, TriggerEffect, hook_on
 from game.core import (
     GS,
+    ActiveUnitContext,
     DamageSignature,
     EnergyCost,
     Hex,
@@ -1033,6 +1034,27 @@ class InspirationTrigger(TriggerEffect[ActivateAbilityAction]):
                 source=self.source,
             )
         )
+
+
+@dataclasses.dataclass(eq=False)
+class AutomatedTrigger(TriggerEffect[MoveUnit]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def should_trigger(self, event: MoveUnit) -> bool:
+        return (
+            self.unit.ready
+            and event.unit.controller != self.unit.controller
+            and event.result
+            and (attack := self.unit.get_primary_attack())
+            and event.unit in attack.get_legal_targets(ActiveUnitContext(self.unit, 1))
+        )
+
+    def resolve(self, event: MoveUnit) -> None:
+        if attack := self.unit.get_primary_attack():
+            ES.resolve(Hit(self.unit, event.unit, attack))
+            ES.resolve(ExhaustUnit(self.unit))
 
 
 @dataclasses.dataclass(eq=False)

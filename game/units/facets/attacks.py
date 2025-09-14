@@ -67,10 +67,11 @@ class DancingSaber(MeleeAttackFacet):
 
 class Gore(MeleeAttackFacet):
     """
-    +2 damage against units this unit wasn't adjacent to at the beginning of its turn.
+    +3 damage against units this unit wasn't adjacent to at the beginning of its turn.
     """
 
-    damage = 4
+    cost = MovementCost(1)
+    damage = 3
 
     # TODO really ugly
     def __init__(self, owner: Unit):
@@ -83,7 +84,7 @@ class Gore(MeleeAttackFacet):
 
     def get_damage_modifier_against(self, unit: Unit) -> int:
         if unit not in self.adjacency_hook.adjacent_units:
-            return 2
+            return 3
 
 
 class MarshmallowFist(MeleeAttackFacet):

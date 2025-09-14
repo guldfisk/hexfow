@@ -6,13 +6,12 @@ const findRelatedUnits = (
   gameObjectDetails: GameObjectDetails,
   seen: string[],
 ): string[] => {
-  const ids: string[] = [];
   for (const facetIdentifier of gameObjectDetails.units[blueprintIdentifier]
     .facets) {
     for (const unitIdentifier of gameObjectDetails.facets[facetIdentifier]
       .related_units) {
       if (!seen.includes(unitIdentifier)) {
-        ids.push(unitIdentifier);
+        seen.push(unitIdentifier);
         findRelatedUnits(unitIdentifier, gameObjectDetails, seen);
       }
     }
@@ -21,12 +20,12 @@ const findRelatedUnits = (
       for (const unitIdentifier of gameObjectDetails.statuses[statusIdentifier]
         .related_units)
         if (!seen.includes(unitIdentifier)) {
-          ids.push(unitIdentifier);
+          seen.push(unitIdentifier);
           findRelatedUnits(unitIdentifier, gameObjectDetails, seen);
         }
     }
   }
-  return ids;
+  return seen;
 };
 
 export const getAdditionalDetails = (

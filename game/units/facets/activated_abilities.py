@@ -1582,7 +1582,7 @@ class ConstructTurret(TargetHexActivatedAbility):
 
 class FixErUp(TargetUnitActivatedAbility):
     """
-    Heals 2.
+    Heals 2. If it's a [sentry_turret], also resets its <ephemeral> status to 4 rounds.
     """
 
     name = "Fix 'er Up"
@@ -1598,6 +1598,9 @@ class FixErUp(TargetUnitActivatedAbility):
 
     def perform(self, target: Unit) -> None:
         ES.resolve(Heal(target, 2, self))
+        if target.blueprint == UnitBlueprint.get_class("sentry_turret"):
+            for status in target.get_statuses(UnitStatus.get("ephemeral")):
+                status.duration = 4
 
 
 class TurboTune(TargetUnitActivatedAbility):

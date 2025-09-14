@@ -45,6 +45,7 @@ from game.effects.replacements import (
     UnitImmuneToStatusReplacement,
 )
 from game.effects.triggers import (
+    AutomatedTrigger,
     CaughtInTheMatchTrigger,
     DebuffOnMeleeAttackTrigger,
     ExplosiveTrigger,
@@ -595,10 +596,22 @@ class SludgeTrail(StaticAbilityFacet):
         )
 
 
-class Automated(StaticAbilityFacet):
+class Structure(StaticAbilityFacet):
     """
-    This unit can't capture objectives.
+    This unit can't take move actions and can't capture points.
     """
 
     def create_effects(self) -> None:
-        self.register_effects(UnitNoCaptureModifier(self.parent))
+        self.register_effects(
+            UnitNoCaptureModifier(self.parent), RootedModifier(self.parent)
+        )
+
+
+class Automated(StaticAbilityFacet):
+    """
+    Whenever an enemy unit moves, if this unit is ready and can hit the moving unit with its primary attack, it does so,
+    and is then exhausted.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(AutomatedTrigger(self.parent))
