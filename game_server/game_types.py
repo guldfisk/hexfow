@@ -61,7 +61,7 @@ class TestGameType(GameType):
             (
                 # MEDIC,
                 BULLDOZER,
-                DJINN,
+                GIANT_TOAD,
                 MISCHIEVOUS_GODMOTHER,
                 RANK_DEFILER,
                 # VILE_TRANSMUTER,
@@ -73,8 +73,8 @@ class TestGameType(GameType):
             (
                 ANCIENT_ALTRUIST,
                 GRANITE_GOLEM,
-                FRONTLINE_TACTICIAN,
-                # FROST_SPRITE,
+                # FRONTLINE_TACTICIAN,
+                FROST_SPRITE,
                 # CYCLOPS,
                 # ELITE_COMMANDO,
             ),

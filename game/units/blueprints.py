@@ -92,10 +92,8 @@ from game.units.facets.activated_abilities import (
 from game.units.facets.attacks import (
     AnkleBite,
     APGun,
-    Bayonet,
     BellHammer,
     Bite,
-    Blaster,
     BloodExpunge,
     BurningSting,
     Chainsaw,
@@ -109,6 +107,7 @@ from game.units.facets.attacks import (
     DeathLaser,
     DiamondFist,
     DrainingGrasp,
+    Engage,
     EtherealSting,
     FinalSting,
     FleaBite,
@@ -152,6 +151,7 @@ from game.units.facets.attacks import (
     SniperRifle,
     SolidMunition,
     Spew,
+    StandardIssueBlaster,
     Stinger,
     Strafe,
     StubbyClaws,
@@ -177,7 +177,7 @@ from game.units.facets.static_abilities import (
     FightFlightFreeze,
     FlameResistant,
     Fleeting,
-    ForestNative,
+    ForestDweller,
     FoulBurst,
     Furious,
     GlassSkin,
@@ -279,7 +279,7 @@ UNBLINKING_WATCHER = UnitBlueprint(
 
 CRAWLING_URCHIN = UnitBlueprint(
     name="Crawling Urchin",
-    health=5,
+    health=6,
     speed=1,
     sight=1,
     facets=[Prickly],
@@ -348,7 +348,7 @@ BLOOD_CONDUIT = UnitBlueprint(
 
 FROST_SPRITE = UnitBlueprint(
     "Frost Sprite",
-    health=4,
+    health=3,
     speed=3,
     sight=1,
     size=Size.SMALL,
@@ -399,7 +399,7 @@ MARSHMALLOW_TITAN = UnitBlueprint(
 
 PANGOLIN_FAMILIAR = UnitBlueprint(
     "Pangolin Familiar",
-    health=5,
+    health=6,
     speed=2,
     sight=1,
     size=Size.SMALL,
@@ -431,7 +431,7 @@ SKITTISH_SOOT_PUFF = UnitBlueprint(
 
 ANKLE_BITER_NUISANCE = UnitBlueprint(
     "Ankle Biter Nuisance",
-    health=3,
+    health=4,
     speed=3,
     sight=1,
     size=Size.SMALL,
@@ -621,7 +621,7 @@ RECON_SPECIALIST = UnitBlueprint(
 
 RHINO_BEETLE = UnitBlueprint(
     "Rhino Beetle",
-    health=4,
+    health=5,
     speed=2,
     sight=1,
     facets=[CrushingMandibles, Grapple],
@@ -684,7 +684,17 @@ HARMONIOUS_DRUID = UnitBlueprint(
     speed=3,
     sight=2,
     energy=5,
-    facets=[NaturalBlessing, VerdantFlash, ForestNative, SoilCommunion],
+    facets=[NaturalBlessing, VerdantFlash, ForestDweller, SoilCommunion],
+    price=7,
+)
+
+MISCHIEVOUS_GODMOTHER = UnitBlueprint(
+    "Mischievous Godmother",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[TurnToRabbit, TugIn, FaerieDust],
     price=7,
 )
 
@@ -704,7 +714,7 @@ ZONE_SKIRMISHER = UnitBlueprint(
     health=6,
     speed=3,
     sight=2,
-    facets=[Blaster, Bayonet],
+    facets=[StandardIssueBlaster, Engage],
     price=7,
 )
 
@@ -723,19 +733,9 @@ GIANT_TOAD = UnitBlueprint(
     health=8,
     speed=2,
     sight=2,
-    energy=2,
+    energy=3,
     facets=[TongueLash, Jump, ToxicSkin],
     price=8,
-)
-
-MISCHIEVOUS_GODMOTHER = UnitBlueprint(
-    "Mischievous Godmother",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=6,
-    facets=[TurnToRabbit, TugIn, FaerieDust],
-    price=7,
 )
 
 REMORSELESS_SNIPER = UnitBlueprint(
@@ -766,23 +766,6 @@ EFFORTLESS_ATHLETE = UnitBlueprint(
     price=9,
 )
 
-ELITE_COMMANDO = UnitBlueprint(
-    "Elite Commando",
-    health=6,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[
-        RifleSalvo,
-        HandGrenade,
-        FlashBang,
-        SmokeGrenade,
-        TerrainSavvy,
-        Swimmer,
-    ],
-    price=9,
-)
-
 INK_WITCH = UnitBlueprint(
     "Ink Witch",
     health=5,
@@ -791,16 +774,6 @@ INK_WITCH = UnitBlueprint(
     energy=5,
     facets=[BloodExpunge, InkRing, MalevolentStare],
     price=9,
-)
-
-PYROMANCER_ARTILLERIST = UnitBlueprint(
-    "Pyromancer Artillerist",
-    health=4,
-    speed=2,
-    sight=1,
-    energy=5,
-    facets=[FireStorm],
-    price=11,
 )
 
 SLUDGE_SLUG = UnitBlueprint(
@@ -851,15 +824,19 @@ BLITZ_TROOPER = UnitBlueprint(
     price=10,
 )
 
-BOULDER_HURLER_OAF = UnitBlueprint(
-    "Boulder Hurler Oaf",
-    health=7,
-    speed=2,
+ELITE_COMMANDO = UnitBlueprint(
+    "Elite Commando",
+    health=6,
+    speed=3,
     sight=2,
-    size=Size.LARGE,
+    energy=5,
     facets=[
-        HurlBoulder,
-        Farsighted,
+        RifleSalvo,
+        HandGrenade,
+        FlashBang,
+        SmokeGrenade,
+        TerrainSavvy,
+        Swimmer,
     ],
     price=10,
 )
@@ -888,6 +865,19 @@ LEGENDARY_WRESTLER = UnitBlueprint(
     ],
     price=10,
     flavor="I need justice in my life: Here it comes.",
+)
+
+BOULDER_HURLER_OAF = UnitBlueprint(
+    "Boulder Hurler Oaf",
+    health=7,
+    speed=2,
+    sight=2,
+    size=Size.LARGE,
+    facets=[
+        HurlBoulder,
+        Farsighted,
+    ],
+    price=11,
 )
 
 BULLDOZER = UnitBlueprint(
@@ -964,6 +954,16 @@ PESTILENCE_PRIEST = UnitBlueprint(
     price=11,
 )
 
+PYROMANCER_ARTILLERIST = UnitBlueprint(
+    "Pyromancer Artillerist",
+    health=4,
+    speed=2,
+    sight=1,
+    energy=5,
+    facets=[FireStorm],
+    price=11,
+)
+
 RANK_DEFILER = UnitBlueprint(
     "Rank Defiler",
     health=6,
@@ -971,6 +971,17 @@ RANK_DEFILER = UnitBlueprint(
     sight=1,
     energy=6,
     facets=[FleaSwarm, Torpor, Disempower],
+    price=11,
+)
+
+STAUNCH_IRON_HEART = UnitBlueprint(
+    "Staunch Iron-Heart",
+    health=7,
+    speed=2,
+    armor=1,
+    sight=2,
+    energy=4,
+    facets=[HammerBlow, MightyBlow, IronBlessing],
     price=11,
 )
 
@@ -1030,17 +1041,6 @@ INSCRUTABLE_CHIMERA = UnitBlueprint(
     price=12,
 )
 
-STAUNCH_IRON_HEART = UnitBlueprint(
-    "Staunch Iron-Heart",
-    health=7,
-    speed=2,
-    armor=1,
-    sight=2,
-    energy=4,
-    facets=[HammerBlow, MightyBlow, IronBlessing],
-    price=12,
-)
-
 GRANITE_GOLEM = UnitBlueprint(
     "Granite Golem",
     health=9,
@@ -1090,7 +1090,7 @@ ZONE_MECH = UnitBlueprint(
     sight=2,
     energy=3,
     size=Size.LARGE,
-    facets=[HammerCannon, SmokeCanister, TerrainSavvy],
+    facets=[HammerCannon, SmokeCanister],
     price=18,
 )
 

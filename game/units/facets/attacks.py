@@ -104,10 +104,10 @@ class RazorTusk(MeleeAttackFacet):
     damage = 3
 
 
-class Blaster(RangedAttackFacet):
+class StandardIssueBlaster(RangedAttackFacet):
+    cost = MovementCost(1)
     damage = 3
     range = 2
-    cost = MovementCost(1)
 
 
 class BloodExpunge(RangedAttackFacet):
@@ -179,9 +179,9 @@ class Strafe(RangedAttackFacet):
     combinable = True
 
 
-class Bayonet(MeleeAttackFacet):
-    cost = MovementCost(1)
-    damage = 3
+class Engage(MeleeAttackFacet):
+    cost = MovementCost(2)
+    damage = 4
 
 
 class Pinch(MeleeAttackFacet):
@@ -282,6 +282,7 @@ class Frostbite(MeleeAttackFacet):
 
     cost = MovementCost(1)
     damage = 1
+    combinable = True
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
         ES.resolve(
@@ -353,13 +354,16 @@ class RifleSalvo(RangedAttackFacet):
 
 class TongueLash(RangedAttackFacet):
     """
-    Deals melee damage.
+    +1 damage against small units.
     """
 
     cost = ExclusiveCost()
     range = 2
     damage = 3
-    damage_type = DamageType.MELEE
+
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        if unit.size.g() == Size.SMALL:
+            return 1
 
 
 class Slice(MeleeAttackFacet):

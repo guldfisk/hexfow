@@ -354,7 +354,7 @@ class SoilCommunion(StaticAbilityFacet):
         self.register_effects(SoilCommunionModifier(self.parent, 1))
 
 
-class ForestNative(StaticAbilityFacet):
+class ForestDweller(StaticAbilityFacet):
     """
     Ignores move in penalties on Forests.
     """

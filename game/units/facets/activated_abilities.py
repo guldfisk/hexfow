@@ -427,10 +427,9 @@ class Jaunt(TargetHexActivatedAbility):
 class Jump(TargetHexActivatedAbility):
     """Moves to the target hex."""
 
-    cost = EnergyCost(2) | ExclusiveCost()
-    range = 2
+    cost = EnergyCost(3) | ExclusiveCost()
+    range = 3
     requires_los = False
-    requires_vision = False
     requires_empty = True
 
     def perform(self, target: Hex) -> None:
