@@ -434,8 +434,8 @@ class ActivateAbilityAction(Event[None]):
             ),
             LogLine([self.unit, "activates", self.ability]),
         ):
-            self.ability.perform(self.target)
             self.ability.get_cost().pay(GS.active_unit_context)
+            self.ability.perform(self.target)
 
 
 @dataclasses.dataclass
