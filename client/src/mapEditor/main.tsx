@@ -23,6 +23,7 @@ const terrainMapping: { [key: string]: string } = {
   w: "water",
   m: "magma",
   h: "hills",
+  s: "swamp",
 };
 
 async function main() {

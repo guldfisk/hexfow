@@ -12,7 +12,7 @@ from sqlalchemy import select
 from game.core import HexSpec, Landscape, Scenario
 from game.map.coordinates import CC
 from game.map.geometry import hex_circle
-from game.map.terrain import Forest, Hills, Magma, Plains, Water
+from game.map.terrain import Forest, Hills, Magma, Plains, Swamp, Water
 from game.units.blueprints import *
 from model.engine import SS
 from model.grouping import get_grouping_meta, get_suffix_remover
@@ -42,12 +42,13 @@ class TestGameType(GameType):
                     random.choice(
                         [
                             Plains,
-                            # Plains,
+                            Plains,
                             # # Plains,
                             # Forest,
                             # Hills,
                             # Water,
                             # Magma,
+                            Swamp,
                         ]
                     ),
                     cc.distance_to(CC(0, 0)) <= 1,

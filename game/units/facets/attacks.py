@@ -44,6 +44,7 @@ class Scratch(MeleeAttackFacet):
 
 
 class GiantClub(MeleeAttackFacet):
+    cost = MovementCost(1)
     damage = 5
 
 

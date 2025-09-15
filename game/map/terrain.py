@@ -78,3 +78,12 @@ class Magma(Terrain):
         # TODO should this also happen when units on this space are melee attacked? how should that be handled in general
         #  for these types of effects?
         self.register_effects(BurnOnWalkIn(space, 1), BurnOnCleanup(space, 1))
+
+
+class Swamp(Terrain):
+    """
+    1 move out penalty.
+    """
+
+    def get_move_out_penalty_for(self, unit: Unit) -> int:
+        return 1
