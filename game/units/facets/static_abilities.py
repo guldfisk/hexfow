@@ -305,7 +305,7 @@ class Quick(StaticAbilityFacet):
 
 class GlassSkin(StaticAbilityFacet):
     """
-    Reduces damage dealt to this unit by statues by half, rounding the result down.
+    Reduces damage dealt to this unit by statues to half, rounded down.
     """
 
     def create_effects(self) -> None:
@@ -327,7 +327,7 @@ class DiamondSkin(StaticAbilityFacet):
 
 class FlameResistant(StaticAbilityFacet):
     """
-    Reduce damage dealt to this unit by the <burn> status by half (after armor), rounding the result down.
+    Reduce damage dealt to this unit by the <burn> status to half (after armor), rounded down.
     """
 
     def create_effects(self) -> None:
@@ -389,7 +389,7 @@ class Stakeout(StaticAbilityFacet):
 
 class AntiMagicHide(StaticAbilityFacet):
     """
-    Reduce damage dealt to this unit by abilities and statuses by half, rounding the result down.
+    Reduce damage dealt to this unit by abilities and statuses to half, rounded down.
     """
 
     name = "Anti-Magic Hide"
@@ -406,7 +406,7 @@ class AntiMagicHide(StaticAbilityFacet):
 
 class ResistantSkin(StaticAbilityFacet):
     """
-    Reduce damage dealt to this unit by abilities and statuses by one third, rounding the result up.
+    Reduce damage dealt to this unit by abilities and statuses to two thirds, rounded up.
     """
 
     def create_effects(self) -> None:
@@ -421,7 +421,7 @@ class ResistantSkin(StaticAbilityFacet):
 
 class MagicForm(StaticAbilityFacet):
     """
-    Reduce damage dealt to this unit by attacks by half, rounding the result up.
+    Reduce damage dealt to this unit by attacks to half, rounded up.
     """
 
     def create_effects(self) -> None:
@@ -441,7 +441,7 @@ class FoulBurst(StaticAbilityFacet):
 
 class ToughSkin(StaticAbilityFacet):
     """
-    Reduce damage dealt to this unit by one third, rounding the result up.
+    Reduce damage dealt to this unit to two thirds, rounded up.
     """
 
     def create_effects(self) -> None:

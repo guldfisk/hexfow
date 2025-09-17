@@ -252,11 +252,20 @@ BLIND_ORACLE = UnitBlueprint(
 
 CHICKEN = UnitBlueprint(
     name="Chicken",
-    health=2,
-    speed=2,
+    health=1,
+    speed=3,
     sight=1,
     size=Size.SMALL,
     facets=[Peck],
+    price=1,
+)
+
+CRAWLING_URCHIN = UnitBlueprint(
+    name="Crawling Urchin",
+    health=4,
+    speed=1,
+    sight=1,
+    facets=[Prickly],
     price=1,
 )
 
@@ -287,15 +296,6 @@ UNBLINKING_WATCHER = UnitBlueprint(
     sight=2,
     size=Size.SMALL,
     price=1,
-)
-
-CRAWLING_URCHIN = UnitBlueprint(
-    name="Crawling Urchin",
-    health=6,
-    speed=1,
-    sight=1,
-    facets=[Prickly],
-    price=2,
 )
 
 GOBLIN_SLINGSHOT = UnitBlueprint(
@@ -331,7 +331,7 @@ SNAPPING_TURTLE = UnitBlueprint(
 
 SNAP_JAW = UnitBlueprint(
     "Snap Jaw",
-    health=3,
+    health=4,
     speed=1,
     sight=1,
     facets=[Chomp],
@@ -346,6 +346,16 @@ WEATHERED_ARMADILLO = UnitBlueprint(
     size=Size.SMALL,
     facets=[StubbyClaws, ToughSkin],
     price=2,
+)
+
+ARTHRITIC_GIANT = UnitBlueprint(
+    "Arthritic Giant",
+    health=7,
+    speed=2,
+    sight=1,
+    size=Size.LARGE,
+    facets=[GranGransOlClub, OldBones],
+    price=3,
 )
 
 BLOOD_CONDUIT = UnitBlueprint(
@@ -450,23 +460,13 @@ ANKLE_BITER_NUISANCE = UnitBlueprint(
     price=4,
 )
 
-ARTHRITIC_GIANT = UnitBlueprint(
-    "Arthritic Giant",
-    health=7,
-    speed=2,
-    sight=1,
-    size=Size.LARGE,
-    facets=[GranGransOlClub, OldBones],
-    price=4,
-)
-
-BOMBARD_CANON = UnitBlueprint(
-    "Bombard Canon",
+GNARLED_SHAMAN = UnitBlueprint(
+    "Gnarled Shaman",
     health=3,
-    speed=1,
-    sight=1,
-    size=Size.LARGE,
-    facets=[SolidMunition],
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[SpiritProjection, SweatItOut, GuidedTrance],
     price=4,
 )
 
@@ -520,6 +520,16 @@ AP_GUNNER = UnitBlueprint(
     price=5,
 )
 
+BOMBARD_CANON = UnitBlueprint(
+    "Bombard Canon",
+    health=3,
+    speed=1,
+    sight=1,
+    size=Size.LARGE,
+    facets=[SolidMunition],
+    price=5,
+)
+
 BUGLING = UnitBlueprint(
     "Bugling",
     health=4,
@@ -530,16 +540,6 @@ BUGLING = UnitBlueprint(
     price=5,
 )
 
-GNARLED_SHAMAN = UnitBlueprint(
-    "Gnarled Shaman",
-    health=3,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[SpiritProjection, SweatItOut, GuidedTrance],
-    price=5,
-)
-
 GOBLIN_ASSASSIN = UnitBlueprint(
     "Goblin Assassin",
     health=3,
@@ -547,6 +547,16 @@ GOBLIN_ASSASSIN = UnitBlueprint(
     sight=2,
     size=Size.SMALL,
     facets=[HiddenBlade, Stealth],
+    price=5,
+)
+
+HARMONIOUS_DRUID = UnitBlueprint(
+    "Harmonious Druid",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[NaturalBlessing, VerdantFlash, ForestDweller, SoilCommunion],
     price=5,
 )
 
@@ -640,16 +650,6 @@ GLASS_GOLEM = UnitBlueprint(
     price=6,
 )
 
-HARMONIOUS_DRUID = UnitBlueprint(
-    "Harmonious Druid",
-    health=4,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[NaturalBlessing, VerdantFlash, ForestDweller, SoilCommunion],
-    price=6,
-)
-
 RECON_SPECIALIST = UnitBlueprint(
     "Recon Specialist",
     health=5,
@@ -683,7 +683,7 @@ STUBBORN_GOAT = UnitBlueprint(
     "Stubborn Goat",
     health=6,
     speed=3,
-    sight=2,
+    sight=1,
     facets=[CurvedHorns, ToughSkin, Ornery],
     price=6,
 )
@@ -731,10 +731,9 @@ MISCHIEVOUS_GODMOTHER = UnitBlueprint(
 
 TRACTOR = UnitBlueprint(
     "Tractor",
-    health=7,
+    health=6,
     speed=3,
     sight=1,
-    size=Size.LARGE,
     facets=[Hitch],
     energy=4,
     price=7,
@@ -1169,7 +1168,7 @@ ANNOYING_FLEA = UnitBlueprint(
     speed=1,
     size=Size.SMALL,
     sight=1,
-    facets=[FleaBite],
+    facets=[FleaBite, Wild],
     price=None,
 )
 

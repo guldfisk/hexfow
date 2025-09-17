@@ -551,7 +551,7 @@ class Chill(RefreshableMixin, UnitStatus):
 
 class MagicWard(RefreshableMixin, UnitStatus):
     """
-    Reduce damage dealt to this unit by abilities and statuses by one third, rounding the result up.
+    Reduce damage dealt to this unit by abilities and statuses to two thirds, rounded up.
     """
 
     default_intention = StatusIntention.BUFF
