@@ -798,7 +798,7 @@ class FlameWall(TargetRadiatingLineActivatedAbility):
     """
 
     cost = MovementCost(1) | EnergyCost(3)
-    length = 4
+    length = 3
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:

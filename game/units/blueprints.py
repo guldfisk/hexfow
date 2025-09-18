@@ -748,6 +748,16 @@ ZONE_SKIRMISHER = UnitBlueprint(
     price=7,
 )
 
+BEE_SHAMAN = UnitBlueprint(
+    "Bee Shaman",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[SummonBees, RoyalJelly],
+    price=8,
+)
+
 BLIND_ABOMINATION = UnitBlueprint(
     "Blind Abomination",
     health=9,
@@ -777,25 +787,6 @@ GIANT_TOAD = UnitBlueprint(
     price=8,
 )
 
-REMORSELESS_SNIPER = UnitBlueprint(
-    "Remorseless Sniper",
-    health=2,
-    speed=2,
-    sight=2,
-    facets=[SniperRifle, Binoculars, Stakeout],
-    price=8,
-)
-
-BEE_SHAMAN = UnitBlueprint(
-    "Bee Shaman",
-    health=4,
-    speed=3,
-    sight=2,
-    energy=6,
-    facets=[SummonBees, RoyalJelly],
-    price=9,
-)
-
 DJINN = UnitBlueprint(
     "Djinn",
     health=4,
@@ -822,6 +813,15 @@ INK_WITCH = UnitBlueprint(
     sight=2,
     energy=5,
     facets=[BloodExpunge, InkRing, MalevolentStare],
+    price=9,
+)
+
+REMORSELESS_SNIPER = UnitBlueprint(
+    "Remorseless Sniper",
+    health=2,
+    speed=2,
+    sight=2,
+    facets=[SniperRifle, Binoculars, Stakeout],
     price=9,
 )
 
@@ -968,6 +968,16 @@ HORROR = UnitBlueprint(
     price=11,
 )
 
+INSCRUTABLE_CHIMERA = UnitBlueprint(
+    "Inscrutable Chimera",
+    health=7,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[CrypticClaws, Riddle, PsychicCommand, InstilFocus],
+    price=11,
+)
+
 NOTORIOUS_OUTLAW = UnitBlueprint(
     "Notorious Outlaw",
     health=5,
@@ -1064,32 +1074,6 @@ GATE_FIEND = UnitBlueprint(
     price=12,
 )
 
-INFERNO_TANK = UnitBlueprint(
-    "Inferno Tank",
-    health=7,
-    speed=2,
-    sight=1,
-    armor=1,
-    energy=6,
-    size=Size.LARGE,
-    facets=[
-        Scorch,
-        FlameWall,
-        FlameResistant,
-    ],
-    price=12,
-)
-
-INSCRUTABLE_CHIMERA = UnitBlueprint(
-    "Inscrutable Chimera",
-    health=7,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[CrypticClaws, Riddle, PsychicCommand, InstilFocus],
-    price=12,
-)
-
 WAR_HOG = UnitBlueprint(
     "War Hog",
     health=7,
@@ -1107,6 +1091,22 @@ GRANITE_GOLEM = UnitBlueprint(
     size=Size.LARGE,
     armor=1,
     facets=[CrushingFists, RockSteady, ResistantSkin],
+    price=13,
+)
+
+INFERNO_TANK = UnitBlueprint(
+    "Inferno Tank",
+    health=7,
+    speed=2,
+    sight=1,
+    armor=1,
+    energy=6,
+    size=Size.LARGE,
+    facets=[
+        Scorch,
+        FlameWall,
+        FlameResistant,
+    ],
     price=13,
 )
 

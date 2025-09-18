@@ -240,7 +240,7 @@ class GranGransOlClub(MeleeAttackFacet):
 
 class CrypticClaws(MeleeAttackFacet):
     """
-    +2 damage on prime rounds.
+    +2 damage on prime rounds (1 is not prime).
     """
 
     cost = MovementCost(1)
