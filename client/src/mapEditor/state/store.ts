@@ -197,7 +197,11 @@ const mainSlice = createSlice({
     removeHex: (state, action: PayloadAction<CC>) => {
       delete state.mapData[ccToKey(action.payload)];
       delete state.mapData[
-        ccToKey({ r: -action.payload.r, h: -action.payload.h })
+        ccToKey(
+          (state.mirrorMode == "double" ? doubleMirror : singleMirror)(
+            action.payload,
+          ),
+        )
       ];
       state.shouldRerender = true;
     },
