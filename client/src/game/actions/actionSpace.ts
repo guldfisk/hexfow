@@ -334,9 +334,12 @@ export const getBaseActionSpace = (
       hexActions: Object.fromEntries(
         Object.entries(actions).map(([cc, _actions]) => [
           cc,
-          _actions.length > 2 ||
-          (_actions.length == 2 && _actions.some((a) => a.type == "menu")) ||
-          new Set(_actions.map((a) => a.type)).size != _actions.length
+          _actions.filter(
+            (action) =>
+              !(
+                action.sourceOption && action.sourceOption.type == "MoveOption"
+              ),
+          ).length > 1
             ? {
                 actions: [
                   ..._actions.filter(

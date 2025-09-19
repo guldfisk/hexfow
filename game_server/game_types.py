@@ -12,7 +12,7 @@ from sqlalchemy import select
 from game.core import DeploymentSpec, HexSpec, Landscape, Scenario
 from game.map.coordinates import CC
 from game.map.geometry import hex_circle
-from game.map.terrain import Forest, Hills, Magma, Plains, Swamp, Water
+from game.map.terrain import *
 from game.units.blueprints import *
 from model.engine import SS
 from model.grouping import get_grouping_meta, get_suffix_remover
@@ -48,7 +48,7 @@ class TestGameType(GameType):
                             # Hills,
                             # Water,
                             # Magma,
-                            Swamp,
+                            # Swamp,
                         ]
                     ),
                     cc.distance_to(CC(0, 0)) <= 1,
@@ -60,17 +60,19 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                PANGOLIN_FAMILIAR,
+                # PANGOLIN_FAMILIAR,
                 EFFORTLESS_ATHLETE,
                 # HARROWED_MYSTICIST,
                 # FROST_SPRITE,
                 SQUIRMING_SQUID,
-                CAMELBACK_OUTRIDER,
+                # CAMELBACK_OUTRIDER,
             ),
             (
                 # ANCIENT_ALTRUIST,
-                CYCLOPS,
+                # CYCLOPS,
                 ELITE_COMMANDO,
+                SHRINE_KEEPER,
+                NOTORIOUS_OUTLAW,
             ),
         )
 
