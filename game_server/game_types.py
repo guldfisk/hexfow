@@ -64,7 +64,9 @@ class TestGameType(GameType):
                 EFFORTLESS_ATHLETE,
                 # HARROWED_MYSTICIST,
                 # FROST_SPRITE,
-                SQUIRMING_SQUID,
+                # SQUIRMING_SQUID,
+                INFERNAL_IMP,
+                ARTHRITIC_GIANT,
                 # CAMELBACK_OUTRIDER,
             ),
             (

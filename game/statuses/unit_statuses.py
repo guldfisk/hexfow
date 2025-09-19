@@ -605,7 +605,7 @@ class Frail(HighestStackableRefreshableMixin, UnitStatus):
 class Parched(RefreshableMixin, UnitStatus):
     """
     At the end of this units turn, if it acted and doesn't have any remaining movement points,
-    deal 1 pure damage to it.
+    it is dealt 1 pure damage. (Exclusive costs sets movement points to zero).
     """
 
     default_intention = StatusIntention.DEBUFF
