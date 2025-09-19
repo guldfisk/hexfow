@@ -7,6 +7,7 @@ import {
   setLoaderOptions,
   setLoaderSelected,
   setMapName,
+  setMirrorMode,
   setSelectedStatusIdentifier,
   setSelectedUnitIdentifier,
   setShowLoader,
@@ -143,6 +144,17 @@ export const HUD = ({}: {}) => {
           save
         </button>
         <button onClick={() => dispatch(setShowLoader(true))}>load map</button>
+        <button
+          onClick={() =>
+            dispatch(
+              setMirrorMode(state.mirrorMode == "double" ? "single" : "double"),
+            )
+          }
+        >
+          {state.mirrorMode == "double"
+            ? "double mirror mode"
+            : "single mirror mode"}
+        </button>
         <DeploymentSpecValueEditor
           state={state}
           label={"Max army units"}

@@ -16,6 +16,7 @@ import {
   constMultRC,
   getHexDimensions,
   getHexVerticeOffsets,
+  getL,
   hexSize,
   hexVerticeOffsets,
   rcToCC,
@@ -141,7 +142,7 @@ export const renderMap = (
     hexContainer.addChild(hex);
 
     const label = new Text({
-      text: `${spec.cc.r},${spec.cc.h}`,
+      text: `${spec.cc.r},${spec.cc.h},${getL(spec.cc)}`,
       style: smallTextStyle,
     });
     label.anchor = 0.5;

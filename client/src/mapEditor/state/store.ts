@@ -5,7 +5,7 @@ import {
   Tuple,
 } from "@reduxjs/toolkit";
 import { CC } from "../../interfaces/geometry.ts";
-import { ccEquals, ccToKey, constMultCC } from "../../geometry.ts";
+import { ccEquals, ccToKey, constMultCC, getL } from "../../geometry.ts";
 import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
 import { DeploymentSpec } from "../../interfaces/gameState.ts";
 import { mapCoordinates } from "../mapShape.ts";
@@ -37,16 +37,20 @@ interface MapLoaderData {
   options: string[];
 }
 
-const mirror = (cc: CC): CC => constMultCC(cc, -1);
+const doubleMirror = (cc: CC): CC => constMultCC(cc, -1);
+const singleMirror = (cc: CC) => ({ r: -getL(cc) - cc.h, h: getL(cc) });
+
+type MirrorMode = "single" | "double";
 
 const changeHex = (
   state: MapEditorState,
   cc: CC,
   change: (spec: HexSpec, isMirrored: boolean) => void,
 ) => {
-  for (const [idx, cc_] of (ccEquals(cc, mirror(cc))
+  const m = state.mirrorMode == "double" ? doubleMirror : singleMirror;
+  for (const [idx, cc_] of (ccEquals(cc, m(cc))
     ? [cc]
-    : [cc, mirror(cc)]
+    : [cc, m(cc)]
   ).entries()) {
     if (!state.mapData[ccToKey(cc_)]) {
       state.mapData[ccToKey(cc_)] = {
@@ -88,6 +92,7 @@ const mainSlice = createSlice({
     gameObjectDetails: null,
     toPoints: 24,
     deploymentSpec: defaultDeploymentSpec,
+    mirrorMode: "double",
   } as {
     mapData: { [key: string]: HexSpec };
     mapName: string;
@@ -99,6 +104,7 @@ const mainSlice = createSlice({
     gameObjectDetails: GameObjectDetails | null;
     toPoints: number;
     deploymentSpec: DeploymentSpec;
+    mirrorMode: MirrorMode;
   },
   reducers: {
     loadedImage: (state) => {
@@ -159,6 +165,9 @@ const mainSlice = createSlice({
     },
     setMapName: (state, action: PayloadAction<string>) => {
       state.mapName = action.payload;
+    },
+    setMirrorMode: (state, action: PayloadAction<MirrorMode>) => {
+      state.mirrorMode = action.payload;
     },
     setShowLoader: (state, action: PayloadAction<boolean>) => {
       state.loaderData.show = action.payload;
@@ -257,6 +266,7 @@ const mainSlice = createSlice({
 
 export const {
   toggleDeploymentZone,
+  setMirrorMode,
   loadMap,
   setMapName,
   setShowLoader,
