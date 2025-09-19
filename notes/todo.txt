@@ -14,7 +14,6 @@ army editor
 map editor
     round restricted objectives
     single mirror axis mode
-    add/remove hexes
 
     unit details
 

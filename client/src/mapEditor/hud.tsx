@@ -2,6 +2,7 @@ import { useMapEditorDispatch, useMapEditorState } from "./state/hooks.ts";
 import {
   loadMap,
   MapEditorState,
+  resetMap,
   setDeploymentSpec,
   setLoaderOptions,
   setLoaderSelected,
@@ -106,6 +107,7 @@ export const HUD = ({}: {}) => {
   return (
     <div>
       <div className={"sidebar sidebar-left"}>
+        <button onClick={() => dispatch(resetMap())}>RESET</button>
         <NameEditor />
         <button
           onClick={() =>
@@ -128,7 +130,7 @@ export const HUD = ({}: {}) => {
                       unit: spec.unit || null,
                     })),
                     deployment_spec: state.deploymentSpec,
-                    to_points: state.toPoints
+                    to_points: state.toPoints,
                   },
                 }),
                 headers: {

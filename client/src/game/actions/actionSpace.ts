@@ -14,7 +14,7 @@ import {
   TriHex,
   Unit,
 } from "../../interfaces/gameState.ts";
-import { ccFromKey, ccToKey } from "../geometry.ts";
+import { ccFromKey, ccToKey } from "../../geometry.ts";
 import {
   Action,
   ActionSpace,

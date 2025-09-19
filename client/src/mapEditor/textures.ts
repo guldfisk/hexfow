@@ -69,7 +69,7 @@ export const loadGameTextures = async () => {
   load(unitFallback, unitFallbackUrl);
   load(statusFallback, statusFallbackUrl);
 
-  fetch(
+  await fetch(
     `${window.location.protocol + "//" + window.location.hostname}:8000/game-object-details`,
   ).then(async (response) => {
     let jsonResponse: GameObjectDetails = await response.json();

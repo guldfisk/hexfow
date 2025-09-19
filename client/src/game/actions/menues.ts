@@ -31,7 +31,7 @@ import {
   hexVerticeOffsetsRcs,
   rcDistance,
   subCCs,
-} from "../geometry.ts";
+} from "../../geometry.ts";
 import { advanceMenu, store } from "../state/store.ts";
 import { range } from "../utils/range.ts";
 import { CC, Corner, RC } from "../../interfaces/geometry.ts";

@@ -3,6 +3,7 @@ import "./style.css";
 import { Application, Container } from "pixi.js";
 import { renderMap } from "./rendering.ts";
 import {
+  removeHex,
   renderedGameState,
   setStatus,
   store,
@@ -35,38 +36,40 @@ async function main() {
 
   const keyHandler = (event: KeyboardEvent) => {
     const state = store.getState();
-    if (state.hoveredHex) {
+    if (state.hoveredCC) {
       if (Object.keys(terrainMapping).includes(event.key)) {
         store.dispatch(
           updateTerrain({
-            cc: state.hoveredHex.cc,
+            cc: state.hoveredCC,
             terrainType: terrainMapping[event.key],
           }),
         );
       } else if (event.key == "1" && state.selectedUnitIdentifier) {
         store.dispatch(
           updateUnit({
-            cc: state.hoveredHex.cc,
+            cc: state.hoveredCC,
             unitIdentifier: state.selectedUnitIdentifier,
           }),
         );
       } else if (event.key == "2") {
         store.dispatch(
-          updateUnit({ cc: state.hoveredHex.cc, unitIdentifier: null }),
+          updateUnit({ cc: state.hoveredCC, unitIdentifier: null }),
         );
       } else if (event.key == "3") {
-        store.dispatch(toggleIsObjective(state.hoveredHex.cc));
+        store.dispatch(toggleIsObjective(state.hoveredCC));
       } else if (event.key == "4") {
         store.dispatch(
           setStatus({
-            cc: state.hoveredHex.cc,
+            cc: state.hoveredCC,
             status: state.selectedStatusIdentifier,
           }),
         );
       } else if (event.key == "5") {
-        store.dispatch(setStatus({ cc: state.hoveredHex.cc, status: null }));
+        store.dispatch(setStatus({ cc: state.hoveredCC, status: null }));
       } else if (event.key == "6") {
-        store.dispatch(toggleDeploymentZone(state.hoveredHex.cc));
+        store.dispatch(toggleDeploymentZone(state.hoveredCC));
+      } else if (event.key == "7") {
+        store.dispatch(removeHex(state.hoveredCC));
       }
     }
   };

@@ -15,7 +15,7 @@ import {
   MenuData,
 } from "../actions/interface.ts";
 import { menuActionSpacers, menuDescribers } from "../actions/menues.ts";
-import { ccToKey } from "../geometry.ts";
+import { ccToKey } from "../../geometry.ts";
 import {
   highlightCCs,
   hoverDetail,

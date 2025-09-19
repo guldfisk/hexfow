@@ -5,9 +5,17 @@ import {
   Tuple,
 } from "@reduxjs/toolkit";
 import { CC } from "../../interfaces/geometry.ts";
-import { ccToKey } from "../../game/geometry.ts";
+import { ccEquals, ccToKey, constMultCC } from "../../geometry.ts";
 import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
 import { DeploymentSpec } from "../../interfaces/gameState.ts";
+import { mapCoordinates } from "../mapShape.ts";
+
+const defaultDeploymentSpec: DeploymentSpec = {
+  max_army_units: 20,
+  max_army_points: 120,
+  max_deployment_units: 12,
+  max_deployment_points: 70,
+};
 
 export interface UnitSpec {
   identifier: string;
@@ -29,30 +37,63 @@ interface MapLoaderData {
   options: string[];
 }
 
+const mirror = (cc: CC): CC => constMultCC(cc, -1);
+
+const changeHex = (
+  state: MapEditorState,
+  cc: CC,
+  change: (spec: HexSpec, isMirrored: boolean) => void,
+) => {
+  for (const [idx, cc_] of (ccEquals(cc, mirror(cc))
+    ? [cc]
+    : [cc, mirror(cc)]
+  ).entries()) {
+    if (!state.mapData[ccToKey(cc_)]) {
+      state.mapData[ccToKey(cc_)] = {
+        terrainType: "plains",
+        unit: null,
+        isObjective: false,
+        deploymentZoneOf: null,
+        statuses: [],
+        cc: cc_,
+      };
+    }
+    change(state.mapData[ccToKey(cc_)], idx == 1);
+  }
+  state.shouldRerender = true;
+};
+
 const mainSlice = createSlice({
   name: "mapEditor",
   initialState: {
-    mapData: {},
-    mapName: "no name",
+    mapData: Object.fromEntries(
+      mapCoordinates.map((cc) => [
+        ccToKey(cc),
+        {
+          terrainType: "plains",
+          unit: null,
+          isObjective: false,
+          deploymentZoneOf: null,
+          statuses: [],
+          cc: cc,
+        },
+      ]),
+    ),
+    mapName: "new map",
     loaderData: { show: false, selected: null, options: [] },
     shouldRerender: true,
-    hoveredHex: null,
+    hoveredCC: null,
     selectedUnitIdentifier: null,
     selectedStatusIdentifier: null,
     gameObjectDetails: null,
     toPoints: 24,
-    deploymentSpec: {
-      max_army_units: 20,
-      max_army_points: 120,
-      max_deployment_units: 12,
-      max_deployment_points: 70,
-    },
+    deploymentSpec: defaultDeploymentSpec,
   } as {
     mapData: { [key: string]: HexSpec };
     mapName: string;
     loaderData: MapLoaderData;
     shouldRerender: boolean;
-    hoveredHex: HexSpec | null;
+    hoveredCC: CC | null;
     selectedUnitIdentifier: string | null;
     selectedStatusIdentifier: string | null;
     gameObjectDetails: GameObjectDetails | null;
@@ -60,13 +101,23 @@ const mainSlice = createSlice({
     deploymentSpec: DeploymentSpec;
   },
   reducers: {
-    setMapData: (state, action: PayloadAction<HexSpec[]>) => {
-      state.mapData = Object.fromEntries(
-        action.payload.map((spec) => [ccToKey(spec.cc), spec]),
-      );
+    loadedImage: (state) => {
       state.shouldRerender = true;
     },
-    loadedImage: (state) => {
+    resetMap: (state) => {
+      state.mapData = {
+        [ccToKey({ r: 0, h: 0 })]: {
+          terrainType: "plains",
+          unit: null,
+          isObjective: false,
+          deploymentZoneOf: null,
+          statuses: [],
+          cc: { r: 0, h: 0 },
+        },
+      };
+      state.mapName = "new map";
+      state.deploymentSpec = defaultDeploymentSpec;
+      state.toPoints = 24;
       state.shouldRerender = true;
     },
     loadMap: (
@@ -128,72 +179,66 @@ const mainSlice = createSlice({
       state,
       action: PayloadAction<{ cc: CC; terrainType: string }>,
     ) => {
-      state.mapData[ccToKey(action.payload.cc)].terrainType =
-        action.payload.terrainType;
-      state.mapData[
-        ccToKey({ r: -action.payload.cc.r, h: -action.payload.cc.h })
-      ].terrainType = action.payload.terrainType;
+      changeHex(
+        state,
+        action.payload.cc,
+        (spec) => (spec.terrainType = action.payload.terrainType),
+      );
+    },
+    removeHex: (state, action: PayloadAction<CC>) => {
+      delete state.mapData[ccToKey(action.payload)];
+      delete state.mapData[
+        ccToKey({ r: -action.payload.r, h: -action.payload.h })
+      ];
       state.shouldRerender = true;
     },
     updateUnit: (
       state,
       action: PayloadAction<{ cc: CC; unitIdentifier: string | null }>,
     ) => {
-      state.mapData[ccToKey(action.payload.cc)].unit = action.payload
-        .unitIdentifier
-        ? { identifier: action.payload.unitIdentifier, allied: true }
-        : null;
-      state.mapData[
-        ccToKey({ r: -action.payload.cc.r, h: -action.payload.cc.h })
-      ].unit = action.payload.unitIdentifier
-        ? { identifier: action.payload.unitIdentifier, allied: false }
-        : null;
-      state.shouldRerender = true;
+      changeHex(
+        state,
+        action.payload.cc,
+        (spec, isMirrored) =>
+          (spec.unit = action.payload.unitIdentifier
+            ? { identifier: action.payload.unitIdentifier, allied: !isMirrored }
+            : null),
+      );
     },
     toggleDeploymentZone: (state, action: PayloadAction<CC>) => {
-      state.mapData[ccToKey(action.payload)].deploymentZoneOf =
-        state.mapData[ccToKey(action.payload)].deploymentZoneOf == null
-          ? 0
-          : null;
-      state.mapData[
-        ccToKey({ r: -action.payload.r, h: -action.payload.h })
-      ].deploymentZoneOf =
-        state.mapData[ccToKey({ r: -action.payload.r, h: -action.payload.h })]
-          .deploymentZoneOf == null
-          ? 1
-          : null;
-      state.shouldRerender = true;
+      changeHex(
+        state,
+        action.payload,
+        (spec, isMirrored) =>
+          (spec.deploymentZoneOf =
+            spec.deploymentZoneOf == null ? (isMirrored ? 1 : 0) : null),
+      );
     },
     toggleIsObjective: (state, action: PayloadAction<CC>) => {
-      state.mapData[ccToKey(action.payload)].isObjective =
-        !state.mapData[ccToKey(action.payload)].isObjective;
-      if (!(action.payload.r == 0 && action.payload.h == 0)) {
-        state.mapData[
-          ccToKey({ r: -action.payload.r, h: -action.payload.h })
-        ].isObjective =
-          !state.mapData[
-            ccToKey({ r: -action.payload.r, h: -action.payload.h })
-          ].isObjective;
-      }
-      state.shouldRerender = true;
+      changeHex(
+        state,
+        action.payload,
+        (spec) => (spec.isObjective = !spec.isObjective),
+      );
     },
     setStatus: (
       state,
       action: PayloadAction<{ cc: CC; status: string | null }>,
     ) => {
-      state.mapData[ccToKey(action.payload.cc)].statuses = action.payload.status
-        ? [action.payload.status]
-        : [];
-      state.mapData[
-        ccToKey({ r: -action.payload.cc.r, h: -action.payload.cc.h })
-      ].statuses = action.payload.status ? [action.payload.status] : [];
-      state.shouldRerender = true;
+      changeHex(
+        state,
+        action.payload.cc,
+        (spec) =>
+          (spec.statuses = action.payload.status
+            ? [action.payload.status]
+            : []),
+      );
     },
     renderedGameState: (state) => {
       state.shouldRerender = false;
     },
-    setHoveredHex: (state, action: PayloadAction<CC>) => {
-      state.hoveredHex = state.mapData[ccToKey(action.payload)] || null;
+    setHoveredCC: (state, action: PayloadAction<CC>) => {
+      state.hoveredCC = action.payload;
     },
     setSelectedUnitIdentifier: (state, action: PayloadAction<string>) => {
       state.selectedUnitIdentifier = action.payload;
@@ -211,7 +256,6 @@ const mainSlice = createSlice({
 });
 
 export const {
-  setMapData,
   toggleDeploymentZone,
   loadMap,
   setMapName,
@@ -221,7 +265,7 @@ export const {
   loadedImage,
   receivedGameObjectDetails,
   renderedGameState,
-  setHoveredHex,
+  setHoveredCC,
   updateTerrain,
   updateUnit,
   toggleIsObjective,
@@ -230,6 +274,8 @@ export const {
   setStatus,
   setDeploymentSpec,
   setToPoints,
+  removeHex,
+  resetMap,
 } = mainSlice.actions;
 
 export const store = configureStore({

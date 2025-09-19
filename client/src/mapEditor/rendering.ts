@@ -8,7 +8,7 @@ import {
   TextStyle,
 } from "pixi.js";
 import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
-import { MapEditorState, setHoveredHex, store } from "./state/store.ts";
+import { MapEditorState, setHoveredCC, store } from "./state/store.ts";
 import {
   addRCs,
   asUnitVector,
@@ -20,7 +20,7 @@ import {
   hexVerticeOffsets,
   rcToCC,
   subRCs,
-} from "../game/geometry.ts";
+} from "../geometry.ts";
 import type { ColorSource } from "pixi.js/lib/color/Color";
 import { getTexture, textureMap } from "./textures.ts";
 import moize from "moize";
@@ -72,6 +72,20 @@ const makeStatusIndicator = (status: string): Container => {
   return statusContainer;
 };
 
+const getHexShape = moize(
+  (
+    color: ColorSource,
+    fillColor: ColorSource = { alpha: 0 },
+  ): GraphicsContext => {
+    let hexShape = new GraphicsContext()
+      .setStrokeStyle({ color: color, pixelLine: true })
+      .moveTo(...hexVerticeOffsets[0]);
+    hexVerticeOffsets.slice(1).forEach((vert) => hexShape.lineTo(...vert));
+    hexShape.closePath().fill(fillColor).stroke();
+    return hexShape;
+  },
+);
+
 export const renderMap = (
   app: Application,
   state: MapEditorState,
@@ -81,15 +95,6 @@ export const renderMap = (
   let maxY = window.innerHeight;
   let center = { x: maxX / 2, y: maxY / 2 };
 
-  // TODO not here
-  const getHexShape = (color: ColorSource): GraphicsContext => {
-    let hexShape = new GraphicsContext()
-      .setStrokeStyle({ color: color, pixelLine: true })
-      .moveTo(...hexVerticeOffsets[0]);
-    hexVerticeOffsets.slice(1).forEach((vert) => hexShape.lineTo(...vert));
-    hexShape.closePath().fill({ alpha: 0 }).stroke();
-    return hexShape;
-  };
   const getHexMask = (color: FillInput, hexSize: number): GraphicsContext => {
     const hexVerticeOffsets = getHexVerticeOffsets(hexSize);
     let hexShape = new GraphicsContext().moveTo(...hexVerticeOffsets[0]);
@@ -208,7 +213,7 @@ export const renderMap = (
   map.on("globalpointermove", (event) => {
     const positionOnMap = subRCs(map.toLocal(event.global), center);
     const cc = rcToCC(positionOnMap);
-    store.dispatch(setHoveredHex(cc));
+    store.dispatch(setHoveredCC(cc));
   });
 
   return map;

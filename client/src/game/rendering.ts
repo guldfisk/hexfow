@@ -26,7 +26,7 @@ import {
   rcInBox,
   rcToCC,
   subRCs,
-} from "./geometry.ts";
+} from "../geometry.ts";
 import { getTexture, textureMap } from "./textures.ts";
 import { range } from "./utils/range.ts";
 import { AppState, deactivateMenu, hoverDetail, store } from "./state/store.ts";
