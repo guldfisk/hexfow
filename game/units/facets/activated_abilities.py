@@ -10,7 +10,6 @@ from game.core import (
     ExclusiveCost,
     Hex,
     HexStatus,
-    HexStatusSignature,
     MeleeAttackFacet,
     MovementCost,
     MoveOption,
@@ -50,18 +49,12 @@ from game.events import (
     ReadyUnit,
     SpawnUnit,
 )
-from game.statuses.dispel import dispel_all, dispel_from_unit
-from game.statuses.hex_statuses import BurningTerrain, Glimpse, Shrine, Smoke, Soot
 from game.statuses.links import GateLink, TaintedLink
-from game.statuses.unit_statuses import (
-    Burn,
-    BurstOfSpeed,
-    Ephemeral,
-    LuckyCharm,
-    Panicked,
-    Rooted,
-    Staggered,
-    Terror,
+from game.statuses.shortcuts import (
+    apply_status_to_hex,
+    apply_status_to_unit,
+    dispel_all,
+    dispel_from_unit,
 )
 from game.target_profiles import (
     Cone,
@@ -174,26 +167,12 @@ class GrantWish(TargetUnitActivatedAbility):
             ),
         ):
             case "Fortitude":
-                ES.resolve(
-                    ApplyStatus(
-                        target,
-                        UnitStatusSignature(
-                            UnitStatus.get("fortified"), self, stacks=3, duration=3
-                        ),
-                    )
-                )
+                apply_status_to_unit(target, "fortified", self, stacks=3, duration=3)
                 ES.resolve(Heal(target, 3, self))
             case "Clarity":
                 ES.resolve(GainEnergy(target, 4, self, allow_overflow=True))
             case "Strength":
-                ES.resolve(
-                    ApplyStatus(
-                        target,
-                        UnitStatusSignature(
-                            UnitStatus.get("supernatural_strength"), self, duration=3
-                        ),
-                    )
-                )
+                apply_status_to_unit(target, "supernatural_strength", self, duration=3)
 
 
 class InducePanic(TargetUnitActivatedAbility):
@@ -206,7 +185,7 @@ class InducePanic(TargetUnitActivatedAbility):
     controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(ApplyStatus(target, UnitStatusSignature(Panicked, self, duration=2)))
+        apply_status_to_unit(target, "panicked", self, duration=2)
 
 
 class Vault(TargetUnitActivatedAbility):
@@ -234,7 +213,7 @@ class Vault(TargetUnitActivatedAbility):
                 )
                 and target.controller != self.parent.controller
             ):
-                ES.resolve(ApplyStatus(target, UnitStatusSignature(Staggered, self)))
+                apply_status_to_unit(target, "staggered", self)
 
 
 class PublicExecution(TargetUnitActivatedAbility):
@@ -284,9 +263,7 @@ class BatonPass(TargetUnitActivatedAbility):
         return unit not in self.adjacency_hook.adjacent_units
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(target, UnitStatusSignature(BurstOfSpeed, self, stacks=1))
-        )
+        apply_status_to_unit(target, "burst_of_speed", self)
 
 
 class SweatItOut(TargetUnitActivatedAbility):
@@ -335,12 +312,7 @@ class WardEvil(TargetUnitActivatedAbility):
     can_target_self = False
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                target,
-                UnitStatusSignature(UnitStatus.get("magic_ward"), self, duration=3),
-            )
-        )
+        apply_status_to_unit(target, "magic_ward", self, duration=3)
 
 
 class WishHarm(TargetUnitActivatedAbility):
@@ -353,14 +325,7 @@ class WishHarm(TargetUnitActivatedAbility):
     controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                target,
-                UnitStatusSignature(
-                    UnitStatus.get("frail"), self, stacks=2, duration=2
-                ),
-            )
-        )
+        apply_status_to_unit(target, "frail", self, stacks=2, duration=2)
 
 
 class GuidedTrance(TargetUnitActivatedAbility):
@@ -393,11 +358,7 @@ class SpiritProjection(TargetHexActivatedAbility):
 
     def perform(self, target: Hex) -> None:
         current_hex = target
-        ES.resolve(
-            ApplyHexStatus(
-                current_hex, HexStatusSignature(HexStatus.get("glimpse"), self)
-            )
-        )
+        apply_status_to_hex(current_hex, "glimpse", self)
         for _ in range(2):
             decision = GS.make_decision(
                 self.parent.controller,
@@ -415,11 +376,7 @@ class SpiritProjection(TargetHexActivatedAbility):
             )
             if isinstance(decision.option, MoveOption):
                 current_hex = decision.target
-                ES.resolve(
-                    ApplyHexStatus(
-                        current_hex, HexStatusSignature(HexStatus.get("glimpse"), self)
-                    )
-                )
+                apply_status_to_hex(current_hex, "glimpse", self)
             else:
                 break
 
@@ -440,7 +397,9 @@ class SummonScarab(TargetHexActivatedAbility):
                 controller=self.parent.controller,
                 space=target,
                 exhausted=True,
-                with_statuses=[UnitStatusSignature(Ephemeral, self, duration=3)],
+                with_statuses=[
+                    UnitStatusSignature(UnitStatus.get("ephemeral"), self, duration=3)
+                ],
             )
         )
 
@@ -469,7 +428,7 @@ class Stare(TargetRadiatingLineActivatedAbility):
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
-            ES.resolve(ApplyHexStatus(h, HexStatusSignature(Glimpse, self)))
+            apply_status_to_hex(h, "glimpse", self)
             if is_vision_obstructed_for_unit_at(self.parent, h.position):
                 break
 
@@ -523,9 +482,7 @@ class Riddle(TargetUnitActivatedAbility):
     controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(target, UnitStatusSignature(UnitStatus.get("baffled"), self))
-        )
+        apply_status_to_unit(target, "baffled", self)
 
 
 class InstilFocus(TargetUnitActivatedAbility):
@@ -536,11 +493,7 @@ class InstilFocus(TargetUnitActivatedAbility):
     controller_target_option = ControllerTargetOption.ALLIED
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                target, UnitStatusSignature(UnitStatus.get("focused"), self, duration=2)
-            )
-        )
+        apply_status_to_unit(target, "focused", self, duration=3)
 
 
 class RoyalJelly(TargetUnitActivatedAbility):
@@ -571,7 +524,9 @@ class SummonBees(TargetHexActivatedAbility):
                 blueprint=UnitBlueprint.registry["bee_swarm"],
                 controller=self.parent.controller,
                 space=target,
-                with_statuses=[UnitStatusSignature(Ephemeral, self, duration=1)],
+                with_statuses=[
+                    UnitStatusSignature(UnitStatus.get("ephemeral"), self, duration=1)
+                ],
             )
         )
 
@@ -605,12 +560,7 @@ class EnfeeblingHex(TargetUnitActivatedAbility):
     controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                target,
-                UnitStatusSignature(UnitStatus.get("enfeebled"), self, duration=2),
-            )
-        )
+        apply_status_to_unit(target, "enfeebled", self, duration=2)
 
 
 class Suplex(TargetUnitActivatedAbility):
@@ -641,7 +591,7 @@ class Lasso(TargetUnitActivatedAbility):
     combinable = True
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(ApplyStatus(target, UnitStatusSignature(Rooted, self, duration=1)))
+        apply_status_to_unit(target, "rooted", self, duration=1)
 
 
 class Showdown(TargetUnitActivatedAbility):
@@ -689,7 +639,7 @@ class RaiseShrine(TargetHexActivatedAbility):
     cost = MovementCost(2) | EnergyCost(3)
 
     def perform(self, target: Hex) -> None:
-        ES.resolve(ApplyHexStatus(target, HexStatusSignature(Shrine, self)))
+        apply_status_to_hex(target, "shrine", self)
 
 
 class GrantCharm(TargetUnitActivatedAbility):
@@ -702,9 +652,7 @@ class GrantCharm(TargetUnitActivatedAbility):
     can_target_self = False
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(target, UnitStatusSignature(LuckyCharm, self, duration=3))
-        )
+        apply_status_to_unit(target, "lucky_charm", self, duration=3)
 
 
 class ChokingSoot(TargetHexCircleActivatedAbility):
@@ -717,7 +665,7 @@ class ChokingSoot(TargetHexCircleActivatedAbility):
 
     def perform(self, target: list[Hex]) -> None:
         for _hex in target:
-            ES.resolve(ApplyHexStatus(_hex, HexStatusSignature(Soot, self, duration=2)))
+            apply_status_to_hex(_hex, "soot", self, duration=2)
 
 
 class SmokeCanister(TargetHexCircleActivatedAbility):
@@ -731,9 +679,7 @@ class SmokeCanister(TargetHexCircleActivatedAbility):
 
     def perform(self, target: list[Hex]) -> None:
         for _hex in target:
-            ES.resolve(
-                ApplyHexStatus(_hex, HexStatusSignature(Smoke, self, duration=2))
-            )
+            apply_status_to_hex(_hex, "smoke", self, duration=2)
 
 
 class Terrorize(TargetUnitActivatedAbility):
@@ -746,7 +692,7 @@ class Terrorize(TargetUnitActivatedAbility):
     controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(ApplyStatus(target, UnitStatusSignature(Terror, self, duration=2)))
+        apply_status_to_unit(target, "terror", self, duration=2)
 
 
 class RollUp(NoTargetActivatedAbility):
@@ -755,11 +701,7 @@ class RollUp(NoTargetActivatedAbility):
     cost = MovementCost(1)
 
     def perform(self, target: None) -> None:
-        ES.resolve(
-            ApplyStatus(
-                self.parent, UnitStatusSignature(UnitStatus.get("rolled_up"), self)
-            )
-        )
+        apply_status_to_unit(self.parent, "rolled_up", self)
 
 
 class InkScreen(TargetHexArcActivatedAbility):
@@ -771,11 +713,7 @@ class InkScreen(TargetHexArcActivatedAbility):
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
-            ES.resolve(
-                ApplyHexStatus(
-                    h, HexStatusSignature(HexStatus.get("ink_cloud"), self, duration=2)
-                )
-            )
+            apply_status_to_hex(h, "ink_cloud", self, duration=2)
 
 
 class Scorch(TargetHexArcActivatedAbility):
@@ -789,7 +727,7 @@ class Scorch(TargetHexArcActivatedAbility):
         for h in target:
             if unit := GS.map.unit_on(h):
                 ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.AOE)))
-                ES.resolve(ApplyStatus(unit, UnitStatusSignature(Burn, self, stacks=2)))
+                apply_status_to_unit(unit, "burn", self, stacks=2)
 
 
 class FlameWall(TargetRadiatingLineActivatedAbility):
@@ -802,14 +740,9 @@ class FlameWall(TargetRadiatingLineActivatedAbility):
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
-            ES.resolve(
-                ApplyHexStatus(
-                    h,
-                    HexStatusSignature(BurningTerrain, self, stacks=1, duration=3),
-                )
-            )
+            apply_status_to_hex(h, "burning_terrain", self, stacks=1, duration=3)
             if unit := GS.map.unit_on(h):
-                ES.resolve(ApplyStatus(unit, UnitStatusSignature(Burn, self, stacks=2)))
+                apply_status_to_unit(unit, "burn", self, stacks=2)
 
 
 class FlameThrower(ActivatedAbilityFacet[list[Hex]]):
@@ -833,14 +766,9 @@ class FlameThrower(ActivatedAbilityFacet[list[Hex]]):
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
-            ES.resolve(
-                ApplyHexStatus(
-                    h,
-                    HexStatusSignature(BurningTerrain, self, stacks=1, duration=2),
-                )
-            )
+            apply_status_to_hex(h, "burning_terrain", self, stacks=1, duration=2)
             if unit := GS.map.unit_on(h):
-                ES.resolve(ApplyStatus(unit, UnitStatusSignature(Burn, self, stacks=1)))
+                apply_status_to_unit(unit, "burn", self, stacks=1)
 
 
 class VitalityTransfusion(ActivatedAbilityFacet[list[Unit]]):
@@ -898,13 +826,8 @@ class FatalBonding(ActivatedAbilityFacet):
             event.result
             for event in itertools.chain(
                 *(
-                    ES.resolve(
-                        ApplyStatus(
-                            unit,
-                            UnitStatusSignature(
-                                UnitStatus.get("tainted_bond"), self, duration=2
-                            ),
-                        )
+                    apply_status_to_unit(
+                        unit, "tainted_bond", self, duration=2
                     ).iter_type(ApplyStatus)
                     for unit in target
                 )
@@ -941,7 +864,7 @@ class Shove(TargetUnitActivatedAbility):
                 external=True,
             )
         )
-        if any(isinstance(status, Staggered) for status in target.statuses):
+        if target.has_status("staggered"):
             ES.resolve(ModifyMovementPoints(self.parent, 1))
 
 
@@ -955,12 +878,7 @@ class Poof(TargetHexActivatedAbility):
     requires_empty = True
 
     def perform(self, target: Hex) -> None:
-        ES.resolve(
-            ApplyHexStatus(
-                GS.map.hex_off(self.parent),
-                HexStatusSignature(Smoke, self, duration=1),
-            )
-        )
+        apply_status_to_hex(GS.map.hex_off(self.parent), "smoke", self, duration=1)
         ES.resolve(MoveUnit(self.parent, target))
 
 
@@ -975,17 +893,8 @@ class VenomousSpine(TargetUnitActivatedAbility):
     combinable = True
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(target, UnitStatusSignature(UnitStatus.get("parasite"), self))
-        )
-        ES.resolve(
-            ApplyStatus(
-                target,
-                UnitStatusSignature(
-                    UnitStatus.get("debilitating_venom"), self, duration=2
-                ),
-            )
-        )
+        apply_status_to_unit(target, "parasite", self)
+        apply_status_to_unit(target, "debilitating_venom", self, duration=2)
 
 
 class NaturalBlessing(TargetUnitActivatedAbility):
@@ -997,12 +906,7 @@ class NaturalBlessing(TargetUnitActivatedAbility):
     controller_target_option = ControllerTargetOption.ALLIED
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                target,
-                UnitStatusSignature(UnitStatus.get("natures_grace"), self, duration=3),
-            )
-        )
+        apply_status_to_unit(target, "natures_grace", self, duration=3)
 
 
 class VerdantFlash(TargetHexActivatedAbility):
@@ -1066,14 +970,7 @@ class DrawSpring(TargetHexActivatedAbility):
         return not hex_.terrain.is_high_ground
 
     def perform(self, target: Hex) -> None:
-        ES.resolve(
-            ApplyHexStatus(
-                target,
-                HexStatusSignature(
-                    HexStatus.get("underground_spring"), self, duration=2
-                ),
-            )
-        )
+        apply_status_to_hex(target, "underground_spring", self, duration=2)
 
 
 class MagmaFissure(TargetHexActivatedAbility):
@@ -1085,12 +982,7 @@ class MagmaFissure(TargetHexActivatedAbility):
     range = 2
 
     def perform(self, target: Hex) -> None:
-        ES.resolve(
-            ApplyHexStatus(
-                target,
-                HexStatusSignature(HexStatus.get("burning_terrain"), self, stacks=2),
-            )
-        )
+        apply_status_to_hex(target, "burning_terrain", self, stacks=2)
 
 
 class Scry(TargetHexActivatedAbility):
@@ -1105,11 +997,7 @@ class Scry(TargetHexActivatedAbility):
     hidden_target = True
 
     def perform(self, target: Hex) -> None:
-        ES.resolve(
-            ApplyHexStatus(
-                target, HexStatusSignature(HexStatus.get("revealed"), self, duration=2)
-            )
-        )
+        apply_status_to_hex(target, "revealed", self, duration=2)
 
 
 class ShrinkRay(TargetUnitActivatedAbility):
@@ -1122,14 +1010,7 @@ class ShrinkRay(TargetUnitActivatedAbility):
 
     def perform(self, target: Unit) -> None:
         ES.resolve(Damage(target, DamageSignature(1, self, DamageType.RANGED)))
-        ES.resolve(
-            ApplyStatus(
-                target,
-                UnitStatusSignature(
-                    UnitStatus.get("shrunk"), self, stacks=1, duration=2
-                ),
-            )
-        )
+        apply_status_to_unit(target, "shrunk", self, stacks=1, duration=2)
 
 
 class AssembleTheDoombot(TargetHexActivatedAbility):
@@ -1161,11 +1042,7 @@ class AssembleTheDoombot(TargetHexActivatedAbility):
                 )
             )
         else:
-            ES.resolve(
-                ApplyHexStatus(
-                    target, HexStatusSignature(HexStatus.get("doombot_scaffold"), self)
-                )
-            )
+            apply_status_to_hex(target, "doombot_scaffold", self)
 
 
 class Translocate(ActivatedAbilityFacet[list[Unit | Hex]]):
@@ -1269,12 +1146,7 @@ class InkRing(ActivatedAbilityFacet[list[Hex]]):
 
     def perform(self, target: list[Hex]) -> None:
         for unit in GS.map.units_on(target):
-            ES.resolve(
-                ApplyStatus(
-                    unit,
-                    UnitStatusSignature(UnitStatus.get("blinded"), self, duration=3),
-                )
-            )
+            apply_status_to_unit(unit, "blinded", self, duration=3)
 
 
 class MalevolentStare(TargetUnitActivatedAbility):
@@ -1288,12 +1160,7 @@ class MalevolentStare(TargetUnitActivatedAbility):
 
     def perform(self, target: Unit) -> None:
         dispel_from_unit(target, StatusIntention.BUFF)
-        ES.resolve(
-            ApplyStatus(
-                target,
-                UnitStatusSignature(UnitStatus.get("silenced"), self, duration=2),
-            )
-        )
+        apply_status_to_unit(target, "silenced", self, duration=2)
 
 
 class IronBlessing(TargetUnitActivatedAbility):
@@ -1306,11 +1173,7 @@ class IronBlessing(TargetUnitActivatedAbility):
     can_target_self = False
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                target, UnitStatusSignature(UnitStatus.get("armored"), self, duration=2)
-            )
-        )
+        apply_status_to_unit(target, "armored", self, duration=2)
 
 
 class InternalStruggle(TargetUnitActivatedAbility):
@@ -1341,9 +1204,7 @@ class Hitch(TargetUnitActivatedAbility):
     combinable = True
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(target, UnitStatusSignature(UnitStatus.get("hitched"), self))
-        )
+        apply_status_to_unit(target, "hitched", self)
 
 
 class CoordinatedManeuver(ActivatedAbilityFacet[list[Unit]]):
@@ -1384,9 +1245,7 @@ class LayMine(TargetHexActivatedAbility):
 
     def perform(self, target: Hex) -> None:
         if not GS.map.unit_on(target):
-            ES.resolve(
-                ApplyHexStatus(target, HexStatusSignature(HexStatus.get("mine"), self))
-            )
+            apply_status_to_hex(target, "mine", self)
 
 
 class TidyUp(TargetHexActivatedAbility):
@@ -1445,12 +1304,7 @@ class Binoculars(TargetHexActivatedAbility):
             GS.map.position_off(self.parent),
             target.position,
         ):
-            ES.resolve(
-                ApplyHexStatus(
-                    target,
-                    HexStatusSignature(HexStatus.get("revealed"), self, duration=2),
-                )
-            )
+            apply_status_to_hex(target, "revealed", self, duration=2)
 
 
 class MapOut(TargetHexActivatedAbility):
@@ -1462,11 +1316,7 @@ class MapOut(TargetHexActivatedAbility):
     hidden_target = True
 
     def perform(self, target: Hex) -> None:
-        ES.resolve(
-            ApplyHexStatus(
-                target, HexStatusSignature(HexStatus.get("mapped_out"), self)
-            )
-        )
+        apply_status_to_hex(target, "mapped_out", self)
 
 
 class ShootFlare(TargetTriHexActivatedAbility):
@@ -1479,11 +1329,7 @@ class ShootFlare(TargetTriHexActivatedAbility):
 
     def perform(self, target: list[Hex]) -> None:
         for _hex in target:
-            ES.resolve(
-                ApplyHexStatus(
-                    _hex, HexStatusSignature(HexStatus.get("flare"), self, duration=1)
-                )
-            )
+            apply_status_to_hex(_hex, "flare", self, duration=1)
 
 
 class SludgeBelch(TargetTriHexActivatedAbility):
@@ -1496,11 +1342,7 @@ class SludgeBelch(TargetTriHexActivatedAbility):
 
     def perform(self, target: list[Hex]) -> None:
         for _hex in target:
-            ES.resolve(
-                ApplyHexStatus(
-                    _hex, HexStatusSignature(HexStatus.get("sludge"), self, duration=2)
-                )
-            )
+            apply_status_to_hex(_hex, "sludge", self, duration=2)
 
 
 class FalseCure(TargetTriHexActivatedAbility):
@@ -1514,11 +1356,7 @@ class FalseCure(TargetTriHexActivatedAbility):
     def perform(self, target: list[Hex]) -> None:
         for unit in GS.map.units_on(target):
             ES.resolve(Heal(unit, 3, self))
-            ES.resolve(
-                ApplyStatus(
-                    unit, UnitStatusSignature(UnitStatus.get("poison"), self, stacks=1)
-                )
-            )
+            apply_status_to_unit(unit, "poison", self, stacks=1)
 
 
 class HandGrenade(TargetTriHexActivatedAbility):
@@ -1546,14 +1384,7 @@ class FlashBang(TargetTriHexActivatedAbility):
     def perform(self, target: list[Hex]) -> None:
         for _hex in target:
             if unit := GS.map.unit_on(_hex):
-                ES.resolve(
-                    ApplyStatus(
-                        unit,
-                        UnitStatusSignature(
-                            UnitStatus.get("blinded"), self, duration=2
-                        ),
-                    )
-                )
+                apply_status_to_unit(unit, "blinded", self, duration=2)
 
 
 class SmokeGrenade(TargetTriHexActivatedAbility):
@@ -1566,11 +1397,7 @@ class SmokeGrenade(TargetTriHexActivatedAbility):
 
     def perform(self, target: list[Hex]) -> None:
         for _hex in target:
-            ES.resolve(
-                ApplyHexStatus(
-                    _hex, HexStatusSignature(HexStatus.get("smoke"), self, duration=2)
-                )
-            )
+            apply_status_to_hex(_hex, "smoke", self, duration=2)
 
 
 class SowDiscord(TargetTriHexActivatedAbility):
@@ -1583,12 +1410,7 @@ class SowDiscord(TargetTriHexActivatedAbility):
 
     def perform(self, target: list[Hex]) -> None:
         for unit in GS.map.units_on(target):
-            ES.resolve(
-                ApplyStatus(
-                    unit,
-                    UnitStatusSignature(UnitStatus.get("paranoia"), self, duration=3),
-                )
-            )
+            apply_status_to_unit(unit, "paranoia", self, duration=3)
 
 
 class Scorn(TargetUnitActivatedAbility):
@@ -1602,14 +1424,7 @@ class Scorn(TargetUnitActivatedAbility):
     controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                target,
-                UnitStatusSignature(
-                    UnitStatus.get("dishonorable_coward"), self, duration=3
-                ),
-            )
-        )
+        apply_status_to_unit(target, "dishonorable_coward", self, duration=3)
         # TODO event
         if (
             _hex := GS.map.hex_off(target)
@@ -1627,12 +1442,7 @@ class SpurIntoRage(TargetUnitActivatedAbility):
     can_target_self = False
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                target,
-                UnitStatusSignature(UnitStatus.get("senseless_rage"), self, duration=2),
-            )
-        )
+        apply_status_to_unit(target, "senseless_rage", self, duration=2)
 
 
 class SquirtSoot(TargetHexActivatedAbility):
@@ -1643,12 +1453,7 @@ class SquirtSoot(TargetHexActivatedAbility):
     cost = MovementCost(1)
 
     def perform(self, target: Hex) -> None:
-        ES.resolve(
-            ApplyHexStatus(
-                target,
-                HexStatusSignature(HexStatus.get("soot"), self, duration=2),
-            )
-        )
+        apply_status_to_hex(target, "soot", self, duration=2)
 
 
 class ConstructTurret(TargetHexActivatedAbility):
@@ -1710,11 +1515,7 @@ class TurboTune(TargetUnitActivatedAbility):
         return unit.armor.get_base() > 0
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                target, UnitStatusSignature(UnitStatus.get("turbo"), self, duration=2)
-            )
-        )
+        apply_status_to_unit(target, "turbo", self, duration=2)
 
 
 class TurnToRabbit(TargetUnitActivatedAbility):
@@ -1728,12 +1529,7 @@ class TurnToRabbit(TargetUnitActivatedAbility):
     can_target_self = False
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                target,
-                UnitStatusSignature(UnitStatus.get("critterized"), self, duration=1),
-            )
-        )
+        apply_status_to_unit(target, "critterized", self, duration=1)
 
 
 class TugIn(TargetUnitActivatedAbility):
@@ -1749,12 +1545,7 @@ class TugIn(TargetUnitActivatedAbility):
         return unit.ready
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                target,
-                UnitStatusSignature(UnitStatus.get("beauty_sleep"), self, duration=1),
-            )
-        )
+        apply_status_to_unit(target, "beauty_sleep", self, duration=1)
 
 
 class FaerieDust(TargetUnitActivatedAbility):
@@ -1767,12 +1558,7 @@ class FaerieDust(TargetUnitActivatedAbility):
     can_target_self = False
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                target,
-                UnitStatusSignature(UnitStatus.get("magic_strength"), self, duration=1),
-            )
-        )
+        apply_status_to_unit(target, "magic_strength", self, duration=1)
 
 
 class FleaSwarm(TargetUnitActivatedAbility):
@@ -1785,12 +1571,7 @@ class FleaSwarm(TargetUnitActivatedAbility):
     controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                target,
-                UnitStatusSignature(UnitStatus.get("flea_infested"), self, duration=3),
-            )
-        )
+        apply_status_to_unit(target, "flea_infested", self, duration=3)
 
 
 class Disempower(TargetTriHexActivatedAbility):
@@ -1803,14 +1584,7 @@ class Disempower(TargetTriHexActivatedAbility):
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
-            ES.resolve(
-                ApplyHexStatus(
-                    h,
-                    HexStatusSignature(
-                        HexStatus.get("sapping_field"), self, duration=2
-                    ),
-                )
-            )
+            apply_status_to_hex(h, "sapping_field", self, duration=2)
 
 
 class Torpor(TargetTriHexActivatedAbility):
@@ -1823,12 +1597,7 @@ class Torpor(TargetTriHexActivatedAbility):
 
     def perform(self, target: list[Hex]) -> None:
         for unit in GS.map.units_on(target):
-            ES.resolve(
-                ApplyStatus(
-                    unit,
-                    UnitStatusSignature(UnitStatus.get("tired"), self, stacks=2),
-                )
-            )
+            apply_status_to_unit(unit, "tired", self, stacks=2)
 
 
 class FireStorm(ActivatedAbilityFacet[list[Hex]]):
@@ -1856,34 +1625,19 @@ class FireStorm(ActivatedAbilityFacet[list[Hex]]):
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
-            ES.resolve(
-                ApplyHexStatus(
-                    h,
-                    HexStatusSignature(
-                        HexStatus.get("burning_terrain"),
-                        self,
-                        stacks=(
-                            2
-                            if (
-                                is_burning := h.has_status(
-                                    HexStatus.get("burning_terrain")
-                                )
-                            )
-                            else 1
-                        ),
-                        duration=2,
-                    ),
-                )
+            apply_status_to_hex(
+                h,
+                "burning_terrain",
+                self,
+                stacks=(
+                    2
+                    if (is_burning := h.has_status(HexStatus.get("burning_terrain")))
+                    else 1
+                ),
+                duration=2,
             )
             if unit := GS.map.unit_on(h):
-                ES.resolve(
-                    ApplyStatus(
-                        unit,
-                        UnitStatusSignature(
-                            UnitStatus.get("burn"), self, stacks=2 if is_burning else 1
-                        ),
-                    )
-                )
+                apply_status_to_unit(unit, "burn", self, stacks=2 if is_burning else 1)
 
 
 class GiantPincers(ActivatedAbilityFacet[list[Hex]]):
@@ -2049,12 +1803,9 @@ class OpenGate(ActivatedAbilityFacet[list[Hex]]):
             result.result
             for result in itertools.chain(
                 *(
-                    ES.resolve(
-                        ApplyHexStatus(
-                            hex_,
-                            HexStatusSignature(HexStatus.get("gate"), self, duration=3),
-                        )
-                    ).iter_type(ApplyHexStatus)
+                    apply_status_to_hex(hex_, "gate", self, duration=3).iter_type(
+                        ApplyHexStatus
+                    )
                     for hex_ in target
                 )
             )

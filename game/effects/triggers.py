@@ -54,6 +54,7 @@ from game.events import (
     TurnCleanup,
     TurnUpkeep,
 )
+from game.statuses.shortcuts import apply_status_to_hex, apply_status_to_unit
 from game.values import DamageType, StatusIntention
 
 
@@ -232,14 +233,7 @@ class GrizzlyMurdererTrigger(TriggerEffect[MeleeAttackAction]):
             if unit.controller != self.unit.controller and unit.can_see(
                 GS.map.hex_off(event.defender)
             ):
-                ES.resolve(
-                    ApplyStatus(
-                        unit,
-                        UnitStatusSignature(
-                            UnitStatus.get("shocked"), self.source, duration=2
-                        ),
-                    )
-                )
+                apply_status_to_unit(unit, "shocked", self.source, duration=2)
 
 
 @dataclasses.dataclass(eq=False)
@@ -284,14 +278,7 @@ class PuffAwayTrigger(TriggerEffect[MoveUnit]):
             ) and decision.target != GS.map.hex_off(self.unit):
                 previous_hex = GS.map.hex_off(self.unit)
                 ES.resolve(MoveUnit(self.unit, to_=decision.target))
-                ES.resolve(
-                    ApplyHexStatus(
-                        previous_hex,
-                        HexStatusSignature(
-                            HexStatus.get("soot"), self.source, duration=2
-                        ),
-                    )
-                )
+                apply_status_to_hex(previous_hex, "soot", self.source, duration=2)
                 ES.resolve(ExhaustUnit(self.unit))
 
 
@@ -331,14 +318,7 @@ class HeelTurnTrigger(TriggerEffect[SufferDamage]):
         return event.unit == self.unit and self.unit.health == 1
 
     def resolve(self, event: SufferDamage) -> None:
-        ES.resolve(
-            ApplyStatus(
-                self.unit,
-                UnitStatusSignature(
-                    UnitStatus.get("they_ve_got_a_steel_chair"), self.source
-                ),
-            )
-        )
+        apply_status_to_unit(self.unit, "they_ve_got_a_steel_chair", self.source)
 
 
 @dataclasses.dataclass(eq=False)
@@ -397,12 +377,7 @@ class OldBonesTrigger(TriggerEffect[TurnCleanup]):
         )
 
     def resolve(self, event: TurnCleanup) -> None:
-        ES.resolve(
-            ApplyStatus(
-                self.unit,
-                UnitStatusSignature(UnitStatus.get("tired"), self.source, stacks=1),
-            )
-        )
+        apply_status_to_unit(self.unit, "tired", self.source, stacks=1)
 
 
 @dataclasses.dataclass(eq=False)
@@ -467,14 +442,7 @@ class ToxicPresenceTrigger(TriggerEffect[TurnCleanup]):
 
     def resolve(self, event: TurnCleanup) -> None:
         for unit in GS.map.get_neighboring_units_off(self.unit):
-            ES.resolve(
-                ApplyStatus(
-                    unit,
-                    UnitStatusSignature(
-                        UnitStatus.get("poison"), self.source, stacks=self.amount
-                    ),
-                )
-            )
+            apply_status_to_unit(unit, "poison", self.source, stacks=self.amount)
 
 
 @dataclasses.dataclass(eq=False)
@@ -504,14 +472,7 @@ class JukeAndJiveTrigger(TriggerEffect[ActionCleanup]):
         )
 
     def resolve(self, event: ActionCleanup) -> None:
-        ES.resolve(
-            ApplyStatus(
-                self.unit,
-                UnitStatusSignature(
-                    UnitStatus.get("all_in_jest"), self.source, stacks=1
-                ),
-            )
-        )
+        apply_status_to_unit(self.unit, "all_in_jest", self.source, stacks=1)
 
 
 @dataclasses.dataclass(eq=False)
@@ -539,17 +500,11 @@ class BurnOnWalkIn(TriggerEffect[MoveUnit]):
         return event.to_ == self.hex and event.result
 
     def resolve(self, event: MoveUnit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                unit=event.unit,
-                signature=UnitStatusSignature(
-                    UnitStatus.get("burn"),
-                    None,
-                    stacks=(
-                        self.amount if isinstance(self.amount, int) else self.amount()
-                    ),
-                ),
-            )
+        apply_status_to_unit(
+            event.unit,
+            "burn",
+            None,
+            stacks=self.amount if isinstance(self.amount, int) else self.amount(),
         )
 
 
@@ -597,19 +552,11 @@ class BurnOnCleanup(TriggerEffect[RoundCleanup]):
 
     def resolve(self, event: RoundCleanup) -> None:
         if unit := GS.map.unit_on(self.hex):
-            ES.resolve(
-                ApplyStatus(
-                    unit=unit,
-                    signature=UnitStatusSignature(
-                        UnitStatus.get("burn"),
-                        None,
-                        stacks=(
-                            self.amount
-                            if isinstance(self.amount, int)
-                            else self.amount()
-                        ),
-                    ),
-                )
+            apply_status_to_unit(
+                unit,
+                "burn",
+                None,
+                stacks=self.amount if isinstance(self.amount, int) else self.amount(),
             )
 
 
@@ -651,14 +598,7 @@ class SludgeTrigger(TriggerEffect[RoundCleanup]):
 
     def resolve(self, event: RoundCleanup) -> None:
         if unit := GS.map.unit_on(self.status.parent):
-            ES.resolve(
-                ApplyStatus(
-                    unit,
-                    UnitStatusSignature(
-                        UnitStatus.get("slimed"), self.status, duration=2
-                    ),
-                )
-            )
+            apply_status_to_unit(unit, "slimed", self.status, duration=2)
 
 
 @dataclasses.dataclass(eq=False)
@@ -700,14 +640,7 @@ class ShrineWalkInTrigger(TriggerEffect[MoveUnit]):
         return event.to_ == self.hex and event.result
 
     def resolve(self, event: MoveUnit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                event.unit,
-                UnitStatusSignature(
-                    UnitStatus.get("fortified"), self.source, stacks=1, duration=4
-                ),
-            )
-        )
+        apply_status_to_unit(event.unit, "fortified", self.source, stacks=1, duration=4)
 
 
 @dataclasses.dataclass(eq=False)
@@ -783,12 +716,7 @@ class HardyTrigger(TriggerEffect[RoundUpkeep]):
         return not self.unit.has_status("vigor")
 
     def resolve(self, event: RoundUpkeep) -> None:
-        ES.resolve(
-            ApplyStatus(
-                self.unit,
-                UnitStatusSignature(UnitStatus.get("vigor"), self.source, stacks=1),
-            )
-        )
+        apply_status_to_unit(self.unit, "vigor", self.source, stacks=1)
 
 
 @dataclasses.dataclass(eq=False)
@@ -943,12 +871,7 @@ class FoulBurstTrigger(TriggerEffect[KillUpkeep]):
         return event.unit == self.unit
 
     def resolve(self, event: KillUpkeep) -> None:
-        ES.resolve(
-            ApplyHexStatus(
-                GS.map.hex_off(event.unit),
-                HexStatusSignature(HexStatus.get("soot"), self.source, duration=2),
-            )
-        )
+        apply_status_to_hex(GS.map.hex_off(event.unit), "soot", self.source, duration=2)
 
 
 @dataclasses.dataclass(eq=False)
@@ -1114,12 +1037,5 @@ class BaffledTrigger(TriggerEffect[Turn]):
 
     def resolve(self, event: Turn) -> None:
         if event.result:
-            ES.resolve(
-                ApplyStatus(
-                    self.status.parent,
-                    UnitStatusSignature(
-                        UnitStatus.get("stunned"), self.status, stacks=1
-                    ),
-                )
-            )
+            apply_status_to_unit(self.status.parent, "stunned", self.status, stacks=1)
         self.status.remove()

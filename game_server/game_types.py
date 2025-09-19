@@ -61,7 +61,7 @@ class TestGameType(GameType):
         player_units = (
             (
                 PANGOLIN_FAMILIAR,
-                MAD_SCIENTIST,
+                EFFORTLESS_ATHLETE,
                 # HARROWED_MYSTICIST,
                 # FROST_SPRITE,
                 SQUIRMING_SQUID,

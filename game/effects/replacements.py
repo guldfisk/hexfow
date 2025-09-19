@@ -3,16 +3,7 @@ from enum import IntEnum, auto
 from typing import ClassVar
 
 from events.eventsystem import ES, ReplacementEffect, hook_on
-from game.core import (
-    GS,
-    DamageSignature,
-    Hex,
-    HexStatusLink,
-    Source,
-    Unit,
-    UnitStatus,
-    UnitStatusSignature,
-)
+from game.core import GS, DamageSignature, Hex, HexStatusLink, Source, Unit, UnitStatus
 from game.events import (
     ApplyStatus,
     CheckAlive,
@@ -26,7 +17,7 @@ from game.events import (
     Turn,
 )
 from game.map.coordinates import CC
-from game.statuses.dispel import dispel_from_unit
+from game.statuses.shortcuts import apply_status_to_unit, dispel_from_unit
 from game.values import DamageType, StatusIntention
 
 
@@ -266,14 +257,7 @@ class LastStandReplacement(ReplacementEffect[Kill]):
     def resolve(self, event: Kill) -> None:
         event.unit.damage = event.unit.max_health.g() - 1
         dispel_from_unit(event.unit, StatusIntention.DEBUFF)
-        ES.resolve(
-            ApplyStatus(
-                event.unit,
-                UnitStatusSignature(
-                    UnitStatus.get("mortally_wounded"), self.source, duration=1
-                ),
-            )
-        )
+        apply_status_to_unit(event.unit, "mortally_wounded", self.source, duration=1)
 
 
 @dataclasses.dataclass(eq=False)

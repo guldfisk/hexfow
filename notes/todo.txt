@@ -46,8 +46,6 @@ ui
     linked statuses display
 
 code
-    common apply status to hex/unit util
-
     clean up action space interface
     don't send no change game state updates
 

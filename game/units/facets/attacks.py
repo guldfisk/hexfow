@@ -9,12 +9,10 @@ from game.core import (
     MovementCost,
     RangedAttackFacet,
     Unit,
-    UnitStatus,
-    UnitStatusSignature,
 )
 from game.effects.hooks import AdjacencyHook
-from game.events import ApplyStatus, Damage, Heal
-from game.statuses.unit_statuses import BellStruck, Staggered, Stumbling
+from game.events import Damage, Heal
+from game.statuses.shortcuts import apply_status_to_unit
 from game.values import DamageType, Size, StatusIntention
 
 
@@ -30,11 +28,7 @@ class BurningSting(MeleeAttackFacet):
     damage = 1
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                defender, UnitStatusSignature(UnitStatus.get("burn"), self, stacks=1)
-            )
-        )
+        apply_status_to_unit(defender, "burn", self, stacks=1)
 
 
 class Scratch(MeleeAttackFacet):
@@ -140,12 +134,7 @@ class SolidMunition(RangedAttackFacet):
     cost = ExclusiveCost()
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                self.parent,
-                UnitStatusSignature(UnitStatus.get("stunned"), self, stacks=1),
-            )
-        )
+        apply_status_to_unit(self.parent, "stunned", self, stacks=1)
 
 
 class HammerBlow(MeleeAttackFacet):
@@ -162,12 +151,7 @@ class MightyBlow(MeleeAttackFacet):
     damage = 6
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                self.parent,
-                UnitStatusSignature(UnitStatus.get("stunned"), self, stacks=1),
-            )
-        )
+        apply_status_to_unit(self.parent, "stunned", self, stacks=1)
 
 
 class LightBlaster(RangedAttackFacet):
@@ -271,11 +255,7 @@ class AnkleBite(MeleeAttackFacet):
     combinable = True
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                defender, UnitStatusSignature(UnitStatus.get("stumbling"), self)
-            )
-        )
+        apply_status_to_unit(defender, "stumbling", self)
 
 
 class Frostbite(MeleeAttackFacet):
@@ -288,11 +268,7 @@ class Frostbite(MeleeAttackFacet):
     combinable = True
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                defender, UnitStatusSignature(UnitStatus.get("chill"), self, duration=3)
-            )
-        )
+        apply_status_to_unit(defender, "chill", self, duration=3)
 
 
 class FinalSting(MeleeAttackFacet):
@@ -304,9 +280,7 @@ class FinalSting(MeleeAttackFacet):
     damage = 1
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(defender, UnitStatusSignature(UnitStatus.get("poison"), self))
-        )
+        apply_status_to_unit(defender, "poison", self, stacks=1)
         ES.resolve(Damage(self.parent, DamageSignature(1, self, DamageType.PURE)))
 
 
@@ -384,12 +358,7 @@ class Spew(RangedAttackFacet):
     damage = 4
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                defender,
-                UnitStatusSignature(UnitStatus.get("slimed"), self, duration=2),
-            )
-        )
+        apply_status_to_unit(defender, "slimed", self, duration=2)
 
 
 class CommandersPistol(RangedAttackFacet):
@@ -472,7 +441,7 @@ class RoundhouseKick(MeleeAttackFacet):
     damage = 3
 
     def get_damage_modifier_against(self, unit: Unit) -> int | None:
-        if any(isinstance(status, Staggered) for status in unit.statuses):
+        if unit.has_status("staggered"):
             return 1
 
 
@@ -524,7 +493,7 @@ class Tackle(MeleeAttackFacet):
     damage = 2
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(ApplyStatus(defender, UnitStatusSignature(Stumbling, self)))
+        apply_status_to_unit(defender, "stumbling", self)
 
 
 class FromTheTopRope(MeleeAttackFacet):
@@ -536,7 +505,7 @@ class FromTheTopRope(MeleeAttackFacet):
     cost = MovementCost(2)
 
     def get_damage_modifier_against(self, unit: Unit) -> int | None:
-        if any(isinstance(status, Stumbling) for status in unit.statuses):
+        if unit.has_status("stumbling"):
             return 1
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
@@ -559,11 +528,7 @@ class InfernalBlade(MeleeAttackFacet):
     damage = 2
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                defender, UnitStatusSignature(UnitStatus.get("burn"), self, stacks=2)
-            )
-        )
+        apply_status_to_unit(defender, "burn", self, stacks=2)
 
 
 class Gnaw(MeleeAttackFacet):
@@ -592,9 +557,7 @@ class BellHammer(MeleeAttackFacet):
     damage = 4
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(defender, UnitStatusSignature(BellStruck, self, duration=2))
-        )
+        apply_status_to_unit(defender, "bell_struck", self, duration=2)
 
 
 class DeathLaser(RangedAttackFacet):
@@ -641,12 +604,7 @@ class Swelter(RangedAttackFacet):
     range = 2
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                defender,
-                UnitStatusSignature(UnitStatus.get("parched"), self, duration=2),
-            )
-        )
+        apply_status_to_unit(defender, "parched", self, duration=2)
 
 
 class SniperRifle(RangedAttackFacet):
@@ -682,9 +640,4 @@ class Grapple(MeleeAttackFacet):
     damage = 2
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
-        ES.resolve(
-            ApplyStatus(
-                defender,
-                UnitStatusSignature(UnitStatus.get("rooted"), self, duration=1),
-            )
-        )
+        apply_status_to_unit(defender, "rooted", self, duration=1)
