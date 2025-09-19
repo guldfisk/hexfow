@@ -7,6 +7,7 @@ import {
 import { CC } from "../../interfaces/geometry.ts";
 import { ccToKey } from "../../game/geometry.ts";
 import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
+import { DeploymentSpec } from "../../interfaces/gameState.ts";
 
 export interface UnitSpec {
   identifier: string;
@@ -39,6 +40,13 @@ const mainSlice = createSlice({
     selectedUnitIdentifier: null,
     selectedStatusIdentifier: null,
     gameObjectDetails: null,
+    toPoints: 24,
+    deploymentSpec: {
+      max_army_units: 20,
+      max_army_points: 120,
+      max_deployment_units: 12,
+      max_deployment_points: 70,
+    },
   } as {
     mapData: { [key: string]: HexSpec };
     mapName: string;
@@ -48,6 +56,8 @@ const mainSlice = createSlice({
     selectedUnitIdentifier: string | null;
     selectedStatusIdentifier: string | null;
     gameObjectDetails: GameObjectDetails | null;
+    toPoints: number;
+    deploymentSpec: DeploymentSpec;
   },
   reducers: {
     setMapData: (state, action: PayloadAction<HexSpec[]>) => {
@@ -72,6 +82,8 @@ const mainSlice = createSlice({
             deployment_zone_of: number | null;
             terrain_type: string;
           }[];
+          deployment_spec: DeploymentSpec;
+          to_points: number;
         };
       }>,
     ) => {
@@ -88,6 +100,8 @@ const mainSlice = createSlice({
           },
         ]),
       );
+      state.toPoints = action.payload.scenario.to_points;
+      state.deploymentSpec = action.payload.scenario.deployment_spec;
       state.shouldRerender = true;
       state.mapName = action.payload.name;
       state.loaderData.show = false;
@@ -187,6 +201,12 @@ const mainSlice = createSlice({
     setSelectedStatusIdentifier: (state, action: PayloadAction<string>) => {
       state.selectedStatusIdentifier = action.payload;
     },
+    setDeploymentSpec: (state, action: PayloadAction<DeploymentSpec>) => {
+      state.deploymentSpec = action.payload;
+    },
+    setToPoints: (state, action: PayloadAction<number>) => {
+      state.toPoints = action.payload;
+    },
   },
 });
 
@@ -208,6 +228,8 @@ export const {
   setSelectedUnitIdentifier,
   setSelectedStatusIdentifier,
   setStatus,
+  setDeploymentSpec,
+  setToPoints,
 } = mainSlice.actions;
 
 export const store = configureStore({

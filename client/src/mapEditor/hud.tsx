@@ -1,15 +1,19 @@
 import { useMapEditorDispatch, useMapEditorState } from "./state/hooks.ts";
 import {
   loadMap,
+  MapEditorState,
+  setDeploymentSpec,
   setLoaderOptions,
   setLoaderSelected,
   setMapName,
   setSelectedStatusIdentifier,
   setSelectedUnitIdentifier,
   setShowLoader,
+  setToPoints,
   store,
 } from "./state/store.ts";
 import { useEffect } from "react";
+import { DeploymentSpec } from "../interfaces/gameState.ts";
 
 const NameEditor = ({}) => {
   const mapName = useMapEditorState((state) => state.mapName);
@@ -70,6 +74,32 @@ const MapLoader = ({}) => {
   );
 };
 
+const DeploymentSpecValueEditor = ({
+  state,
+  label,
+  specKey,
+}: {
+  state: MapEditorState;
+  label: string;
+  specKey: keyof DeploymentSpec;
+}) => (
+  <div>
+    <label>{label}</label>
+    <input
+      type={"number"}
+      value={state.deploymentSpec[specKey]}
+      onChange={(event) =>
+        store.dispatch(
+          setDeploymentSpec({
+            ...state.deploymentSpec,
+            [specKey]: parseInt(event.target.value),
+          }),
+        )
+      }
+    />
+  </div>
+);
+
 export const HUD = ({}: {}) => {
   const state = useMapEditorState((state) => state);
   const dispatch = useMapEditorDispatch();
@@ -90,10 +120,15 @@ export const HUD = ({}: {}) => {
                       cc: spec.cc,
                       terrain_type: spec.terrainType,
                       is_objective: spec.isObjective,
-                      deployment_zone_of: spec.deploymentZoneOf === undefined ? null : spec.deploymentZoneOf,
+                      deployment_zone_of:
+                        spec.deploymentZoneOf === undefined
+                          ? null
+                          : spec.deploymentZoneOf,
                       statuses: spec.statuses,
                       unit: spec.unit || null,
                     })),
+                    deployment_spec: state.deploymentSpec,
+                    to_points: state.toPoints
                   },
                 }),
                 headers: {
@@ -106,6 +141,36 @@ export const HUD = ({}: {}) => {
           save
         </button>
         <button onClick={() => dispatch(setShowLoader(true))}>load map</button>
+        <DeploymentSpecValueEditor
+          state={state}
+          label={"Max army units"}
+          specKey={"max_army_units"}
+        />
+        <DeploymentSpecValueEditor
+          state={state}
+          label={"Max army points"}
+          specKey={"max_army_points"}
+        />
+        <DeploymentSpecValueEditor
+          state={state}
+          label={"Max deployment units"}
+          specKey={"max_deployment_units"}
+        />
+        <DeploymentSpecValueEditor
+          state={state}
+          label={"Max deployment points"}
+          specKey={"max_deployment_points"}
+        />
+        <div>
+          <label>To points</label>
+          <input
+            type={"number"}
+            value={state.toPoints}
+            onChange={(event) =>
+              store.dispatch(setToPoints(parseInt(event.target.value)))
+            }
+          />
+        </div>
         {state.gameObjectDetails ? (
           <>
             <div className={"unit-list"}>

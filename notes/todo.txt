@@ -12,12 +12,11 @@ army editor
     test deploy on map
 
 map editor
-    change meta info, aka point goals, and army max_unit counts and values.
-
     round restricted objectives
     single mirror axis mode
-    unit details
     add/remove hexes
+
+    unit details
 
 game
     round restricted objectives
@@ -49,9 +48,10 @@ ui
     linked statuses display
 
 code
+    common apply status to hex/unit util
+
     clean up action space interface
     don't send no change game state updates
-    common apply status to hex/unit util
 
     registered get classes clean up
     common target profile interface for effort facets
