@@ -39,6 +39,7 @@ export interface EffortFacetDetailsBase extends BaseFacetDetails {
 interface SingleTargetAttackDetails extends EffortFacetDetailsBase {
   damage: number;
   ap: number;
+  benefits_from_attack_power: boolean;
 }
 
 export interface MeleeAttackFacetDetails extends SingleTargetAttackDetails {

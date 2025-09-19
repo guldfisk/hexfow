@@ -10,7 +10,6 @@ from game.core import (
     ExclusiveCost,
     Hex,
     HexStatus,
-    MeleeAttackFacet,
     MovementCost,
     MoveOption,
     NoTarget,
@@ -35,6 +34,7 @@ from game.events import (
     ApplyHexStatus,
     ApplyStatus,
     ChangeHexTerrain,
+    CheckAlive,
     Damage,
     DispelStatus,
     ExhaustUnit,
@@ -48,6 +48,7 @@ from game.events import (
     QueueUnitForActivation,
     ReadyUnit,
     SpawnUnit,
+    SufferDamage,
 )
 from game.statuses.links import GateLink, TaintedLink
 from game.statuses.shortcuts import (
@@ -597,9 +598,9 @@ class Lasso(TargetUnitActivatedAbility):
 class Showdown(TargetUnitActivatedAbility):
     """
     This unit hits the target with its primary ranged attack twice.
-    If the target isn't exhausted, and it has a primary ranged attack, and it can hit this unit with
-    that attack, it does and is exhausted. If it does not have a primary ranged attack, but it has
-    a primary melee attack that can hit this unit, it uses that instead.
+    Then, if the target unit is alive and can hit this unit with its primary attack,
+    it does so. If it does, and both units are still alive, and at least one unit
+    was damaged this way, repeat this process.
     """
 
     cost = ExclusiveCost() | EnergyCost(3)
@@ -607,28 +608,50 @@ class Showdown(TargetUnitActivatedAbility):
     controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: Unit) -> None:
-        if attack := self.parent.get_primary_attack(RangedAttackFacet):
-            for _ in range(2):
-                ES.resolve(Hit(attacker=self.parent, defender=target, attack=attack))
+        if not (attack := self.parent.get_primary_attack(RangedAttackFacet)):
+            return
 
-        if not target.exhausted:
-            for attack_type in (RangedAttackFacet, MeleeAttackFacet):
-                if (
-                    (defender_attack := target.get_primary_attack(attack_type))
-                    and self.parent
-                    in
-                    # TODO yikes
-                    defender_attack.get_legal_targets(ActiveUnitContext(target, 1))
-                ):
+        while True:
+            damaged = any(
+                event.unit == target
+                for result in [
                     ES.resolve(
+                        Hit(attacker=self.parent, defender=target, attack=attack)
+                    )
+                    for _ in range(2)
+                ]
+                for event in result.iter_type(SufferDamage)
+            )
+
+            ES.resolve(CheckAlive(target))
+            if not target.on_map():
+                break
+
+            if not (
+                (defender_attack := target.get_primary_attack())
+                and self.parent
+                in defender_attack.get_legal_targets(ActiveUnitContext(target, 1))
+            ):
+                break
+
+            if not (
+                any(
+                    event.unit == self.parent
+                    for event in ES.resolve(
                         Hit(
                             attacker=target,
                             defender=self.parent,
                             attack=defender_attack,
                         )
-                    )
-                    ES.resolve(ExhaustUnit(target))
-                    break
+                    ).iter_type(SufferDamage)
+                )
+                or damaged
+            ):
+                break
+
+            ES.resolve(CheckAlive(self.parent))
+            if not self.parent.on_map():
+                break
 
 
 class RaiseShrine(TargetHexActivatedAbility):

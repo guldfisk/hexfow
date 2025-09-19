@@ -160,10 +160,15 @@ class LightBlaster(RangedAttackFacet):
 
 
 class Strafe(RangedAttackFacet):
+    """
+    Unaffected by positive attack power.
+    """
+
     damage = 2
     range = 2
     cost = MovementCost(1)
     combinable = True
+    benefits_from_attack_power = False
 
 
 class Engage(MeleeAttackFacet):
@@ -513,10 +518,15 @@ class FromTheTopRope(MeleeAttackFacet):
 
 
 class TwinRevolvers(RangedAttackFacet):
+    """
+    Unaffected by positive attack power.
+    """
+
     cost = MovementCost(1)
     damage = 2
     range = 3
     max_activations = 2
+    benefits_from_attack_power = False
 
 
 class InfernalBlade(MeleeAttackFacet):

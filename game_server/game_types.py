@@ -60,21 +60,14 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                # PANGOLIN_FAMILIAR,
-                EFFORTLESS_ATHLETE,
-                # HARROWED_MYSTICIST,
-                # FROST_SPRITE,
-                # SQUIRMING_SQUID,
-                INFERNAL_IMP,
-                ARTHRITIC_GIANT,
-                # CAMELBACK_OUTRIDER,
+                NOTORIOUS_OUTLAW,
+                UNDERHANDED_HEXMAGE,
+                BLOOD_FEUD_WARLOCK,
             ),
             (
-                # ANCIENT_ALTRUIST,
-                # CYCLOPS,
-                ELITE_COMMANDO,
-                SHRINE_KEEPER,
-                NOTORIOUS_OUTLAW,
+                CYCLOPS,
+                LIGHT_ARCHER,
+                UNDERHANDED_HEXMAGE,
             ),
         )
 

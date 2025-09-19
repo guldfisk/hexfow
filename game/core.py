@@ -547,10 +547,18 @@ class SingleTargetAttackFacet(AttackFacet, ABC):
     damage_type: ClassVar[DamageType]
     damage: ClassVar[int]
     ap: ClassVar[int] = 0
+    benefits_from_attack_power: ClassVar[bool] = True
 
     def get_damage_modifier_against(self, unit: Unit) -> int | None:
         # TODO blah internal hook
         ...
+
+    def get_attack_power_modifier(self) -> int:
+        return (
+            self.parent.attack_power.g()
+            if self.benefits_from_attack_power
+            else min(self.parent.attack_power.g(), 0)
+        )
 
     @modifiable
     def get_damage_signature_against(self, unit: Unit) -> DamageSignature:
@@ -558,7 +566,7 @@ class SingleTargetAttackFacet(AttackFacet, ABC):
             max(
                 self.damage
                 + (self.get_damage_modifier_against(unit) or 0)
-                + self.parent.attack_power.g(),
+                + self.get_attack_power_modifier(),
                 0,
             ),
             self,
@@ -571,7 +579,12 @@ class SingleTargetAttackFacet(AttackFacet, ABC):
 
     @classmethod
     def serialize_type(cls) -> JSON:
-        return {**super().serialize_type(), "damage": cls.damage, "ap": cls.ap}
+        return {
+            **super().serialize_type(),
+            "damage": cls.damage,
+            "ap": cls.ap,
+            "benefits_from_attack_power": cls.benefits_from_attack_power,
+        }
 
 
 class MeleeAttackFacet(SingleTargetAttackFacet, ABC):

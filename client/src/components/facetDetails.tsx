@@ -48,7 +48,14 @@ const getFacetStatLine = (
     stats.push([
       "damage: ",
       <ModifiedValue
-        current={facet.damage + (unit ? unit.attack_power : 0)}
+        current={
+          facet.damage +
+          (unit
+            ? facet.benefits_from_attack_power
+              ? unit.attack_power
+              : Math.min(unit.attack_power, 0)
+            : 0)
+        }
         base={facet.damage}
       />,
     ]);

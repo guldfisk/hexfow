@@ -1074,15 +1074,6 @@ GATE_FIEND = UnitBlueprint(
     price=12,
 )
 
-WAR_HOG = UnitBlueprint(
-    "War Hog",
-    health=7,
-    speed=3,
-    sight=2,
-    facets=[RazorTusk, Furious],
-    price=12,
-)
-
 GRANITE_GOLEM = UnitBlueprint(
     "Granite Golem",
     health=9,
@@ -1091,7 +1082,16 @@ GRANITE_GOLEM = UnitBlueprint(
     size=Size.LARGE,
     armor=1,
     facets=[CrushingFists, RockSteady, ResistantSkin],
-    price=13,
+    price=12,
+)
+
+WAR_HOG = UnitBlueprint(
+    "War Hog",
+    health=7,
+    speed=3,
+    sight=2,
+    facets=[RazorTusk, Furious],
+    price=12,
 )
 
 INFERNO_TANK = UnitBlueprint(
