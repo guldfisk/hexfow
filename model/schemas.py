@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from game.core import (
+    DeploymentSpec,
     HexSpec,
     HexStatus,
     HexStatusSignature,
@@ -48,8 +49,20 @@ class HexSchema(BaseModel):
         )
 
 
+class DeploymentSpecSchema(BaseModel):
+    max_army_units: int
+    max_army_points: int
+    max_deployment_units: int
+    max_deployment_points: int
+
+    def get_deployment_spec(self) -> DeploymentSpec:
+        return DeploymentSpec(**self.model_dump())
+
+
 class ScenarioSchema(BaseModel):
     hexes: list[HexSchema]
+    deployment_spec: DeploymentSpecSchema
+    to_points: int
 
     def get_scenario(self) -> Scenario:
         return Scenario(
@@ -66,4 +79,6 @@ class ScenarioSchema(BaseModel):
                 }
                 for allied in (False, True)
             ],
+            deployment_spec=self.deployment_spec.get_deployment_spec(),
+            to_points=self.to_points,
         )

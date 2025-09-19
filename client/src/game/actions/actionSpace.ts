@@ -366,13 +366,83 @@ export const getBaseActionSpace = (
       ),
       buttonAction: null,
     };
-  } else if (decision && decision["type"] == "DeployArmyDecisionPoint") {
+  } else if (decision && decision["type"] == "SelectArmyDecisionPoint") {
     return {
-      hexActions: {},
+      hexActions: Object.fromEntries(
+        decision.payload.deployment_zone.map((cc) => [
+          ccToKey(cc),
+          {
+            actions: [
+              {
+                type: "generic",
+                description: "",
+                do: () => null,
+              },
+            ],
+          },
+        ]),
+      ),
       buttonAction: null,
       loadFileAction: {
         description: "load army list",
         do: (armyContent) => loadArmy(armyContent, decision, gameObjectDetails),
+      },
+    };
+  } else if (decision && decision["type"] == "DeployArmyDecisionPoint") {
+    return {
+      hexActions: Object.fromEntries(
+        decision.payload.deployment_zone.map((cc) => [
+          ccToKey(cc),
+          {
+            actions: [
+              {
+                type: "generic",
+                description: "",
+                do: () => null,
+              },
+            ],
+          },
+        ]),
+      ),
+      buttonAction: {
+        description: "deploy",
+        do: () => {
+          store.dispatch(
+            activateMenu({
+              type: "ArrangeArmy",
+              decisionPoint: decision,
+              units: decision.payload.units.map(
+                (identifier) => gameObjectDetails.units[identifier],
+              ),
+              unitPositions: {},
+              swappingPosition: null,
+              submitted: false,
+              uncloseable: true,
+            }),
+          );
+        },
+      },
+      unitListActions: {
+        units: decision.payload.units.map(
+          (identifier) => gameObjectDetails.units[identifier],
+        ),
+        onClick: (unit) => {
+          store.dispatch(
+            activateMenu({
+              type: "ArrangeArmy",
+              decisionPoint: decision,
+              units: decision.payload.units.map(
+                (identifier) => gameObjectDetails.units[identifier],
+              ),
+              unitPositions: {
+                [unit.identifier]: decision.payload.deployment_zone[0],
+              },
+              swappingPosition: null,
+              submitted: false,
+              uncloseable: true,
+            }),
+          );
+        },
       },
     };
   } else if (decision && decision.type == "SelectOptionAtHexDecisionPoint") {

@@ -113,12 +113,9 @@ button {
 
 .info-window {
   width: 100%;
-  /*border: 1px solid #ccc;*/
+  height: 100%;
   overflow: auto;
   white-space: pre-wrap;
-}
-.event-log {
-  height: 70%;
 }
 
 .log-line {
@@ -176,6 +173,7 @@ button {
   width: 100%;
   overflow-y: scroll;
   white-space: pre-wrap;
+  height: 100%;
   /*height: 60%;*/
 }
 

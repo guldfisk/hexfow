@@ -23,3 +23,4 @@ RUN mkdir -p /code
 COPY . /code
 
 ENV PYTHONPATH=.
+ENV DB_HOST=db

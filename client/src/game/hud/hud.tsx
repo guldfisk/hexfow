@@ -9,7 +9,11 @@ import {
   Unit,
 } from "../../interfaces/gameState.ts";
 import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
-import { DelayedActivation, MenuData } from "../actions/interface.ts";
+import {
+  ActionSpace,
+  DelayedActivation,
+  MenuData,
+} from "../actions/interface.ts";
 import { menuActionSpacers, menuDescribers } from "../actions/menues.ts";
 import { ccToKey } from "../geometry.ts";
 import {
@@ -21,6 +25,7 @@ import {
 import { getBaseActionSpace } from "../actions/actionSpace.ts";
 import { getAdditionalDetails } from "../../details/additional.ts";
 import { DetailView } from "../../components/details.tsx";
+import { sortBlueprints, UnitList } from "../../components/unitList.tsx";
 
 const LogLineComponentView = ({
   element,
@@ -150,6 +155,20 @@ const LogLineComponentView = ({
       </div>
     );
   }
+  if (element.type == "blueprint") {
+    return (
+      <div
+        className={"log-component highlighted-log-component"}
+        onMouseEnter={() => {
+          store.dispatch(
+            hoverDetail({ type: "blueprint", blueprint: element.blueprint }),
+          );
+        }}
+      >
+        {gameObjectDetails.units[element.blueprint].name}
+      </div>
+    );
+  }
 };
 
 const LogLineView = ({ line: [indent, content] }: { line: LogLine }) => {
@@ -183,10 +202,9 @@ const LogList = ({ logLines }: { logLines: LogLine[] }) => {
     }
   });
   return (
-    <div className="info-window event-log" id="event-log" ref={myRef}>
+    <div className="info-window" id="event-log" ref={myRef}>
       {logLines.map((log, idx) => (
         <LogLineView line={log} key={idx} />
-        // <p key={idx}>{log}</p>
       ))}
     </div>
   );
@@ -207,12 +225,15 @@ const DecisionDetailView = ({
   makeDecision,
   menu,
   delayedActivation,
+  actionSpace,
 }: {
+  // TODO these not nullable
   gameState: GameState | null;
   gameObjectDetails: GameObjectDetails | null;
   makeDecision: (payload: { [key: string]: any }) => void;
   menu: MenuData | null;
   delayedActivation: DelayedActivation | null;
+  actionSpace: ActionSpace;
 }) => {
   if (!gameState?.decision || !gameObjectDetails) {
     return (
@@ -224,22 +245,6 @@ const DecisionDetailView = ({
   }
 
   let button = null;
-
-  // TODO common
-  const actionSpace = menu
-    ? menuActionSpacers[menu.type](
-        gameState,
-        gameObjectDetails,
-        makeDecision,
-        menu,
-      )
-    : getBaseActionSpace(
-        gameState,
-        makeDecision,
-        gameObjectDetails,
-        gameState.decision,
-        delayedActivation,
-      );
 
   if (delayedActivation) {
     button = <button onClick={() => makeDecision({})}>Activate unit</button>;
@@ -319,12 +324,61 @@ export const HUD = ({
   // TODO fucking LMAO
   const applicationState = useAppSelector((state) => state);
 
+  const gameState = applicationState.gameState;
+  const gameObjectDetails = applicationState.gameObjectDetails;
+
+  if (!gameState || !gameObjectDetails) {
+    return <div className={"sidebar sidebar-left"}></div>;
+  }
+
+  const menu = applicationState.menuData;
+  // TODO common
+  const actionSpace = menu
+    ? menuActionSpacers[menu.type](
+        gameState,
+        gameObjectDetails,
+        makeDecision,
+        menu,
+      )
+    : getBaseActionSpace(
+        gameState,
+        makeDecision,
+        gameObjectDetails,
+        gameState.decision,
+        null,
+        applicationState.delayedActivation,
+      );
+
   return (
     <div>
       <div className={"sidebar sidebar-left"}>
-        {applicationState.gameState ? (
-          <LogList logLines={applicationState.gameState.logs} />
-        ) : null}
+        {actionSpace.unitListActions ? (
+          <>
+            <div style={{ height: "20%" }}>
+              <LogList logLines={gameState.logs} />
+            </div>
+            <div style={{ height: "45%" }}>
+              <UnitList
+                units={[...actionSpace.unitListActions.units].sort(
+                  sortBlueprints,
+                )}
+                onClick={actionSpace.unitListActions.onClick}
+                onHover={(unit) =>
+                  store.dispatch(
+                    hoverDetail({
+                      type: "blueprint",
+                      blueprint: unit.identifier,
+                    }),
+                  )
+                }
+              />
+            </div>
+          </>
+        ) : (
+          <div style={{ height: "70%" }}>
+            <LogList logLines={gameState.logs} />
+          </div>
+        )}
 
         <DecisionDetailView
           gameState={applicationState.gameState}
@@ -332,6 +386,7 @@ export const HUD = ({
           makeDecision={makeDecision}
           menu={applicationState.menuData}
           delayedActivation={applicationState.delayedActivation}
+          actionSpace={actionSpace}
         />
       </div>
 

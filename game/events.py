@@ -18,7 +18,6 @@ from game.core import (
     Hex,
     HexStatus,
     HexStatusSignature,
-    Landscape,
     LogLine,
     MeleeAttackFacet,
     MoveOption,
@@ -28,6 +27,8 @@ from game.core import (
     OptionDecision,
     Player,
     RangedAttackFacet,
+    Scenario,
+    SelectArmyDecisionPoint,
     SelectOptionDecisionPoint,
     SingleTargetAttackFacet,
     SkipOption,
@@ -937,22 +938,46 @@ class Round(Event[None]):
 
 @dataclasses.dataclass
 class DeployArmies(Event[None]):
-    landscape: Landscape
+    scenario: Scenario
 
     def resolve(self) -> None:
         GS.update_vision()
+
+        deployment_zones = {
+            player: [
+                GS.map.hexes[cc]
+                for cc, spec in self.scenario.landscape.terrain_map.items()
+                if spec.deployment_zone_of == idx
+            ]
+            for idx, player in enumerate(reversed(GS.turn_order.original_order))
+        }
+        armies = {
+            player: army
+            for player, army in GS.make_parallel_decision(
+                {
+                    player: SelectArmyDecisionPoint(
+                        deployment_zone, self.scenario.deployment_spec
+                    )
+                    for player, deployment_zone in deployment_zones.items()
+                }
+            ).items()
+        }
+
+        for player, army in armies.items():
+            with GS.log(
+                LogLine(
+                    [player, "fields army of", sorted(army, key=lambda u: u.price)],
+                    valid_for_players={p for p in GS.turn_order if p != player},
+                )
+            ):
+                pass
+
         for player, deployment in GS.make_parallel_decision(
             {
                 player: DeployArmyDecisionPoint(
-                    12,
-                    70,
-                    [
-                        GS.map.hexes[cc]
-                        for cc, spec in self.landscape.terrain_map.items()
-                        if spec.deployment_zone_of == idx
-                    ],
+                    army, self.scenario.deployment_spec, deployment_zones[player]
                 )
-                for idx, player in enumerate(reversed(GS.turn_order.original_order))
+                for player, army in armies.items()
             }
         ).items():
             for blueprint, hex_ in deployment:

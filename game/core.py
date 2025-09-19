@@ -39,6 +39,7 @@ from game.schemas import (
     EmptySchema,
     IndexSchema,
     PremoveSchema,
+    SelectArmyDecisionPointSchema,
     SelectOptionAtHexDecisionPointSchema,
     SelectOptionDecisionPointSchema,
 )
@@ -171,20 +172,65 @@ class SelectOptionDecisionPoint(DecisionPoint[OptionDecision]):
 
 
 @dataclasses.dataclass
-class DeployArmyDecisionPoint(DecisionPoint[list[tuple["UnitBlueprint", "Hex"]]]):
-    response_schema: ClassVar[type[BaseModel]] = DeployArmyDecisionPointSchema
+class SelectArmyDecisionPoint(DecisionPoint[list[tuple["UnitBlueprint", "Hex"]]]):
+    response_schema: ClassVar[type[BaseModel]] = SelectArmyDecisionPointSchema
 
-    max_units: int
-    max_points: int
     deployment_zone: list[Hex]
+    deployment_spec: DeploymentSpec
 
     def get_explanation(self) -> str:
-        return f"deploy army of max {self.max_units} units and max {self.max_points} points"
+        return "Select army of max {} units and max {} points".format(
+            self.deployment_spec.max_army_units, self.deployment_spec.max_army_points
+        )
 
     def serialize_payload(self, context: SerializationContext) -> JSON:
         return {
-            "max_units": self.max_units,
-            "max_points": self.max_points,
+            "deployment_spec": self.deployment_spec.serialize(),
+            "deployment_zone": [
+                hex_.position.serialize() for hex_ in self.deployment_zone
+            ],
+        }
+
+    def parse_response_schema(
+        self, v: SelectArmyDecisionPointSchema
+    ) -> list["UnitBlueprint"]:
+        try:
+            units = [
+                UnitBlueprint.get_class(blueprint_name) for blueprint_name in v.units
+            ]
+        except UnknownIdentifierError as e:
+            raise DecisionValidationError(f"unknown blueprint {e.identifier}")
+
+        if len(units) != len(set(units)):
+            raise DecisionValidationError("duplicat units not allowed")
+
+        if (
+            len(units) > self.deployment_spec.max_army_units
+            or sum(u.price for u in units) > self.deployment_spec.max_army_points
+        ):
+            raise DecisionValidationError("price exceeded")
+
+        return units
+
+
+@dataclasses.dataclass
+class DeployArmyDecisionPoint(DecisionPoint[list[tuple["UnitBlueprint", "Hex"]]]):
+    response_schema: ClassVar[type[BaseModel]] = DeployArmyDecisionPointSchema
+
+    units: list[UnitBlueprint]
+    deployment_spec: DeploymentSpec
+    deployment_zone: list[Hex]
+
+    def get_explanation(self) -> str:
+        return "Deploy army of max {} units and max {} points".format(
+            self.deployment_spec.max_deployment_units,
+            self.deployment_spec.max_deployment_points,
+        )
+
+    def serialize_payload(self, context: SerializationContext) -> JSON:
+        return {
+            "units": [unit.identifier for unit in self.units],
+            "deployment_spec": self.deployment_spec.serialize(),
             "deployment_zone": [
                 hex_.position.serialize() for hex_ in self.deployment_zone
             ],
@@ -194,7 +240,7 @@ class DeployArmyDecisionPoint(DecisionPoint[list[tuple["UnitBlueprint", "Hex"]]]
         self, v: DeployArmyDecisionPointSchema
     ) -> list[tuple["UnitBlueprint", "Hex"]]:
         try:
-            return [
+            deployments = [
                 (UnitBlueprint.get_class(blueprint_name), GS.map.hexes[CC(cc.r, cc.h)])
                 for blueprint_name, cc in v.deployments
             ]
@@ -202,6 +248,18 @@ class DeployArmyDecisionPoint(DecisionPoint[list[tuple["UnitBlueprint", "Hex"]]]
             raise DecisionValidationError(f"unknown blueprint {e.identifier}")
         except IndexError:
             raise DecisionValidationError("invalid position")
+
+        if len(deployments) != len({u for u, _ in deployments}):
+            raise DecisionValidationError("duplicat units not allowed")
+
+        if (
+            len(deployments) > self.deployment_spec.max_deployment_units
+            or sum(u.price for u, _ in deployments)
+            > self.deployment_spec.max_deployment_points
+        ):
+            raise DecisionValidationError("price exceeded")
+
+        return deployments
 
 
 @dataclasses.dataclass
@@ -1298,13 +1356,25 @@ class HexSpec:
 @dataclasses.dataclass
 class Landscape:
     terrain_map: Mapping[CC, HexSpec]
-    # deployment_zones: Collection[AbstractSet[CubeCoordinate]]
+
+
+@dataclasses.dataclass
+class DeploymentSpec:
+    max_army_units: int
+    max_army_points: int
+    max_deployment_units: int
+    max_deployment_points: int
+
+    def serialize(self) -> dict[str, Any]:
+        return dataclasses.asdict(self)
 
 
 @dataclasses.dataclass
 class Scenario:
     landscape: Landscape
     units: list[Mapping[CC, UnitBlueprint]]
+    deployment_spec: DeploymentSpec
+    to_points: int
 
 
 @dataclasses.dataclass
@@ -1774,7 +1844,16 @@ class ActiveUnitContext(Serializable):
 
 @dataclasses.dataclass
 class LogLine:
-    elements: list[str | Unit | Hex | list[Hex | Unit] | Facet | Status | Player]
+    elements: list[
+        str
+        | Unit
+        | Hex
+        | list[Hex | Unit | UnitBlueprint]
+        | Facet
+        | Status
+        | Player
+        | UnitBlueprint
+    ]
     valid_for_players: set[Player] | None = None
 
     def is_visible_to(self, player: Player) -> bool:
@@ -1782,7 +1861,8 @@ class LogLine:
             return False
         for element in self.elements:
             if isinstance(element, list) and not any(
-                e.is_visible_to(player) for e in element
+                e.is_visible_to(player) if isinstance(e, (Unit, Hex)) else True
+                for e in element
             ):
                 return False
             if isinstance(element, Unit) and not element.is_visible_to(player):
@@ -1817,11 +1897,13 @@ class LogLine:
                 "items": [
                     cls._serialize_element(e, player)
                     for e in element
-                    if e.is_visible_to(player)
+                    if not (isinstance(e, (Unit, Hex)) and not e.is_visible_to(player))
                 ],
             }
         if isinstance(element, Player):
             return {"type": "player", "name": element.name}
+        if isinstance(element, UnitBlueprint):
+            return {"type": "blueprint", "blueprint": element.identifier}
         return {"type": "string", "message": element}
 
     def serialize(self, player: Player) -> list[dict[str, Any]]:
@@ -1964,7 +2046,7 @@ class GameState:
         self,
         player_count: int,
         connection_factory: Callable[[Player], Connection],
-        landscape: Landscape,
+        scenario: Scenario,
     ):
         # TODO handle names
         self.turn_order = TurnOrder(
@@ -1973,11 +2055,10 @@ class GameState:
         self.connections = {
             player: connection_factory(player) for player in self.turn_order
         }
-        self.map = HexMap(landscape)
+        self.map = HexMap(scenario.landscape)
         self.active_unit_context: ActiveUnitContext | None = None
         self.activation_queued_units: set[Unit] = set()
-        # TODO in scenario
-        self.target_points = 24
+        self.target_points = scenario.to_points
         self.round_counter = 0
 
         self.previous_hex_states: dict[Player, dict[CC, dict[str, Any]] | None] = {

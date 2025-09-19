@@ -22,6 +22,7 @@ from game.core import (
     ActivateUnitOption,
     Connection,
     DecisionPoint,
+    DeploymentSpec,
     EffortOption,
     G_decision_result,
     GameState,
@@ -33,6 +34,7 @@ from game.core import (
     MoveOption,
     Player,
     RangedAttackFacet,
+    Scenario,
     SkipOption,
     Terrain,
     Unit,
@@ -346,8 +348,16 @@ def ground_landscape() -> Landscape:
 
 @pytest.fixture
 def game_state(ground_landscape: Landscape) -> Iterator[GameState]:
-    gs = GameState(2, MockConnection, ground_landscape)
-    # GameState.instance = gs
+    gs = GameState(
+        2,
+        MockConnection,
+        Scenario(
+            landscape=ground_landscape,
+            units=[],
+            deployment_spec=DeploymentSpec(0, 0, 0, 0),
+            to_points=24,
+        ),
+    )
     GS.bind(gs)
     yield gs
     for interface in gs.connections.values():

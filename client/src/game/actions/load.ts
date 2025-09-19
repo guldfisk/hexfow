@@ -1,23 +1,20 @@
 import { activateMenu, store } from "../state/store.ts";
-import { DeployArmyDecisionPoint } from "../../interfaces/gameState.ts";
-import {GameObjectDetails} from "../../interfaces/gameObjectDetails.ts";
+import { SelectArmyDecisionPoint } from "../../interfaces/gameState.ts";
+import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
 
 export const loadArmy = (
   armyContent: string,
-  decision: DeployArmyDecisionPoint,
-  gameObjectDetails: GameObjectDetails
+  decision: SelectArmyDecisionPoint,
+  gameObjectDetails: GameObjectDetails,
 ) =>
   store.dispatch(
     activateMenu({
-      type: "ArrangeArmy",
+      type: "SelectArmy",
       decisionPoint: decision,
-      unitPositions: Object.fromEntries(
-        armyContent
-          .split("\n")
-          .filter((id) => id in gameObjectDetails.units)
-          .map((name, idx) => [name, decision.payload.deployment_zone[idx]]),
-      ),
-      swappingPosition: null,
+      selectedUnits: armyContent
+        .split("\n")
+        .filter((id) => id in gameObjectDetails.units)
+        .map((name) => gameObjectDetails.units[name]),
       submitted: false,
       uncloseable: true,
     }),

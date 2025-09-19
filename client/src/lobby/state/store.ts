@@ -23,7 +23,7 @@ const mainSlice = createSlice({
     selectedGameType: "map",
     gameResponse: null,
     withFow: true,
-    withCustomArmies: false,
+    withCustomArmies: true,
     settings: {},
     mapNames: [],
   } as {

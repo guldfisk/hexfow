@@ -195,12 +195,27 @@ export interface SelectOptionDecisionPoint extends BaseDecision {
   payload: { options: Option[] };
 }
 
+export interface DeploymentSpec {
+  max_army_units: number;
+  max_army_points: number;
+  max_deployment_units: number;
+  max_deployment_points: number;
+}
+
+export interface SelectArmyDecisionPoint extends BaseDecision {
+  type: "SelectArmyDecisionPoint";
+  payload: {
+    deployment_zone: CC[];
+    deployment_spec: DeploymentSpec;
+  };
+}
+
 export interface DeployArmyDecisionPoint extends BaseDecision {
   type: "DeployArmyDecisionPoint";
   payload: {
-    max_units: number;
-    max_points: number;
+    units: string[];
     deployment_zone: CC[];
+    deployment_spec: DeploymentSpec;
   };
 }
 
@@ -214,6 +229,7 @@ export interface SelectOptionAtHexDecisionPoint extends BaseDecision {
 
 export type Decision =
   | SelectOptionDecisionPoint
+  | SelectArmyDecisionPoint
   | DeployArmyDecisionPoint
   | SelectOptionAtHexDecisionPoint;
 
@@ -227,6 +243,11 @@ export interface UnitLogLineComponent extends LogLineComponentBase {
   blueprint: string;
   controller: string;
   cc: CC;
+}
+
+export interface BlueprintLogLineComponent extends LogLineComponentBase {
+  type: "blueprint";
+  blueprint: string;
 }
 
 export interface HexLogLineComponent extends LogLineComponentBase {
@@ -251,7 +272,11 @@ export interface StringLogLineComponent extends LogLineComponentBase {
 
 export interface ListLogLineComponent extends LogLineComponentBase {
   type: "list";
-  items: (UnitLogLineComponent | HexLogLineComponent)[];
+  items: (
+    | UnitLogLineComponent
+    | HexLogLineComponent
+    | BlueprintLogLineComponent
+  )[];
 }
 
 export interface PlayerLogLineComponent extends LogLineComponentBase {
@@ -266,7 +291,8 @@ export type LogLineComponent =
   | StatusLogLineComponent
   | ListLogLineComponent
   | StringLogLineComponent
-  | PlayerLogLineComponent;
+  | PlayerLogLineComponent
+  | BlueprintLogLineComponent;
 
 export type LogLine = [number, LogLineComponent[]];
 

@@ -12,7 +12,9 @@ def setup_scenario(
 ) -> GameState:
     ES.bind(EventSystem())
 
-    gs = GameState(2, connection_factory, scenario.landscape)
+    gs = GameState(
+        player_count=2, connection_factory=connection_factory, scenario=scenario
+    )
 
     GS.bind(gs)
 
@@ -26,7 +28,7 @@ def setup_scenario_units(
 ) -> GameState:
     gs = GS._gs
     if custom_armies:
-        ES.resolve(DeployArmies(scenario.landscape))
+        ES.resolve(DeployArmies(scenario))
     else:
         for player, units in zip(gs.turn_order, scenario.units):
             for cc, blueprint in units.items():

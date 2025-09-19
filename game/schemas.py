@@ -57,5 +57,9 @@ class SelectOptionAtHexDecisionPointSchema(BaseModel):
     index: int
 
 
+class SelectArmyDecisionPointSchema(BaseModel):
+    units: list[str]
+
+
 class DeployArmyDecisionPointSchema(BaseModel):
     deployments: list[tuple[str, CCSchema]]

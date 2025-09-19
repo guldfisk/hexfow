@@ -13,6 +13,7 @@ import {
   NOfHexesMenu,
   NOfUnitsMenu,
   RadiatingLineMenu,
+  SelectArmyMenu,
   TakeAction,
   TreeMenu,
   TriHexMenu,
@@ -40,6 +41,76 @@ import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
 
 // TODO some common logic in this mess
 
+const getSelectArmyActionSpace = (
+  gameState: GameState,
+  gameObjectDetails: GameObjectDetails,
+  takeAction: TakeAction,
+  menu: SelectArmyMenu,
+): ActionSpace => {
+  const points = menu.selectedUnits
+    .map((unit) => unit.price || 0)
+    .reduce((a, b) => a + b, 0);
+
+  return menu.submitted
+    ? { hexActions: {}, buttonAction: null }
+    : {
+        hexActions: Object.fromEntries(
+          menu.decisionPoint.payload.deployment_zone.map((cc) => [
+            ccToKey(cc),
+            {
+              actions: [
+                {
+                  type: "generic",
+                  description: "",
+                  do: () => null,
+                },
+              ],
+            },
+          ]),
+        ),
+        loadFileAction: {
+          description: "load army list",
+          do: (armyContent) =>
+            loadArmy(armyContent, menu.decisionPoint, gameObjectDetails),
+        },
+        buttonAction:
+          points <=
+            menu.decisionPoint.payload.deployment_spec.max_army_points &&
+          menu.selectedUnits.length <=
+            menu.decisionPoint.payload.deployment_spec.max_army_units
+            ? {
+                description: "submit",
+                do: () => {
+                  takeAction({
+                    units: menu.selectedUnits.map((unit) => unit.identifier),
+                  });
+                  store.dispatch(advanceMenu({ ...menu, submitted: true }));
+                },
+              }
+            : null,
+        unitListActions: {
+          units: menu.selectedUnits,
+          onClick: null,
+        },
+      };
+};
+
+const getSelectArmyDescription = (
+  gameState: GameState,
+  gameObjectDetails: GameObjectDetails,
+  menu: SelectArmyMenu,
+): string => {
+  return menu.submitted
+    ? "waiting for opponent to select their army"
+    : `current army: ${menu.selectedUnits
+        .map((unit) => unit.price || 0)
+        .reduce((a, b) => a + b, 0)}/${
+        menu.decisionPoint.payload.deployment_spec.max_army_points
+      } points ${menu.selectedUnits.length}/${
+        menu.decisionPoint.payload.deployment_spec.max_army_units
+      } units`;
+};
+
 const getArrangeArmiesActionSpace = (
   gameState: GameState,
   gameObjectDetails: GameObjectDetails,
@@ -55,34 +126,47 @@ const getArrangeArmiesActionSpace = (
       ccToKey(hex.cc),
       {
         actions:
-          !(menu.swappingPosition && ccEquals(hex.cc, menu.swappingPosition)) &&
+          !menu.submitted &&
           menu.decisionPoint.payload.deployment_zone.some((v) =>
             ccEquals(v, hex.cc),
-          ) &&
-          !menu.submitted
+          )
             ? [
                 {
                   type: "generic",
                   description: "swap",
                   do: () => {
                     if (menu.swappingPosition) {
-                      const newPositions = { ...menu.unitPositions };
-                      if (positionsMap[ccToKey(menu.swappingPosition)]) {
-                        newPositions[
-                          positionsMap[ccToKey(menu.swappingPosition)]
-                        ] = hex.cc;
+                      if (ccEquals(menu.swappingPosition, hex.cc)) {
+                        store.dispatch(
+                          advanceMenu({
+                            ...menu,
+                            unitPositions: Object.fromEntries(
+                              Object.entries(menu.unitPositions).filter(
+                                ([, cc]) => !ccEquals(cc, hex.cc),
+                              ),
+                            ),
+                            swappingPosition: null,
+                          }),
+                        );
+                      } else {
+                        const newPositions = { ...menu.unitPositions };
+                        if (positionsMap[ccToKey(menu.swappingPosition)]) {
+                          newPositions[
+                            positionsMap[ccToKey(menu.swappingPosition)]
+                          ] = hex.cc;
+                        }
+                        if (positionsMap[ccToKey(hex.cc)]) {
+                          newPositions[positionsMap[ccToKey(hex.cc)]] =
+                            menu.swappingPosition;
+                        }
+                        store.dispatch(
+                          advanceMenu({
+                            ...menu,
+                            unitPositions: newPositions,
+                            swappingPosition: null,
+                          }),
+                        );
                       }
-                      if (positionsMap[ccToKey(hex.cc)]) {
-                        newPositions[positionsMap[ccToKey(hex.cc)]] =
-                          menu.swappingPosition;
-                      }
-                      store.dispatch(
-                        advanceMenu({
-                          ...menu,
-                          unitPositions: newPositions,
-                          swappingPosition: null,
-                        }),
-                      );
                     } else {
                       store.dispatch(
                         advanceMenu({ ...menu, swappingPosition: hex.cc }),
@@ -103,16 +187,44 @@ const getArrangeArmiesActionSpace = (
     ? { hexActions, buttonAction: null }
     : {
         hexActions,
-        loadFileAction: {
-          description: "load army list",
-          do: (armyContent) =>
-            loadArmy(armyContent, menu.decisionPoint, gameObjectDetails),
-        },
-        buttonAction: {
-          description: "submit",
-          do: () => {
-            takeAction({ deployments: Object.entries(menu.unitPositions) });
-            store.dispatch(advanceMenu({ ...menu, submitted: true }));
+        buttonAction:
+          Object.keys(menu.unitPositions)
+            .map((identifier) => gameObjectDetails.units[identifier].price || 0)
+            .reduce((a, b) => a + b, 0) <=
+            menu.decisionPoint.payload.deployment_spec.max_deployment_points &&
+          Object.keys(menu.unitPositions).length <=
+            menu.decisionPoint.payload.deployment_spec.max_deployment_units
+            ? {
+                description: "submit",
+                do: () => {
+                  takeAction({
+                    deployments: Object.entries(menu.unitPositions),
+                  });
+                  store.dispatch(advanceMenu({ ...menu, submitted: true }));
+                },
+              }
+            : null,
+        unitListActions: {
+          units: menu.units.filter(
+            (unit) => !menu.unitPositions[unit.identifier],
+          ),
+          onClick: (unit) => {
+            store.dispatch(
+              advanceMenu({
+                ...menu,
+                unitPositions: {
+                  ...menu.unitPositions,
+                  [unit.identifier]:
+                    menu.decisionPoint.payload.deployment_zone.find(
+                      (cc) =>
+                        !Object.values(menu.unitPositions).some((_cc) =>
+                          ccEquals(cc, _cc),
+                        ),
+                    ),
+                },
+                swappingPosition: null,
+              }),
+            );
           },
         },
       };
@@ -124,8 +236,14 @@ const getArrangeArmiesDescription = (
   menu: ArrangeArmyMenu,
 ): string => {
   return menu.submitted
-    ? "waiting for opponent to submit their army"
-    : "arrange army";
+    ? "waiting for opponent to select their army"
+    : `current army: ${Object.keys(menu.unitPositions)
+        .map((identifier) => gameObjectDetails.units[identifier].price || 0)
+        .reduce((a, b) => a + b, 0)}/${
+        menu.decisionPoint.payload.deployment_spec.max_deployment_points
+      } points ${Object.keys(menu.unitPositions).length}/${
+        menu.decisionPoint.payload.deployment_spec.max_deployment_units
+      } units`;
 };
 
 const getNOfHexesActionSpace = (
@@ -779,6 +897,7 @@ export const menuActionSpacers: {
     menu: MenuData,
   ) => ActionSpace;
 } = {
+  SelectArmy: getSelectArmyActionSpace,
   ArrangeArmy: getArrangeArmiesActionSpace,
   NOfUnits: getNOfUnitsActionSpace,
   NOfHexes: getNOfHexesActionSpace,
@@ -799,6 +918,7 @@ export const menuDescribers: {
     menu: MenuData,
   ) => string;
 } = {
+  SelectArmy: getSelectArmyDescription,
   ArrangeArmy: getArrangeArmiesDescription,
   NOfUnits: getNOfUnitsDescription,
   NOfHexes: getNOfHexesDescription,

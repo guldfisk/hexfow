@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from pydantic._internal._model_construction import ModelMetaclass
 from sqlalchemy import select
 
-from game.core import HexSpec, Landscape, Scenario
+from game.core import DeploymentSpec, HexSpec, Landscape, Scenario
 from game.map.coordinates import CC
 from game.map.geometry import hex_circle
 from game.map.terrain import Forest, Hills, Magma, Plains, Swamp, Water
@@ -86,6 +86,8 @@ class TestGameType(GameType):
         return Scenario(
             landscape=landscape,
             units=[{ccs.pop(0): v for v in values} for values in player_units],
+            deployment_spec=DeploymentSpec(0, 0, 0, 0),
+            to_points=100,
         )
 
 
@@ -332,7 +334,12 @@ class RandomGameType(GameType):
             player_1_units[CC(-position.r, -position.h)] = unit
             player_2_units[position] = unit
 
-        return Scenario(landscape, [player_1_units, player_2_units])
+        return Scenario(
+            landscape,
+            [player_1_units, player_2_units],
+            deployment_spec=DeploymentSpec(0, 0, 0, 0),
+            to_points=100,
+        )
 
 
 class MapGameType(GameType):

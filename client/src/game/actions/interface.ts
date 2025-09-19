@@ -8,12 +8,14 @@ import {
   NOfUnits,
   Option,
   RadiatingLine,
+  SelectArmyDecisionPoint,
   Tree,
   TriHex,
   Unit,
   UnitOption,
 } from "../../interfaces/gameState.ts";
 import { CC, Corner, RC } from "../../interfaces/geometry.ts";
+import { UnitDetails } from "../../interfaces/gameObjectDetails.ts";
 
 export type TakeAction = (body: { [key: string]: any }) => void;
 
@@ -62,6 +64,10 @@ export interface ActionSpace {
   hexActions: { [key: string]: HexActions };
   buttonAction: ButtonAction | null;
   loadFileAction?: LoadFileAction | null;
+  unitListActions?: {
+    units: UnitDetails[];
+    onClick: ((unit: UnitDetails) => void) | null;
+  } | null;
 }
 
 export interface BaseMenuData {
@@ -137,9 +143,17 @@ export interface TriHexMenu extends BaseMenuData {
   hovering: Corner | null;
 }
 
+export interface SelectArmyMenu extends BaseMenuData {
+  type: "SelectArmy";
+  decisionPoint: SelectArmyDecisionPoint;
+  selectedUnits: UnitDetails[];
+  submitted: boolean;
+}
+
 export interface ArrangeArmyMenu extends BaseMenuData {
   type: "ArrangeArmy";
   decisionPoint: DeployArmyDecisionPoint;
+  units: UnitDetails[];
   unitPositions: { [name: string]: CC };
   swappingPosition: CC | null;
   submitted: boolean;
@@ -156,4 +170,5 @@ export type MenuData =
   | ConeMenu
   | ListMenu
   | TriHexMenu
+  | SelectArmyMenu
   | ArrangeArmyMenu;

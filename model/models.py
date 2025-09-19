@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, TypeAlias
 from uuid import UUID
 
-from sqlalchemy import ForeignKey, MetaData, UniqueConstraint
+from sqlalchemy import ForeignKey, MetaData, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from model.values import GameStatus
+
+
+JsonDict: TypeAlias = dict[str, Any]
 
 
 def utcnow() -> datetime:
@@ -26,6 +29,7 @@ class Base(DeclarativeBase):
             "pk": "pk_%(table_name)s",
         }
     )
+    type_annotation_map = {str: Text(), JsonDict: JSONB}
 
 
 class CreatedMixin:

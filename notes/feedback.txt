@@ -32,3 +32,9 @@ terrain savy ignore additional move costs as well?
 bug i movement options
 
 cost on action indicators?
+
+always collapse 2+ options on same hex
+
+log for vigor stack aborbed
+
+parched explain exclusive

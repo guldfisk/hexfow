@@ -1,54 +1,11 @@
 import { useArmyEditorDispatch, useArmyEditorState } from "./state/hooks.ts";
-import {
-  GameObjectDetails,
-  UnitDetails,
-} from "../interfaces/gameObjectDetails.ts";
-import { getImageUrl } from "../image/images.ts";
+import { GameObjectDetails } from "../interfaces/gameObjectDetails.ts";
 import { addUnit, hoverUnit, removeUnit, setUnits } from "./state/store.ts";
 import { UnitDetailsView } from "../components/unitDetails.tsx";
 import { DetailsIndicator } from "../details/components.tsx";
 import React from "react";
 import { getAdditionalDetails } from "../details/additional.ts";
-
-const UnitListItem = ({
-  unit,
-  onClick,
-}: {
-  unit: UnitDetails;
-  onClick: ((unit: UnitDetails) => void) | null;
-}) => {
-  const dispatch = useArmyEditorDispatch();
-
-  return (
-    <div
-      className={"unit-list-item"}
-      onMouseEnter={() => dispatch(hoverUnit(unit))}
-      onClick={() => (onClick ? onClick(unit) : null)}
-    >
-      <span>{`${unit.name} - ${unit.price}`}</span>
-      <img
-        src={getImageUrl("unit", unit.identifier)}
-        className={"unit-thumbnail"}
-      />
-    </div>
-  );
-};
-
-const UnitList = ({
-  units,
-  onClick,
-}: {
-  units: UnitDetails[];
-  onClick: ((unit: UnitDetails) => void) | null;
-}) => {
-  return (
-    <div className={"unit-list"}>
-      {units.map((unit) => (
-        <UnitListItem unit={unit} onClick={onClick} />
-      ))}
-    </div>
-  );
-};
+import { sortBlueprints, UnitList } from "../components/unitList.tsx";
 
 const DetailsView = ({
   gameObjectDetails,
@@ -124,6 +81,7 @@ export const ArmyEditor = ({}: {}) => {
                 unit.max_count > 0,
             )}
             onClick={(unit) => dispatch(addUnit(unit.identifier))}
+            onHover={(unit) => dispatch(hoverUnit(unit))}
           />
         ) : null}
       </div>
@@ -131,13 +89,12 @@ export const ArmyEditor = ({}: {}) => {
         {state.gameObjectDetails ? (
           <>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <span>unit count: {state.armyList.length} / 12</span>
+              <span>unit count: {state.armyList.length}</span>
               <span>
                 army value:{" "}
                 {state.armyList
-                  .map((u) => state.gameObjectDetails?.units[u].price)
+                  .map((u) => state.gameObjectDetails?.units[u].price || 0)
                   .reduce((a, b) => a + b, 0)}{" "}
-                / 70
               </span>
               <button onClick={() => saveArmyList(state.armyList)}>
                 export
@@ -170,21 +127,7 @@ export const ArmyEditor = ({}: {}) => {
               <UnitList
                 units={Object.values(state.gameObjectDetails.units)
                   .filter((unit) => state.armyList.includes(unit.identifier))
-                  .sort((a, b) => {
-                    if (a.price > b.price) {
-                      return 1;
-                    }
-                    if (b.price > a.price) {
-                      return -1;
-                    }
-                    if (a.identifier > b.identifier) {
-                      return 1;
-                    }
-                    if (b.identifier > b.identifier) {
-                      return -1;
-                    }
-                    return 0;
-                  })}
+                  .sort(sortBlueprints)}
                 onClick={(unit) => dispatch(removeUnit(unit.identifier))}
               />
             </div>
