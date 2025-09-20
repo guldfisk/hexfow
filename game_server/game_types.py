@@ -65,6 +65,7 @@ class TestGameType(GameType):
                 BLOOD_FEUD_WARLOCK,
             ),
             (
+                INFERNO_TANK,
                 CYCLOPS,
                 LIGHT_ARCHER,
                 UNDERHANDED_HEXMAGE,

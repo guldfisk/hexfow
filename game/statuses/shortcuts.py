@@ -15,8 +15,8 @@ from game.events import ApplyHexStatus, ApplyStatus, DispelStatus
 from game.values import StatusIntention
 
 
-UnitStatusType: TypeAlias = UnitStatus | str
-HexStatusType: TypeAlias = HexStatus | str
+UnitStatusType: TypeAlias = type[UnitStatus] | str
+HexStatusType: TypeAlias = type[HexStatus] | str
 
 
 def dispel_all(target: HasStatuses) -> None:
@@ -43,7 +43,7 @@ def apply_status_to_unit(
         ApplyStatus(
             unit,
             UnitStatusSignature(
-                status if isinstance(status, UnitStatus) else UnitStatus.get(status),
+                UnitStatus.get(status) if isinstance(status, str) else status,
                 source,
                 stacks=stacks,
                 duration=duration,
@@ -65,7 +65,7 @@ def apply_status_to_hex(
         ApplyHexStatus(
             hex_,
             HexStatusSignature(
-                status if isinstance(status, HexStatus) else HexStatus.get(status),
+                HexStatus.get(status) if isinstance(status, str) else status,
                 source,
                 stacks=stacks,
                 duration=duration,
