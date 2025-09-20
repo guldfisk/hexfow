@@ -1529,13 +1529,9 @@ class TurboTune(TargetUnitActivatedAbility):
     Applies <turbo> for 2 rounds.
     """
 
-    cost = EnergyCost(2) | MovementCost(2)
+    cost = EnergyCost(3) | MovementCost(1)
     controller_target_option = ControllerTargetOption.ALLIED
     can_target_self = False
-    explain_with_filter = "with 1 or more base armor"
-
-    def filter_unit(self, unit: Unit) -> bool:
-        return unit.armor.get_base() > 0
 
     def perform(self, target: Unit) -> None:
         apply_status_to_unit(target, "turbo", self, duration=2)

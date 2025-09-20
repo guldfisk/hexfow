@@ -699,16 +699,6 @@ VOID_SPRITE = UnitBlueprint(
     price=6,
 )
 
-BLOOD_FEUD_WARLOCK = UnitBlueprint(
-    "Blood Feud Warlock",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=6,
-    facets=[SowDiscord, Scorn, SpurIntoRage],
-    price=7,
-)
-
 GIANT_SLAYER_MOUSE = UnitBlueprint(
     "Giant Slayer Mouse",
     health=5,
@@ -768,6 +758,16 @@ BLIND_ABOMINATION = UnitBlueprint(
     price=8,
 )
 
+BLOOD_FEUD_WARLOCK = UnitBlueprint(
+    "Blood Feud Warlock",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[SowDiscord, Scorn, SpurIntoRage],
+    price=8,
+)
+
 CAMELBACK_OUTRIDER = UnitBlueprint(
     "Camelback Outrider",
     health=6,
@@ -803,16 +803,6 @@ EFFORTLESS_ATHLETE = UnitBlueprint(
     speed=3,
     sight=2,
     facets=[RoundhouseKick, Vault, BatonPass],
-    price=9,
-)
-
-INK_WITCH = UnitBlueprint(
-    "Ink Witch",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[BloodExpunge, InkRing, MalevolentStare],
     price=9,
 )
 
@@ -899,6 +889,16 @@ HOODED_EXECUTIONER = UnitBlueprint(
     price=10,
 )
 
+INK_WITCH = UnitBlueprint(
+    "Ink Witch",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[BloodExpunge, InkRing, MalevolentStare],
+    price=10,
+)
+
 LEGENDARY_WRESTLER = UnitBlueprint(
     "Legendary Wrestler",
     health=7,
@@ -916,6 +916,16 @@ LEGENDARY_WRESTLER = UnitBlueprint(
     flavor="I need justice in my life: Here it comes.",
 )
 
+VILE_TRANSMUTER = UnitBlueprint(
+    "Vile Transmuter",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[DrainingGrasp, WringEssence, FatalBonding, FalseCure],
+    price=10,
+)
+
 BOULDER_HURLER_OAF = UnitBlueprint(
     "Boulder Hurler Oaf",
     health=7,
@@ -931,7 +941,7 @@ BOULDER_HURLER_OAF = UnitBlueprint(
 
 BULLDOZER = UnitBlueprint(
     "Bulldozer",
-    health=9,
+    health=8,
     speed=2,
     sight=1,
     size=Size.LARGE,
@@ -1031,16 +1041,6 @@ STAUNCH_IRON_HEART = UnitBlueprint(
     sight=2,
     energy=4,
     facets=[HammerBlow, MightyBlow, IronBlessing],
-    price=11,
-)
-
-VILE_TRANSMUTER = UnitBlueprint(
-    "Vile Transmuter",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[DrainingGrasp, WringEssence, FatalBonding, FalseCure],
     price=11,
 )
 

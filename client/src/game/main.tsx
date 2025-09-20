@@ -122,9 +122,9 @@ async function main() {
   // TODO disable normal browser zoom?
 
   // TODO YIKES
-  // document.oncontextmenu = document.body.oncontextmenu = function () {
-  //   return false;
-  // };
+  document.oncontextmenu = document.body.oncontextmenu = function () {
+    return false;
+  };
 
   // TODO lmao
   const keyHandler = (event: KeyboardEvent) => {

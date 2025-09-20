@@ -63,6 +63,7 @@ class TestGameType(GameType):
                 NOTORIOUS_OUTLAW,
                 UNDERHANDED_HEXMAGE,
                 BLOOD_FEUD_WARLOCK,
+                COMBAT_ENGINEER,
             ),
             (
                 INFERNO_TANK,
