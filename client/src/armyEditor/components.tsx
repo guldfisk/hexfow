@@ -129,6 +129,7 @@ export const ArmyEditor = ({}: {}) => {
                   .filter((unit) => state.armyList.includes(unit.identifier))
                   .sort(sortBlueprints)}
                 onClick={(unit) => dispatch(removeUnit(unit.identifier))}
+                onHover={(unit) => dispatch(hoverUnit(unit))}
               />
             </div>
           </>
