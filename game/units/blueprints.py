@@ -292,7 +292,7 @@ HIVE_GUARD_GNAT = UnitBlueprint(
 UNBLINKING_WATCHER = UnitBlueprint(
     name="Unblinking Watcher",
     health=2,
-    speed=1,
+    speed=2,
     sight=2,
     size=Size.SMALL,
     price=1,
@@ -392,7 +392,7 @@ INFERNAL_IMP = UnitBlueprint(
     "Infernal Imp",
     health=3,
     speed=3,
-    sight=2,
+    sight=1,
     size=Size.SMALL,
     facets=[Swelter],
     price=3,
@@ -570,16 +570,6 @@ HARROWED_MYSTICIST = UnitBlueprint(
     price=5,
 )
 
-MEDIC = UnitBlueprint(
-    "Medic",
-    health=3,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[HealBeam],
-    price=5,
-)
-
 MINE_LAYER_BEETLE = UnitBlueprint(
     "Mine Layer Beetle",
     health=5,
@@ -650,6 +640,16 @@ GLASS_GOLEM = UnitBlueprint(
     price=6,
 )
 
+MEDIC = UnitBlueprint(
+    "Medic",
+    health=3,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[HealBeam],
+    price=6,
+)
+
 RECON_SPECIALIST = UnitBlueprint(
     "Recon Specialist",
     health=5,
@@ -662,7 +662,7 @@ RECON_SPECIALIST = UnitBlueprint(
 
 RHINO_BEETLE = UnitBlueprint(
     "Rhino Beetle",
-    health=5,
+    health=4,
     speed=2,
     sight=1,
     facets=[CrushingMandibles, Grapple],
@@ -685,6 +685,16 @@ STUBBORN_GOAT = UnitBlueprint(
     speed=3,
     sight=1,
     facets=[CurvedHorns, ToughSkin, Ornery],
+    price=6,
+)
+
+TRACTOR = UnitBlueprint(
+    "Tractor",
+    health=6,
+    speed=3,
+    sight=1,
+    facets=[Hitch],
+    energy=4,
     price=6,
 )
 
@@ -716,16 +726,6 @@ MISCHIEVOUS_GODMOTHER = UnitBlueprint(
     sight=2,
     energy=6,
     facets=[TurnToRabbit, TugIn, FaerieDust],
-    price=7,
-)
-
-TRACTOR = UnitBlueprint(
-    "Tractor",
-    health=6,
-    speed=3,
-    sight=1,
-    facets=[Hitch],
-    energy=4,
     price=7,
 )
 
@@ -803,15 +803,6 @@ EFFORTLESS_ATHLETE = UnitBlueprint(
     speed=3,
     sight=2,
     facets=[RoundhouseKick, Vault, BatonPass],
-    price=9,
-)
-
-REMORSELESS_SNIPER = UnitBlueprint(
-    "Remorseless Sniper",
-    health=2,
-    speed=2,
-    sight=2,
-    facets=[SniperRifle, Binoculars, Stakeout],
     price=9,
 )
 
@@ -914,6 +905,15 @@ LEGENDARY_WRESTLER = UnitBlueprint(
     ],
     price=10,
     flavor="I need justice in my life: Here it comes.",
+)
+
+REMORSELESS_SNIPER = UnitBlueprint(
+    "Remorseless Sniper",
+    health=2,
+    speed=2,
+    sight=2,
+    facets=[SniperRifle, Binoculars, Stakeout],
+    price=10,
 )
 
 VILE_TRANSMUTER = UnitBlueprint(
@@ -1033,17 +1033,6 @@ RANK_DEFILER = UnitBlueprint(
     price=11,
 )
 
-STAUNCH_IRON_HEART = UnitBlueprint(
-    "Staunch Iron-Heart",
-    health=7,
-    speed=2,
-    armor=1,
-    sight=2,
-    energy=4,
-    facets=[HammerBlow, MightyBlow, IronBlessing],
-    price=11,
-)
-
 COMBAT_ENGINEER = UnitBlueprint(
     "Combat Engineer",
     health=5,
@@ -1082,6 +1071,17 @@ GRANITE_GOLEM = UnitBlueprint(
     size=Size.LARGE,
     armor=1,
     facets=[CrushingFists, RockSteady, ResistantSkin],
+    price=12,
+)
+
+STAUNCH_IRON_HEART = UnitBlueprint(
+    "Staunch Iron-Heart",
+    health=7,
+    speed=2,
+    armor=1,
+    sight=2,
+    energy=4,
+    facets=[HammerBlow, MightyBlow, IronBlessing],
     price=12,
 )
 

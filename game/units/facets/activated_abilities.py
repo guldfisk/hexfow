@@ -270,7 +270,7 @@ class BatonPass(TargetUnitActivatedAbility):
 class SweatItOut(TargetUnitActivatedAbility):
     """Dispels all statuses."""
 
-    cost = EnergyCost(3) | MovementCost(2)
+    cost = EnergyCost(3) | MovementCost(1)
     can_target_self = False
 
     def perform(self, target: Unit) -> None:
@@ -332,7 +332,7 @@ class WishHarm(TargetUnitActivatedAbility):
 class GuidedTrance(TargetUnitActivatedAbility):
     """Exhausts the target and it gains full energy."""
 
-    cost = EnergyCost(3) | MovementCost(2)
+    cost = EnergyCost(3) | MovementCost(1)
     controller_target_option = ControllerTargetOption.ALLIED
     can_target_self = False
     explain_qualifier_filter = "ready"
@@ -987,11 +987,6 @@ class DrawSpring(TargetHexActivatedAbility):
     cost = EnergyCost(3) | MovementCost(2)
     range = 3
 
-    explain_qualifier_filter = "non-elevated"
-
-    def filter_hex(self, hex_: Hex) -> bool:
-        return not hex_.terrain.is_high_ground
-
     def perform(self, target: Hex) -> None:
         apply_status_to_hex(target, "underground_spring", self, duration=2)
 
@@ -1010,7 +1005,7 @@ class MagmaFissure(TargetHexActivatedAbility):
 
 class Scry(TargetHexActivatedAbility):
     """
-    Applies <revealed> for 2 round.
+    Applies <revealed> for 2 rounds.
     """
 
     cost = EnergyCost(2)
