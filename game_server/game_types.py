@@ -60,9 +60,10 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                NOTORIOUS_OUTLAW,
-                JOLLY_HERBALIST,
-                PRIMEVAL_TORTOISE,
+                EFFORTLESS_ATHLETE,
+                # NOTORIOUS_OUTLAW,
+                # JOLLY_HERBALIST,
+                # PRIMEVAL_TORTOISE,
                 # UNDERHANDED_HEXMAGE,
                 # BLOOD_FEUD_WARLOCK,
                 COMBAT_ENGINEER,
@@ -70,8 +71,8 @@ class TestGameType(GameType):
             (
                 INFERNO_TANK,
                 CYCLOPS,
-                LIGHT_ARCHER,
-                UNDERHANDED_HEXMAGE,
+                # LIGHT_ARCHER,
+                # UNDERHANDED_HEXMAGE,
             ),
         )
 

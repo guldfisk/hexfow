@@ -5,6 +5,7 @@ import { StatusesDetailView } from "./statusDetails.tsx";
 import React from "react";
 import { HexDetailView } from "./hexDetail.tsx";
 import { DetailsIndicator } from "../details/components.tsx";
+import { FacetDetailView } from "./facetDetails.tsx";
 
 export const DetailView = ({
   applicationState,
@@ -58,6 +59,8 @@ export const DetailView = ({
           gameObjectDetails={applicationState.gameObjectDetails}
         />
       );
+    } else if (detail.type == "facet") {
+      detailView = <FacetDetailView facet={detail.facet} unit={null} />;
     }
   }
   return (

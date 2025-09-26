@@ -101,6 +101,13 @@ const LogLineComponentView = ({
                 blueprint: units[0].identifier,
               }),
             );
+          } else {
+            store.dispatch(
+              hoverDetail({
+                type: "facet",
+                facet: gameObjectDetails.facets[element.identifier],
+              }),
+            );
           }
           //   TODO else idk
         }}

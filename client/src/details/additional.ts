@@ -55,6 +55,20 @@ export const getAdditionalDetails = (
     for (const unitIdentifier of seen) {
       details.push({ type: "blueprint", blueprint: unitIdentifier });
     }
+  } else if (detail.type == "facet") {
+    const blueprints = Object.values(gameObjectDetails.units).filter((unit) =>
+      unit.facets.includes(detail.facet.identifier),
+    );
+    const seen: string[] = [];
+    for (const blueprint of blueprints) {
+      seen.push(blueprint.identifier);
+    }
+    for (const blueprint of blueprints) {
+      findRelatedUnits(blueprint.identifier, gameObjectDetails, seen);
+    }
+    for (const unitIdentifier of seen) {
+      details.push({ type: "blueprint", blueprint: unitIdentifier });
+    }
   }
   return details;
 };

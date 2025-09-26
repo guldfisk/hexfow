@@ -35,7 +35,6 @@ game
 
 ui
     unit details include current statuses
-    support facet detail for facet used by multiple units
     select facet with num key
 
     facet/related statuses overflow details

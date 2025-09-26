@@ -1,4 +1,5 @@
 import { Hex, Status, Unit, UnitStatus } from "./gameState.ts";
+import { FacetDetails } from "./gameObjectDetails.ts";
 
 interface BaseHovered {
   type: string;
@@ -29,9 +30,15 @@ export interface HoveredStatusTypes extends BaseHovered {
   statuses: string[];
 }
 
+export interface HoveredFacet extends BaseHovered {
+  type: "facet";
+  facet: FacetDetails;
+}
+
 export type HoveredDetails =
   | HoveredUnit
   | HoveredBlueprint
   | HoveredHex
   | HoveredStatuses
-  | HoveredStatusTypes;
+  | HoveredStatusTypes
+  | HoveredFacet;
