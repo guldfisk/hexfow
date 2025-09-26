@@ -939,13 +939,19 @@ class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Seriali
     statuses: list[UnitStatus]
 
     def __init__(
-        self, controller: Player, blueprint: UnitBlueprint, exhausted: bool = False
+        self,
+        controller: Player,
+        blueprint: UnitBlueprint,
+        exhausted: bool = False,
+        spawned: bool = False,
     ):
         super().__init__()
 
         self.controller = controller
         self.blueprint = blueprint
         self.original_blueprint = blueprint
+
+        self.is_spawned = spawned
 
         self.damage: int = 0
         self.last_damaged_by: Source = None
@@ -1007,11 +1013,6 @@ class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Seriali
     @property
     def ready(self) -> bool:
         return not self.exhausted
-
-    @property
-    def is_spawned(self) -> bool:
-        # TODO hmm
-        return self.blueprint.price is None
 
     @modifiable
     def is_aquatic(self, _: None) -> bool:

@@ -37,6 +37,7 @@ def setup_scenario_units(
                         blueprint=blueprint,
                         controller=player,
                         space=gs.map.hexes[cc],
+                        setup=True,
                     )
                 )
 
@@ -71,8 +72,5 @@ def setup_scenario_units(
 
         if with_fow:
             ES.deregister_effects(*effects)
-
-    for logs in gs._pending_player_logs.values():
-        logs[:] = []
 
     return gs

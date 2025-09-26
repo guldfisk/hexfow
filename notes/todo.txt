@@ -24,7 +24,6 @@ game
     corpses
     break
     spawn unit source
-    spawned unit indicator
     "+2 attack power to melee attacks"
     sacrifice cost?
 

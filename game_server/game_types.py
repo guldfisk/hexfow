@@ -60,12 +60,12 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                # PESTILENCE_PRIEST,
+                PESTILENCE_PRIEST,
                 EFFORTLESS_ATHLETE,
                 # ANCIENT_ALTRUIST,
                 # NOTORIOUS_OUTLAW,
                 BULLDOZER,
-                CHAINSAW_SADIST,
+                # CHAINSAW_SADIST,
                 # JOLLY_HERBALIST,
                 # PRIMEVAL_TORTOISE,
                 # UNDERHANDED_HEXMAGE,
@@ -75,8 +75,9 @@ class TestGameType(GameType):
                 INFERNO_TANK,
                 # CYCLOPS,
                 TERRAFORMER_MAGE,
+                DJINN,
                 # COMBAT_ENGINEER,
-                LIGHT_ARCHER,
+                # LIGHT_ARCHER,
                 # UNDERHANDED_HEXMAGE,
             ),
         )

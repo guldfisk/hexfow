@@ -496,12 +496,18 @@ class SpawnUnit(Event[Unit | None]):
     with_statuses: Iterable[UnitStatusSignature] = ()
     max_health: int | None = None
     max_energy: int | None = None
+    setup: bool = False
 
     def is_valid(self) -> bool:
         return not self.space.map.unit_on(self.space)
 
     def resolve(self) -> Unit | None:
-        unit = Unit(self.controller, self.blueprint, exhausted=self.exhausted)
+        unit = Unit(
+            self.controller,
+            self.blueprint,
+            exhausted=self.exhausted,
+            spawned=not self.setup,
+        )
         if not self.space.map.move_unit_to(unit, self.space):
             return None
         if self.max_health and unit.health > self.max_health:
@@ -509,7 +515,11 @@ class SpawnUnit(Event[Unit | None]):
         if self.max_energy and unit.energy > self.max_energy:
             unit.energy = self.max_energy
         GS.update_vision()
-        with GS.log(LogLine([unit, "is spawned in", self.space])):
+        with (
+            GS.log(LogLine([unit, "is spawned in", self.space]))
+            if not self.setup
+            else contextlib.nullcontext()
+        ):
             for signature in self.with_statuses:
                 unit.add_status(signature)
         return unit
@@ -983,7 +993,7 @@ class DeployArmies(Event[None]):
             }
         ).items():
             for blueprint, hex_ in deployment:
-                ES.resolve(SpawnUnit(blueprint, player, hex_))
+                ES.resolve(SpawnUnit(blueprint, player, hex_, setup=True))
 
 
 @dataclasses.dataclass
