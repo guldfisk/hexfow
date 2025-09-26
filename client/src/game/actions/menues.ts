@@ -742,7 +742,6 @@ const getRadiatingLineActionSpace = (
           type: "aoe",
           description: "select hexes",
           do: () => {
-            // store.dispatch(deactivateMenu());
             takeAction({
               index: menu.optionIndex,
               target: {
@@ -851,13 +850,16 @@ const getListMenuActionSpace = (
   takeAction: TakeAction,
   menu: ListMenu,
 ): ActionSpace => {
+  // TODO yikes
+  const state = store.getState();
   const actions = getBaseActions(
     gameState,
+    gameObjectDetails,
     takeAction,
     gameState.decision,
     gameState.active_unit_context,
-    // TODO yikes
-    store.getState().delayedActivation,
+    state.delayedActivation,
+    state.actionFilter,
   );
   return {
     hexActions: Object.fromEntries(

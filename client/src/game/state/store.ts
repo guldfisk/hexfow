@@ -6,7 +6,11 @@ import {
 } from "@reduxjs/toolkit";
 import { GameState } from "../../interfaces/gameState.ts";
 import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
-import { DelayedActivation, MenuData } from "../actions/interface.ts";
+import {
+  ActionFilter,
+  DelayedActivation,
+  MenuData,
+} from "../actions/interface.ts";
 import { HoveredDetails } from "../../interfaces/details.ts";
 import { deepEquals } from "../utils/equals.ts";
 import { GameStateMessage } from "../../interfaces/messages.ts";
@@ -25,6 +29,7 @@ const mainSlice = createSlice({
     highlightedCCs: null,
     showCoordinates: false,
     additionalDetailsIndex: null,
+    actionFilter: null,
   } as {
     gameState: GameState | null;
     gameStateId: number;
@@ -36,6 +41,7 @@ const mainSlice = createSlice({
     highlightedCCs: string[] | null;
     showCoordinates: boolean;
     additionalDetailsIndex: number | null;
+    actionFilter: ActionFilter | null;
   },
   reducers: {
     receiveGameState: (state, action: PayloadAction<GameStateMessage>) => {
@@ -43,6 +49,7 @@ const mainSlice = createSlice({
       state.gameStateId = action.payload.count;
       state.menuData = null;
       state.delayedActivation = null;
+      state.actionFilter = null;
       state.highlightedCCs = null;
       state.shouldRerender = true;
     },
@@ -64,12 +71,14 @@ const mainSlice = createSlice({
     },
     activateMenu: (state, action: PayloadAction<MenuData>) => {
       state.menuData = action.payload;
+      state.actionFilter = null;
       state.highlightedCCs = null;
       state.shouldRerender = true;
     },
     advanceMenu: (state, action: PayloadAction<MenuData>) => {
       if (state.menuData && !deepEquals(state.menuData, action.payload)) {
         state.menuData = action.payload;
+        state.actionFilter = null;
         state.highlightedCCs = null;
         state.shouldRerender = true;
       }
@@ -77,6 +86,7 @@ const mainSlice = createSlice({
     deactivateMenu: (state) => {
       state.menuData = null;
       state.delayedActivation = null;
+      state.actionFilter = null;
       state.shouldRerender = true;
     },
     highlightCCs: (state, action: PayloadAction<string[]>) => {
@@ -89,6 +99,19 @@ const mainSlice = createSlice({
     },
     setDelayedActivation: (state, action: PayloadAction<DelayedActivation>) => {
       state.delayedActivation = action.payload;
+      state.shouldRerender = true;
+    },
+    setActionFilter: (state, action: PayloadAction<ActionFilter | null>) => {
+      state.actionFilter =
+        action.payload &&
+        state.actionFilter &&
+        ((action.payload.type == "move" && state.actionFilter.type == "move") ||
+          (action.payload.type == "facet" &&
+            state.actionFilter.type == "facet" &&
+            action.payload.idx == state.actionFilter.idx))
+          ? null
+          : action.payload;
+      state.menuData = null;
       state.shouldRerender = true;
     },
     toggleShowCoordinates: (state) => {
@@ -136,6 +159,7 @@ export const {
   setDelayedActivation,
   toggleShowCoordinates,
   setAdditionalDetailsIndex,
+  setActionFilter,
   incrementAdditionalDetailsIndex,
 } = mainSlice.actions;
 

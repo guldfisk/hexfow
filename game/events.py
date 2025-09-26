@@ -701,7 +701,9 @@ class Turn(Event[bool]):
                 else:
                     decision = GS.make_decision(
                         self.unit.controller,
-                        SelectOptionDecisionPoint(legal_options, explanation="do shit"),
+                        SelectOptionDecisionPoint(
+                            legal_options, explanation="select action"
+                        ),
                     )
 
                 if isinstance(decision.option, SkipOption):
@@ -904,7 +906,7 @@ class Round(Event[None]):
                                 else (SkipOption(target_profile=NoTarget()),)
                             ),
                         ],
-                        explanation="activate unit?",
+                        explanation="activate unit",
                     ),
                 )
                 if isinstance(decision.option, ActivateUnitOption):

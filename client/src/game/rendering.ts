@@ -59,16 +59,6 @@ const colors = {
   fullEnergy: [47, 103, 248],
   noEnergy: [5, 17, 74],
 };
-// const colors = {
-//   enemy: "0x9b1711",
-//   ally: "0x2f71e7",
-//   // fullHealth: [128, 215, 100],
-//   fullHealth: [88, 230, 68],
-//   noHealth: [43, 1, 1],
-//   // fullEnergy: [250, 218, 77],
-//   fullEnergy: [223, 213, 45],
-//   noEnergy: [133, 10, 7],
-// };
 
 let maxX = window.innerWidth;
 let maxY = window.innerHeight;
@@ -303,6 +293,7 @@ export const renderMap = (
           gameState.decision,
           gameState.active_unit_context,
           state.delayedActivation,
+          state.actionFilter,
         )
   ).hexActions;
 
@@ -371,6 +362,7 @@ export const renderMap = (
     // TODO common trigger zone
     if (
       (state.delayedActivation ||
+        state.actionFilter ||
         (state.menuData && !state.menuData.uncloseable)) &&
       !(actionSpace[ccToKey(hexData.cc)]?.actions || []).length
     ) {

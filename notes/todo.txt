@@ -34,8 +34,6 @@ game
     deployment zone detail view during game
 
 ui
-    select facet with num key
-
     facet/related statuses overflow details
     better indication of which facet will be used to perform action
 

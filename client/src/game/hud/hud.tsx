@@ -9,14 +9,11 @@ import {
   Unit,
 } from "../../interfaces/gameState.ts";
 import { GameObjectDetails } from "../../interfaces/gameObjectDetails.ts";
-import {
-  ActionSpace,
-  DelayedActivation,
-  MenuData,
-} from "../actions/interface.ts";
+import { ActionSpace } from "../actions/interface.ts";
 import { menuActionSpacers, menuDescribers } from "../actions/menues.ts";
 import { ccToKey } from "../../geometry.ts";
 import {
+  AppState,
   highlightCCs,
   hoverDetail,
   removeCCHighlight,
@@ -227,22 +224,19 @@ const GameInfoView = ({ gameState }: { gameState: GameState }) => (
 );
 
 const DecisionDetailView = ({
+  applicationState,
   gameState,
   gameObjectDetails,
   makeDecision,
-  menu,
-  delayedActivation,
   actionSpace,
 }: {
-  // TODO these not nullable
-  gameState: GameState | null;
-  gameObjectDetails: GameObjectDetails | null;
+  applicationState: AppState;
+  gameState: GameState;
+  gameObjectDetails: GameObjectDetails;
   makeDecision: (payload: { [key: string]: any }) => void;
-  menu: MenuData | null;
-  delayedActivation: DelayedActivation | null;
   actionSpace: ActionSpace;
 }) => {
-  if (!gameState?.decision || !gameObjectDetails) {
+  if (!gameState?.decision) {
     return (
       <div className="info-window decision-details" id="decision-description">
         waiting for opponent
@@ -250,6 +244,9 @@ const DecisionDetailView = ({
       </div>
     );
   }
+
+  const menu = applicationState.menuData;
+  const delayedActivation = applicationState.delayedActivation;
 
   let button = null;
 
@@ -272,7 +269,7 @@ const DecisionDetailView = ({
         button = (
           <button
             className={
-              gameState.decision.explanation == "activate unit?"
+              gameState.decision.explanation == "activate unit"
                 ? "alert-button"
                 : ""
             }
@@ -280,7 +277,7 @@ const DecisionDetailView = ({
               makeDecision({ index: skipIndexes[0], target: {} });
             }}
           >
-            {gameState.decision.explanation == "activate unit?"
+            {gameState.decision.explanation == "activate unit"
               ? "Wait"
               : "Skip rest of unit turn"}
           </button>
@@ -289,17 +286,31 @@ const DecisionDetailView = ({
     }
   }
 
+  const unit = gameState.active_unit_context?.unit || delayedActivation?.unit;
+  let description = gameState.decision.explanation;
+  if (applicationState.actionFilter && unit) {
+    description =
+      applicationState.actionFilter.type == "facet"
+        ? "Select target for " +
+          gameObjectDetails.facets[
+            gameObjectDetails.units[unit.blueprint].facets[
+              applicationState.actionFilter.idx - 1
+            ]
+          ].name
+        : "Select movement";
+  } else if (menu) {
+    description = menuDescribers[menu.type](gameState, gameObjectDetails, menu);
+  } else if (delayedActivation) {
+    description = "activate unit and select action";
+  }
+
   return (
     <div
       className="info-window decision-details"
       id="decision-description"
       style={{ borderColor: "#2f71e7" }}
     >
-      <div>
-        {menu
-          ? menuDescribers[menu.type](gameState, gameObjectDetails, menu)
-          : gameState.decision.explanation}
-      </div>
+      <div>{description}</div>
       {button}
       {actionSpace.loadFileAction ? (
         <>
@@ -354,6 +365,7 @@ export const HUD = ({
         gameState.decision,
         null,
         applicationState.delayedActivation,
+        applicationState.actionFilter,
       );
 
   return (
@@ -388,11 +400,10 @@ export const HUD = ({
         )}
 
         <DecisionDetailView
+          applicationState={applicationState}
           gameState={applicationState.gameState}
           gameObjectDetails={applicationState.gameObjectDetails}
           makeDecision={makeDecision}
-          menu={applicationState.menuData}
-          delayedActivation={applicationState.delayedActivation}
           actionSpace={actionSpace}
         />
       </div>

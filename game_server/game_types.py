@@ -41,9 +41,9 @@ class TestGameType(GameType):
                 cc: HexSpec(
                     random.choice(
                         [
+                            # Plains,
+                            # Plains,
                             Plains,
-                            Plains,
-                            # # Plains,
                             # Forest,
                             # Hills,
                             # Water,
@@ -60,8 +60,10 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                # EFFORTLESS_ATHLETE,
-                # NOTORIOUS_OUTLAW,
+                # PESTILENCE_PRIEST,
+                EFFORTLESS_ATHLETE,
+                ANCIENT_ALTRUIST,
+                NOTORIOUS_OUTLAW,
                 # JOLLY_HERBALIST,
                 # PRIMEVAL_TORTOISE,
                 # UNDERHANDED_HEXMAGE,

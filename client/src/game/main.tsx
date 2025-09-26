@@ -13,11 +13,14 @@ import {
   incrementAdditionalDetailsIndex,
   receiveGameState,
   renderedGameState,
+  setActionFilter,
   store,
   toggleShowCoordinates,
 } from "./state/store.ts";
 import { Message } from "../interfaces/messages.ts";
 import { TakeAction } from "./actions/interface.ts";
+import { getBaseActions } from "./actions/actionSpace.ts";
+import { ccToKey } from "../geometry.ts";
 
 const gameConnection = new WebSocket(
   `ws://${window.location.hostname}:8765/ws`,
@@ -133,7 +136,7 @@ async function main() {
       state.gameState &&
       state.gameState.decision &&
       state.gameState.decision["type"] == "SelectOptionDecisionPoint" &&
-      (state.gameState.decision.explanation == "activate unit?" &&
+      (state.gameState.decision.explanation == "activate unit" &&
       !state.delayedActivation
         ? event.code == "KeyW"
         : event.code == "KeyS")
@@ -156,6 +159,69 @@ async function main() {
       store.dispatch(deactivateMenu());
     } else if (event.key == "d") {
       store.dispatch(incrementAdditionalDetailsIndex());
+    } else if (
+      (parseInt(event.key) || event.key == "m") &&
+      state.gameObjectDetails &&
+      state.gameState
+    ) {
+      if (
+        !state.gameState.decision ||
+        !(
+          state.delayedActivation ||
+          state.gameState.decision.explanation == "select action"
+        )
+      ) {
+        return;
+      }
+
+      const unit =
+        state.gameState.active_unit_context?.unit ||
+        state.delayedActivation?.unit;
+      if (!unit) {
+        return;
+      }
+
+      if (event.key == "m") {
+        store.dispatch(setActionFilter({ type: "move" }));
+        return;
+      }
+
+      const idx = parseInt(event.key);
+
+      const facets = state.gameObjectDetails.units[unit.blueprint].facets;
+
+      if (
+        idx > facets.length ||
+        state.gameObjectDetails.facets[facets[idx - 1]].category ==
+          "static_ability"
+      ) {
+        return;
+      }
+
+      const actions = getBaseActions(
+        state.gameState,
+        state.gameObjectDetails,
+        makeDecision,
+        state.gameState.decision,
+        state.gameState.active_unit_context,
+        state.delayedActivation,
+        { type: "facet", idx },
+      );
+
+      const hex = state.gameState.map.hexes.find(
+        (h) => h.unit && h.unit.id == unit.id,
+      );
+
+      if (
+        hex &&
+        actions[ccToKey(hex.cc)] &&
+        actions[ccToKey(hex.cc)].length == 1 &&
+        actions[ccToKey(hex.cc)][0].type == "menu"
+      ) {
+        actions[ccToKey(hex.cc)][0].do({ x: 0, y: 0 });
+      } else {
+        store.dispatch(setActionFilter({ type: "facet", idx }));
+      }
     }
   };
 

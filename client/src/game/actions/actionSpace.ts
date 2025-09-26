@@ -17,6 +17,7 @@ import {
 import { ccFromKey, ccToKey } from "../../geometry.ts";
 import {
   Action,
+  ActionFilter,
   ActionSpace,
   DelayedActivation,
   TakeAction,
@@ -42,11 +43,13 @@ export const getUnitIdMap = (
 
 export const getBaseActions = (
   gameState: GameState,
+  gameObjectDetails: GameObjectDetails,
   takeAction: TakeAction,
   // TODO
   decision: Decision | null,
   activeUnitContext: ActiveUnitContext | null,
   delayedActivation: DelayedActivation | null,
+  actionFilter: ActionFilter | null,
 ): { [key: string]: Action[] } => {
   if (delayedActivation) {
     decision = {
@@ -67,7 +70,25 @@ export const getBaseActions = (
   );
 
   if (decision && decision["type"] == "SelectOptionDecisionPoint") {
+    const unit = activeUnitContext?.unit || delayedActivation?.unit;
+    const facetIndicator =
+      actionFilter && actionFilter.type == "facet" && unit
+        ? gameObjectDetails.units[unit.blueprint].facets[actionFilter.idx - 1]
+        : null;
+
     for (const [idx, option] of decision.payload.options.entries()) {
+      if (
+        (facetIndicator &&
+          !(
+            option.type == "EffortOption" &&
+            option.values.facet.identifier == facetIndicator
+          )) ||
+        (actionFilter &&
+          actionFilter.type == "move" &&
+          option.type != "MoveOption")
+      ) {
+        continue;
+      }
       if (option.target_profile.type == "OneOfUnits") {
         for (const [
           targetIdx,
@@ -289,14 +310,17 @@ export const getBaseActionSpace = (
   decision: Decision | null,
   activeUnitContext: ActiveUnitContext | null,
   delayedActivation: DelayedActivation | null,
+  actionFilter: ActionFilter | null,
 ): ActionSpace => {
   if (decision && decision.type == "SelectOptionDecisionPoint") {
     const actions = getBaseActions(
       gameState,
+      gameObjectDetails,
       takeAction,
       decision,
       activeUnitContext,
       delayedActivation,
+      actionFilter,
     );
 
     if (!delayedActivation) {

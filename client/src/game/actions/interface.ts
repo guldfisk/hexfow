@@ -19,6 +19,21 @@ import { UnitDetails } from "../../interfaces/gameObjectDetails.ts";
 
 export type TakeAction = (body: { [key: string]: any }) => void;
 
+export interface BaseActionFilter {
+  type: string;
+}
+
+export interface MoveActionFilter extends BaseActionFilter {
+  type: "move";
+}
+
+export interface FacetActionFilter extends BaseActionFilter {
+  type: "facet";
+  idx: number;
+}
+
+export type ActionFilter = MoveActionFilter | FacetActionFilter;
+
 export interface DelayedActivation {
   optionIndex: number;
   targetIndex: number;
