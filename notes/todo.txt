@@ -34,7 +34,6 @@ game
     deployment zone detail view during game
 
 ui
-    unit details include current statuses
     select facet with num key
 
     facet/related statuses overflow details

@@ -60,17 +60,17 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                EFFORTLESS_ATHLETE,
+                # EFFORTLESS_ATHLETE,
                 # NOTORIOUS_OUTLAW,
                 # JOLLY_HERBALIST,
                 # PRIMEVAL_TORTOISE,
                 # UNDERHANDED_HEXMAGE,
-                # BLOOD_FEUD_WARLOCK,
-                COMBAT_ENGINEER,
+                BLOOD_FEUD_WARLOCK,
             ),
             (
                 INFERNO_TANK,
                 CYCLOPS,
+                COMBAT_ENGINEER,
                 # LIGHT_ARCHER,
                 # UNDERHANDED_HEXMAGE,
             ),

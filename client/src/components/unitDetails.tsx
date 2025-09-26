@@ -64,7 +64,10 @@ export const UnitDetailsView = ({
             {unit.energy != 0 || unit.max_energy != 0 ? (
               <div>
                 energy: {unit.energy}/
-                <ModifiedValue current={unit.max_energy} base={details.energy} />
+                <ModifiedValue
+                  current={unit.max_energy}
+                  base={details.energy}
+                />
               </div>
             ) : null}
           </>
@@ -80,6 +83,25 @@ export const UnitDetailsView = ({
         {/*TODO*/}
         <div>size: {sizeNames[(unit || details).size.toString()]}</div>
         <div>price: {details.price}</div>
+      </div>
+      <div
+        style={{
+          display: "inline-block",
+          paddingLeft: "5px",
+          verticalAlign: "top",
+          width: "150px",
+        }}
+      >
+        {unit
+          ? unit.statuses.map((status) => {
+              return (
+                <img
+                  src={getImageUrl("status", status.type)}
+                  className={"status-icon-unit"}
+                />
+              );
+            })
+          : null}
       </div>
       {details.flavor ? (
         <div className={"facet-details"}>
