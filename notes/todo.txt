@@ -39,7 +39,6 @@ ui
 
     dedicated movement action icon?
     unit last seen at round counter / ghost fading
-    fix human visibility of target icons on spaces without vision
     linked statuses display
 
 code

@@ -44,7 +44,7 @@ class TestGameType(GameType):
                             # Plains,
                             # Plains,
                             Plains,
-                            # Forest,
+                            Forest,
                             # Hills,
                             # Water,
                             # Magma,
