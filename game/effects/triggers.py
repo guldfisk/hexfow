@@ -706,17 +706,18 @@ class HitchedTrigger(TriggerEffect[MoveUnit]):
 
 
 @dataclasses.dataclass(eq=False)
-class HardyTrigger(TriggerEffect[RoundUpkeep]):
+class RecurringUnitBuffTrigger(TriggerEffect[RoundUpkeep]):
     priority: ClassVar[int] = 0
 
     unit: Unit
     source: Source
+    status_type: type[UnitStatus]
 
     def should_trigger(self, event: RoundUpkeep) -> bool:
-        return not self.unit.has_status("vigor")
+        return not self.unit.has_status(self.status_type)
 
     def resolve(self, event: RoundUpkeep) -> None:
-        apply_status_to_unit(self.unit, "vigor", self.source, stacks=1)
+        apply_status_to_unit(self.unit, self.status_type, self.source, stacks=1)
 
 
 @dataclasses.dataclass(eq=False)
@@ -802,6 +803,19 @@ class ExpireOnDealDamageStatusTrigger(TriggerEffect[Damage]):
             event.signature.get_unit_source() == self.status.parent
             and event.unit.controller != self.status.parent.controller
         )
+
+    def resolve(self, event: Damage) -> None:
+        self.status.remove()
+
+
+@dataclasses.dataclass(eq=False)
+class ExpireOnHitTrigger(TriggerEffect[Hit]):
+    priority: ClassVar[int] = 0
+
+    status: Status
+
+    def should_trigger(self, event: Hit) -> bool:
+        return event.attacker == self.status.parent
 
     def resolve(self, event: Damage) -> None:
         self.status.remove()

@@ -274,6 +274,19 @@ class StayingPowerReplacement(ReplacementEffect[SufferDamage]):
 
 
 @dataclasses.dataclass(eq=False)
+class BufferReplacement(ReplacementEffect[SufferDamage]):
+    priority: ClassVar[int] = 0
+
+    status: UnitStatus
+
+    def can_replace(self, event: SufferDamage) -> bool:
+        return event.unit == self.status.parent
+
+    def resolve(self, event: SufferDamage) -> None:
+        self.status.decrement_stacks()
+
+
+@dataclasses.dataclass(eq=False)
 class FrailReplacement(ReplacementEffect[SufferDamage]):
     priority: ClassVar[int] = 0
 

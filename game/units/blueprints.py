@@ -1,6 +1,7 @@
 from game.core import UnitBlueprint
 from game.units.facets.activated_abilities import (
     AssembleTheDoombot,
+    BallMode,
     BatonPass,
     Binoculars,
     Bloom,
@@ -32,6 +33,7 @@ from game.units.facets.activated_abilities import (
     GuidedTrance,
     HandGrenade,
     HealBeam,
+    HealingPotion,
     Hitch,
     InducePanic,
     InkRing,
@@ -105,6 +107,7 @@ from game.units.facets.attacks import (
     Chainsaw,
     Chomp,
     CommandersPistol,
+    CrushingBeak,
     CrushingFists,
     CrushingMandibles,
     CrypticClaws,
@@ -133,6 +136,7 @@ from game.units.facets.attacks import (
     HurlBoulder,
     InfernalBlade,
     Lance,
+    LaserBlaster,
     LightBlaster,
     LightBow,
     MarshmallowFist,
@@ -184,12 +188,12 @@ from game.units.facets.static_abilities import (
     FightFlightFreeze,
     FlameResistant,
     Fleeting,
+    ForceShield,
     ForestDweller,
     FoulBurst,
     Furious,
     GlassSkin,
     GrizzlyMurderer,
-    Hardy,
     HeelTurn,
     Immobile,
     Inspiration,
@@ -226,6 +230,7 @@ from game.units.facets.static_abilities import (
     ToughSkin,
     ToxicPresence,
     ToxicSkin,
+    Vigorous,
     Wild,
 )
 from game.values import Size
@@ -395,6 +400,16 @@ INFERNAL_IMP = UnitBlueprint(
     sight=1,
     size=Size.SMALL,
     facets=[Swelter],
+    price=3,
+)
+
+JOLLY_HERBALIST = UnitBlueprint(
+    "Jolly Herbalist",
+    health=3,
+    speed=3,
+    sight=2,
+    energy=3,
+    facets=[HealingPotion],
     price=3,
 )
 
@@ -748,6 +763,15 @@ BEE_SHAMAN = UnitBlueprint(
     price=8,
 )
 
+BLASTER_DROID = UnitBlueprint(
+    "Blaster Droid",
+    health=4,
+    speed=1,
+    sight=2,
+    facets=[LaserBlaster, BallMode, ForceShield],
+    price=8,
+)
+
 BLIND_ABOMINATION = UnitBlueprint(
     "Blind Abomination",
     health=9,
@@ -773,7 +797,7 @@ CAMELBACK_OUTRIDER = UnitBlueprint(
     health=6,
     speed=4,
     sight=2,
-    facets=[Lance, Hardy, StayingPower],
+    facets=[Lance, Vigorous, StayingPower],
     price=8,
 )
 
@@ -1110,6 +1134,17 @@ INFERNO_TANK = UnitBlueprint(
     price=13,
 )
 
+PRIMEVAL_TORTOISE = UnitBlueprint(
+    "Primeval Tortoise",
+    health=5,
+    speed=1,
+    sight=2,
+    armor=2,
+    size=Size.LARGE,
+    facets=[CrushingBeak, Vigorous],
+    price=14,
+)
+
 WITCH_ENGINE = UnitBlueprint(
     "Witch Engine",
     health=7,
@@ -1159,7 +1194,7 @@ RHINO_BEAST = UnitBlueprint(
     sight=2,
     size=Size.LARGE,
     facets=[Gore],
-    price=21,
+    price=20,
 )
 
 ANNOYING_FLEA = UnitBlueprint(

@@ -61,8 +61,10 @@ class TestGameType(GameType):
         player_units = (
             (
                 NOTORIOUS_OUTLAW,
-                UNDERHANDED_HEXMAGE,
-                BLOOD_FEUD_WARLOCK,
+                JOLLY_HERBALIST,
+                PRIMEVAL_TORTOISE,
+                # UNDERHANDED_HEXMAGE,
+                # BLOOD_FEUD_WARLOCK,
                 COMBAT_ENGINEER,
             ),
             (

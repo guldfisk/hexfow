@@ -19,8 +19,9 @@ map editor
 game
     round restricted objectives
 
-    corpses
     chess clock
+
+    corpses
     break
     kill source
     spawn unit source
@@ -37,7 +38,7 @@ ui
     support facet detail for facet used by multiple units
     select facet with num key
 
-    facet overflow details
+    facet/related statuses overflow details
     better indication of which facet will be used to perform action
 
     dedicated movement action icon?

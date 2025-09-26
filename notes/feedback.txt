@@ -1,10 +1,6 @@
 status indicator på unit detail
     not obvious when unit is affected by status
 
-mere visible det din tur
-    bjælke i topped med current turn player eller ramme om viewport eller farved cirkel ved action detail view
-tykkere turn indicator ramme (grøn)
-
 aura effect indicators?
 
 aoe arc target outside map
@@ -27,14 +23,8 @@ more readable negative armor
 
 per unit reminder text
 
-terrain savy ignore additional move costs as well?
-
-bug i movement options
+bug i movement options (stealth + sight 0 + visible hex)
 
 cost on action indicators?
 
-always collapse 2+ options on same hex
-
 log for vigor stack aborbed
-
-parched explain exclusive

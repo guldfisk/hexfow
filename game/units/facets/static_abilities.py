@@ -55,7 +55,6 @@ from game.effects.triggers import (
     FoulBurstTrigger,
     FuriousTrigger,
     GrizzlyMurdererTrigger,
-    HardyTrigger,
     HeelTurnTrigger,
     InspirationTrigger,
     JukeAndJiveTrigger,
@@ -65,6 +64,7 @@ from game.effects.triggers import (
     PricklyTrigger,
     PuffAwayTrigger,
     QuickTrigger,
+    RecurringUnitBuffTrigger,
     SchadenfreudeDamageTrigger,
     SchadenfreudeDebuffTrigger,
     ScurryInTheShadowsTrigger,
@@ -585,13 +585,26 @@ class SlimySkin(StaticAbilityFacet):
         )
 
 
-class Hardy(StaticAbilityFacet):
+class ForceShield(StaticAbilityFacet):
     """
-    At the beginning of each round, if this unit doesn't have a stack of <vigor>, apply 1 stack of vigor to it.
+    At the beginning of each round, if this unit doesn't have a stack of <buffer>, apply 1 stack of <buffer> to it.
     """
 
     def create_effects(self) -> None:
-        self.register_effects(HardyTrigger(self.parent, self))
+        self.register_effects(
+            RecurringUnitBuffTrigger(self.parent, self, UnitStatus.get("buffer"))
+        )
+
+
+class Vigorous(StaticAbilityFacet):
+    """
+    At the beginning of each round, if this unit doesn't have a stack of <vigor>, apply 1 stack of <vigor> to it.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            RecurringUnitBuffTrigger(self.parent, self, UnitStatus.get("vigor"))
+        )
 
 
 class StayingPower(StaticAbilityFacet):

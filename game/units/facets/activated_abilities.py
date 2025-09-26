@@ -48,7 +48,6 @@ from game.events import (
     QueueUnitForActivation,
     ReadyUnit,
     SpawnUnit,
-    SufferDamage,
 )
 from game.statuses.links import GateLink, TaintedLink
 from game.statuses.shortcuts import (
@@ -280,7 +279,7 @@ class SweatItOut(TargetUnitActivatedAbility):
 class Exorcise(TargetUnitActivatedAbility):
     """
     Dispels all statuses from the target unit. For each debuff dispelled this way,
-    the unit is dealt 1 damage, and for each buff it is healed 1.
+    the unit is dealt pure 1 damage, and for each buff it is healed 1.
     """
 
     cost = EnergyCost(3) | MovementCost(1)
@@ -599,8 +598,8 @@ class Showdown(TargetUnitActivatedAbility):
     """
     This unit hits the target with its primary ranged attack twice.
     Then, if the target unit is alive and can hit this unit with its primary attack,
-    it does so. If it does, and both units are still alive, and at least one unit
-    was damaged this way, repeat this process.
+    it does so. If it does, and both units are still alive, repeat this process, up to
+    5 times total.
     """
 
     cost = ExclusiveCost() | EnergyCost(3)
@@ -611,17 +610,9 @@ class Showdown(TargetUnitActivatedAbility):
         if not (attack := self.parent.get_primary_attack(RangedAttackFacet)):
             return
 
-        while True:
-            damaged = any(
-                event.unit == target
-                for result in [
-                    ES.resolve(
-                        Hit(attacker=self.parent, defender=target, attack=attack)
-                    )
-                    for _ in range(2)
-                ]
-                for event in result.iter_type(SufferDamage)
-            )
+        for _ in range(5):
+            for _ in range(2):
+                ES.resolve(Hit(attacker=self.parent, defender=target, attack=attack))
 
             ES.resolve(CheckAlive(target))
             if not target.on_map():
@@ -634,24 +625,28 @@ class Showdown(TargetUnitActivatedAbility):
             ):
                 break
 
-            if not (
-                any(
-                    event.unit == self.parent
-                    for event in ES.resolve(
-                        Hit(
-                            attacker=target,
-                            defender=self.parent,
-                            attack=defender_attack,
-                        )
-                    ).iter_type(SufferDamage)
+            ES.resolve(
+                Hit(
+                    attacker=target,
+                    defender=self.parent,
+                    attack=defender_attack,
                 )
-                or damaged
-            ):
-                break
+            )
 
             ES.resolve(CheckAlive(self.parent))
             if not self.parent.on_map():
                 break
+
+
+class BallMode(NoTargetActivatedAbility):
+    """
+    Applies status <rolling> to this unit.
+    """
+
+    cost = ExclusiveCost()
+
+    def perform(self, target: None) -> None:
+        apply_status_to_unit(self.parent, "rolling", self)
 
 
 class RaiseShrine(TargetHexActivatedAbility):
@@ -829,7 +824,6 @@ class VitalityTransfusion(ActivatedAbilityFacet[list[Unit]]):
 
 class FatalBonding(ActivatedAbilityFacet):
     """
-    Target 2 units within 4 range LoS.
     Applies linked <tainted_bond> to both units for 2 rounds.
     """
 
@@ -918,6 +912,18 @@ class VenomousSpine(TargetUnitActivatedAbility):
     def perform(self, target: Unit) -> None:
         apply_status_to_unit(target, "parasite", self)
         apply_status_to_unit(target, "debilitating_venom", self, duration=2)
+
+
+class HealingPotion(TargetUnitActivatedAbility):
+    """
+    Applies <regenerating> for 3 rounds.
+    """
+
+    cost = EnergyCost(2) | MovementCost(1)
+    controller_target_option = ControllerTargetOption.ALLIED
+
+    def perform(self, target: Unit) -> None:
+        apply_status_to_unit(target, "regenerating", self, duration=3)
 
 
 class NaturalBlessing(TargetUnitActivatedAbility):

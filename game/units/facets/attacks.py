@@ -96,6 +96,12 @@ class SerratedBeak(MeleeAttackFacet):
     damage = 2
 
 
+class LaserBlaster(RangedAttackFacet):
+    cost = ExclusiveCost()
+    damage = 4
+    range = 2
+
+
 class RazorTusk(MeleeAttackFacet):
     cost = MovementCost(1)
     damage = 3
@@ -184,6 +190,11 @@ class Pinch(MeleeAttackFacet):
 class SnappingBeak(MeleeAttackFacet):
     cost = MovementCost(1)
     damage = 2
+
+
+class CrushingBeak(MeleeAttackFacet):
+    cost = ExclusiveCost()
+    damage = 4
 
 
 class FleaBite(MeleeAttackFacet):

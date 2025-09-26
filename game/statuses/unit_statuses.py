@@ -33,6 +33,7 @@ from game.effects.modifiers import (
     UnitSpeedModifier,
 )
 from game.effects.replacements import (
+    BufferReplacement,
     FrailReplacement,
     LuckyCharmReplacement,
     StunnedReplacement,
@@ -45,6 +46,7 @@ from game.effects.triggers import (
     ChillTrigger,
     ExpireOnActivatedTrigger,
     ExpireOnDealDamageStatusTrigger,
+    ExpireOnHitTrigger,
     ExpireOnSufferDamageStatusTrigger,
     FleaInfestedTrigger,
     HitchedTrigger,
@@ -474,6 +476,21 @@ class Baffled(UnitStatus):
         self.register_effects(BaffledTrigger(self))
 
 
+class Regenerating(RefreshableMixin, UnitStatus):
+    """
+    At the end of each round, this unit heals 1.
+    When this unit is damaged, remove this status.
+    """
+
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            RoundHealTrigger(self.parent, 1, self),
+            ExpireOnSufferDamageStatusTrigger(self),
+        )
+
+
 class NaturesGrace(RefreshableMixin, UnitStatus):
     """
     At the end of each round, this unit heals 1.
@@ -547,6 +564,30 @@ class Chill(RefreshableMixin, UnitStatus):
 
     def create_effects(self) -> None:
         self.register_effects(ChillTrigger(self.parent, self))
+
+
+class Buffer(StackableRefreshableMixin, UnitStatus):
+    """
+    If this unit would suffer damage, instead remove a stack of this status.
+    """
+
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(BufferReplacement(self))
+
+
+class Rolling(UnitStatus):
+    """
+    +3 movement. Remove this status when this unit hits another unit.
+    """
+
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            UnitSpeedModifier(self.parent, 3), ExpireOnHitTrigger(self)
+        )
 
 
 class MagicWard(RefreshableMixin, UnitStatus):
