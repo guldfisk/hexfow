@@ -88,7 +88,7 @@ class Bloom(NoTargetActivatedAbility):
     def perform(self, target: None) -> None:
         for unit in GS.map.get_neighboring_units_off(self.parent):
             ES.resolve(Heal(unit, 1, self))
-        ES.resolve(Kill(self.parent))
+        ES.resolve(Kill(self.parent, self))
 
 
 class Grow(NoTargetActivatedAbility):
@@ -127,7 +127,7 @@ class GreaseTheGears(TargetUnitActivatedAbility):
         movement_bonus = 1 if not target.exhausted and GS.active_unit_context else 0
         if any(
             kill_event.unit == target
-            for kill_event in ES.resolve(Kill(target)).iter_type(Kill)
+            for kill_event in ES.resolve(Kill(target, self)).iter_type(Kill)
         ):
             ES.resolve(Heal(self.parent, 2, self))
             ES.resolve(GainEnergy(self.parent, 2, source=self))
@@ -138,7 +138,7 @@ class SelfDestruct(NoTargetActivatedAbility):
     """Kills this unit."""
 
     def perform(self, target: None) -> None:
-        ES.resolve(Kill(self.parent))
+        ES.resolve(Kill(self.parent, self))
 
 
 class GrantWish(TargetUnitActivatedAbility):
@@ -230,7 +230,7 @@ class PublicExecution(TargetUnitActivatedAbility):
         return unit.exhausted and unit.health <= 5
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(Kill(target))
+        ES.resolve(Kill(target, self))
         for unit in GS.map.units:
             if unit.controller == self.parent.controller and unit.can_see(
                 GS.map.hex_off(target)
@@ -547,7 +547,7 @@ class StimulatingInjection(TargetUnitActivatedAbility):
         ES.resolve(Damage(target, DamageSignature(1, self, DamageType.PURE)))
         ES.resolve(ReadyUnit(target))
         # TODO sacrifice as a cost?
-        ES.resolve(Kill(self.parent))
+        ES.resolve(Kill(self.parent, self))
 
 
 class EnfeeblingHex(TargetUnitActivatedAbility):

@@ -237,7 +237,7 @@ class Schadenfreude(StaticAbilityFacet):
 class GrizzlyMurderer(StaticAbilityFacet):
     """
     When this unit kills an opposing unit with a melee attack, apply <shocked> for
-    2 rounds to each each unit allied to the killed units that could see it.
+    2 rounds to each unit allied to the killed units that could see it.
     """
 
     def create_effects(self) -> None:
@@ -273,7 +273,7 @@ class Fleeting(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(FleetingTrigger(self.parent, 2))
+        self.register_effects(FleetingTrigger(self.parent, 2, self))
 
 
 class CrabShuffle(StaticAbilityFacet):

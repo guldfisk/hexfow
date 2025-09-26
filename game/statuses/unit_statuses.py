@@ -108,7 +108,7 @@ class Ephemeral(LowestRefreshableMixin, UnitStatus):
     dispellable = False
 
     def on_expires(self) -> None:
-        ES.resolve(Kill(self.parent))
+        ES.resolve(Kill(self.parent, self))
 
 
 class Shocked(RefreshableMixin, UnitStatus):
@@ -259,7 +259,7 @@ class MortallyWounded(UnitStatus):
     dispellable = False
 
     def on_expires(self) -> None:
-        ES.resolve(Kill(self.parent))
+        ES.resolve(Kill(self.parent, self))
 
 
 class Tired(StackableMixin, UnitStatus):

@@ -54,7 +54,7 @@ class CrushableReplacement(ReplacementEffect[MoveUnit]):
         )
 
     def resolve(self, event: MoveUnit) -> None:
-        ES.resolve(Kill(self.unit))
+        ES.resolve(Kill(self.unit, self.source))
         ES.resolve(Heal(event.unit, 1, self.source))
         ES.resolve(event)
 

@@ -209,29 +209,27 @@ class OrneryTrigger(TriggerEffect[ApplyStatus]):
         ES.resolve(Heal(self.unit, 1, self.source))
 
 
-# TODO originally this was for all simple attacks, but then the kill event isn't
-#  a child. could of course hack it in some way, or just have multiple triggers,
-#  but it only has a melee attack, and maybe it is more evocative anyways...
 # TODO the vision based trigger is cool, but it has some pretty unintuitive interactions,
 #  since the attacking unit with this ability will still block vision from where it
 #  attacked, not the space it follows up into. This is kinda intentional, but weird,
 #  so yeah.
 @dataclasses.dataclass(eq=False)
-class GrizzlyMurdererTrigger(TriggerEffect[MeleeAttackAction]):
+class GrizzlyMurdererTrigger(TriggerEffect[Kill]):
     priority: ClassVar[int] = 0
 
     unit: Unit
     source: Source
 
-    def should_trigger(self, event: MeleeAttackAction) -> bool:
-        return event.attacker == self.unit and any(
-            kill.unit == event.defender for kill in event.iter_type(Kill)
+    def should_trigger(self, event: Kill) -> bool:
+        return (
+            isinstance(event.source, MeleeAttackFacet)
+            and event.source.parent == self.unit
         )
 
-    def resolve(self, event: MeleeAttackAction) -> None:
+    def resolve(self, event: Kill) -> None:
         for unit in GS.map.units:
             if unit.controller != self.unit.controller and unit.can_see(
-                GS.map.hex_off(event.defender)
+                GS.map.hex_off(event.unit)
             ):
                 apply_status_to_unit(unit, "shocked", self.source, duration=2)
 
@@ -566,12 +564,13 @@ class FleetingTrigger(TriggerEffect[RoundCleanup]):
 
     unit: Unit
     round: int
+    source: Source
 
     def should_trigger(self, event: RoundCleanup) -> bool:
         return GS.round_counter >= self.round
 
     def resolve(self, event: RoundCleanup) -> None:
-        ES.resolve(Kill(self.unit))
+        ES.resolve(Kill(self.unit, self.source))
 
 
 @dataclasses.dataclass(eq=False)

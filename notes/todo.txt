@@ -23,7 +23,6 @@ game
 
     corpses
     break
-    kill source
     spawn unit source
     spawned unit indicator
     "+2 attack power to melee attacks"

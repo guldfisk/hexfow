@@ -59,6 +59,7 @@ class KillUpkeep(Event[None]):
 @dataclasses.dataclass
 class Kill(Event[None]):
     unit: Unit
+    source: Source
 
     def resolve(self) -> None:
         with GS.log(LogLine([self.unit, "dies"])):
@@ -72,19 +73,31 @@ class Kill(Event[None]):
             self.unit.deregister()
 
 
-# TODO don't think this should be an event?
+def check_unit_state_based_kill(unit: Unit) -> bool:
+    if unit.health <= 0:
+        ES.resolve(Kill(unit, unit.last_damaged_by))
+        return True
+    if not GS.map.hex_off(unit).is_passable_to(unit):
+        ES.resolve(Kill(unit, None))
+        return True
+
+
+def do_state_based_check() -> None:
+    has_changed = True
+    while has_changed:
+        has_changed = ES.resolve_pending_triggers()
+        # TODO order?
+        for unit in list(GS.map.unit_positions.keys()):
+            if check_unit_state_based_kill(unit):
+                has_changed = True
+
+
 @dataclasses.dataclass
 class CheckAlive(Event[bool]):
     unit: Unit
 
     def resolve(self) -> bool:
-        # TODO common logic
-        if self.unit.health <= 0 or not GS.map.hex_off(self.unit).is_passable_to(
-            self.unit
-        ):
-            ES.resolve(Kill(self.unit))
-            return False
-        return True
+        return not check_unit_state_based_kill(self.unit)
 
 
 @dataclasses.dataclass
@@ -589,19 +602,6 @@ class Rest(Event[None]):
     def resolve(self) -> None:
         with GS.log(LogLine([self.unit, "rests"])):
             GS.active_unit_context.should_stop = True
-
-
-# TODO where should this be?
-# TODO currently only checked in turn, should prob be checked in round as well.
-def do_state_based_check() -> None:
-    has_changed = True
-    while has_changed:
-        has_changed = ES.resolve_pending_triggers()
-        # TODO order?
-        for unit in list(GS.map.unit_positions.keys()):
-            if unit.health <= 0 or not GS.map.hex_off(unit).is_passable_to(unit):
-                has_changed = True
-                ES.resolve(Kill(unit))
 
 
 @dataclasses.dataclass

@@ -948,6 +948,7 @@ class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Seriali
         self.original_blueprint = blueprint
 
         self.damage: int = 0
+        self.last_damaged_by: Source = None
 
         self.energy_regen.set(1)
         self.energy: int = (
@@ -1035,6 +1036,7 @@ class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Seriali
             else min(signature.amount, self.health - 1)
         )
         self.damage += damage
+        self.last_damaged_by = signature.source
         return damage
 
     @modifiable
