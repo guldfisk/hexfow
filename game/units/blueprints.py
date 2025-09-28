@@ -294,12 +294,13 @@ HIVE_GUARD_GNAT = UnitBlueprint(
     price=1,
 )
 
-UNBLINKING_WATCHER = UnitBlueprint(
-    name="Unblinking Watcher",
-    health=2,
+IMPARTIAL_OBSERVER = UnitBlueprint(
+    name="Impartial Observer",
+    health=3,
     speed=2,
     sight=2,
     size=Size.SMALL,
+    facets=[Wild],
     price=1,
 )
 
@@ -413,8 +414,8 @@ JOLLY_HERBALIST = UnitBlueprint(
     price=3,
 )
 
-LIGHT_ARCHER = UnitBlueprint(
-    name="Light Archer",
+KEEN_ARCHER = UnitBlueprint(
+    name="Keen Archer",
     health=4,
     speed=3,
     sight=2,
@@ -607,7 +608,7 @@ MORTAR_SQUAD = UnitBlueprint(
 
 SQUIRMING_SQUID = UnitBlueprint(
     "Squirming Squid",
-    health=5,
+    health=6,
     speed=2,
     sight=1,
     energy=4,
@@ -811,6 +812,15 @@ GIANT_TOAD = UnitBlueprint(
     price=8,
 )
 
+BELL_STRIKER_BRUTE = UnitBlueprint(
+    "Bell-Striker Brute",
+    health=8,
+    speed=3,
+    sight=2,
+    facets=[BellHammer],
+    price=9,
+)
+
 DJINN = UnitBlueprint(
     "Djinn",
     health=4,
@@ -860,21 +870,25 @@ VELOCIRAPTOR = UnitBlueprint(
     price=9,
 )
 
-BELL_STRIKER_BRUTE = UnitBlueprint(
-    "Bell-Striker Brute",
-    health=8,
-    speed=3,
-    sight=2,
-    facets=[BellHammer],
-    price=10,
-)
-
 BLITZ_TROOPER = UnitBlueprint(
     "Blitz Trooper",
     health=6,
     speed=3,
     sight=2,
     facets=[LightBlaster, Strafe],
+    price=10,
+)
+
+BOULDER_HURLER_OAF = UnitBlueprint(
+    "Boulder Hurler Oaf",
+    health=7,
+    speed=2,
+    sight=2,
+    size=Size.LARGE,
+    facets=[
+        HurlBoulder,
+        Farsighted,
+    ],
     price=10,
 )
 
@@ -895,22 +909,22 @@ ELITE_COMMANDO = UnitBlueprint(
     price=10,
 )
 
-HOODED_EXECUTIONER = UnitBlueprint(
-    "Hooded Executioner",
-    health=6,
+GATE_FIEND = UnitBlueprint(
+    "Gate Fiend",
+    health=8,
     speed=3,
     sight=2,
-    facets=[GuillotineAxe, PublicExecution, DreadfulVisage],
+    energy=4,
+    facets=[InfernalBlade, OpenGate],
     price=10,
 )
 
-INK_WITCH = UnitBlueprint(
-    "Ink Witch",
-    health=5,
+HOODED_EXECUTIONER = UnitBlueprint(
+    "Hooded Executioner",
+    health=7,
     speed=3,
     sight=2,
-    energy=5,
-    facets=[BloodExpunge, InkRing, MalevolentStare],
+    facets=[GuillotineAxe, PublicExecution, DreadfulVisage],
     price=10,
 )
 
@@ -950,19 +964,6 @@ VILE_TRANSMUTER = UnitBlueprint(
     price=10,
 )
 
-BOULDER_HURLER_OAF = UnitBlueprint(
-    "Boulder Hurler Oaf",
-    health=7,
-    speed=2,
-    sight=2,
-    size=Size.LARGE,
-    facets=[
-        HurlBoulder,
-        Farsighted,
-    ],
-    price=11,
-)
-
 BULLDOZER = UnitBlueprint(
     "Bulldozer",
     health=8,
@@ -999,6 +1000,16 @@ HORROR = UnitBlueprint(
     sight=2,
     energy=4,
     facets=[SerratedClaws, VenomousSpine],
+    price=11,
+)
+
+INK_WITCH = UnitBlueprint(
+    "Ink Witch",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[BloodExpunge, InkRing, MalevolentStare],
     price=11,
 )
 
@@ -1077,21 +1088,11 @@ FRONTLINE_TACTICIAN = UnitBlueprint(
     price=12,
 )
 
-GATE_FIEND = UnitBlueprint(
-    "Gate Fiend",
-    health=8,
-    speed=3,
-    sight=2,
-    energy=4,
-    facets=[InfernalBlade, OpenGate],
-    price=12,
-)
-
 GRANITE_GOLEM = UnitBlueprint(
     "Granite Golem",
     health=9,
-    speed=1,
-    sight=2,
+    speed=2,
+    sight=1,
     size=Size.LARGE,
     armor=1,
     facets=[CrushingFists, RockSteady, ResistantSkin],

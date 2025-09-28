@@ -34,6 +34,7 @@ class SpeedLayer(IntEnum):
     FLAT = auto()
     PROPORTIONAL = auto()
     CAP = auto()
+    SET = auto()
 
 
 class SightLayer(IntEnum):
@@ -516,6 +517,21 @@ class UnitCapSpeedModifier(StateModifierEffect[Unit, None, int]):
 
     def modify(self, obj: Unit, request: None, value: int) -> int:
         return min(value, self.value)
+
+
+@dataclasses.dataclass(eq=False)
+class UnitSetSpeedModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = SpeedLayer.SET
+    target: ClassVar[object] = Unit.speed
+
+    unit: Unit
+    value: int
+
+    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+        return obj == self.unit
+
+    def modify(self, obj: Unit, request: None, value: int) -> int:
+        return self.value
 
 
 @dataclasses.dataclass(eq=False)

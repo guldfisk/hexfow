@@ -32,7 +32,6 @@ class BurningSting(MeleeAttackFacet):
 
 
 class Scratch(MeleeAttackFacet):
-    cost = MovementCost(1)
     combinable = True
     damage = 2
 

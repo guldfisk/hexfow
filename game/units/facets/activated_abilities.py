@@ -103,7 +103,7 @@ class HealBeam(TargetUnitActivatedAbility):
     Heals 2.
     """
 
-    cost = EnergyCost(3)
+    cost = EnergyCost(3) | MovementCost(1)
     range = 2
     can_target_self = False
     controller_target_option = ControllerTargetOption.ALLIED
@@ -1402,8 +1402,8 @@ class FlashBang(TargetTriHexActivatedAbility):
     Applies <blinded> for 2 rounds.
     """
 
-    cost = EnergyCost(3)
-    range = 2
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 3
 
     def perform(self, target: list[Hex]) -> None:
         for _hex in target:
@@ -1416,8 +1416,8 @@ class SmokeGrenade(TargetTriHexActivatedAbility):
     Applies <smoke> for 2 rounds.
     """
 
-    cost = EnergyCost(3)
-    range = 2
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 3
 
     def perform(self, target: list[Hex]) -> None:
         for _hex in target:

@@ -59,26 +59,10 @@ class TestGameType(GameType):
         )
 
         player_units = (
-            (
-                PESTILENCE_PRIEST,
-                EFFORTLESS_ATHLETE,
-                # ANCIENT_ALTRUIST,
-                # NOTORIOUS_OUTLAW,
-                BULLDOZER,
-                # CHAINSAW_SADIST,
-                # JOLLY_HERBALIST,
-                # PRIMEVAL_TORTOISE,
-                # UNDERHANDED_HEXMAGE,
-                # BLOOD_FEUD_WARLOCK,
-            ),
+            (KEEN_ARCHER, IMPARTIAL_OBSERVER, ANKLE_BITER_NUISANCE, SLUDGE_SLUG),
             (
                 INFERNO_TANK,
-                # CYCLOPS,
-                TERRAFORMER_MAGE,
-                DJINN,
-                # COMBAT_ENGINEER,
-                # LIGHT_ARCHER,
-                # UNDERHANDED_HEXMAGE,
+                GRANITE_GOLEM,
             ),
         )
 

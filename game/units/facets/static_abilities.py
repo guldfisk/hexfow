@@ -30,8 +30,8 @@ from game.effects.modifiers import (
     StealthModifier,
     StealthOnTerrainModifier,
     TelepathicSpyModifier,
-    UnitCapSpeedModifier,
     UnitNoCaptureModifier,
+    UnitSetSpeedModifier,
     UnitSightMinModifier,
     UnwieldySwimmerModifier,
 )
@@ -168,13 +168,13 @@ class TerrainSavvy(StaticAbilityFacet):
 
 class RockSteady(StaticAbilityFacet):
     """
-    This unit can't be moved by other units, and it's speed can't be more than 1.
+    This unit can't be moved by other units, and it's speed is always 2.
     """
 
     def create_effects(self) -> None:
         self.register_effects(
             ExternallyImmobileReplacement(self.parent),
-            UnitCapSpeedModifier(self.parent, 1),
+            UnitSetSpeedModifier(self.parent, 2),
         )
 
 
