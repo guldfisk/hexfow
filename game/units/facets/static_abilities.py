@@ -13,7 +13,6 @@ from game.core import (
 )
 from game.effects.modifiers import (
     AquaticModifier,
-    CamouflageModifier,
     CrabShuffleModifier,
     CrushableModifier,
     FarsightedModifier,
@@ -63,6 +62,7 @@ from game.effects.triggers import (
     PackHunterTrigger,
     PricklyTrigger,
     PuffAwayTrigger,
+    PureInnocenceTrigger,
     QuickTrigger,
     RecurringUnitBuffTrigger,
     SchadenfreudeDamageTrigger,
@@ -160,7 +160,7 @@ class StrainedPusher(StaticAbilityFacet):
 
 
 class TerrainSavvy(StaticAbilityFacet):
-    """Ignores the first movement penalty (not additional move in costs) each turn."""
+    """This unit ignores one movement penalty each turn."""
 
     def create_effects(self) -> None:
         self.register_effects(PerTurnMovePenaltyIgnoreReplacement(self.parent, 1))
@@ -507,15 +507,6 @@ class Diver(StaticAbilityFacet):
         )
 
 
-class Camouflage(StaticAbilityFacet):
-    """
-    +1 ranged terrain protection against non-adjacent units.
-    """
-
-    def create_effects(self) -> None:
-        self.register_effects(CamouflageModifier(self.parent))
-
-
 class Swimmer(StaticAbilityFacet):
     """
     This unit can move on water.
@@ -594,6 +585,15 @@ class ForceShield(StaticAbilityFacet):
         self.register_effects(
             RecurringUnitBuffTrigger(self.parent, self, UnitStatus.get("buffer"))
         )
+
+
+class PureInnocence(StaticAbilityFacet):
+    """
+    When a unit kills this unit, apply <shame> to that unit.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(PureInnocenceTrigger(self.parent, self))
 
 
 class Vigorous(StaticAbilityFacet):

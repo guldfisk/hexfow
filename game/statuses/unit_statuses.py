@@ -20,6 +20,7 @@ from game.effects.modifiers import (
     RootedModifier,
     SilencedModifier,
     SourceTypeResistanceModifier,
+    StealthModifier,
     TerrorModifier,
     UnactivateableModifier,
     UnitArmorFlatModifier,
@@ -36,6 +37,7 @@ from game.effects.replacements import (
     BufferReplacement,
     FrailReplacement,
     LuckyCharmReplacement,
+    PerTurnMovePenaltyIgnoreReplacement,
     StunnedReplacement,
     VigorReplacement,
 )
@@ -48,6 +50,7 @@ from game.effects.triggers import (
     ExpireOnDealDamageStatusTrigger,
     ExpireOnHitTrigger,
     ExpireOnSufferDamageStatusTrigger,
+    ExpiresOnMovesTrigger,
     FleaInfestedTrigger,
     HitchedTrigger,
     OneTimeModifyMovementPointsStatusTrigger,
@@ -489,6 +492,55 @@ class Regenerating(RefreshableMixin, UnitStatus):
             RoundHealTrigger(self.parent, 1, self),
             ExpireOnSufferDamageStatusTrigger(self),
         )
+
+
+class Shame(RefreshableMixin, UnitStatus):
+    """
+    This unit can't capture objectives.
+    """
+
+    default_intention = StatusIntention.DEBUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(UnitNoCaptureModifier(self.parent))
+
+
+class Corroded(StackableRefreshableMixin, UnitStatus):
+    """
+    -1 armor per stack.
+    """
+
+    default_intention = StatusIntention.DEBUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(UnitArmorFlatModifier(self.parent, lambda: -self.stacks))
+
+
+class Pathfinding(RefreshableMixin, UnitStatus):
+    """This unit ignores one movement penalty each turn."""
+
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(PerTurnMovePenaltyIgnoreReplacement(self.parent, 1))
+
+
+class Camouflaged(RefreshableMixin, UnitStatus):
+    """This unit is stealth. Remove this status when this unit moves."""
+
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(StealthModifier(self.parent), ExpiresOnMovesTrigger(self))
+
+
+class KeenVision(RefreshableMixin, UnitStatus):
+    """+1 sight."""
+
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(UnitSightFlatModifier(self.parent, 1))
 
 
 class NaturesGrace(RefreshableMixin, UnitStatus):

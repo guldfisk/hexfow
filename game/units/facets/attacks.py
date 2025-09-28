@@ -5,6 +5,7 @@ from game.core import (
     GS,
     DamageSignature,
     ExclusiveCost,
+    Facet,
     MeleeAttackFacet,
     MovementCost,
     RangedAttackFacet,
@@ -93,6 +94,39 @@ class GnomeSpear(MeleeAttackFacet):
 class SerratedBeak(MeleeAttackFacet):
     cost = MovementCost(1)
     damage = 2
+
+
+class Strangle(MeleeAttackFacet):
+    """+2 damage against small units."""
+
+    cost = MovementCost(4)
+    damage = 3
+
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        if unit.size.g() == Size.SMALL:
+            return 2
+
+
+class SpitAcid(RangedAttackFacet):
+    """Applies 1 stack of <corroded> for 2 rounds."""
+
+    cost = MovementCost(1)
+    range = 2
+    damage = 2
+
+    def resolve_post_damage_effects(self, defender: Unit) -> None:
+        apply_status_to_unit(defender, "corroded", self, stacks=1, duration=2)
+
+
+class HuntingKnife(MeleeAttackFacet):
+    """+1 damage against units with the Wild ability."""
+
+    cost = MovementCost(1)
+    damage = 2
+
+    def get_damage_modifier_against(self, unit: Unit) -> int | None:
+        if Facet.get_class("wild") in unit.blueprint.facets:
+            return 1
 
 
 class LaserBlaster(RangedAttackFacet):

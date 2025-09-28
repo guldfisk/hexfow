@@ -1424,6 +1424,44 @@ class SmokeGrenade(TargetTriHexActivatedAbility):
             apply_status_to_hex(_hex, "smoke", self, duration=2)
 
 
+class WildernessGuide(TargetUnitActivatedAbility):
+    """
+    Applies <pathfinding> for 2 rounds.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+    controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
+
+    def perform(self, target: Unit) -> None:
+        apply_status_to_unit(target, "pathfinding", self, duration=2)
+
+
+class Camouflage(TargetUnitActivatedAbility):
+    """
+    Applies <camouflaged>.
+    """
+
+    cost = EnergyCost(3) | MovementCost(2)
+    controller_target_option = ControllerTargetOption.ALLIED
+
+    def perform(self, target: Unit) -> None:
+        apply_status_to_unit(target, "camouflaged", self)
+
+
+class AwarenessMentor(TargetUnitActivatedAbility):
+    """
+    Applies <keen_vision> for 1 round.
+    """
+
+    cost = EnergyCost(3)
+    controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
+
+    def perform(self, target: Unit) -> None:
+        apply_status_to_unit(target, "keen_vision", self, duration=1)
+
+
 class SowDiscord(TargetTriHexActivatedAbility):
     """
     Applies <paranoia> for 3 rounds.

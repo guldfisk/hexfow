@@ -1584,6 +1584,10 @@ def get_source_controller(source: Source) -> Player | None:
     )
 
 
+def get_source_unit(source: Source) -> Unit | None:
+    return source.parent if isinstance(source, Facet) else None
+
+
 @dataclasses.dataclass
 class DamageSignature:
     amount: int
@@ -1605,7 +1609,7 @@ class DamageSignature:
         return self.branch(amount=amount)
 
     def get_unit_source(self) -> Unit | None:
-        return self.source.parent if isinstance(self.source, Facet) else None
+        return get_source_unit(self.source)
 
 
 class HexStatus(Status[Hex, "HexStatusSignature"], ABC):

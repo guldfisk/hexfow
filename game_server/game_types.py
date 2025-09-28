@@ -41,11 +41,11 @@ class TestGameType(GameType):
                 cc: HexSpec(
                     random.choice(
                         [
-                            # Plains,
-                            # Plains,
                             Plains,
-                            # Forest,
-                            # Hills,
+                            Plains,
+                            Plains,
+                            Forest,
+                            Hills,
                             # Water,
                             # Magma,
                             # Swamp,
@@ -59,10 +59,33 @@ class TestGameType(GameType):
         )
 
         player_units = (
-            (KEEN_ARCHER, IMPARTIAL_OBSERVER, ANKLE_BITER_NUISANCE, SLUDGE_SLUG),
             (
-                INFERNO_TANK,
-                GRANITE_GOLEM,
+                # LANKY_PROWLER,
+                RANGER_GUIDE,
+                # INFERNO_TANK,
+                GNOME_COMMANDO,
+                # ACID_SPITTER_IGUANA,
+                # EFFORTLESS_ATHLETE,
+                # ANCIENT_ALTRUIST,
+                # NOTORIOUS_OUTLAW,
+                # BULLDOZER,
+                # CHAINSAW_SADIST,
+                # JOLLY_HERBALIST,
+                # PRIMEVAL_TORTOISE,
+                # UNDERHANDED_HEXMAGE,
+                # BLOOD_FEUD_WARLOCK,
+            ),
+            (
+                # INFERNO_TANK,
+                CYCLOPS,
+                # GNOME_COMMANDO,
+                INNOCENT_LAMB,
+                # TERRAFORMER_MAGE,
+                # DJINN,
+                IMPARTIAL_OBSERVER,
+                # COMBAT_ENGINEER,
+                # LIGHT_ARCHER,
+                # UNDERHANDED_HEXMAGE,
             ),
         )
 

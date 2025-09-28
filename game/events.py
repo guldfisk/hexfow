@@ -4,7 +4,7 @@ import math
 from collections import defaultdict
 from typing import Iterable
 
-from events.eventsystem import ES, Event, V
+from events.eventsystem import ES, Event
 from game.core import (
     GS,
     ActivatedAbilityFacet,
@@ -52,8 +52,9 @@ from game.values import DamageType, Resistance
 @dataclasses.dataclass
 class KillUpkeep(Event[None]):
     unit: Unit
+    source: Source
 
-    def resolve(self) -> V: ...
+    def resolve(self) -> None: ...
 
 
 @dataclasses.dataclass

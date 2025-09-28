@@ -1,10 +1,12 @@
 from game.core import UnitBlueprint
 from game.units.facets.activated_abilities import (
     AssembleTheDoombot,
+    AwarenessMentor,
     BallMode,
     BatonPass,
     Binoculars,
     Bloom,
+    Camouflage,
     ChokingSoot,
     ConstructTurret,
     CoordinatedManeuver,
@@ -94,6 +96,7 @@ from game.units.facets.activated_abilities import (
     VitalityTransfusion,
     Vomit,
     WardEvil,
+    WildernessGuide,
     WishHarm,
     WringEssence,
 )
@@ -133,6 +136,7 @@ from game.units.facets.attacks import (
     HammerBlow,
     HammerCannon,
     HiddenBlade,
+    HuntingKnife,
     HurlBoulder,
     InfernalBlade,
     Lance,
@@ -162,9 +166,11 @@ from game.units.facets.attacks import (
     SniperRifle,
     SolidMunition,
     Spew,
+    SpitAcid,
     StandardIssueBlaster,
     Stinger,
     Strafe,
+    Strangle,
     StubbyClaws,
     SturdyClaws,
     Swelter,
@@ -207,6 +213,7 @@ from game.units.facets.static_abilities import (
     PackHunter,
     Prickly,
     PuffAway,
+    PureInnocence,
     Pusher,
     Quick,
     ResistantSkin,
@@ -311,6 +318,16 @@ GOBLIN_SLINGSHOT = UnitBlueprint(
     sight=1,
     size=Size.SMALL,
     facets=[SlingShot],
+    price=2,
+)
+
+INNOCENT_LAMB = UnitBlueprint(
+    "Innocent Lamb",
+    health=2,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    facets=[PureInnocence],
     price=2,
 )
 
@@ -725,6 +742,16 @@ VOID_SPRITE = UnitBlueprint(
     price=6,
 )
 
+ACID_SPITTER_IGUANA = UnitBlueprint(
+    "Acid Spitter Iguana",
+    health=4,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    facets=[SpitAcid],
+    price=7,
+)
+
 GIANT_SLAYER_MOUSE = UnitBlueprint(
     "Giant Slayer Mouse",
     health=5,
@@ -809,6 +836,16 @@ GIANT_TOAD = UnitBlueprint(
     sight=2,
     energy=3,
     facets=[TongueLash, Jump, ToxicSkin],
+    price=8,
+)
+
+RANGER_GUIDE = UnitBlueprint(
+    "Ranger Guide",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[HuntingKnife, WildernessGuide, Camouflage, AwarenessMentor, TerrainSavvy],
     price=8,
 )
 
@@ -1020,6 +1057,15 @@ INSCRUTABLE_CHIMERA = UnitBlueprint(
     sight=2,
     energy=5,
     facets=[CrypticClaws, Riddle, PsychicCommand, InstilFocus],
+    price=11,
+)
+
+LANKY_PROWLER = UnitBlueprint(
+    "Lanky Prowler",
+    health=5,
+    speed=5,
+    sight=2,
+    facets=[Strangle, Stealth],
     price=11,
 )
 

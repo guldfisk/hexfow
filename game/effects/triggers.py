@@ -25,6 +25,7 @@ from game.core import (
     UnitStatus,
     UnitStatusLink,
     UnitStatusSignature,
+    get_source_unit,
 )
 from game.events import (
     ActionCleanup,
@@ -782,6 +783,19 @@ class ExpireOnActivatedTrigger(TriggerEffect[TurnUpkeep]):
 
 
 @dataclasses.dataclass(eq=False)
+class ExpiresOnMovesTrigger(TriggerEffect[MoveUnit]):
+    priority: ClassVar[int] = 0
+
+    status: UnitStatus
+
+    def should_trigger(self, event: MoveUnit) -> bool:
+        return event.result and event.unit == self.status.parent
+
+    def resolve(self, event: MoveUnit) -> None:
+        self.status.remove()
+
+
+@dataclasses.dataclass(eq=False)
 class TurnExpiringStatusTrigger(TriggerEffect[Turn]):
     priority: ClassVar[int] = 0
 
@@ -871,6 +885,20 @@ class PanickedTrigger(TriggerEffect[RoundCleanup]):
                 ),
             )
         )
+
+
+@dataclasses.dataclass(eq=False)
+class PureInnocenceTrigger(TriggerEffect[KillUpkeep]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+    source: Source
+
+    def should_trigger(self, event: KillUpkeep) -> bool:
+        return event.unit == self.unit and get_source_unit(event.source)
+
+    def resolve(self, event: KillUpkeep) -> None:
+        apply_status_to_unit(get_source_unit(event.source), "shame", self.source)
 
 
 @dataclasses.dataclass(eq=False)
