@@ -24,7 +24,6 @@ from game.effects.modifiers import (
     PusherModifier,
     ResistanceModifier,
     RootedModifier,
-    SoilCommunionModifier,
     SourceTypeResistanceModifier,
     StealthModifier,
     StealthOnTerrainModifier,
@@ -356,15 +355,6 @@ class OldBones(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(OldBonesTrigger(self.parent, self))
-
-
-class SoilCommunion(StaticAbilityFacet):
-    """
-    Allied units with 1 range on forests have +1 energy regen.
-    """
-
-    def create_effects(self) -> None:
-        self.register_effects(SoilCommunionModifier(self.parent, 1))
 
 
 class ForestDweller(StaticAbilityFacet):

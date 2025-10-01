@@ -994,12 +994,13 @@ class BellStruckTrigger(TriggerEffect[ReceiveDamage]):
     priority: ClassVar[int] = TriggerLayers.EXHAUST
 
     unit: Unit
+    source: Source
 
     def should_trigger(self, event: ReceiveDamage) -> bool:
         return event.unit == self.unit and event.signature.amount >= 3
 
     def resolve(self, event: ReceiveDamage) -> None:
-        ES.resolve(ExhaustUnit(event.unit))
+        apply_status_to_unit(event.unit, "stunned", self.source, stacks=1)
 
 
 @dataclasses.dataclass(eq=False)

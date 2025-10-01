@@ -25,7 +25,6 @@ class Peck(MeleeAttackFacet):
 class BurningSting(MeleeAttackFacet):
     """Applies 1 stack of <burn>."""
 
-    cost = MovementCost(1)
     damage = 1
 
     def resolve_post_damage_effects(self, defender: Unit) -> None:
@@ -495,6 +494,7 @@ class RoundhouseKick(MeleeAttackFacet):
 
 
 class ScratchAndBite(MeleeAttackFacet):
+    cost = MovementCost(1)
     damage = 2
 
 

@@ -98,6 +98,19 @@ class Grow(NoTargetActivatedAbility):
         ES.resolve(Heal(self.parent, 1, self))
 
 
+class PatchUp(TargetUnitActivatedAbility):
+    """
+    Heals 1.
+    """
+
+    cost = EnergyCost(2)
+    controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(Heal(target, 1, self))
+
+
 class HealBeam(TargetUnitActivatedAbility):
     """
     Heals 2.
@@ -307,7 +320,7 @@ class WardEvil(TargetUnitActivatedAbility):
     Applies <magic_ward> for 3 rounds.
     """
 
-    cost = EnergyCost(3) | MovementCost(1)
+    cost = EnergyCost(2) | MovementCost(1)
     controller_target_option = ControllerTargetOption.ALLIED
     can_target_self = False
 
@@ -317,21 +330,21 @@ class WardEvil(TargetUnitActivatedAbility):
 
 class WishHarm(TargetUnitActivatedAbility):
     """
-    Applies 2 stacks of <frail> for 2 rounds.
+    Applies 3 stacks of <frail> for 2 rounds.
     """
 
-    cost = EnergyCost(2) | MovementCost(1)
+    cost = EnergyCost(3) | MovementCost(2)
     range = 2
     controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: Unit) -> None:
-        apply_status_to_unit(target, "frail", self, stacks=2, duration=2)
+        apply_status_to_unit(target, "frail", self, stacks=3, duration=2)
 
 
 class GuidedTrance(TargetUnitActivatedAbility):
     """Exhausts the target and it gains full energy."""
 
-    cost = EnergyCost(3) | MovementCost(1)
+    cost = EnergyCost(2) | MovementCost(1)
     controller_target_option = ControllerTargetOption.ALLIED
     can_target_self = False
     explain_qualifier_filter = "ready"
@@ -346,7 +359,7 @@ class GuidedTrance(TargetUnitActivatedAbility):
 
 class SpiritProjection(TargetHexActivatedAbility):
     """
-    Apply <glimpse> to the target hex. Then up to 2 times, choose another hex adjacent to the last chosen hex,
+    Apply <glimpse> to the target hex. Then up to 3 times, choose another hex adjacent to the last chosen hex,
     and apply <glimpse> to that as well.
     """
 
@@ -359,7 +372,7 @@ class SpiritProjection(TargetHexActivatedAbility):
     def perform(self, target: Hex) -> None:
         current_hex = target
         apply_status_to_hex(current_hex, "glimpse", self)
-        for _ in range(2):
+        for _ in range(3):
             decision = GS.make_decision(
                 self.parent.controller,
                 SelectOptionDecisionPoint(
@@ -462,8 +475,8 @@ class Jump(TargetHexActivatedAbility):
 class PsychicCommand(TargetUnitActivatedAbility):
     """Activates it."""
 
-    cost = EnergyCost(2)
-    range = 3
+    cost = EnergyCost(3)
+    range = 2
     combinable = True
     can_target_self = False
 
@@ -511,11 +524,13 @@ class RoyalJelly(TargetUnitActivatedAbility):
 
 class SummonBees(TargetHexActivatedAbility):
     """
-    Spawns a [bee_swarm] on the target hex.
+    Spawns a [bee_swarm] with <ephemeral> for 1 round on the target hex.
     """
 
     cost = MovementCost(2) | EnergyCost(3)
     range = 2
+    requires_los = False
+    requires_vision = False
     requires_empty = True
 
     def perform(self, target: Hex) -> None:
@@ -943,7 +958,7 @@ class VerdantFlash(TargetHexActivatedAbility):
     Turns the terrain into Forest.
     """
 
-    cost = EnergyCost(3) | MovementCost(1)
+    cost = EnergyCost(2) | MovementCost(1)
     explain_hex_alias = "plains"
 
     def filter_hex(self, hex_: Hex) -> bool:
@@ -990,7 +1005,7 @@ class DrawSpring(TargetHexActivatedAbility):
     Applies <underground_spring> for 2 rounds.
     """
 
-    cost = EnergyCost(3) | MovementCost(2)
+    cost = EnergyCost(2) | MovementCost(2)
     range = 3
 
     def perform(self, target: Hex) -> None:
@@ -1231,30 +1246,19 @@ class Hitch(TargetUnitActivatedAbility):
         apply_status_to_unit(target, "hitched", self)
 
 
-class CoordinatedManeuver(ActivatedAbilityFacet[list[Unit]]):
+class CoordinatedManeuver(TargetUnitActivatedAbility):
     """
-    Activates them.
+    Activates it.
     """
 
-    cost = EnergyCost(3) | MovementCost(1)
+    cost = EnergyCost(2) | MovementCost(1)
+    combinable = True
+    range = 3
+    controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
 
-    @classmethod
-    def get_target_explanation(cls) -> str | None:
-        return "Target 1 or 2 other ready allied units within 3 range LoS."
-
-    def get_target_profile(self) -> TargetProfile[list[Unit]] | None:
-        if units := find_units_within_range(
-            self.parent,
-            3,
-            with_controller=ControllerTargetOption.ALLIED,
-            can_include_self=False,
-            additional_filter=lambda u: u.ready,
-        ):
-            return NOfUnits(units, 2, ["select target"] * 2, min_count=1)
-
-    def perform(self, target: list[Unit]) -> None:
-        for unit in target:
-            ES.resolve(QueueUnitForActivation(unit))
+    def perform(self, target: Unit) -> None:
+        ES.resolve(QueueUnitForActivation(target))
 
 
 class LayMine(TargetHexActivatedAbility):
@@ -1499,7 +1503,7 @@ class SpurIntoRage(TargetUnitActivatedAbility):
     Applies <senseless_rage> for 2 rounds.
     """
 
-    cost = EnergyCost(3) | MovementCost(1)
+    cost = EnergyCost(2) | MovementCost(1)
     range = 3
     can_target_self = False
 
@@ -1625,7 +1629,7 @@ class FleaSwarm(TargetUnitActivatedAbility):
     """
 
     cost = EnergyCost(4) | MovementCost(1)
-    range = 2
+    range = 3
     controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: Unit) -> None:
@@ -1634,18 +1638,18 @@ class FleaSwarm(TargetUnitActivatedAbility):
 
 class Disempower(TargetTriHexActivatedAbility):
     """
-    Applies <sapping_field> for 2 rounds.
+    Applies <sapping_field> for 1 round.
     """
 
-    cost = EnergyCost(3)
+    cost = EnergyCost(2)
     range = 3
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:
-            apply_status_to_hex(h, "sapping_field", self, duration=2)
+            apply_status_to_hex(h, "sapping_field", self, duration=1)
 
 
-class Torpor(TargetTriHexActivatedAbility):
+class TorporFumes(TargetTriHexActivatedAbility):
     """
     Applies 2 stacks of <tired> to units on target hexes.
     """
@@ -1753,10 +1757,10 @@ class GiantPincers(ActivatedAbilityFacet[list[Hex]]):
 
 class Evacuate(TargetUnitActivatedAbility):
     """
-    Teleports the target unit to the target hex.
+    Teleports the target unit to the target hex, then exhausts it.
     """
 
-    cost = EnergyCost(3) | ExclusiveCost()
+    cost = EnergyCost(2) | ExclusiveCost()
 
     @classmethod
     def get_target_explanation(cls) -> str | None:
@@ -1783,6 +1787,7 @@ class Evacuate(TargetUnitActivatedAbility):
     def perform(self, target: list[Hex | Unit]) -> None:
         unit, to_ = target
         ES.resolve(MoveUnit(unit, to_, external=True))
+        ES.resolve(ExhaustUnit(unit))
 
 
 class CriticalAid(TargetUnitActivatedAbility):

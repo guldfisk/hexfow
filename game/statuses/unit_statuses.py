@@ -244,13 +244,13 @@ class LuckyCharm(RefreshableMixin, UnitStatus):
 class BellStruck(RefreshableMixin, UnitStatus):
     """
     When this unit receives 3 or more damage (after terrain reductions, before any
-    other modifiers), it is exhausted.
+    other modifiers), apply 1 stack of <stunned> to it.
     """
 
     default_intention = StatusIntention.DEBUFF
 
     def create_effects(self) -> None:
-        self.register_effects(BellStruckTrigger(self.parent))
+        self.register_effects(BellStruckTrigger(self.parent, self))
 
 
 class MortallyWounded(UnitStatus):

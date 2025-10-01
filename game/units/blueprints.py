@@ -53,6 +53,7 @@ from game.units.facets.activated_abilities import (
     Mortar,
     NaturalBlessing,
     OpenGate,
+    PatchUp,
     Poof,
     PsychicCommand,
     PublicExecution,
@@ -85,7 +86,7 @@ from game.units.facets.activated_abilities import (
     Sweep,
     Terrorize,
     TidyUp,
-    Torpor,
+    TorporFumes,
     Translocate,
     TugIn,
     TurboTune,
@@ -223,7 +224,6 @@ from game.units.facets.static_abilities import (
     SlimyLocomotion,
     SlimySkin,
     SludgeTrail,
-    SoilCommunion,
     SootDweller,
     Stakeout,
     StayingPower,
@@ -514,7 +514,7 @@ LITTLE_ENGINE = UnitBlueprint(
 
 OTTER_SCOUT = UnitBlueprint(
     "Otter Scout",
-    health=5,
+    health=4,
     speed=3,
     sight=2,
     size=Size.SMALL,
@@ -585,12 +585,12 @@ GOBLIN_ASSASSIN = UnitBlueprint(
 
 HARMONIOUS_DRUID = UnitBlueprint(
     "Harmonious Druid",
-    health=4,
+    health=5,
     speed=3,
     sight=2,
     energy=5,
-    facets=[NaturalBlessing, VerdantFlash, ForestDweller, SoilCommunion],
-    price=5,
+    facets=[NaturalBlessing, VerdantFlash, ForestDweller],
+    price=6,
 )
 
 HARROWED_MYSTICIST = UnitBlueprint(
@@ -679,7 +679,7 @@ MEDIC = UnitBlueprint(
     speed=3,
     sight=2,
     energy=5,
-    facets=[HealBeam],
+    facets=[PatchUp, HealBeam],
     price=6,
 )
 
@@ -769,7 +769,7 @@ MISCHIEVOUS_GODMOTHER = UnitBlueprint(
     sight=2,
     energy=6,
     facets=[TurnToRabbit, TugIn, FaerieDust],
-    price=7,
+    price=6,
 )
 
 ZONE_SKIRMISHER = UnitBlueprint(
@@ -788,7 +788,7 @@ BEE_SHAMAN = UnitBlueprint(
     sight=2,
     energy=6,
     facets=[SummonBees, RoyalJelly],
-    price=8,
+    price=7,
 )
 
 BLASTER_DROID = UnitBlueprint(
@@ -815,7 +815,7 @@ BLOOD_FEUD_WARLOCK = UnitBlueprint(
     health=5,
     speed=3,
     sight=2,
-    energy=6,
+    energy=5,
     facets=[SowDiscord, Scorn, SpurIntoRage],
     price=8,
 )
@@ -855,7 +855,7 @@ BELL_STRIKER_BRUTE = UnitBlueprint(
     speed=3,
     sight=2,
     facets=[BellHammer],
-    price=9,
+    price=10,
 )
 
 DJINN = UnitBlueprint(
@@ -1110,7 +1110,7 @@ RANK_DEFILER = UnitBlueprint(
     speed=2,
     sight=1,
     energy=6,
-    facets=[FleaSwarm, Torpor, Disempower],
+    facets=[FleaSwarm, TorporFumes, Disempower],
     price=11,
 )
 
@@ -1260,7 +1260,7 @@ BEE_SWARM = UnitBlueprint(
     speed=2,
     sight=1,
     size=Size.SMALL,
-    facets=[Stinger, Wild],
+    facets=[Stinger, TerrainSavvy, Wild],
     price=None,
 )
 
