@@ -82,7 +82,7 @@ export const UnitDetailsView = ({
         )}
         {/*TODO*/}
         <div>size: {sizeNames[(unit || details).size.toString()]}</div>
-        <div>price: {details.price}</div>
+        {details.price !== null ? <div>price: {details.price}</div> : null}
       </div>
       <div
         style={{

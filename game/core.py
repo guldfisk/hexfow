@@ -1084,13 +1084,20 @@ class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Seriali
             player == self.controller or GS.map.hex_off(self).is_visible_to(player)
         ) and not self.is_hidden_for(player)
 
-    # TODO should effects modifying get_legal_options on movement modify this instead?
     @modifiable
     def get_potential_move_destinations(self, _: None) -> list[Hex]:
         return [
             _hex
             for _hex in GS.map.get_neighbors_off(self)
-            if not _hex.is_visible_to(self.controller) or _hex.can_move_into(self)
+            if not _hex.is_visible_to(self.controller)
+            or _hex.can_move_into(self)
+            or (
+                (unit := GS.map.unit_on(_hex))
+                and unit.controller != self.controller
+                and not _hex.is_occupied_for(self)
+                and _hex.is_passable_to(self)
+                and unit.is_hidden_for(self.controller)
+            )
         ]
 
     @modifiable

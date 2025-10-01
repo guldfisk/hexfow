@@ -59,38 +59,10 @@ class TestGameType(GameType):
         )
 
         player_units = (
+            (GOBLIN_ASSASSIN,),
             (
-                # LANKY_PROWLER,
-                RANGER_GUIDE,
-                # INFERNO_TANK,
-                BELL_STRIKER_BRUTE,
-                # GNOME_COMMANDO,
-                RANK_DEFILER,
-                # ACID_SPITTER_IGUANA,
-                # EFFORTLESS_ATHLETE,
-                # ANCIENT_ALTRUIST,
-                # NOTORIOUS_OUTLAW,
-                # BULLDOZER,
-                # CHAINSAW_SADIST,
-                # JOLLY_HERBALIST,
-                # PRIMEVAL_TORTOISE,
-                # UNDERHANDED_HEXMAGE,
-                # BLOOD_FEUD_WARLOCK,
-            ),
-            (
-                MEDIC,
-                FRONTLINE_TACTICIAN,
-                # INFERNO_TANK,
-                # CYCLOPS,
-                # GNOME_COMMANDO,
-                # INNOCENT_LAMB,
-                # TERRAFORMER_MAGE,
-                # DJINN,
-                GIANT_BATTLE_CRAB,
-                # IMPARTIAL_OBSERVER,
-                # COMBAT_ENGINEER,
-                # LIGHT_ARCHER,
-                # UNDERHANDED_HEXMAGE,
+                LUMBERING_PILLAR,
+                BEE_SHAMAN,
             ),
         )
 
