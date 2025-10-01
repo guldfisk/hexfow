@@ -583,16 +583,6 @@ GOBLIN_ASSASSIN = UnitBlueprint(
     price=5,
 )
 
-HARMONIOUS_DRUID = UnitBlueprint(
-    "Harmonious Druid",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[NaturalBlessing, VerdantFlash, ForestDweller],
-    price=6,
-)
-
 HARROWED_MYSTICIST = UnitBlueprint(
     "Harrowed Mysticist",
     health=4,
@@ -673,6 +663,16 @@ GLASS_GOLEM = UnitBlueprint(
     price=6,
 )
 
+HARMONIOUS_DRUID = UnitBlueprint(
+    "Harmonious Druid",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[NaturalBlessing, VerdantFlash, ForestDweller],
+    price=6,
+)
+
 MEDIC = UnitBlueprint(
     "Medic",
     health=3,
@@ -680,6 +680,16 @@ MEDIC = UnitBlueprint(
     sight=2,
     energy=5,
     facets=[PatchUp, HealBeam],
+    price=6,
+)
+
+MISCHIEVOUS_GODMOTHER = UnitBlueprint(
+    "Mischievous Godmother",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[TurnToRabbit, TugIn, FaerieDust],
     price=6,
 )
 
@@ -705,7 +715,7 @@ RHINO_BEETLE = UnitBlueprint(
 
 RIFLE_INFANTRY = UnitBlueprint(
     "Rifle Infantry",
-    health=5,
+    health=4,
     speed=3,
     sight=2,
     facets=[Rifle],
@@ -752,6 +762,16 @@ ACID_SPITTER_IGUANA = UnitBlueprint(
     price=7,
 )
 
+BEE_SHAMAN = UnitBlueprint(
+    "Bee Shaman",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[SummonBees, RoyalJelly],
+    price=7,
+)
+
 GIANT_SLAYER_MOUSE = UnitBlueprint(
     "Giant Slayer Mouse",
     health=5,
@@ -762,32 +782,12 @@ GIANT_SLAYER_MOUSE = UnitBlueprint(
     price=7,
 )
 
-MISCHIEVOUS_GODMOTHER = UnitBlueprint(
-    "Mischievous Godmother",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=6,
-    facets=[TurnToRabbit, TugIn, FaerieDust],
-    price=6,
-)
-
 ZONE_SKIRMISHER = UnitBlueprint(
     "ZONE Skirmisher",
     health=6,
     speed=3,
     sight=2,
     facets=[StandardIssueBlaster, Engage],
-    price=7,
-)
-
-BEE_SHAMAN = UnitBlueprint(
-    "Bee Shaman",
-    health=4,
-    speed=3,
-    sight=2,
-    energy=6,
-    facets=[SummonBees, RoyalJelly],
     price=7,
 )
 
@@ -849,15 +849,6 @@ RANGER_GUIDE = UnitBlueprint(
     price=8,
 )
 
-BELL_STRIKER_BRUTE = UnitBlueprint(
-    "Bell-Striker Brute",
-    health=8,
-    speed=3,
-    sight=2,
-    facets=[BellHammer],
-    price=10,
-)
-
 DJINN = UnitBlueprint(
     "Djinn",
     health=4,
@@ -905,6 +896,15 @@ VELOCIRAPTOR = UnitBlueprint(
     sight=2,
     facets=[ViciousBite],
     price=9,
+)
+
+BELL_STRIKER_BRUTE = UnitBlueprint(
+    "Bell-Striker Brute",
+    health=8,
+    speed=3,
+    sight=2,
+    facets=[BellHammer],
+    price=10,
 )
 
 BLITZ_TROOPER = UnitBlueprint(
