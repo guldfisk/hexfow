@@ -17,6 +17,7 @@ from game.effects.modifiers import (
     HexFlatSightModifier,
     HexMoveOutPenaltyModifier,
     HexRevealedModifier,
+    HexStealthRevealedModifier,
     MappedOutModifier,
 )
 from game.effects.triggers import (
@@ -103,14 +104,17 @@ class BurningTerrain(HighestStackableRefreshableMixin, HexStatus):
 
 class Revealed(PerPlayerRefreshable, HexStatus):
     """
-    You have vision of this hex. This status is hidden for opponents.
+    You have vision of this hex. Reveals stealth units. This status is hidden for opponents.
     """
 
     def is_hidden_for(self, player: Player) -> bool:
         return player != self.controller
 
     def create_effects(self) -> None:
-        self.register_effects(HexRevealedModifier(self.parent, self.controller))
+        self.register_effects(
+            HexRevealedModifier(self.parent, self.controller),
+            HexStealthRevealedModifier(self.parent, self.controller),
+        )
 
 
 class Flare(PerPlayerRefreshable, HexStatus):

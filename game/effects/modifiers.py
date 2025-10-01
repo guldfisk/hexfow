@@ -49,6 +49,11 @@ class LegalOptions(IntEnum):
     MUST_ATTACK = auto()
 
 
+class IsHiddenLayer(IntEnum):
+    STEALTH = auto()
+    DETECTION = auto()
+
+
 @dataclasses.dataclass(eq=False)
 class AquaticModifier(StateModifierEffect[Unit, None, bool]):
     priority: ClassVar[int] = 1
@@ -166,7 +171,7 @@ def stealth_hidden_for(unit: Unit, player: Player) -> bool:
 
 @dataclasses.dataclass(eq=False)
 class StealthModifier(StateModifierEffect[Unit, Player, bool]):
-    priority: ClassVar[int] = 1
+    priority: ClassVar[int] = IsHiddenLayer.STEALTH
     # TODO is_hidden_for should prob be is_hidden_for(unit) instead of for (player)
     target: ClassVar[object] = Unit.is_hidden_for
 
@@ -180,7 +185,7 @@ class StealthModifier(StateModifierEffect[Unit, Player, bool]):
 
 
 class NotMovedStealthModifier(StateModifierEffect[Unit, Player, bool]):
-    priority: ClassVar[int] = 1
+    priority: ClassVar[int] = IsHiddenLayer.STEALTH
     target: ClassVar[object] = Unit.is_hidden_for
 
     def __init__(self, unit: Unit):
@@ -209,7 +214,7 @@ class NotMovedStealthModifier(StateModifierEffect[Unit, Player, bool]):
 
 @dataclasses.dataclass(eq=False)
 class ForestStealthModifier(StateModifierEffect[Unit, Player, bool]):
-    priority: ClassVar[int] = 1
+    priority: ClassVar[int] = IsHiddenLayer.STEALTH
     target: ClassVar[object] = Unit.is_hidden_for
 
     hex: Hex
@@ -227,7 +232,7 @@ class ForestStealthModifier(StateModifierEffect[Unit, Player, bool]):
 
 @dataclasses.dataclass(eq=False)
 class StealthOnTerrainModifier(StateModifierEffect[Unit, Player, bool]):
-    priority: ClassVar[int] = 1
+    priority: ClassVar[int] = IsHiddenLayer.STEALTH
     target: ClassVar[object] = Unit.is_hidden_for
 
     unit: Unit
@@ -592,6 +597,23 @@ class HexBlocksVisionModifier(StateModifierEffect[Hex, None, VisionObstruction])
         self, obj: Hex, request: None, value: VisionObstruction
     ) -> VisionObstruction:
         return VisionObstruction.FULL
+
+
+@dataclasses.dataclass(eq=False)
+class HexStealthRevealedModifier(StateModifierEffect[Unit, Player, bool]):
+    priority: ClassVar[int] = IsHiddenLayer.DETECTION
+    target: ClassVar[object] = Unit.is_hidden_for
+
+    space: Hex
+    controller: Player | None
+
+    def should_modify(self, obj: Unit, request: Player, value: bool) -> bool:
+        return obj == GS.map.unit_on(self.space) and (
+            request == self.controller or self.controller is None
+        )
+
+    def modify(self, obj: Unit, request: Player, value: bool) -> bool:
+        return False
 
 
 @dataclasses.dataclass(eq=False)

@@ -59,9 +59,13 @@ class TestGameType(GameType):
         )
 
         player_units = (
-            (GOBLIN_ASSASSIN,),
             (
-                LUMBERING_PILLAR,
+                GOBLIN_ASSASSIN,
+                KEEN_ARCHER,
+            ),
+            (
+                BLIND_ORACLE,
+                # LUMBERING_PILLAR,
                 BEE_SHAMAN,
             ),
         )
