@@ -40,6 +40,7 @@ from game.effects.replacements import (
     LastStandReplacement,
     PerTurnMovePenaltyIgnoreReplacement,
     PusherReplacement,
+    RockSteadyReplacement,
     StayingPowerReplacement,
     StrainedPusherReplacement,
     UnitImmuneToStatusReplacement,
@@ -167,13 +168,15 @@ class TerrainSavvy(StaticAbilityFacet):
 
 class RockSteady(StaticAbilityFacet):
     """
-    This unit can't be moved by other units, and it's speed is always 2.
+    This unit can't be moved by other units, its speed is always 2,
+    and its movement points can't be modified by effects.
     """
 
     def create_effects(self) -> None:
         self.register_effects(
             ExternallyImmobileReplacement(self.parent),
             UnitSetSpeedModifier(self.parent, 2),
+            RockSteadyReplacement(self.parent),
         )
 
 

@@ -10,6 +10,7 @@ from game.events import (
     Damage,
     Heal,
     Kill,
+    ModifyMovementPoints,
     MovePenalty,
     MoveUnit,
     ReadyUnit,
@@ -271,6 +272,18 @@ class StayingPowerReplacement(ReplacementEffect[SufferDamage]):
 
     def resolve(self, event: SufferDamage) -> None:
         ES.resolve(SufferDamage(event.unit, event.signature.branch(lethal=False)))
+
+
+@dataclasses.dataclass(eq=False)
+class RockSteadyReplacement(ReplacementEffect[ModifyMovementPoints]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+
+    def can_replace(self, event: ModifyMovementPoints) -> bool:
+        return event.unit == self.unit
+
+    def resolve(self, event: ModifyMovementPoints) -> None: ...
 
 
 @dataclasses.dataclass(eq=False)

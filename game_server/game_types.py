@@ -60,10 +60,13 @@ class TestGameType(GameType):
 
         player_units = (
             (
-                GOBLIN_ASSASSIN,
-                KEEN_ARCHER,
+                # GOBLIN_ASSASSIN,
+                # KEEN_ARCHER,
+                EFFORTLESS_ATHLETE,
+                GRANITE_GOLEM,
             ),
             (
+                ANKLE_BITER_NUISANCE,
                 BLIND_ORACLE,
                 # LUMBERING_PILLAR,
                 BEE_SHAMAN,
