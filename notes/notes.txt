@@ -1,11 +1,4 @@
 reactive armor
-delayed aoe damage
-rupture
-blind blood hunter
-isolation hunter
-delayed long range tp
-anti tp aura
-compulsive impatience, aoe debuff - when player takes action with unit that is not this unit while this unit is ready, this units suffers 1 pure damage, removed when this unit is activated.
 soul tether - debuff two targets, keeps track of maximum seen distance between units, both suffer a pure damage for each distance max seen distance is extended.
 corpse explosion - aoe - multiple corpses same square combined into single damage instance - corpses of dead units explode recursively
 star shaped aoe
@@ -65,18 +58,6 @@ raise dead - corpse as generic skeleton - merge multiple corpses into more power
 energy overcharge
 ambush trapdoor spider
 storm summoner - AA
-day/night cycle?
-    night -1 sight (min 1)
-    amount of rounds of day/night in a cycle, and where in the cycle the game starts can vary depending on map
-weather (bloat, this time for real). but maybe these can just be like global statuses on certain maps?
-    hot
-        units ending turn with no unspent movement points suffer 1 damage
-    cold
-        units ending round with no adjacent allied units suffer 1 damage
-    rain
-        -1 sight (min 1)
-    windy
-        -1 movement air units
 identities?
     could have resource bonuses, like:
         all units below n points -1 point cost
@@ -109,7 +90,6 @@ this one's dumb, like the shrivel idea, though:
             stackable
             -1 max health
 meteor strike jump
-heal to minimum threshold
 greater cleric
 frost archmage
 illusion
@@ -121,12 +101,11 @@ buff - healed when damaged over threshold / debuffed
 debuff - double damage taken
 corpse explosion
 effect removes stacks/duration of all debuffs
-exhaustion - debuff stack n - when unit ends non skip action, takes n damage. when ends skip action, remove stack of exhaustion
-werewolf
 
-civilian {4p} x3
-health 3, movement 3, sight 1, M
-- at the end of the round, if this unit is in the middle of the board, sacrifice it. you gain 3 points
+delayed aoe damage
+rupture
+isolation hunter
+delayed long range tp
 
 must use ability if able
 
@@ -142,8 +121,6 @@ babushka
 ready unit only allow movement
 bleeding - like poison but with duration.
 
-ranged attacks attack power cap?
-
 gas like soot only damage ends turn / end of round for active units
 
 unit types? - mechanical, biological, magical?
@@ -153,7 +130,6 @@ hedgehog beast
 inkling
 snack
 roach
-ranger
 
 croc
 pharaoh
@@ -173,3 +149,4 @@ damaged when debuffed
 shake it off
 all units immune to damage grace
 keen senses
+may move back to beginning position at end of turn buff

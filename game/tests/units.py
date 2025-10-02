@@ -1,5 +1,6 @@
 from game.core import MeleeAttackFacet, UnitBlueprint
 from game.units.facets.attacks import LightBow
+from game.units.facets.static_abilities import Immobile, Prickly
 from game.values import Size
 
 
@@ -24,4 +25,14 @@ TEST_LIGHT_ARCHER = UnitBlueprint(
     sight=2,
     facets=[LightBow],
     price=3,
+)
+
+TEST_CACTUS = UnitBlueprint(
+    name="Cactus",
+    health=3,
+    speed=0,
+    sight=0,
+    energy=2,
+    facets=[Prickly, Immobile],
+    price=None,
 )

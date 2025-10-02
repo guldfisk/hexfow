@@ -1011,33 +1011,6 @@ forbidden awakening
         +1 sight
 - whenever an allied unit within 4 range is damaged, this unit gains a stack of sanguine energy.
 
-terraforming mage {12rpp} x1
-health 5, movement 3, sight 2, energy 6, S
-raise terrain
-    ability 3 energy
-    target hex 3 range NLoS, -1 movement
-    if terrain is lowground applies status raised
-        terrain is elevated
-flatten terrain
-    ability 3 energy
-    target hex 3 range NLoS, -1 movement
-    if target is elevated applies status lowered
-        terrain is lowground
-fault line
-    aoe ability 2 energy
-    aoe type line length 3 range 3 NLoS, -2 movement
-    deals terrain piercing aoe damage to each ground unit equal to the aoe terrain protection (excluding elevation bonus) of their hex.
-landslide
-    ability 2 energy
-    target hex 3 range NLoS, -2 movement
-    if hex is lowground, deals 2*(amount of adjacent high ground hexes) (+1 if any of those are snow) aoe damage to ground unit on hex.
-magma fissure
-    ability 2 energy
-    target hex 3 range NLoS, -1 movement
-    applies status magma to hex
-        unstackable
-        when ground units moves in, melee attacks into, and at the end of round, applies 2 burn
-
 ghoul titan {12ggpp}
 health 9, movement 2, sight 2, energy 3, L
 smash
@@ -1084,24 +1057,6 @@ silence
     applies silenced for 2 rounds
 - when dies applies regenerating lich to hex for 2 rounds
     when expires remove lich corpse and summon lich with 3 energy
-
-vampire {12wggp} x1
-health 7, movement 2, sight 2, energy 4, M
-bite
-    melee attack
-    4 damage, no movement
-    heals this unit 2 damage
-blink
-    combinable ability 2 energy
-    target hex range 2 NLoS
-    teleport to hex
-dissolve into mist
-    combinable ability 1 energy
-    suffer 2 damage
-    until next actions gains mist form
-        can not be attacked
-        disarmed
-        ignores terrain penalties
 
 lindworm {13w} x1
 health 8, movement 3, sight 2, energy 4, M

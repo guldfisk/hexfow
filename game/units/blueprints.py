@@ -31,7 +31,6 @@ from game.units.facets.activated_abilities import (
     GrantCharm,
     GrantWish,
     GreaseTheGears,
-    Grow,
     GuidedTrance,
     HandGrenade,
     HealBeam,
@@ -442,7 +441,7 @@ KEEN_ARCHER = UnitBlueprint(
 
 MARSHMALLOW_TITAN = UnitBlueprint(
     name="Marshmallow Titan",
-    health=11,
+    health=10,
     speed=2,
     sight=1,
     armor=-1,
@@ -653,6 +652,16 @@ BOMB_TRUCK = UnitBlueprint(
     flavor="Nothing stops the mail.",
 )
 
+GIANT_SLAYER_MOUSE = UnitBlueprint(
+    "Giant Slayer Mouse",
+    health=4,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    facets=[Slay, LastStand],
+    price=6,
+)
+
 GLASS_GOLEM = UnitBlueprint(
     "Glass Golem",
     health=1,
@@ -772,25 +781,6 @@ BEE_SHAMAN = UnitBlueprint(
     price=7,
 )
 
-GIANT_SLAYER_MOUSE = UnitBlueprint(
-    "Giant Slayer Mouse",
-    health=5,
-    speed=3,
-    sight=2,
-    size=Size.SMALL,
-    facets=[Slay, LastStand],
-    price=7,
-)
-
-ZONE_SKIRMISHER = UnitBlueprint(
-    "ZONE Skirmisher",
-    health=6,
-    speed=3,
-    sight=2,
-    facets=[StandardIssueBlaster, Engage],
-    price=7,
-)
-
 BLASTER_DROID = UnitBlueprint(
     "Blaster Droid",
     health=4,
@@ -829,6 +819,16 @@ CAMELBACK_OUTRIDER = UnitBlueprint(
     price=8,
 )
 
+DJINN = UnitBlueprint(
+    "Djinn",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[DancingSaber, GrantWish, MagicForm],
+    price=8,
+)
+
 GIANT_TOAD = UnitBlueprint(
     "Giant Toad",
     health=8,
@@ -849,14 +849,34 @@ RANGER_GUIDE = UnitBlueprint(
     price=8,
 )
 
-DJINN = UnitBlueprint(
-    "Djinn",
-    health=4,
+SLUDGE_SLUG = UnitBlueprint(
+    "Sludge Slug",
+    health=10,
+    speed=1,
+    sight=1,
+    size=Size.LARGE,
+    energy=3,
+    facets=[Spew, SludgeBelch, SludgeTrail, SlimyLocomotion, SlimySkin],
+    price=8,
+)
+
+TERRAFORMER_MAGE = UnitBlueprint(
+    "Terraformer Mage",
+    health=5,
     speed=3,
     sight=2,
-    energy=4,
-    facets=[DancingSaber, GrantWish, MagicForm],
-    price=9,
+    energy=6,
+    facets=[RaiseGround, FlattenGround, DrawSpring, MagmaFissure],
+    price=8,
+)
+
+ZONE_SKIRMISHER = UnitBlueprint(
+    "ZONE Skirmisher",
+    health=6,
+    speed=3,
+    sight=2,
+    facets=[StandardIssueBlaster, Engage],
+    price=8,
 )
 
 EFFORTLESS_ATHLETE = UnitBlueprint(
@@ -868,25 +888,21 @@ EFFORTLESS_ATHLETE = UnitBlueprint(
     price=9,
 )
 
-SLUDGE_SLUG = UnitBlueprint(
-    "Sludge Slug",
-    health=10,
-    speed=1,
-    sight=1,
-    size=Size.LARGE,
-    energy=3,
-    facets=[Spew, SludgeBelch, SludgeTrail, SlimyLocomotion, SlimySkin],
-    price=9,
-)
-
-TERRAFORMER_MAGE = UnitBlueprint(
-    "Terraformer Mage",
-    health=5,
+LEGENDARY_WRESTLER = UnitBlueprint(
+    "Legendary Wrestler",
+    health=7,
     speed=3,
     sight=2,
-    energy=6,
-    facets=[RaiseGround, FlattenGround, DrawSpring, MagmaFissure],
+    energy=4,
+    facets=[
+        Tackle,
+        FromTheTopRope,
+        Suplex,
+        CaughtInTheMatch,
+        HeelTurn,
+    ],
     price=9,
+    flavor="I need justice in my life: Here it comes.",
 )
 
 VELOCIRAPTOR = UnitBlueprint(
@@ -965,21 +981,14 @@ HOODED_EXECUTIONER = UnitBlueprint(
     price=10,
 )
 
-LEGENDARY_WRESTLER = UnitBlueprint(
-    "Legendary Wrestler",
-    health=7,
-    speed=3,
-    sight=2,
-    energy=4,
-    facets=[
-        Tackle,
-        FromTheTopRope,
-        Suplex,
-        CaughtInTheMatch,
-        HeelTurn,
-    ],
+RANK_DEFILER = UnitBlueprint(
+    "Rank Defiler",
+    health=6,
+    speed=2,
+    sight=1,
+    energy=6,
+    facets=[FleaSwarm, TorporFumes, Disempower],
     price=10,
-    flavor="I need justice in my life: Here it comes.",
 )
 
 REMORSELESS_SNIPER = UnitBlueprint(
@@ -1101,16 +1110,6 @@ PYROMANCER_ARTILLERIST = UnitBlueprint(
     sight=1,
     energy=5,
     facets=[FireStorm],
-    price=11,
-)
-
-RANK_DEFILER = UnitBlueprint(
-    "Rank Defiler",
-    health=6,
-    speed=2,
-    sight=1,
-    energy=6,
-    facets=[FleaSwarm, TorporFumes, Disempower],
     price=11,
 )
 
@@ -1273,17 +1272,6 @@ BLOOD_HOMUNCULUS = UnitBlueprint(
     price=None,
 )
 
-CACTUS = UnitBlueprint(
-    name="Cactus",
-    health=3,
-    speed=0,
-    sight=0,
-    energy=2,
-    starting_energy=0,
-    facets=[Prickly, Immobile, Grow],
-    price=None,
-)
-
 DOOMBOT_3000 = UnitBlueprint(
     "Doombot 3000",
     identifier="doombot_3000",
@@ -1304,18 +1292,6 @@ HORROR_SPAWN = UnitBlueprint(
     sight=1,
     size=Size.SMALL,
     facets=[SerratedBeak],
-    price=None,
-)
-
-LOTUS_BUD = UnitBlueprint(
-    name="Lotus Bud",
-    health=3,
-    speed=0,
-    sight=0,
-    energy=2,
-    starting_energy=0,
-    size=Size.SMALL,
-    facets=[Immobile, Nourishing, Bloom],
     price=None,
 )
 
@@ -1349,6 +1325,19 @@ SENTRY_TURRET = UnitBlueprint(
     price=None,
 )
 
+LOTUS_BUD = UnitBlueprint(
+    name="Lotus Bud",
+    health=3,
+    speed=0,
+    sight=0,
+    energy=2,
+    starting_energy=0,
+    size=Size.SMALL,
+    facets=[Immobile, Nourishing, Bloom],
+    price=1,
+    max_count=0,
+)
+
 TELEPATH = UnitBlueprint(
     "Telepath",
     health=4,
@@ -1356,7 +1345,8 @@ TELEPATH = UnitBlueprint(
     sight=1,
     energy=4,
     facets=[InternalStruggle, TelepathicSpy],
-    price=None,
+    price=7,
+    max_count=0,
 )
 
 CAPRICIOUS_TRICKSTER = UnitBlueprint(

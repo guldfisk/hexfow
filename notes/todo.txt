@@ -14,6 +14,8 @@ army editor
 map editor
     round restricted objectives
 
+    viewer mode
+
     unit details
 
 game
@@ -29,9 +31,16 @@ game
 
     well-defined effects order
     well-defined order of iterating units on map
+
     deployment zone detail view during game
 
 ui
+    changes animations
+        unit move
+        damage/heal
+        status add/remove
+        target arrows
+
     facet/related statuses overflow details
     better indication of which facet will be used to perform action
 

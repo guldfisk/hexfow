@@ -85,33 +85,6 @@ scan
     aoe type triangle size 1 range 8 NLoS, no movement
     applies revealed status to terrain for 1 round
 
-force bubble droid {8} x2
-health 6, movement 3, sight 2, M
-blast
-    ranged attack
-    3 damage, range 2, -1 movement
-- at the beginning of each round, if this unit does not have a stack of shield, it gains a stack of shield.
-
-acid spitter iguana {8p} x2
-health 6, movement 3, sight, M
-acid spit
-    ranged attack
-    3 damage, 2 range, -1 movement
-    apply corrosion for 2 rounds to target
-        stackable, refreshable
-        -1 armor
-- when a unit melee attacks this unit, apply corrosion to the attacker for 2 rounds
-- +1 ranged protection against non-adjacent
-
-lanky prowler {8w} x1
-health 6, movement 4, sight 2, M
-strangle
-    melee attack
-    3 damage, -1 movement
-    +1 damage against M, +2 against S
-- ignores first terrain movement penalty each turn
-- stealth on your turn
-
 ursine warrior {8g} x2
 health 9, movement 3, sight 2, M
 maul
@@ -202,23 +175,6 @@ spawn
     -2 movement
     create an exhausted horror spawn on that space
 
-sniper {9rr} x2
-health 3, movement 3, sight 2, S
-snipe
-    ranged attack
-    4 damage, 4 range, no movement
-    cannot target adjacent units
-    -2 damage against air
-- stealth while not moving
-
-fearsome ogre {10g} x2
-health 9, movement 3, sight 2, L
-bash
-    melee attack
-    5 damage, -1 movement
-    +1 damage against S
-- adjacent enemy units have -1 attack power
-
 porcupine beast {10g} x1
 health 7, movement 3, sight 2, M
 claws
@@ -266,12 +222,23 @@ spin web
         to the hex
 - stealth while on web
 
-giant turtle {12gggp} x1
-health 10, movement 2, armor 3, sight 2, L
+vampire {12wggp} x1
+health 7, movement 2, sight 2, energy 4, M
 bite
     melee attack
-    4 damage, -1 movement
-- at the beginning of each round, if this unit does not have a stack of vigor, it gains one.
+    4 damage, no movement
+    heals this unit 2 damage
+blink
+    combinable ability 2 energy
+    target hex range 2 NLoS
+    teleport to hex
+dissolve into mist
+    combinable ability 1 energy
+    suffer 2 damage
+    until next actions gains mist form
+        can not be attacked
+        disarmed
+        ignores terrain penalties
 
 hydra {14gg} x1
 health 11, movement 3, sight 2, L

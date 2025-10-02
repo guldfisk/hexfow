@@ -46,8 +46,8 @@ from game.map.geometry import hex_circle
 from game.map.terrain import Plains, Water
 from game.tests.conftest import TestScope
 from game.tests.test_terrain import InstantDamageMagma
-from game.tests.units import TEST_CHICKEN, TEST_LIGHT_ARCHER
-from game.units.blueprints import CACTUS, LUMBERING_PILLAR, MARSHMALLOW_TITAN
+from game.tests.units import TEST_CACTUS, TEST_CHICKEN, TEST_LIGHT_ARCHER
+from game.units.blueprints import LUMBERING_PILLAR, MARSHMALLOW_TITAN
 from game.values import Size
 
 
@@ -426,7 +426,7 @@ def unit_spawner(ground_map: HexMap, player1: Player) -> UnitSpawner:
 
 def test_attack(unit_spawner: UnitSpawner) -> None:
     chicken = unit_spawner.spawn(TEST_CHICKEN)
-    cactus = unit_spawner.spawn(CACTUS)
+    cactus = unit_spawner.spawn(TEST_CACTUS)
 
     ES.resolve(
         Hit(attacker=chicken, defender=cactus, attack=chicken.get_primary_attack())

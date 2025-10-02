@@ -91,13 +91,6 @@ class Bloom(NoTargetActivatedAbility):
         ES.resolve(Kill(self.parent, self))
 
 
-class Grow(NoTargetActivatedAbility):
-    cost = EnergyCost(2)
-
-    def perform(self, target: None) -> None:
-        ES.resolve(Heal(self.parent, 1, self))
-
-
 class PatchUp(TargetUnitActivatedAbility):
     """
     Heals 1.
