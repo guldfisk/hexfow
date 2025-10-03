@@ -19,7 +19,9 @@ import { getAdditionalDetails } from "../../details/additional.ts";
 const mainSlice = createSlice({
   name: "application",
   initialState: {
+    previousGameState: null,
     gameState: null,
+    doAnimations: false,
     gameStateId: 0,
     shouldRerender: true,
     gameObjectDetails: null,
@@ -31,7 +33,9 @@ const mainSlice = createSlice({
     additionalDetailsIndex: null,
     actionFilter: null,
   } as {
+    previousGameState: GameState | null;
     gameState: GameState | null;
+    doAnimations: boolean;
     gameStateId: number;
     shouldRerender: boolean;
     gameObjectDetails: GameObjectDetails | null;
@@ -45,6 +49,11 @@ const mainSlice = createSlice({
   },
   reducers: {
     receiveGameState: (state, action: PayloadAction<GameStateMessage>) => {
+      state.doAnimations = !!(
+        state.gameState &&
+        state.gameState.player == action.payload.game_state.player
+      );
+      state.previousGameState = state.gameState;
       state.gameState = action.payload.game_state;
       state.gameStateId = action.payload.count;
       state.menuData = null;
@@ -55,6 +64,7 @@ const mainSlice = createSlice({
     },
     renderedGameState: (state) => {
       state.shouldRerender = false;
+      state.doAnimations = false;
     },
     loadedImage: (state) => {
       state.shouldRerender = true;

@@ -1,8 +1,8 @@
 import "../../common.css";
 
-import { Application, Container, Graphics } from "pixi.js";
+import { Application, Container, Graphics, Ticker } from "pixi.js";
 
-import { loadGameTextures } from "./textures.ts";
+import { backgroundLoadTextures, loadGameTextures } from "./textures.ts";
 import { renderMap } from "./rendering.ts";
 import { createRoot } from "react-dom/client";
 import { StrictMode } from "react";
@@ -21,6 +21,7 @@ import { Message } from "../interfaces/messages.ts";
 import { TakeAction } from "./actions/interface.ts";
 import { getBaseActions } from "./actions/actionSpace.ts";
 import { ccToKey } from "../geometry.ts";
+import { MapAnimation } from "./animations/interface.ts";
 
 const gameConnection = new WebSocket(
   `ws://${window.location.hostname}:8765/ws`,
@@ -72,11 +73,8 @@ async function main() {
   // TODO
   document.body.appendChild(app.canvas);
 
-  let map = new Container();
-  let previousGraphics: Graphics[] = [];
-  app.stage.addChild(map);
-
-  await loadGameTextures();
+  const gameObjectDetails = await loadGameTextures();
+  backgroundLoadTextures(gameObjectDetails);
 
   let isDragging = false;
   let worldTranslation = { x: 0, y: 0 };
@@ -227,20 +225,31 @@ async function main() {
 
   document.addEventListener("keydown", keyHandler);
 
-  app.ticker.add(() => {
+  let map = new Container();
+  let previousGraphics: Graphics[] = [];
+  app.stage.addChild(map);
+  let elapsed: number = 0;
+  let animations: MapAnimation[] = [];
+
+  app.ticker.add((ticker: Ticker) => {
     const state = store.getState();
 
     if (state.shouldRerender && state.gameState && state.gameObjectDetails) {
       app.stage.removeChild(map);
       const result = renderMap(app, state, state.gameState, makeDecision);
       map = result.map;
+      elapsed = 0;
+      animations = result.animations;
       app.stage.addChild(map);
       for (const g of previousGraphics) {
         g.destroy();
       }
       previousGraphics = result.graphics;
       store.dispatch(renderedGameState());
+    } else {
+      elapsed += ticker.deltaMS;
     }
+    animations = animations.filter((animation) => animation.play(elapsed));
     map.position = worldTranslation;
     map.scale = worldScale;
   });

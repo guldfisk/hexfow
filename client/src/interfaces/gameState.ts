@@ -311,4 +311,5 @@ export interface GameState {
   decision: Decision | null;
   active_unit_context: ActiveUnitContext | null;
   logs: LogLine[];
+  new_logs: LogLine[];
 }

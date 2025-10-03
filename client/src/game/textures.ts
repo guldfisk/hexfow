@@ -2,7 +2,11 @@ import { Assets, Texture } from "pixi.js";
 
 import { GameObjectDetails } from "../interfaces/gameObjectDetails.ts";
 import { getImageUrl, ResourceType } from "../image/images.ts";
-import {loadedImage, receivedGameObjectDetails, store} from "./state/store.ts";
+import {
+  loadedImage,
+  receivedGameObjectDetails,
+  store,
+} from "./state/store.ts";
 
 // TODO don't export?
 export const textureMap: { [key: string]: Texture } = {};
@@ -35,6 +39,20 @@ export const getTexture = (
   return textureMap[statusFallback];
 };
 
+const lazyLoad = (identifier: string, url: string) =>
+  Assets.load(url).then((texture) => (textureMap[identifier] = texture));
+
+export const backgroundLoadTextures = (
+  gameObjectDetails: GameObjectDetails,
+) => {
+  for (const status of Object.values(gameObjectDetails.statuses)) {
+    lazyLoad(status.identifier, getImageUrl("status", status.identifier));
+  }
+  for (const unit of Object.values(gameObjectDetails.units)) {
+    lazyLoad(unit.identifier, getImageUrl("unit", unit.identifier));
+  }
+};
+
 export const loadGameTextures = async () => {
   const promises: Promise<Texture>[] = [];
   const load = (identifier: string, url: string) =>
@@ -53,18 +71,20 @@ export const loadGameTextures = async () => {
     load(uiIdentifier, `/src/images/ui/${uiIdentifier}.png`);
   }
   for (const iconIdentifier of [
-    "shield_icon",
-    "shield_broken_icon",
-    "flag_icon",
-    "closed_eye_icon",
+    "shield",
+    "shield_broken",
+    "flag",
+    "closed_eye",
+    "damaged",
+    "healed",
   ]) {
-    load(iconIdentifier, `/src/images/icons/${iconIdentifier}.png`);
+    load(iconIdentifier, getImageUrl("icon", iconIdentifier));
   }
 
   load(unitFallback, unitFallbackUrl);
   load(statusFallback, statusFallbackUrl);
 
-  fetch(
+  return await fetch(
     `${window.location.protocol + "//" + window.location.hostname}:8000/game-object-details`,
   ).then(async (response) => {
     let jsonResponse: GameObjectDetails = await response.json();
@@ -78,5 +98,6 @@ export const loadGameTextures = async () => {
 
     await Promise.all(promises);
     store.dispatch(receivedGameObjectDetails(jsonResponse));
+    return jsonResponse;
   });
 };

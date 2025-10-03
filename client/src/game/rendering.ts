@@ -8,7 +8,7 @@ import {
   TextStyle,
   Texture,
 } from "pixi.js";
-import { GameState, Intention, Status } from "../interfaces/gameState.ts";
+import { GameState, Intention, Status, Unit } from "../interfaces/gameState.ts";
 import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
 import {
   addRCs,
@@ -38,6 +38,13 @@ import type { ColorSource } from "pixi.js/lib/color/Color";
 import moize from "moize";
 import { ViewContainer } from "pixi.js/lib/scene/view/ViewContainer";
 import { CanvasTextOptions } from "pixi.js/lib/scene/text/Text";
+import {
+  makeAnimation,
+  MapAnimation,
+  shake,
+  sigmoid,
+} from "./animations/interface.ts";
+import { CC, RC } from "../interfaces/geometry.ts";
 
 const selectionIconMap: { [key in selectionIcon]: string } = {
   ranged_attack: "hex_selection_ranged_attack",
@@ -205,6 +212,13 @@ const stacksStyle = new TextStyle({
   align: "center",
   stroke: { color: "white", width: 3 },
 });
+const damageStyle = new TextStyle({
+  fontFamily: "Arial",
+  fontSize: 50,
+  fill: "black",
+  align: "center",
+  stroke: { color: "white", width: 3 },
+});
 const menuStyle = new TextStyle({
   fontFamily: "Arial",
   fontSize: 40,
@@ -253,8 +267,13 @@ export const renderMap = (
   state: AppState,
   gameState: GameState,
   makeDecision: (payload: { [key: string]: any }) => void,
-): { map: Container; graphics: ViewContainer[] } => {
+): {
+  map: Container;
+  graphics: ViewContainer[];
+  animations: MapAnimation[];
+} => {
   const createdObjects: ViewContainer[] = [];
+  const animations: MapAnimation[] = [];
 
   const newGraphic = (context: GraphicsContext) => {
     const g = new Graphics(context);
@@ -272,6 +291,55 @@ export const renderMap = (
     const text = new Text(options);
     createdObjects.push(text);
     return text;
+  };
+
+  const makeStatusIndicator = (
+    status: Status,
+    intention: Intention | null,
+  ): Container => {
+    const statusContainer = new Container();
+    const statusSprite = newSprite(getTexture("status", status.type));
+
+    if (intention) {
+      const frame = intentionBorderMap[intention];
+      statusContainer.addChild(frame);
+    }
+
+    statusSprite.anchor = 0.5;
+    statusContainer.addChild(statusSprite);
+
+    const mask = newGraphic(!intention ? hexStatusFrame : statusFrame);
+    statusContainer.addChild(mask);
+    statusSprite.mask = mask;
+
+    if (!intention) {
+      const border = newGraphic(hexStatusBorder);
+      statusContainer.addChild(border);
+    }
+
+    if (status.stacks) {
+      const durationText = newText({
+        text: `${status.stacks}`,
+        style: stacksStyle,
+      });
+      durationText.x = -17;
+      durationText.y = -7;
+      durationText.anchor = 0.5;
+      statusContainer.addChild(durationText);
+    }
+
+    if (status.duration) {
+      const durationText = newText({
+        text: `${status.duration}`,
+        style: durationStyle,
+      });
+      durationText.x = 17;
+      durationText.y = -7;
+      durationText.anchor = 0.5;
+      statusContainer.addChild(durationText);
+    }
+
+    return statusContainer;
   };
 
   const map = new Container();
@@ -296,6 +364,68 @@ export const renderMap = (
           state.actionFilter,
         )
   ).hexActions;
+
+  const unitMoves: { [key: string]: { from: CC | null; to: CC | null } } = {};
+  const unitRotations: { [key: string]: boolean } = {};
+  const unitDamages: { [key: string]: number } = {};
+
+  const getUnitPositions = (gameState: GameState) => {
+    const values: { [key: string]: { cc: CC; unit: Unit } } = {};
+    for (const hexData of gameState.map.hexes) {
+      if (hexData.unit) {
+        values[hexData.unit.id] = { cc: hexData.cc, unit: hexData.unit };
+      }
+    }
+    return values;
+  };
+
+  const activeUnitId = gameState.active_unit_context
+    ? gameState.active_unit_context.unit.id
+    : null;
+
+  if (state.previousGameState && state.doAnimations) {
+    const currentUnits = getUnitPositions(gameState);
+    const previousUnits = getUnitPositions(state.previousGameState);
+    for (const { cc, unit } of Object.values(currentUnits)) {
+      if (
+        unit.id in previousUnits &&
+        !unit.is_ghost &&
+        !previousUnits[unit.id].unit.is_ghost
+      ) {
+        const prevUnit = previousUnits[unit.id].unit;
+        if (unit.damage != prevUnit.damage) {
+          unitDamages[unit.id] = unit.damage - prevUnit.damage;
+        }
+        if (unit.exhausted != prevUnit.exhausted) {
+          unitRotations[unit.id] = true;
+        }
+      }
+      if (
+        unit.id in previousUnits &&
+        !ccEquals(cc, previousUnits[unit.id].cc)
+      ) {
+        unitMoves[unit.id] = { from: previousUnits[unit.id].cc, to: cc };
+      }
+      if (activeUnitId && unit.id != activeUnitId) {
+        continue;
+      }
+      if (unit.id in previousUnits) {
+        if (unit.is_ghost && !previousUnits[unit.id].unit.is_ghost) {
+          unitMoves[unit.id] = { from: cc, to: null };
+        } else if (!unit.is_ghost && previousUnits[unit.id].unit.is_ghost) {
+          unitMoves[unit.id] = { from: null, to: cc };
+        }
+      } else {
+        if (unit.is_ghost) {
+          unitMoves[unit.id] = { from: cc, to: null };
+        } else {
+          unitMoves[unit.id] = { from: null, to: cc };
+        }
+      }
+    }
+  }
+
+  const actionTriggerZones: [Graphics[], RC][] = [];
 
   for (const hexData of gameState.map.hexes) {
     let realHexPosition = addRCs(ccToRC(hexData.cc), center);
@@ -329,7 +459,7 @@ export const renderMap = (
       hexContainer.addChild(coordinateLabel);
     }
 
-    const actionTriggerZones = [];
+    const hexActionTriggerZones = [];
 
     for (const [idx, action] of (ccToKey(hexData.cc) in actionSpace
       ? actionSpace[ccToKey(hexData.cc)].actions
@@ -356,7 +486,7 @@ export const renderMap = (
           action.do(event.getLocalPosition(hexContainer));
         }
       });
-      actionTriggerZones.push(triggerZone);
+      hexActionTriggerZones.push(triggerZone);
     }
 
     // TODO common trigger zone
@@ -373,68 +503,100 @@ export const renderMap = (
           store.dispatch(deactivateMenu());
         }
       });
-      actionTriggerZones.push(triggerZone);
+      hexActionTriggerZones.push(triggerZone);
     }
 
-    const makeStatusIndicator = (
-      status: Status,
-      intention: Intention | null,
-    ): Container => {
-      const statusContainer = new Container();
-      const statusSprite = newSprite(getTexture("status", status.type));
+    if (hexData.is_objective) {
+      const flagContainer = new Container();
 
-      if (intention) {
-        const frame = intentionBorderMap[intention];
-        statusContainer.addChild(frame);
+      flagContainer.x = -hexWidth / 2 + 30;
+      flagContainer.y = -hexSize / 2 + 20;
+
+      if (hexData.captured_by) {
+        flagContainer.addChild(
+          newGraphic(
+            getFlagCapturedIndicator(hexData.captured_by == gameState.player),
+          ),
+        );
       }
 
-      statusSprite.anchor = 0.5;
-      statusContainer.addChild(statusSprite);
+      const flagSprite = newSprite(textureMap["flag"]);
+      flagSprite.anchor = 0.5;
 
-      const mask = newGraphic(!intention ? hexStatusFrame : statusFrame);
-      statusContainer.addChild(mask);
-      statusSprite.mask = mask;
+      flagContainer.addChild(flagSprite);
+      hexContainer.addChild(flagContainer);
+    }
 
-      if (!intention) {
-        const border = newGraphic(hexStatusBorder);
-        statusContainer.addChild(border);
+    for (let [idx, status] of hexData.statuses.entries()) {
+      if (
+        !hexData.visible &&
+        status.duration !== null &&
+        hexData.last_visible_round !== null
+      ) {
+        if (gameState.round - hexData.last_visible_round >= status.duration) {
+          continue;
+        }
+        status = {
+          ...status,
+          duration:
+            status.duration - (gameState.round - hexData.last_visible_round),
+        };
       }
+      const statusContainer = makeStatusIndicator(status, null);
 
-      if (status.stacks) {
-        const durationText = newText({
-          text: `${status.stacks}`,
-          style: stacksStyle,
-        });
-        durationText.x = -17;
-        durationText.y = -7;
-        durationText.anchor = 0.5;
-        statusContainer.addChild(durationText);
-      }
+      const smallerSize = hexSize - 30;
+      const [smallerWidth, smallerHeight] = getHexDimensions(smallerSize);
 
-      if (status.duration) {
-        const durationText = newText({
-          text: `${status.duration}`,
-          style: durationStyle,
-        });
-        durationText.x = 17;
-        durationText.y = -7;
-        durationText.anchor = 0.5;
-        statusContainer.addChild(durationText);
-      }
+      const firstPoint = { x: 0, y: -smallerHeight / 2 };
+      const lastPoint = { x: smallerWidth / 2, y: -smallerSize / 2 };
 
-      return statusContainer;
-    };
+      statusContainer.position = addRCs(
+        firstPoint,
+        constMultRC(
+          asUnitVector(subRCs(lastPoint, firstPoint)),
+          hexData.statuses.length <= 4
+            ? idx * 43
+            : (hexSize / hexData.statuses.length) * idx,
+        ),
+      );
 
+      hexContainer.addChild(statusContainer);
+    }
+
+    if (
+      (ccToKey(hexData.cc) in actionSpace &&
+        actionSpace[ccToKey(hexData.cc)].highlighted) ||
+      (state.highlightedCCs &&
+        state.highlightedCCs.includes(ccToKey(hexData.cc)))
+    ) {
+      let highlight = newGraphic(highlightShape);
+      hexContainer.addChild(highlight);
+    }
+    if (actionSpace[ccToKey(hexData.cc)]?.blueprintGhost) {
+      const unitGhostSprite = newSprite(
+        getTexture("unit", actionSpace[ccToKey(hexData.cc)].blueprintGhost),
+      );
+      unitGhostSprite.anchor = 0.5;
+      hexContainer.addChild(unitGhostSprite);
+    }
+
+    actionTriggerZones.push([hexActionTriggerZones, realHexPosition]);
+  }
+
+  for (const hexData of gameState.map.hexes) {
     if (hexData.unit) {
       const unitContainer = new Container();
       const baseUnitContainer = new Container();
       unitContainer.addChild(baseUnitContainer);
       const unitSprite = newSprite(getTexture("unit", hexData.unit.blueprint));
       unitSprite.anchor = 0.5;
-      baseUnitContainer.scale = (hexData.unit.size + 1) * 0.1 + 1;
-      if (hexData.unit.controller == gameState.players[0].name) {
-        baseUnitContainer.scale.x = -baseUnitContainer.scale.x;
-      }
+      const size = (hexData.unit.size + 1) * 0.1 + 1;
+      const targetScale = {
+        x: hexData.unit.controller == gameState.players[0].name ? -size : size,
+
+        y: size,
+      };
+      baseUnitContainer.scale = targetScale;
 
       const borderColor =
         hexData.unit.controller != gameState.player
@@ -477,6 +639,19 @@ export const renderMap = (
 
       if (hexData.unit.exhausted) {
         unitContainer.angle = 90;
+      }
+
+      if (hexData.unit.id in unitRotations) {
+        animations.push(
+          makeAnimation(
+            (c) =>
+              (unitContainer.angle = hexData.unit.exhausted
+                ? c * 90
+                : (1 - c) * 90),
+            200,
+            sigmoid,
+          ),
+        );
       }
 
       for (const [idx, status] of hexData.unit.statuses.entries()) {
@@ -584,11 +759,57 @@ export const renderMap = (
         healthIndicatorContainer.addChild(shieldContainer);
       }
 
+      if (unitDamages[hexData.unit.id]) {
+        const damageContainer = new Container();
+        const damageContentContainer = new Container();
+        damageContainer.addChild(damageContentContainer);
+        unitContainer.addChild(damageContainer);
+
+        if (hexData.unit.exhausted) {
+          damageContainer.angle = -90;
+        }
+
+        const damagedSprite = newSprite(
+          getTexture(
+            "icon",
+            unitDamages[hexData.unit.id] > 0 ? "damaged" : "healed",
+          ),
+        );
+        damagedSprite.anchor = 0.5;
+        damageContentContainer.addChild(damagedSprite);
+        const damageText = newText({
+          text: `${Math.abs(unitDamages[hexData.unit.id])}`,
+          style: damageStyle,
+        });
+        damageText.anchor = 0.5;
+        damageContentContainer.addChild(damageText);
+        animations.push(
+          makeAnimation(
+            (cursor) => (damageContentContainer.scale = cursor),
+            200,
+            sigmoid,
+          ),
+        );
+        animations.push(
+          makeAnimation(
+            (cursor) => (damageContentContainer.rotation = cursor * 0.2),
+            1000,
+            shake,
+            () => {
+              unitContainer.removeChild(damageContainer);
+            },
+          ),
+        );
+      }
+
+      const targetPosition = addRCs(ccToRC(hexData.cc), center);
+
       if (hexData.unit.is_ghost) {
         const unitSprite = newSprite(
           app.renderer.generateTexture(unitContainer),
         );
-        unitSprite.alpha =
+        unitSprite.position = targetPosition;
+        const targetAlpha =
           (hexData.visible ? 0.5 : 0.6) -
           Math.min(
             hexData.last_visible_round === null
@@ -596,91 +817,64 @@ export const renderMap = (
               : (gameState.round - hexData.last_visible_round) * 0.15,
             0.4,
           );
+        unitSprite.alpha = targetAlpha;
         unitSprite.anchor = 0.5;
-        hexContainer.addChild(unitSprite);
-      } else {
-        hexContainer.addChild(unitContainer);
-      }
-    }
-
-    if (hexData.is_objective) {
-      const flagContainer = new Container();
-
-      flagContainer.x = -hexWidth / 2 + 30;
-      flagContainer.y = -hexSize / 2 + 20;
-
-      if (hexData.captured_by) {
-        flagContainer.addChild(
-          newGraphic(
-            getFlagCapturedIndicator(hexData.captured_by == gameState.player),
-          ),
-        );
-      }
-
-      const flagSprite = newSprite(textureMap["flag_icon"]);
-      flagSprite.anchor = 0.5;
-
-      flagContainer.addChild(flagSprite);
-      hexContainer.addChild(flagContainer);
-    }
-
-    for (let [idx, status] of hexData.statuses.entries()) {
-      if (
-        !hexData.visible &&
-        status.duration !== null &&
-        hexData.last_visible_round !== null
-      ) {
-        if (gameState.round - hexData.last_visible_round >= status.duration) {
-          continue;
+        map.addChild(unitSprite);
+        if (hexData.unit.id in unitMoves) {
+          animations.push(
+            makeAnimation(
+              (cursor) => {
+                unitSprite.rotation = cursor * 0.2;
+              },
+              200,
+              shake,
+            ),
+          );
         }
-        status = {
-          ...status,
-          duration:
-            status.duration - (gameState.round - hexData.last_visible_round),
-        };
+      } else {
+        unitContainer.position = targetPosition;
+
+        if (hexData.unit.id in unitMoves && !unitMoves[hexData.unit.id].from) {
+          animations.push(
+            makeAnimation(
+              (cursor) => {
+                baseUnitContainer.rotation = cursor * 0.2;
+              },
+              200,
+              shake,
+            ),
+          );
+        }
+
+        if (hexData.unit.id in unitMoves && unitMoves[hexData.unit.id].from) {
+          const previousPosition = addRCs(
+            ccToRC(unitMoves[hexData.unit.id].from as CC),
+            center,
+          );
+          animations.push(
+            makeAnimation(
+              (cursor) => {
+                unitContainer.position = addRCs(
+                  constMultRC(previousPosition, 1 - cursor),
+                  constMultRC(targetPosition, cursor),
+                );
+              },
+              200,
+              sigmoid,
+            ),
+          );
+        }
+
+        map.addChild(unitContainer);
       }
-      const statusContainer = makeStatusIndicator(status, null);
-
-      const smallerSize = hexSize - 30;
-      const [smallerWidth, smallerHeight] = getHexDimensions(smallerSize);
-
-      const firstPoint = { x: 0, y: -smallerHeight / 2 };
-      const lastPoint = { x: smallerWidth / 2, y: -smallerSize / 2 };
-
-      statusContainer.position = addRCs(
-        firstPoint,
-        constMultRC(
-          asUnitVector(subRCs(lastPoint, firstPoint)),
-          hexData.statuses.length <= 4
-            ? idx * 43
-            : (hexSize / hexData.statuses.length) * idx,
-        ),
-      );
-
-      hexContainer.addChild(statusContainer);
     }
+  }
 
-    if (
-      (ccToKey(hexData.cc) in actionSpace &&
-        actionSpace[ccToKey(hexData.cc)].highlighted) ||
-      (state.highlightedCCs &&
-        state.highlightedCCs.includes(ccToKey(hexData.cc)))
-    ) {
-      let highlight = newGraphic(highlightShape);
-      hexContainer.addChild(highlight);
+  for (const [hexActionTriggerZones, rc] of actionTriggerZones) {
+    for (const zone of hexActionTriggerZones) {
+      zone.position = rc;
+      map.addChild(zone);
     }
-    if (actionSpace[ccToKey(hexData.cc)]?.blueprintGhost) {
-      const unitGhostSprite = newSprite(
-        getTexture("unit", actionSpace[ccToKey(hexData.cc)].blueprintGhost),
-      );
-      unitGhostSprite.anchor = 0.5;
-      hexContainer.addChild(unitGhostSprite);
-    }
-
-    for (const zone of actionTriggerZones) {
-      hexContainer.addChild(zone);
-    }
-    hexContainer.eventMode = "static";
   }
 
   gameState.map.hexes.forEach((hexData) => {
@@ -801,5 +995,5 @@ export const renderMap = (
     }
   });
 
-  return { map, graphics: createdObjects };
+  return { map, graphics: createdObjects, animations };
 };

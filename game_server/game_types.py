@@ -62,14 +62,15 @@ class TestGameType(GameType):
             (
                 # GOBLIN_ASSASSIN,
                 # KEEN_ARCHER,
+                VOID_SPRITE,
                 EFFORTLESS_ATHLETE,
-                GRANITE_GOLEM,
+                # GRANITE_GOLEM,
             ),
             (
                 ANKLE_BITER_NUISANCE,
                 BLIND_ORACLE,
-                # LUMBERING_PILLAR,
-                BEE_SHAMAN,
+                # # LUMBERING_PILLAR,
+                # BEE_SHAMAN,
             ),
         )
 

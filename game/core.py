@@ -2101,6 +2101,9 @@ class GameState:
         self._pending_player_logs: dict[
             Player, list[tuple[int, list[dict[str, Any]]]]
         ] = {player: [] for player in self.turn_order}
+        self._player_logs: dict[Player, list[tuple[int, list[dict[str, Any]]]]] = {
+            player: [] for player in self.turn_order
+        }
 
     @contextlib.contextmanager
     def log(self, *line_options: LogLine) -> Iterator[None]:
@@ -2142,6 +2145,9 @@ class GameState:
     def serialize_for(
         self, context: SerializationContext, decision_point: DecisionPoint | None
     ) -> Mapping[str, Any]:
+        new_logs = self._pending_player_logs[context.player]
+        self._player_logs[context.player].extend(new_logs)
+        self._pending_player_logs[context.player] = []
         serialized_game_state = {
             "player": context.player.name,
             "target_points": self.target_points,
@@ -2157,7 +2163,8 @@ class GameState:
                 and self.active_unit_context.unit.is_visible_to(context.player)
                 else None
             ),
-            "logs": self._pending_player_logs[context.player],
+            "logs": self._player_logs[context.player],
+            "new_logs": new_logs,
         }
         # TODO yikes
         self.previous_hex_states[context.player] = {
