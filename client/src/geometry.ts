@@ -114,6 +114,7 @@ export const rcDistance = (a: RC, b: RC): number => {
 };
 
 export const ccEquals = (a: CC, b: CC): boolean => a.r == b.r && a.h == b.h;
+export const rcEquals = (a: RC, b: RC): boolean => a.x == b.x && a.y == b.y;
 
 export const asUnitVector = (rc: RC) =>
   constDivRc(rc, Math.sqrt(rc.x ** 2 + rc.y ** 2));

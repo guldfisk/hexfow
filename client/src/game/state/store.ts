@@ -49,10 +49,7 @@ const mainSlice = createSlice({
   },
   reducers: {
     receiveGameState: (state, action: PayloadAction<GameStateMessage>) => {
-      state.doAnimations = !!(
-        state.gameState &&
-        state.gameState.player == action.payload.game_state.player
-      );
+      state.doAnimations = true;
       state.previousGameState = state.gameState;
       state.gameState = action.payload.game_state;
       state.gameStateId = action.payload.count;

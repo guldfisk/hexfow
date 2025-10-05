@@ -8,7 +8,14 @@ import {
   TextStyle,
   Texture,
 } from "pixi.js";
-import { GameState, Intention, Status, Unit } from "../interfaces/gameState.ts";
+import {
+  GameState,
+  Hex,
+  Intention,
+  Status,
+  Unit,
+  UnitStatus,
+} from "../interfaces/gameState.ts";
 import type { FillInput } from "pixi.js/lib/scene/graphics/shared/FillTypes";
 import {
   addRCs,
@@ -23,6 +30,7 @@ import {
   hexSize,
   hexVerticeOffsets,
   hexWidth,
+  rcEquals,
   rcInBox,
   rcToCC,
   subRCs,
@@ -342,6 +350,78 @@ export const renderMap = (
     return statusContainer;
   };
 
+  const addStatuses = (
+    from: (Status | UnitStatus)[] | null,
+    to: (Status | UnitStatus)[],
+    container: Container,
+    positionGetter: (idx: number, count: number) => RC,
+  ) => {
+    if (from) {
+      for (const [idx, status] of from.entries()) {
+        if (!to.some((s) => s.type == status.type)) {
+          const statusContainer = makeStatusIndicator(
+            status,
+            "intention" in status ? status.intention : null,
+          );
+          statusContainer.position = positionGetter(idx, from.length);
+
+          container.addChild(statusContainer);
+
+          animations.push(
+            makeAnimation(
+              (c) => (statusContainer.scale = 1 - c),
+              200,
+              sigmoid,
+              () => container.removeChild(statusContainer),
+            ),
+          );
+        }
+      }
+    }
+
+    for (const [idx, status] of to.entries()) {
+      const statusContainer = makeStatusIndicator(
+        status,
+        "intention" in status ? status.intention : null,
+      );
+      statusContainer.position = positionGetter(idx, to.length);
+
+      container.addChild(statusContainer);
+
+      if (from) {
+        if (!from.some((s) => s.type == status.type)) {
+          animations.push(
+            makeAnimation(
+              (c) => (statusContainer.scale = 1 + 3 * (1 - c)),
+              250,
+              sigmoid,
+            ),
+          );
+        } else {
+          const fromPosition = positionGetter(
+            from.findIndex((s) => s.type == status.type),
+            from.length,
+          );
+          const toPosition = positionGetter(idx, to.length);
+
+          if (!rcEquals(fromPosition, toPosition)) {
+            animations.push(
+              makeAnimation(
+                (c) =>
+                  (statusContainer.position = addRCs(
+                    constMultRC(toPosition, c),
+                    constMultRC(fromPosition, 1 - c),
+                  )),
+                200,
+                sigmoid,
+              ),
+            );
+          }
+        }
+      }
+    }
+  };
+
   const map = new Container();
 
   app.stage.addChild(map);
@@ -368,6 +448,12 @@ export const renderMap = (
   const unitMoves: { [key: string]: { from: CC | null; to: CC | null } } = {};
   const unitRotations: { [key: string]: boolean } = {};
   const unitDamages: { [key: string]: number } = {};
+  const statusChanges: {
+    [key: string]: { from: UnitStatus[]; to: UnitStatus[] };
+  } = {};
+  const hexStatusChanges: {
+    [key: string]: { from: Status[]; to: Status[] };
+  } = {};
 
   const getUnitPositions = (gameState: GameState) => {
     const values: { [key: string]: { cc: CC; unit: Unit } } = {};
@@ -379,11 +465,20 @@ export const renderMap = (
     return values;
   };
 
-  const activeUnitId = gameState.active_unit_context
-    ? gameState.active_unit_context.unit.id
-    : null;
-
   if (state.previousGameState && state.doAnimations) {
+    const previousHexes: { [key: string]: Hex } = {};
+
+    for (const hexData of state.previousGameState.map.hexes) {
+      previousHexes[ccToKey(hexData.cc)] = hexData;
+    }
+
+    for (const hexData of gameState.map.hexes) {
+      hexStatusChanges[ccToKey(hexData.cc)] = {
+        from: previousHexes[ccToKey(hexData.cc)].statuses,
+        to: hexData.statuses,
+      };
+    }
+
     const currentUnits = getUnitPositions(gameState);
     const previousUnits = getUnitPositions(state.previousGameState);
     for (const { cc, unit } of Object.values(currentUnits)) {
@@ -399,6 +494,7 @@ export const renderMap = (
         if (unit.exhausted != prevUnit.exhausted) {
           unitRotations[unit.id] = true;
         }
+        statusChanges[unit.id] = { from: prevUnit.statuses, to: unit.statuses };
       }
       if (
         unit.id in previousUnits &&
@@ -406,7 +502,16 @@ export const renderMap = (
       ) {
         unitMoves[unit.id] = { from: previousUnits[unit.id].cc, to: cc };
       }
-      if (activeUnitId && unit.id != activeUnitId) {
+      if (
+        !(
+          (gameState.active_unit_context &&
+            gameState.active_unit_context.unit.id == unit.id) ||
+          (state.previousGameState.active_unit_context &&
+            state.previousGameState.active_unit_context.unit.id == unit.id) ||
+          (unit.controller != gameState.player &&
+            (!gameState.decision || !state.previousGameState.decision))
+        )
+      ) {
         continue;
       }
       if (unit.id in previousUnits) {
@@ -527,42 +632,6 @@ export const renderMap = (
       hexContainer.addChild(flagContainer);
     }
 
-    for (let [idx, status] of hexData.statuses.entries()) {
-      if (
-        !hexData.visible &&
-        status.duration !== null &&
-        hexData.last_visible_round !== null
-      ) {
-        if (gameState.round - hexData.last_visible_round >= status.duration) {
-          continue;
-        }
-        status = {
-          ...status,
-          duration:
-            status.duration - (gameState.round - hexData.last_visible_round),
-        };
-      }
-      const statusContainer = makeStatusIndicator(status, null);
-
-      const smallerSize = hexSize - 30;
-      const [smallerWidth, smallerHeight] = getHexDimensions(smallerSize);
-
-      const firstPoint = { x: 0, y: -smallerHeight / 2 };
-      const lastPoint = { x: smallerWidth / 2, y: -smallerSize / 2 };
-
-      statusContainer.position = addRCs(
-        firstPoint,
-        constMultRC(
-          asUnitVector(subRCs(lastPoint, firstPoint)),
-          hexData.statuses.length <= 4
-            ? idx * 43
-            : (hexSize / hexData.statuses.length) * idx,
-        ),
-      );
-
-      hexContainer.addChild(statusContainer);
-    }
-
     if (
       (ccToKey(hexData.cc) in actionSpace &&
         actionSpace[ccToKey(hexData.cc)].highlighted) ||
@@ -581,6 +650,56 @@ export const renderMap = (
     }
 
     actionTriggerZones.push([hexActionTriggerZones, realHexPosition]);
+  }
+
+  for (const hexData of gameState.map.hexes) {
+    let realHexPosition = addRCs(ccToRC(hexData.cc), center);
+
+    const filteredHexStatuses = [];
+
+    for (let status of hexData.statuses) {
+      if (
+        !hexData.visible &&
+        status.duration !== null &&
+        hexData.last_visible_round !== null
+      ) {
+        if (gameState.round - hexData.last_visible_round >= status.duration) {
+          continue;
+        }
+        status = {
+          ...status,
+          duration:
+            status.duration - (gameState.round - hexData.last_visible_round),
+        };
+      }
+      filteredHexStatuses.push(status);
+    }
+
+    const smallerSize = hexSize - 30;
+    const [smallerWidth, smallerHeight] = getHexDimensions(smallerSize);
+
+    const firstPoint = { x: 0, y: -smallerHeight / 2 };
+    const lastPoint = { x: smallerWidth / 2, y: -smallerSize / 2 };
+
+    const hexStatusesContainer = new Container();
+    hexStatusesContainer.position = realHexPosition;
+    map.addChild(hexStatusesContainer);
+
+    addStatuses(
+      ccToKey(hexData.cc) in hexStatusChanges
+        ? hexStatusChanges[ccToKey(hexData.cc)].from
+        : null,
+      hexData.statuses,
+      hexStatusesContainer,
+      (idx, count) =>
+        addRCs(
+          firstPoint,
+          constMultRC(
+            asUnitVector(subRCs(lastPoint, firstPoint)),
+            count <= 4 ? idx * 43 : (hexSize / count) * idx,
+          ),
+        ),
+    );
   }
 
   for (const hexData of gameState.map.hexes) {
@@ -654,19 +773,21 @@ export const renderMap = (
         );
       }
 
-      for (const [idx, status] of hexData.unit.statuses.entries()) {
-        const statusContainer = makeStatusIndicator(status, status.intention);
-        statusContainer.position = {
+      addStatuses(
+        hexData.unit.id in statusChanges
+          ? statusChanges[hexData.unit.id].from
+          : null,
+        hexData.unit.statuses,
+        unitContainer,
+        (idx, count) => ({
           x: -unitSprite.width / 2,
           y:
             -unitSprite.height / 2 +
             (hexData.unit.statuses.length <= 4
               ? idx * 43
-              : (150 / hexData.unit.statuses.length) * idx),
-        };
-
-        unitContainer.addChild(statusContainer);
-      }
+              : (150 / count) * idx),
+        }),
+      );
 
       const makeIndicatorDisplay = (
         currentValue: number,
