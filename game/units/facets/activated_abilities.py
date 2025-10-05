@@ -49,6 +49,7 @@ from game.events import (
     ReadyUnit,
     SpawnUnit,
 )
+from game.map.terrain import Forest
 from game.statuses.links import GateLink, TaintedLink
 from game.statuses.shortcuts import (
     apply_status_to_hex,
@@ -97,6 +98,7 @@ class PatchUp(TargetUnitActivatedAbility):
     """
 
     cost = EnergyCost(2)
+    combinable = True
     controller_target_option = ControllerTargetOption.ALLIED
     can_target_self = False
 
@@ -951,11 +953,7 @@ class VerdantFlash(TargetHexActivatedAbility):
     Turns the terrain into Forest.
     """
 
-    cost = EnergyCost(2) | MovementCost(1)
-    explain_hex_alias = "plains"
-
-    def filter_hex(self, hex_: Hex) -> bool:
-        return isinstance(hex_.terrain, Terrain.get_class("plains"))
+    cost = EnergyCost(3) | MovementCost(1)
 
     def perform(self, target: Hex) -> None:
         ES.resolve(ChangeHexTerrain(target, Terrain.get_class("forest")))
@@ -1195,12 +1193,34 @@ class MalevolentStare(TargetUnitActivatedAbility):
         apply_status_to_unit(target, "silenced", self, duration=2)
 
 
+class HelpfulWatchers(TargetHexActivatedAbility):
+    """
+    If the target is a Forest, apply <revealed> for 3 rounds.
+    """
+
+    cost = EnergyCost(1)
+    range = 2
+    requires_los = False
+    requires_vision = False
+    hidden_target = True
+
+    def filter_hex(self, hex_: Hex) -> bool:
+        return isinstance(hex_.terrain, Forest) or not hex_.is_visible_to(
+            self.parent.controller
+        )
+
+    def perform(self, target: Hex) -> None:
+        if isinstance(target.terrain, Forest):
+            apply_status_to_hex(target, "revealed", self, duration=3)
+
+
 class IronBlessing(TargetUnitActivatedAbility):
     """
     Applies <armored> for 2 rounds.
     """
 
     cost = EnergyCost(3) | MovementCost(1)
+    combinable = True
     controller_target_option = ControllerTargetOption.ALLIED
     can_target_self = False
 

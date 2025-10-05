@@ -35,6 +35,7 @@ from game.units.facets.activated_abilities import (
     HandGrenade,
     HealBeam,
     HealingPotion,
+    HelpfulWatchers,
     Hitch,
     InducePanic,
     InkRing,
@@ -273,10 +274,10 @@ CHICKEN = UnitBlueprint(
 
 CRAWLING_URCHIN = UnitBlueprint(
     name="Crawling Urchin",
-    health=4,
+    health=5,
     speed=1,
     sight=1,
-    facets=[Prickly],
+    facets=[Prickly, Aquatic],
     price=1,
 )
 
@@ -292,7 +293,7 @@ FIREFLY = UnitBlueprint(
 
 HIVE_GUARD_GNAT = UnitBlueprint(
     "Hive-Guard Gnat",
-    health=1,
+    health=2,
     speed=2,
     sight=1,
     size=Size.SMALL,
@@ -377,16 +378,6 @@ ARTHRITIC_GIANT = UnitBlueprint(
     sight=1,
     size=Size.LARGE,
     facets=[GranGransOlClub, OldBones],
-    price=3,
-)
-
-BLOOD_CONDUIT = UnitBlueprint(
-    "Blood Conduit",
-    health=3,
-    speed=3,
-    sight=2,
-    energy=3,
-    facets=[VitalityTransfusion],
     price=3,
 )
 
@@ -492,6 +483,16 @@ ANKLE_BITER_NUISANCE = UnitBlueprint(
     price=4,
 )
 
+BLOOD_CONDUIT = UnitBlueprint(
+    "Blood Conduit",
+    health=3,
+    speed=3,
+    sight=2,
+    energy=3,
+    facets=[VitalityTransfusion],
+    price=4,
+)
+
 GNARLED_SHAMAN = UnitBlueprint(
     "Gnarled Shaman",
     health=3,
@@ -549,16 +550,6 @@ AP_GUNNER = UnitBlueprint(
     speed=2,
     sight=2,
     facets=[APGun],
-    price=5,
-)
-
-BOMBARD_CANON = UnitBlueprint(
-    "Bombard Canon",
-    health=3,
-    speed=1,
-    sight=1,
-    size=Size.LARGE,
-    facets=[SolidMunition],
     price=5,
 )
 
@@ -642,6 +633,16 @@ ANCIENT_ALTRUIST = UnitBlueprint(
     price=6,
 )
 
+BOMBARD_CANON = UnitBlueprint(
+    "Bombard Canon",
+    health=3,
+    speed=1,
+    sight=1,
+    size=Size.LARGE,
+    facets=[SolidMunition],
+    price=6,
+)
+
 BOMB_TRUCK = UnitBlueprint(
     "Bomb Truck",
     health=3,
@@ -678,7 +679,7 @@ HARMONIOUS_DRUID = UnitBlueprint(
     speed=3,
     sight=2,
     energy=5,
-    facets=[NaturalBlessing, VerdantFlash, ForestDweller],
+    facets=[NaturalBlessing, VerdantFlash, HelpfulWatchers, ForestDweller],
     price=6,
 )
 
@@ -781,6 +782,17 @@ BEE_SHAMAN = UnitBlueprint(
     price=7,
 )
 
+TERRAFORMER_MAGE = UnitBlueprint(
+    "Terraformer Mage",
+    health=5,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    energy=6,
+    facets=[RaiseGround, FlattenGround, DrawSpring, MagmaFissure],
+    price=7,
+)
+
 BLASTER_DROID = UnitBlueprint(
     "Blaster Droid",
     health=4,
@@ -839,6 +851,23 @@ GIANT_TOAD = UnitBlueprint(
     price=8,
 )
 
+LEGENDARY_WRESTLER = UnitBlueprint(
+    "Legendary Wrestler",
+    health=7,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[
+        Tackle,
+        FromTheTopRope,
+        Suplex,
+        CaughtInTheMatch,
+        HeelTurn,
+    ],
+    price=8,
+    flavor="I need justice in my life: Here it comes.",
+)
+
 RANGER_GUIDE = UnitBlueprint(
     "Ranger Guide",
     health=5,
@@ -860,16 +889,6 @@ SLUDGE_SLUG = UnitBlueprint(
     price=8,
 )
 
-TERRAFORMER_MAGE = UnitBlueprint(
-    "Terraformer Mage",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=6,
-    facets=[RaiseGround, FlattenGround, DrawSpring, MagmaFissure],
-    price=8,
-)
-
 ZONE_SKIRMISHER = UnitBlueprint(
     "ZONE Skirmisher",
     health=6,
@@ -886,23 +905,6 @@ EFFORTLESS_ATHLETE = UnitBlueprint(
     sight=2,
     facets=[RoundhouseKick, Vault, BatonPass],
     price=9,
-)
-
-LEGENDARY_WRESTLER = UnitBlueprint(
-    "Legendary Wrestler",
-    health=7,
-    speed=3,
-    sight=2,
-    energy=4,
-    facets=[
-        Tackle,
-        FromTheTopRope,
-        Suplex,
-        CaughtInTheMatch,
-        HeelTurn,
-    ],
-    price=9,
-    flavor="I need justice in my life: Here it comes.",
 )
 
 VELOCIRAPTOR = UnitBlueprint(
@@ -1039,6 +1041,17 @@ DIRE_WOLF = UnitBlueprint(
     price=11,
 )
 
+GRANITE_GOLEM = UnitBlueprint(
+    "Granite Golem",
+    health=9,
+    speed=2,
+    sight=1,
+    size=Size.LARGE,
+    armor=1,
+    facets=[CrushingFists, RockSteady, ResistantSkin],
+    price=11,
+)
+
 HORROR = UnitBlueprint(
     "Horror",
     health=7,
@@ -1133,28 +1146,6 @@ FRONTLINE_TACTICIAN = UnitBlueprint(
     price=12,
 )
 
-GRANITE_GOLEM = UnitBlueprint(
-    "Granite Golem",
-    health=9,
-    speed=2,
-    sight=1,
-    size=Size.LARGE,
-    armor=1,
-    facets=[CrushingFists, RockSteady, ResistantSkin],
-    price=12,
-)
-
-STAUNCH_IRON_HEART = UnitBlueprint(
-    "Staunch Iron-Heart",
-    health=7,
-    speed=2,
-    armor=1,
-    sight=2,
-    energy=4,
-    facets=[HammerBlow, MightyBlow, IronBlessing],
-    price=12,
-)
-
 WAR_HOG = UnitBlueprint(
     "War Hog",
     health=7,
@@ -1188,6 +1179,17 @@ PRIMEVAL_TORTOISE = UnitBlueprint(
     armor=2,
     size=Size.LARGE,
     facets=[CrushingBeak, Vigorous],
+    price=13,
+)
+
+STAUNCH_IRON_HEART = UnitBlueprint(
+    "Staunch Iron-Heart",
+    health=7,
+    speed=2,
+    armor=1,
+    sight=2,
+    energy=4,
+    facets=[HammerBlow, MightyBlow, IronBlessing],
     price=14,
 )
 
@@ -1217,6 +1219,7 @@ GIANT_BATTLE_CRAB = UnitBlueprint(
     speed=2,
     sight=1,
     armor=2,
+    size=Size.LARGE,
     facets=[GiantPincers, Aquatic, CrabShuffle],
     price=17,
 )

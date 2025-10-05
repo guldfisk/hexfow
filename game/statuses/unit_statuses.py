@@ -208,7 +208,7 @@ class AllInJest(StackableMixin, UnitStatus):
 
 class Rooted(RefreshableMixin, UnitStatus):
     """
-    This unit can't move or melee attack.
+    This unit can't move.
     """
 
     default_intention = StatusIntention.DEBUFF
