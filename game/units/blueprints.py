@@ -37,6 +37,7 @@ from game.units.facets.activated_abilities import (
     HealingPotion,
     HelpfulWatchers,
     Hitch,
+    IcicleSplinter,
     InducePanic,
     InkRing,
     InkScreen,
@@ -60,12 +61,14 @@ from game.units.facets.activated_abilities import (
     RaiseGround,
     RaiseShrine,
     Riddle,
+    RingOfIce,
     RollUp,
     RoyalJelly,
     Scorch,
     Scorn,
     Scry,
     SelfDestruct,
+    ShieldWithFrost,
     ShootFlare,
     Shove,
     Showdown,
@@ -201,6 +204,7 @@ from game.units.facets.static_abilities import (
     Furious,
     GlassSkin,
     GrizzlyMurderer,
+    Haughty,
     HeelTurn,
     Immobile,
     Inspiration,
@@ -1234,6 +1238,16 @@ ZONE_MECH = UnitBlueprint(
     size=Size.LARGE,
     facets=[HammerCannon, SmokeCanister],
     price=18,
+)
+
+ICE_SAVANT = UnitBlueprint(
+    "Ice Savant",
+    health=6,
+    speed=3,
+    sight=2,
+    energy=7,
+    facets=[RingOfIce, ShieldWithFrost, IcicleSplinter, Haughty],
+    price=19,
 )
 
 RHINO_BEAST = UnitBlueprint(

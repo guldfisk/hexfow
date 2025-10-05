@@ -1,5 +1,25 @@
 import { HoveredDetails } from "../interfaces/details.ts";
-import { GameObjectDetails } from "../interfaces/gameObjectDetails.ts";
+import {
+  GameObjectDetails,
+  UnitDetails,
+} from "../interfaces/gameObjectDetails.ts";
+import { traverseStatuses } from "../components/statuses.ts";
+
+export const getRelatedStatuses = (
+  unitDetails: UnitDetails,
+  gameObjectDetails: GameObjectDetails,
+): string[] => {
+  const relatedStatuses: string[] = [];
+  for (const facetName of unitDetails.facets) {
+    for (const status of gameObjectDetails.facets[facetName].related_statuses) {
+      if (!relatedStatuses.includes(status)) {
+        relatedStatuses.push(status);
+        traverseStatuses(status, gameObjectDetails, relatedStatuses);
+      }
+    }
+  }
+  return relatedStatuses;
+};
 
 const findRelatedUnits = (
   blueprintIdentifier: string,
@@ -34,12 +54,24 @@ export const getAdditionalDetails = (
 ): HoveredDetails[] => {
   const details: HoveredDetails[] = [];
   if (detail.type == "unit" || detail.type == "blueprint") {
+    const unitDetails =
+      gameObjectDetails.units[
+        detail.type == "unit" ? detail.unit.blueprint : detail.blueprint
+      ];
     for (const relatedId of findRelatedUnits(
-      detail.type == "unit" ? detail.unit.blueprint : detail.blueprint,
+      unitDetails.identifier,
       gameObjectDetails,
       [],
     )) {
       details.push({ type: "blueprint", blueprint: relatedId });
+    }
+
+    const relatedStatuses = getRelatedStatuses(unitDetails, gameObjectDetails);
+    if (
+      relatedStatuses.length &&
+      relatedStatuses.length + unitDetails.facets.length > 6
+    ) {
+      details.push({ type: "statusTypes", statuses: relatedStatuses });
     }
   } else if (detail.type == "statuses") {
     const seen: string[] = [];

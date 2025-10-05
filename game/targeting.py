@@ -16,6 +16,7 @@ from game.core import (
 from game.target_profiles import (
     ConsecutiveAdjacentHexes,
     HexHexes,
+    HexRing,
     RadiatingLine,
     TriHex,
 )
@@ -188,6 +189,21 @@ class TargetHexCircleActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
 
     @abstractmethod
     def perform(self, target: list[Hex]) -> None: ...
+
+
+class TargetHexRingActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
+    range: ClassVar[int]
+    radius: ClassVar[int] = 1
+
+    @classmethod
+    def get_target_explanation(cls) -> str | None:
+        return f"Target radius {cls.radius} hex ring, center within {cls.range} NLoS."
+
+    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
+        if hexes := [
+            _hex for _hex in GS.map.get_hexes_within_range_off(self.parent, self.range)
+        ]:
+            return HexRing(hexes, self.radius)
 
 
 class TargetTriHexActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):

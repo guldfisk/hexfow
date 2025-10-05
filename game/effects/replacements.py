@@ -22,16 +22,24 @@ from game.statuses.shortcuts import apply_status_to_unit, dispel_from_unit
 from game.values import DamageType, StatusIntention
 
 
-class MoveUnitLayers(IntEnum):
+class MoveUnitLayer(IntEnum):
     IMMOBILE = auto()
     CRUSH = auto()
     PUSH = auto()
     PORTAL = auto()
 
 
+class SufferDamageLayer(IntEnum):
+    STAYING_POWER = auto()
+    FRAIL = auto()
+    REDUCE = auto()
+    LUCKY_CHARM = auto()
+    BUFFER = auto()
+
+
 @dataclasses.dataclass(eq=False)
 class ExternallyImmobileReplacement(ReplacementEffect[MoveUnit]):
-    priority: ClassVar[int] = MoveUnitLayers.IMMOBILE
+    priority: ClassVar[int] = MoveUnitLayer.IMMOBILE
 
     unit: Unit
 
@@ -43,7 +51,7 @@ class ExternallyImmobileReplacement(ReplacementEffect[MoveUnit]):
 
 @dataclasses.dataclass(eq=False)
 class CrushableReplacement(ReplacementEffect[MoveUnit]):
-    priority: ClassVar[int] = MoveUnitLayers.CRUSH
+    priority: ClassVar[int] = MoveUnitLayer.CRUSH
 
     unit: Unit
     source: Source
@@ -62,7 +70,7 @@ class CrushableReplacement(ReplacementEffect[MoveUnit]):
 
 @dataclasses.dataclass(eq=False)
 class GateReplacement(ReplacementEffect[MoveUnit]):
-    priority: ClassVar[int] = MoveUnitLayers.PORTAL
+    priority: ClassVar[int] = MoveUnitLayer.PORTAL
 
     link: HexStatusLink
 
@@ -107,7 +115,7 @@ def get_push_chain(from_: CC, direction: CC) -> list[tuple[Unit, Hex | None]]:
 
 @dataclasses.dataclass(eq=False)
 class PusherReplacement(ReplacementEffect[MoveUnit]):
-    priority: ClassVar[int] = MoveUnitLayers.PUSH
+    priority: ClassVar[int] = MoveUnitLayer.PUSH
 
     unit: Unit
     source: Source
@@ -141,7 +149,7 @@ class PusherReplacement(ReplacementEffect[MoveUnit]):
 
 @dataclasses.dataclass(eq=False)
 class StrainedPusherReplacement(ReplacementEffect[MoveUnit]):
-    priority: ClassVar[int] = MoveUnitLayers.PUSH
+    priority: ClassVar[int] = MoveUnitLayer.PUSH
 
     unit: Unit
     source: Source
@@ -263,7 +271,7 @@ class LastStandReplacement(ReplacementEffect[Kill]):
 
 @dataclasses.dataclass(eq=False)
 class StayingPowerReplacement(ReplacementEffect[SufferDamage]):
-    priority: ClassVar[int] = 0
+    priority: ClassVar[int] = SufferDamageLayer.STAYING_POWER
 
     unit: Unit
 
@@ -287,8 +295,28 @@ class RockSteadyReplacement(ReplacementEffect[ModifyMovementPoints]):
 
 
 @dataclasses.dataclass(eq=False)
+class ReduceDamageReplacement(ReplacementEffect[SufferDamage]):
+    priority: ClassVar[int] = SufferDamageLayer.REDUCE
+
+    unit: Unit
+    amount: int
+
+    def can_replace(self, event: SufferDamage) -> bool:
+        return event.unit == self.unit
+
+    def resolve(self, event: SufferDamage) -> None:
+        ES.resolve(
+            event.branch(
+                signature=event.signature.branch(
+                    amount=event.signature.amount - self.amount
+                )
+            )
+        )
+
+
+@dataclasses.dataclass(eq=False)
 class BufferReplacement(ReplacementEffect[SufferDamage]):
-    priority: ClassVar[int] = 0
+    priority: ClassVar[int] = SufferDamageLayer.BUFFER
 
     status: UnitStatus
 
@@ -301,7 +329,7 @@ class BufferReplacement(ReplacementEffect[SufferDamage]):
 
 @dataclasses.dataclass(eq=False)
 class FrailReplacement(ReplacementEffect[SufferDamage]):
-    priority: ClassVar[int] = 0
+    priority: ClassVar[int] = SufferDamageLayer.FRAIL
 
     status: UnitStatus
 
@@ -319,7 +347,7 @@ class FrailReplacement(ReplacementEffect[SufferDamage]):
 
 @dataclasses.dataclass(eq=False)
 class LuckyCharmReplacement(ReplacementEffect[SufferDamage]):
-    priority: ClassVar[int] = 0
+    priority: ClassVar[int] = SufferDamageLayer.LUCKY_CHARM
 
     status: UnitStatus
 

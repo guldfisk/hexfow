@@ -1,14 +1,11 @@
 import React from "react";
-import { Unit } from "../interfaces/gameState.ts";
-import {
-  GameObjectDetails,
-  UnitDetails,
-} from "../interfaces/gameObjectDetails.ts";
-import { getImageUrl } from "../image/images.ts";
-import { ModifiedValue } from "./modifiedValue.tsx";
-import { FacetDetailView } from "./facetDetails.tsx";
-import { StatusDetailView } from "./statusDetails.tsx";
-import { traverseStatuses } from "./statuses.ts";
+import {Unit} from "../interfaces/gameState.ts";
+import {GameObjectDetails, UnitDetails,} from "../interfaces/gameObjectDetails.ts";
+import {getImageUrl} from "../image/images.ts";
+import {ModifiedValue} from "./modifiedValue.tsx";
+import {FacetDetailView} from "./facetDetails.tsx";
+import {StatusDetailView} from "./statusDetails.tsx";
+import {getRelatedStatuses} from "../details/additional.ts";
 
 const sizeNames = { "0": "Small", "1": "Medium", "2": "Large" };
 
@@ -22,15 +19,7 @@ export const UnitDetailsView = ({
   details: UnitDetails;
   gameObjectDetails: GameObjectDetails;
 }) => {
-  const relatedStatuses: string[] = [];
-  for (const facetName of details.facets) {
-    for (const status of gameObjectDetails.facets[facetName].related_statuses) {
-      if (!relatedStatuses.includes(status)) {
-        relatedStatuses.push(status);
-        traverseStatuses(status, gameObjectDetails, relatedStatuses);
-      }
-    }
-  }
+  const relatedStatuses = getRelatedStatuses(details, gameObjectDetails);
   return (
     <div>
       <img src={getImageUrl("unit", details.identifier)} />
@@ -111,12 +100,14 @@ export const UnitDetailsView = ({
       {details.facets.map((facet) => (
         <FacetDetailView facet={gameObjectDetails.facets[facet]} unit={unit} />
       ))}
-      {relatedStatuses.map((statusIdentifier) => (
-        <StatusDetailView
-          status={null}
-          statusDetails={gameObjectDetails.statuses[statusIdentifier]}
-        />
-      ))}
+      {relatedStatuses.length + details.facets.length <= 6
+        ? relatedStatuses.map((statusIdentifier) => (
+            <StatusDetailView
+              status={null}
+              statusDetails={gameObjectDetails.statuses[statusIdentifier]}
+            />
+          ))
+        : null}
     </div>
   );
 };

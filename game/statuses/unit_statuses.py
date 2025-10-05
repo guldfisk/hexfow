@@ -4,6 +4,7 @@ from game.core import (
     ActivatedAbilityFacet,
     HighestStackableRefreshableMixin,
     LowestRefreshableMixin,
+    LowestStackableRefreshableMixin,
     RefreshableMixin,
     StackableMixin,
     StackableRefreshableMixin,
@@ -38,14 +39,17 @@ from game.effects.replacements import (
     FrailReplacement,
     LuckyCharmReplacement,
     PerTurnMovePenaltyIgnoreReplacement,
+    ReduceDamageReplacement,
     StunnedReplacement,
     VigorReplacement,
 )
 from game.effects.triggers import (
+    ApplyStatusOnHitTrigger,
     BaffledTrigger,
     BellStruckTrigger,
     BurnTrigger,
     ChillTrigger,
+    DecrementPerDamageTrigger,
     ExpireOnActivatedTrigger,
     ExpireOnDealDamageStatusTrigger,
     ExpireOnHitTrigger,
@@ -64,6 +68,7 @@ from game.effects.triggers import (
     TurnExpiringStatusTrigger,
 )
 from game.events import ExhaustUnit, Heal, Kill
+from game.statuses.shortcuts import apply_status_to_unit
 from game.values import Resistance, StatusIntention
 
 
@@ -541,6 +546,51 @@ class KeenVision(RefreshableMixin, UnitStatus):
 
     def create_effects(self) -> None:
         self.register_effects(UnitSightFlatModifier(self.parent, 1))
+
+
+class Freezing(RefreshableMixin, UnitStatus):
+    """-1 attack power and -1 speed."""
+
+    default_intention = StatusIntention.DEBUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            UnitSpeedModifier(self.parent, -1),
+            UnitAttackPowerFlatModifier(self.parent, -1),
+        )
+
+
+class Frigid(LowestStackableRefreshableMixin, UnitStatus):
+    """
+    Whenever this unit suffers damage, remove that many stacks. When the last is
+    removed, apply 1 stack of <stunned> to this unit.
+    """
+
+    default_intention = StatusIntention.DEBUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(DecrementPerDamageTrigger(self))
+
+    def on_fully_decremented(self) -> None:
+        apply_status_to_unit(self.parent, "stunned", self, stacks=1)
+
+
+class FrostShield(RefreshableMixin, UnitStatus):
+    """
+    If this unit would suffer damage, it suffers 1 less.
+    When a unit hits this unit, apply <freezing> to it for 2 rounds.
+    """
+
+    default_intention = StatusIntention.DEBUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            ReduceDamageReplacement(self.parent, 1),
+            ApplyStatusOnHitTrigger(
+                self.parent,
+                UnitStatusSignature(UnitStatus.get("freezing"), self, duration=2),
+            ),
+        )
 
 
 class NaturesGrace(RefreshableMixin, UnitStatus):

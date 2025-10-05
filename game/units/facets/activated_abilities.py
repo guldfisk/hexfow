@@ -57,21 +57,14 @@ from game.statuses.shortcuts import (
     dispel_all,
     dispel_from_unit,
 )
-from game.target_profiles import (
-    Cone,
-    HexRing,
-    NOfHexes,
-    NOfUnits,
-    Tree,
-    TreeNode,
-    TriHex,
-)
+from game.target_profiles import Cone, NOfHexes, NOfUnits, Tree, TreeNode, TriHex
 from game.targeting import (
     ControllerTargetOption,
     NoTargetActivatedAbility,
     TargetHexActivatedAbility,
     TargetHexArcActivatedAbility,
     TargetHexCircleActivatedAbility,
+    TargetHexRingActivatedAbility,
     TargetRadiatingLineActivatedAbility,
     TargetTriHexActivatedAbility,
     TargetUnitActivatedAbility,
@@ -1157,22 +1150,13 @@ class WringEssence(ActivatedAbilityFacet):
             ES.resolve(Damage(unit, DamageSignature(4, self, DamageType.PURE)))
 
 
-class InkRing(ActivatedAbilityFacet[list[Hex]]):
+class InkRing(TargetHexRingActivatedAbility):
     """
     Applies <blinded> for 3 rounds.
     """
 
     cost = EnergyCost(3)
-
-    @classmethod
-    def get_target_explanation(cls) -> str | None:
-        return "Target radius 1 hex ring, center within 3 range NloS."
-
-    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        if hexes := [
-            _hex for _hex in GS.map.get_hexes_within_range_off(self.parent, 3)
-        ]:
-            return HexRing(hexes, 1)
+    range = 3
 
     def perform(self, target: list[Hex]) -> None:
         for unit in GS.map.units_on(target):
@@ -1477,6 +1461,48 @@ class AwarenessMentor(TargetUnitActivatedAbility):
 
     def perform(self, target: Unit) -> None:
         apply_status_to_unit(target, "keen_vision", self, duration=1)
+
+
+class IcicleSplinter(TargetUnitActivatedAbility):
+    """
+    Applies 3 stacks of <frail> for 2 rounds and 5 stacks of <frigid> for 2 rounds.
+    """
+
+    cost = EnergyCost(3)
+    range = 2
+    controller_target_option = ControllerTargetOption.ENEMY
+
+    def perform(self, target: Unit) -> None:
+        apply_status_to_unit(target, "frail", self, stacks=3, duration=2)
+        apply_status_to_unit(target, "frigid", self, stacks=5, duration=2)
+
+
+class ShieldWithFrost(TargetUnitActivatedAbility):
+    """
+    Applies <frost_shield> for 2 rounds.
+    """
+
+    cost = EnergyCost(4) | MovementCost(1)
+    range = 2
+    controller_target_option = ControllerTargetOption.ALLIED
+
+    def perform(self, target: Unit) -> None:
+        apply_status_to_unit(target, "frost_shield", self, duration=2)
+
+
+class RingOfIce(TargetHexRingActivatedAbility):
+    """
+    Deals 3 aoe damage to other units on the target hexes and applies <chill> for 2 rounds.
+    """
+
+    cost = EnergyCost(4) | MovementCost(1)
+    range = 2
+
+    def perform(self, target: list[Hex]) -> None:
+        for unit in GS.map.units_on(target):
+            if unit != self.parent:
+                ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.AOE)))
+                apply_status_to_unit(unit, "chill", self, duration=2)
 
 
 class SowDiscord(TargetTriHexActivatedAbility):

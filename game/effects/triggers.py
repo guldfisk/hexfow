@@ -822,6 +822,20 @@ class ExpireOnDealDamageStatusTrigger(TriggerEffect[Damage]):
 
 
 @dataclasses.dataclass(eq=False)
+class ApplyStatusOnHitTrigger(TriggerEffect[Hit]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+    signature: UnitStatusSignature
+
+    def should_trigger(self, event: Hit) -> bool:
+        return event.defender == self.unit
+
+    def resolve(self, event: Hit) -> None:
+        ES.resolve(ApplyStatus(event.attacker, self.signature))
+
+
+@dataclasses.dataclass(eq=False)
 class ExpireOnHitTrigger(TriggerEffect[Hit]):
     priority: ClassVar[int] = 0
 
@@ -832,6 +846,19 @@ class ExpireOnHitTrigger(TriggerEffect[Hit]):
 
     def resolve(self, event: Damage) -> None:
         self.status.remove()
+
+
+@dataclasses.dataclass(eq=False)
+class DecrementPerDamageTrigger(TriggerEffect[SufferDamage]):
+    priority: ClassVar[int] = 0
+
+    status: Status
+
+    def should_trigger(self, event: SufferDamage) -> bool:
+        return event.unit == self.status.parent
+
+    def resolve(self, event: SufferDamage) -> None:
+        self.status.decrement_stacks(event.result)
 
 
 @dataclasses.dataclass(eq=False)

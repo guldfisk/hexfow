@@ -768,6 +768,8 @@ class Status(
 
     def on_expires(self) -> None: ...
 
+    def on_fully_decremented(self) -> None: ...
+
     def on_remove(self) -> None: ...
 
     def remove(self) -> None:
@@ -785,9 +787,10 @@ class Status(
             self.on_expires()
             self.remove()
 
-    def decrement_stacks(self) -> None:
-        self.stacks -= 1
+    def decrement_stacks(self, n: int = 1) -> None:
+        self.stacks -= n
         if self.stacks <= 0:
+            self.on_fully_decremented()
             self.remove()
 
 
@@ -1341,6 +1344,19 @@ class HighestStackableRefreshableMixin(StackableMixin):
     def merge(self, signature: StatusSignature) -> MergeResult:
         refresh_result = refresh_duration(self, signature)
         if signature.stacks > self.stacks:
+            self.stacks = signature.stacks
+            return MergeResult.MERGED
+        return refresh_result
+
+
+class LowestStackableRefreshableMixin(StackableMixin):
+    @classmethod
+    def get_stacking_info(cls) -> str:
+        return "lowest stackable, refreshable"
+
+    def merge(self, signature: StatusSignature) -> MergeResult:
+        refresh_result = refresh_duration(self, signature)
+        if signature.stacks < self.stacks:
             self.stacks = signature.stacks
             return MergeResult.MERGED
         return refresh_result

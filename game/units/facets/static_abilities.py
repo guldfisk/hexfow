@@ -17,6 +17,7 @@ from game.effects.modifiers import (
     CrushableModifier,
     FarsightedModifier,
     FightFlightFreezeModifier,
+    HaughtyModifier,
     IgnoreMoveInOnTerrainModifier,
     IncreaseSpeedAuraModifier,
     NegativeAttackPowerAuraModifier,
@@ -498,6 +499,15 @@ class Diver(StaticAbilityFacet):
         self.register_effects(
             AquaticModifier(self.parent), StealthOnTerrainModifier(self.parent, Water)
         )
+
+
+class Haughty(StaticAbilityFacet):
+    """
+    +1 energy regen while this unit is undamaged.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(HaughtyModifier(self.parent))
 
 
 class Swimmer(StaticAbilityFacet):

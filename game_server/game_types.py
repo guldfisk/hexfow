@@ -42,12 +42,11 @@ class TestGameType(GameType):
                     random.choice(
                         [
                             Plains,
-                            Plains,
                             # Plains,
-                            Forest,
-                            Hills,
-                            Water,
-                            Magma,
+                            # Forest,
+                            # Hills,
+                            # Water,
+                            # Magma,
                             # Swamp,
                         ]
                     ),
@@ -64,8 +63,10 @@ class TestGameType(GameType):
                 # KEEN_ARCHER,
                 # VOID_SPRITE,
                 # EFFORTLESS_ATHLETE,
+                WITCH_ENGINE,
                 HARMONIOUS_DRUID,
                 TERRAFORMER_MAGE,
+                ICE_SAVANT,
                 # INK_WITCH,
                 # HARROWED_MYSTICIST,
                 # GRANITE_GOLEM,

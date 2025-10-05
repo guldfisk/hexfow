@@ -12,7 +12,6 @@ from game.core import (
     AttackFacet,
     DamageSignature,
     EffortOption,
-    Facet,
     Hex,
     MoveOption,
     OneOfHexes,
@@ -27,7 +26,7 @@ from game.core import (
 )
 from game.events import MoveUnit, TurnUpkeep
 from game.map.coordinates import CC
-from game.values import DamageType, Resistance, Size, VisionObstruction
+from game.values import Resistance, Size, VisionObstruction
 
 
 class SpeedLayer(IntEnum):
@@ -437,30 +436,6 @@ class TerrainProtectionModifier(
 
 
 @dataclasses.dataclass(eq=False)
-class CamouflageModifier(StateModifierEffect[Unit, TerrainProtectionRequest, int]):
-    priority: ClassVar[int] = 1
-    target: ClassVar[object] = Unit.get_terrain_protection_for
-
-    unit: Unit
-
-    def should_modify(
-        self, obj: Unit, request: TerrainProtectionRequest, value: int
-    ) -> bool:
-        return (
-            obj == self.unit
-            and request.damage_signature.type == DamageType.RANGED
-            and isinstance(request.damage_signature.source, Facet)
-            and GS.map.distance_between(
-                self.unit, request.damage_signature.source.parent
-            )
-            > 1
-        )
-
-    def modify(self, obj: Unit, request: TerrainProtectionRequest, value: int) -> int:
-        return value + 1
-
-
-@dataclasses.dataclass(eq=False)
 class IncreaseSpeedAuraModifier(StateModifierEffect[Unit, None, int]):
     priority: ClassVar[int] = SpeedLayer.FLAT
     target: ClassVar[object] = Unit.speed
@@ -726,22 +701,17 @@ class UnactivateableModifier(StateModifierEffect[Unit, None, bool]):
 
 
 @dataclasses.dataclass(eq=False)
-class SoilCommunionModifier(StateModifierEffect[Unit, None, int]):
+class HaughtyModifier(StateModifierEffect[Unit, None, int]):
     priority: ClassVar[int] = 1
     target: ClassVar[object] = Unit.energy_regen
 
     unit: Unit
-    amount: int
 
     def should_modify(self, obj: Unit, request: None, value: int) -> bool:
-        return (
-            obj.controller == self.unit.controller
-            and GS.map.distance_between(obj, self.unit) <= 1
-            and isinstance(GS.map.hex_off(obj).terrain, Terrain.get_class("forest"))
-        )
+        return obj == self.unit and not self.unit.damage
 
     def modify(self, obj: Unit, request: None, value: int) -> int:
-        return value + self.amount
+        return value + 1
 
 
 @dataclasses.dataclass(eq=False)
