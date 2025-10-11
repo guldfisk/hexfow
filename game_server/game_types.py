@@ -66,6 +66,7 @@ class TestGameType(GameType):
                 WITCH_ENGINE,
                 HARMONIOUS_DRUID,
                 TERRAFORMER_MAGE,
+                BLOOD_CONDUIT,
                 ICE_SAVANT,
                 # INK_WITCH,
                 # HARROWED_MYSTICIST,

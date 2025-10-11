@@ -802,13 +802,16 @@ class VitalityTransfusion(ActivatedAbilityFacet[list[Unit]]):
 
     @classmethod
     def get_target_explanation(cls) -> str | None:
-        return "Target two allied units within 3 range LoS."
+        return "Target two other allied units within 3 range LoS."
 
     def get_target_profile(self) -> TargetProfile[list[Unit]] | None:
         if (
             len(
                 units := find_units_within_range(
-                    self.parent, 3, with_controller=ControllerTargetOption.ALLIED
+                    self.parent,
+                    3,
+                    with_controller=ControllerTargetOption.ALLIED,
+                    can_include_self=False,
                 )
             )
             >= 2
