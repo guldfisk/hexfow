@@ -169,6 +169,25 @@ def stealth_hidden_for(unit: Unit, player: Player) -> bool:
 
 
 @dataclasses.dataclass(eq=False)
+class InvisibleWhenActiveModifier(StateModifierEffect[Unit, Player, bool]):
+    priority: ClassVar[int] = IsHiddenLayer.STEALTH
+    target: ClassVar[object] = Unit.is_hidden_for
+
+    unit: Unit
+
+    def should_modify(self, obj: Unit, request: Player, value: bool) -> bool:
+        return (
+            obj == self.unit
+            and GS.active_unit_context
+            and GS.active_unit_context.unit == self.unit
+            and request != self.unit.controller
+        )
+
+    def modify(self, obj: Unit, request: Player, value: bool) -> bool:
+        return True
+
+
+@dataclasses.dataclass(eq=False)
 class StealthModifier(StateModifierEffect[Unit, Player, bool]):
     priority: ClassVar[int] = IsHiddenLayer.STEALTH
     # TODO is_hidden_for should prob be is_hidden_for(unit) instead of for (player)
@@ -463,6 +482,21 @@ class UnitSpeedModifier(StateModifierEffect[Unit, None, int]):
 
     def should_modify(self, obj: Unit, request: None, value: int) -> bool:
         return obj == self.unit
+
+    def modify(self, obj: Unit, request: None, value: int) -> int:
+        return value + self.amount
+
+
+@dataclasses.dataclass(eq=False)
+class GambitSpeedModifier(StateModifierEffect[Unit, None, int]):
+    priority: ClassVar[int] = SpeedLayer.FLAT
+    target: ClassVar[object] = Unit.speed
+
+    unit: Unit
+    amount: int
+
+    def should_modify(self, obj: Unit, request: None, value: int) -> bool:
+        return obj == self.unit and GS.round_counter == 1
 
     def modify(self, obj: Unit, request: None, value: int) -> int:
         return value + self.amount

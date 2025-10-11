@@ -52,10 +52,12 @@ from game.units.facets.activated_abilities import (
     MalevolentStare,
     MapOut,
     Mortar,
+    MountCharge,
     NaturalBlessing,
     OpenGate,
     PatchUp,
     Poof,
+    PrepareTrap,
     PsychicCommand,
     PublicExecution,
     RaiseGround,
@@ -103,6 +105,7 @@ from game.units.facets.activated_abilities import (
     WildernessGuide,
     WishHarm,
     WringEssence,
+    Zap,
 )
 from game.units.facets.attacks import (
     AnkleBite,
@@ -207,6 +210,7 @@ from game.units.facets.static_abilities import (
     Haughty,
     HeelTurn,
     Immobile,
+    Infiltrator,
     Inspiration,
     InspiringPresence,
     JukeAndJive,
@@ -214,6 +218,7 @@ from game.units.facets.static_abilities import (
     MagicForm,
     Nourishing,
     OldBones,
+    OpeningGambit,
     Ornery,
     PackHunter,
     Prickly,
@@ -832,6 +837,16 @@ CAMELBACK_OUTRIDER = UnitBlueprint(
     speed=4,
     sight=2,
     facets=[Lance, Vigorous, StayingPower],
+    price=8,
+)
+
+DEVIOUS_SABOTEUR = UnitBlueprint(
+    "Devious Saboteur",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[PrepareTrap, MountCharge, Zap, Stealth, Infiltrator, OpeningGambit],
     price=8,
 )
 

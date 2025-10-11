@@ -489,6 +489,25 @@ class MineTrigger(TriggerEffect[MoveUnit]):
 
 
 @dataclasses.dataclass(eq=False)
+class BearTrapTrigger(TriggerEffect[MoveUnit]):
+    priority: ClassVar[int] = 0
+
+    status: HexStatus
+
+    def should_trigger(self, event: MoveUnit) -> bool:
+        return (
+            event.to_ == self.status.parent
+            and event.result
+            and event.unit.controller != self.status.controller
+        )
+
+    def resolve(self, event: MoveUnit) -> None:
+        ES.resolve(Damage(event.unit, DamageSignature(1, self.status)))
+        apply_status_to_unit(event.unit, "rooted", self.status, duration=1)
+        self.status.remove()
+
+
+@dataclasses.dataclass(eq=False)
 class BurnOnWalkIn(TriggerEffect[MoveUnit]):
     priority: ClassVar[int] = 0
 

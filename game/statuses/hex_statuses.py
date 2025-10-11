@@ -1,11 +1,13 @@
 from events.eventsystem import ES
-from events.tests.game_objects.advanced_units import Player
 from game.core import (
+    GS,
+    DamageSignature,
     HexStatus,
     HighestStackableRefreshableMixin,
     LowestRefreshableMixin,
     PerPlayerRefreshable,
     PerPlayerUnstackable,
+    Player,
     RefreshableMixin,
     Terrain,
 )
@@ -21,6 +23,7 @@ from game.effects.modifiers import (
     MappedOutModifier,
 )
 from game.effects.triggers import (
+    BearTrapTrigger,
     BurnOnCleanup,
     BurnOnWalkIn,
     HexRoundDamageTrigger,
@@ -33,7 +36,7 @@ from game.effects.triggers import (
     TurnExpiringStatusTrigger,
     WalkInDestroyStatusTrigger,
 )
-from game.events import ChangeHexTerrain
+from game.events import ChangeHexTerrain, Damage
 
 
 class Shrine(HexStatus):
@@ -115,6 +118,20 @@ class Revealed(PerPlayerRefreshable, HexStatus):
             HexRevealedModifier(self.parent, self.controller),
             HexStealthRevealedModifier(self.parent, self.controller),
         )
+
+
+class TimedDemoCharge(LowestRefreshableMixin, HexStatus):
+    """
+    When this status expires, it deals 4 damage to units on this hex.
+    This status is hidden for opponents.
+    """
+
+    def is_hidden_for(self, player: Player) -> bool:
+        return player != self.controller
+
+    def on_expires(self) -> None:
+        if unit := GS.map.unit_on(self.parent):
+            ES.resolve(Damage(unit, DamageSignature(4, self)))
 
 
 class Flare(PerPlayerRefreshable, HexStatus):
@@ -218,6 +235,20 @@ class Mine(HexStatus):
 
     def create_effects(self) -> None:
         self.register_effects(MineTrigger(self))
+
+
+class BearTrap(HexStatus):
+    """
+    When an enemy unit moves into this hex, apply <rooted> to it for 1 round,
+    it's dealt 1 damage and this status is removed.
+    This status is hidden for opponents.
+    """
+
+    def is_hidden_for(self, player: Player) -> bool:
+        return player != self.controller
+
+    def create_effects(self) -> None:
+        self.register_effects(BearTrapTrigger(self))
 
 
 class Sludge(RefreshableMixin, HexStatus):

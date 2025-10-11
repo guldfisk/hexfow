@@ -17,9 +17,11 @@ from game.effects.modifiers import (
     CrushableModifier,
     FarsightedModifier,
     FightFlightFreezeModifier,
+    GambitSpeedModifier,
     HaughtyModifier,
     IgnoreMoveInOnTerrainModifier,
     IncreaseSpeedAuraModifier,
+    InvisibleWhenActiveModifier,
     NegativeAttackPowerAuraModifier,
     NotMovedStealthModifier,
     PusherModifier,
@@ -206,6 +208,24 @@ class Stealth(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(StealthModifier(self.parent))
+
+
+class Infiltrator(StaticAbilityFacet):
+    """
+    This unit is invisible to the opponent while it is active.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(InvisibleWhenActiveModifier(self.parent))
+
+
+class OpeningGambit(StaticAbilityFacet):
+    """
+    +3 speed on the first round.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(GambitSpeedModifier(self.parent, 3))
 
 
 class FightFlightFreeze(StaticAbilityFacet):

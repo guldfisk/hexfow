@@ -866,6 +866,45 @@ class FatalBonding(ActivatedAbilityFacet):
                     status.remove()
 
 
+class PrepareTrap(TargetHexActivatedAbility):
+    """
+    Applies <bear_trap> to the target hex.
+    """
+
+    cost = MovementCost(1) | EnergyCost(3)
+    combinable = True
+    hidden_target = True
+
+    def perform(self, target: Hex) -> None:
+        apply_status_to_hex(target, "bear_trap", self)
+
+
+class MountCharge(TargetHexActivatedAbility):
+    """
+    Applies <timed_demo_charge> for 2 rounds to the target hex.
+    """
+
+    cost = MovementCost(1) | EnergyCost(2)
+    combinable = True
+    hidden_target = True
+
+    def perform(self, target: Hex) -> None:
+        apply_status_to_hex(target, "timed_demo_charge", self, duration=2)
+
+
+class Zap(TargetUnitActivatedAbility):
+    """
+    The target loses 3 energy.
+    """
+
+    cost = EnergyCost(2)
+    range = 2
+    controller_target_option = ControllerTargetOption.ENEMY
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(LoseEnergy(target, 3, self))
+
+
 class Shove(TargetUnitActivatedAbility):
     """
     Moves target one space away from this unit. If it is staggered, this unit gains 1 movement point.

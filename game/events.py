@@ -2,7 +2,7 @@ import contextlib
 import dataclasses
 import math
 from collections import defaultdict
-from typing import Iterable
+from typing import Iterable, Sequence
 
 from events.eventsystem import ES, Event
 from game.core import (
@@ -188,23 +188,22 @@ class SufferDamage(Event[int]):
         health_before = self.unit.health
         damage_dealt = self.unit.suffer_damage(self.signature)
         if damage_dealt:
+            no_source_elements = [
+                self.unit,
+                f"suffers {damage_dealt} damage",
+                *(
+                    (f"({damage_dealt - health_before} overkill)",)
+                    if damage_dealt > health_before
+                    else ()
+                ),
+            ]
             with GS.log(
-                LogLine(
-                    [
-                        self.unit,
-                        f"suffers {damage_dealt} damage",
-                        *(
-                            (f"({damage_dealt - health_before} overkill)",)
-                            if damage_dealt > health_before
-                            else ()
-                        ),
-                        *(
-                            ("from", self.signature.source)
-                            if self.signature.source
-                            else ()
-                        ),
-                    ]
-                )
+                *(
+                    (LogLine(no_source_elements + ["from", self.signature.source]),)
+                    if self.signature.source
+                    else ()
+                ),
+                LogLine(no_source_elements),
             ):
                 pass
         return min(health_before, damage_dealt)
@@ -365,26 +364,31 @@ class RangedAttackAction(Event[None]):
         self.attack.get_cost().pay(GS.active_unit_context)
 
 
-def make_status_log_line(
+def make_status_log_lines(
     status: Status, signature: StatusSignature, recipient: Unit | Hex
-) -> LogLine:
-    return LogLine(
-        [
-            *(
-                (f"{signature.stacks} stack{'s' if signature.stacks > 1 else ''} off",)
-                if status.stacks
-                else ()
-            ),
-            status,
-            "is applied to",
-            recipient,
-            *(
-                (f"for {status.duration} round{'s' if status.duration > 1 else ''}",)
-                if status.duration
-                else ()
-            ),
-            *(("by", signature.source) if signature.source else ()),
-        ]
+) -> Sequence[LogLine]:
+    no_source_elements = [
+        *(
+            (f"{signature.stacks} stack{'s' if signature.stacks > 1 else ''} off",)
+            if status.stacks
+            else ()
+        ),
+        status,
+        "is applied to",
+        recipient,
+        *(
+            (f"for {status.duration} round{'s' if status.duration > 1 else ''}",)
+            if status.duration
+            else ()
+        ),
+    ]
+    return (
+        *(
+            (LogLine(no_source_elements + ["by", signature.source]),)
+            if signature.source
+            else ()
+        ),
+        LogLine(no_source_elements),
     )
 
 
@@ -398,7 +402,7 @@ class ApplyStatus(Event[UnitStatus | None]):
 
     def resolve(self) -> UnitStatus | None:
         if status := self.unit.add_status(self.signature):
-            with GS.log(make_status_log_line(status, self.signature, self.unit)):
+            with GS.log(*make_status_log_lines(status, self.signature, self.unit)):
                 return status
         return None
 
@@ -410,7 +414,7 @@ class ApplyHexStatus(Event[HexStatus | None]):
 
     def resolve(self) -> HexStatus | None:
         if status := self.space.add_status(self.signature):
-            with GS.log(make_status_log_line(status, self.signature, self.space)):
+            with GS.log(*make_status_log_lines(status, self.signature, self.space)):
                 return status
         return None
 
