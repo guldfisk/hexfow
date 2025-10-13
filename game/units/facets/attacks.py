@@ -99,7 +99,7 @@ class SerratedBeak(MeleeAttackFacet):
 class Strangle(MeleeAttackFacet):
     """+2 damage against small units."""
 
-    cost = MovementCost(4)
+    cost = MovementCost(3)
     damage = 3
 
     def get_damage_modifier_against(self, unit: Unit) -> int | None:
@@ -110,7 +110,6 @@ class Strangle(MeleeAttackFacet):
 class SpitAcid(RangedAttackFacet):
     """Applies 1 stack of <corroded> for 2 rounds."""
 
-    cost = MovementCost(1)
     range = 2
     damage = 2
 
@@ -392,7 +391,7 @@ class TongueLash(RangedAttackFacet):
             return 1
 
 
-class Slice(MeleeAttackFacet):
+class SpinyAppendages(MeleeAttackFacet):
     cost = MovementCost(2)
     damage = 2
 

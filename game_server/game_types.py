@@ -60,13 +60,15 @@ class TestGameType(GameType):
         player_units = (
             (
                 # GOBLIN_ASSASSIN,
-                KEEN_ARCHER,
+                ACID_SPITTER_IGUANA,
+                # KEEN_ARCHER,
                 # VOID_SPRITE,
                 # EFFORTLESS_ATHLETE,
                 # WITCH_ENGINE,
                 # HARMONIOUS_DRUID,
                 # TERRAFORMER_MAGE,
                 # BLOOD_CONDUIT,
+                PYROMANCER_ARTILLERIST,
                 DEVIOUS_SABOTEUR,
                 # ICE_SAVANT,
                 # INK_WITCH,

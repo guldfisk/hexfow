@@ -558,7 +558,7 @@ class EnfeeblingHex(TargetUnitActivatedAbility):
     Applies <enfeebled> for 2 rounds.
     """
 
-    cost = MovementCost(1) | EnergyCost(3)
+    cost = EnergyCost(3)
     range = 2
     controller_target_option = ControllerTargetOption.ENEMY
 
@@ -1307,6 +1307,7 @@ class LayMine(TargetHexActivatedAbility):
 
     cost = EnergyCost(2) | MovementCost(1)
     combinable = True
+    max_activations = 2
     requires_empty = True
     hidden_target = True
 
@@ -1379,7 +1380,7 @@ class MapOut(TargetHexActivatedAbility):
     Applies <mapped_out>.
     """
 
-    cost = EnergyCost(3) | MovementCost(1)
+    cost = EnergyCost(2)
     hidden_target = True
 
     def perform(self, target: Hex) -> None:
@@ -1753,12 +1754,12 @@ class FireStorm(ActivatedAbilityFacet[list[Hex]]):
 
     @classmethod
     def get_target_explanation(cls) -> str | None:
-        return "Target tri hex within 3 range and at least 2 hexes away NLoS."
+        return "Target tri hex within 4 range and at least 2 hexes away NLoS."
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
         if corners := [
             corner
-            for corner in GS.map.get_corners_within_range_off(self.parent, 3)
+            for corner in GS.map.get_corners_within_range_off(self.parent, 4)
             if all(
                 GS.map.distance_between(cc, self.parent) >= 2
                 for cc in corner.get_adjacent_positions()
