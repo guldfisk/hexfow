@@ -82,6 +82,7 @@ class Gore(MeleeAttackFacet):
 
 
 class MarshmallowFist(MeleeAttackFacet):
+    cost = MovementCost(1)
     damage = 2
 
 

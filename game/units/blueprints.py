@@ -441,7 +441,7 @@ KEEN_ARCHER = UnitBlueprint(
 
 MARSHMALLOW_TITAN = UnitBlueprint(
     name="Marshmallow Titan",
-    health=10,
+    health=11,
     speed=2,
     sight=1,
     armor=-1,

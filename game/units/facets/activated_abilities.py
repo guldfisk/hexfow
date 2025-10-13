@@ -795,7 +795,7 @@ class FlameThrower(ActivatedAbilityFacet[list[Hex]]):
 class VitalityTransfusion(ActivatedAbilityFacet[list[Unit]]):
     """
     Transfers health from the second to the first unit.
-    Amount transferred is the minimum of 3, how much the recipient is missing, and how much the donor can give without dying.
+    Amount transferred is the minimum of 2, how much the recipient is missing, and how much the donor can give without dying.
     """
 
     cost = MovementCost(1) | EnergyCost(2)
@@ -820,7 +820,7 @@ class VitalityTransfusion(ActivatedAbilityFacet[list[Unit]]):
 
     def perform(self, target: list[Unit]) -> None:
         recipient, donor = target
-        available_health = min(donor.health - 1, recipient.damage, 3)
+        available_health = min(donor.health - 1, recipient.damage, 2)
         if available_health:
             # TODO yikes should be an event, but unclear what it should be,
             #  since we don't want it to be damage i think.
