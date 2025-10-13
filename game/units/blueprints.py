@@ -478,7 +478,7 @@ SKITTISH_SOOT_PUFF = UnitBlueprint(
     sight=1,
     size=Size.SMALL,
     facets=[SquirtSoot, PuffAway, FoulBurst, SootDweller],
-    price=3,
+    price=2,
     flavor="OMG, it's literally the fucking puff-puff. Are you fucking kidding me with this shit?",
 )
 
@@ -709,7 +709,7 @@ MISCHIEVOUS_GODMOTHER = UnitBlueprint(
     sight=2,
     energy=6,
     facets=[TurnToRabbit, TugIn, FaerieDust],
-    price=6,
+    price=5,
 )
 
 RECON_SPECIALIST = UnitBlueprint(
