@@ -11,6 +11,7 @@ from game.core import (
     ActiveUnitContext,
     AttackFacet,
     DamageSignature,
+    EffortFacet,
     EffortOption,
     Hex,
     MoveOption,
@@ -45,7 +46,7 @@ class SightLayer(IntEnum):
 
 class LegalOptions(IntEnum):
     RESTRICTIVE = auto()
-    MUST_ATTACK = auto()
+    MUST = auto()
 
 
 class IsHiddenLayer(IntEnum):
@@ -316,11 +317,14 @@ class FightFlightFreezeModifier(
 
 
 @dataclasses.dataclass(eq=False)
-class MustAttackModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Option]]):
-    priority: ClassVar[int] = LegalOptions.MUST_ATTACK
+class MustDoEffortTypeModifier(
+    StateModifierEffect[Unit, ActiveUnitContext, list[Option]]
+):
+    priority: ClassVar[int] = LegalOptions.MUST
     target: ClassVar[object] = Unit.get_legal_options
 
     unit: Unit
+    effort_type: type[EffortFacet]
 
     def should_modify(
         self, obj: Unit, request: ActiveUnitContext, value: list[Option]
@@ -334,7 +338,7 @@ class MustAttackModifier(StateModifierEffect[Unit, ActiveUnitContext, list[Optio
             option
             for option in value
             if isinstance(option, EffortOption)
-            and isinstance(option.facet, AttackFacet)
+            and isinstance(option.facet, self.effort_type)
         ]:
             return attack_options
         return value

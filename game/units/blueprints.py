@@ -2,6 +2,7 @@ from game.core import UnitBlueprint
 from game.units.facets.activated_abilities import (
     AssembleTheDoombot,
     AwarenessMentor,
+    Baffle,
     BallMode,
     BatonPass,
     Binoculars,
@@ -9,6 +10,7 @@ from game.units.facets.activated_abilities import (
     Camouflage,
     Charge,
     ChokingSoot,
+    Compel,
     ConstructTurret,
     CoordinatedManeuver,
     CriticalAid,
@@ -28,6 +30,7 @@ from game.units.facets.activated_abilities import (
     FlashBang,
     FlattenGround,
     FleaSwarm,
+    ForcedMarch,
     GiantPincers,
     GrantCharm,
     GrantWish,
@@ -42,8 +45,6 @@ from game.units.facets.activated_abilities import (
     InducePanic,
     InkRing,
     InkScreen,
-    InstilFocus,
-    InternalStruggle,
     IronBlessing,
     Jaunt,
     Jump,
@@ -63,7 +64,6 @@ from game.units.facets.activated_abilities import (
     PublicExecution,
     RaiseGround,
     RaiseShrine,
-    Riddle,
     RingOfIce,
     RollUp,
     RoyalJelly,
@@ -85,6 +85,7 @@ from game.units.facets.activated_abilities import (
     SquirtSoot,
     Stare,
     StimulatingInjection,
+    StopHittingYourself,
     SummonBees,
     SummonScarab,
     Suplex,
@@ -121,7 +122,6 @@ from game.units.facets.attacks import (
     CrushingBeak,
     CrushingFists,
     CrushingMandibles,
-    CrypticClaws,
     CurvedHorns,
     DancingSaber,
     DeathLaser,
@@ -844,6 +844,16 @@ DJINN = UnitBlueprint(
     price=7,
 )
 
+DOMINEERING_PSYCHIC = UnitBlueprint(
+    "Domineering Psychic",
+    health=5,
+    speed=3,
+    sight=1,
+    energy=6,
+    facets=[Compel, Baffle, PsychicCommand, TelepathicSpy],
+    price=7,
+)
+
 RANGER_GUIDE = UnitBlueprint(
     "Ranger Guide",
     health=5,
@@ -988,6 +998,25 @@ BOULDER_HURLER_OAF = UnitBlueprint(
     price=10,
 )
 
+CHAINSAW_SADIST = UnitBlueprint(
+    "Chainsaw Sadist",
+    health=7,
+    speed=3,
+    sight=2,
+    facets=[Chainsaw, FightFlightFreeze, GrizzlyMurderer],
+    price=10,
+)
+
+CRUEL_PUPPETEER = UnitBlueprint(
+    "Cruel Puppeteer",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[StopHittingYourself, FatalBonding, ForcedMarch],
+    price=10,
+)
+
 HOODED_EXECUTIONER = UnitBlueprint(
     "Hooded Executioner",
     health=7,
@@ -1037,7 +1066,7 @@ VILE_TRANSMUTER = UnitBlueprint(
     speed=3,
     sight=2,
     energy=5,
-    facets=[DrainingGrasp, WringEssence, FatalBonding, FalseCure],
+    facets=[DrainingGrasp, WringEssence, FalseCure],
     price=10,
 )
 
@@ -1049,15 +1078,6 @@ BULLDOZER = UnitBlueprint(
     size=Size.LARGE,
     armor=1,
     facets=[Pusher],
-    price=11,
-)
-
-CHAINSAW_SADIST = UnitBlueprint(
-    "Chainsaw Sadist",
-    health=7,
-    speed=3,
-    sight=2,
-    facets=[Chainsaw, FightFlightFreeze, GrizzlyMurderer],
     price=11,
 )
 
@@ -1125,16 +1145,6 @@ INK_WITCH = UnitBlueprint(
     sight=2,
     energy=5,
     facets=[BloodExpunge, InkRing, MalevolentStare],
-    price=11,
-)
-
-INSCRUTABLE_CHIMERA = UnitBlueprint(
-    "Inscrutable Chimera",
-    health=7,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[CrypticClaws, Riddle, PsychicCommand, InstilFocus],
     price=11,
 )
 
@@ -1389,17 +1399,6 @@ LOTUS_BUD = UnitBlueprint(
     size=Size.SMALL,
     facets=[Immobile, Nourishing, Bloom],
     price=1,
-    max_count=0,
-)
-
-TELEPATH = UnitBlueprint(
-    "Telepath",
-    health=4,
-    speed=3,
-    sight=1,
-    energy=4,
-    facets=[InternalStruggle, TelepathicSpy],
-    price=7,
     max_count=0,
 )
 

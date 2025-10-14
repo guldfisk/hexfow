@@ -279,6 +279,10 @@ class GrizzlyMurderer(StaticAbilityFacet):
 
 
 class TelepathicSpy(StaticAbilityFacet):
+    """
+    Adjacent enemy units also provide vision for you.
+    """
+
     def create_effects(self) -> None:
         self.register_effects(TelepathicSpyModifier(self.parent))
 

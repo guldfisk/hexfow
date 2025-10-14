@@ -2,6 +2,7 @@ from events.eventsystem import ES
 from game.core import (
     GS,
     ActivatedAbilityFacet,
+    AttackFacet,
     HighestStackableRefreshableMixin,
     LowestRefreshableMixin,
     LowestStackableRefreshableMixin,
@@ -16,7 +17,7 @@ from game.core import (
     UnitStatusSignature,
 )
 from game.effects.modifiers import (
-    MustAttackModifier,
+    MustDoEffortTypeModifier,
     ParanoiaModifier,
     RootedModifier,
     SilencedModifier,
@@ -435,7 +436,19 @@ class SenselessRage(RefreshableMixin, UnitStatus):
 
     def create_effects(self) -> None:
         self.register_effects(
-            MustAttackModifier(self.parent), UnitAttackPowerFlatModifier(self.parent, 1)
+            MustDoEffortTypeModifier(self.parent, AttackFacet),
+            UnitAttackPowerFlatModifier(self.parent, 1),
+        )
+
+
+class Compulsion(RefreshableMixin, UnitStatus):
+    """
+    If this unit can use an ability, it must.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            MustDoEffortTypeModifier(self.parent, ActivatedAbilityFacet)
         )
 
 
@@ -451,7 +464,7 @@ class Turbo(RefreshableMixin, UnitStatus):
 class TaintedBond(UnitStatus):
     """
     Whenever a unit with a linked Tainted Bond status suffers damage not from a Tainted Bond
-    status, this status deals that much pure damage to this unit.
+    status, this status deals 1 pure damage to this unit.
     """
 
 

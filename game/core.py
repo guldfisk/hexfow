@@ -26,7 +26,12 @@ from typing import (
 from bidict import bidict
 from pydantic import BaseModel, ValidationError
 
-from events.eventsystem import Modifiable, ModifiableAttribute, modifiable
+from events.eventsystem import (
+    EventResolution,
+    Modifiable,
+    ModifiableAttribute,
+    modifiable,
+)
 from game.has_effects import HasEffectChildren, HasEffects
 from game.identification import IDMap
 from game.info.registered import Registered, UnknownIdentifierError, get_registered_meta
@@ -575,7 +580,9 @@ class SingleTargetAttackFacet(AttackFacet, ABC):
         )
 
     def resolve_pre_damage_effects(self, defender: Unit) -> None: ...
-    def resolve_post_damage_effects(self, defender: Unit) -> None: ...
+    def resolve_post_damage_effects(
+        self, defender: Unit, result: EventResolution
+    ) -> None: ...
 
     @classmethod
     def serialize_type(cls) -> JSON:

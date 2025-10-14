@@ -44,6 +44,7 @@ from game.events import (
     Kill,
     LoseEnergy,
     ModifyMovementPoints,
+    MoveAction,
     MoveUnit,
     QueueUnitForActivation,
     ReadyUnit,
@@ -473,27 +474,40 @@ class Jump(TargetHexActivatedAbility):
         ES.resolve(MoveUnit(self.parent, target))
 
 
+class Compel(TargetUnitActivatedAbility):
+    """
+    Applies <compulsion> for 1 round.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 2
+    controller_target_option = ControllerTargetOption.ENEMY
+    requires_los = False
+
+    def perform(self, target: Unit) -> None:
+        apply_status_to_unit(target, "compulsion", self, duration=1)
+
+
 class PsychicCommand(TargetUnitActivatedAbility):
     """Activates it."""
 
-    cost = EnergyCost(3)
+    cost = EnergyCost(2)
     range = 2
     combinable = True
     can_target_self = False
-
-    def can_target_unit(self, unit: Unit) -> bool:
-        return unit != self.parent
+    requires_los = False
 
     def perform(self, target: Unit) -> None:
         ES.resolve(QueueUnitForActivation(target))
 
 
-class Riddle(TargetUnitActivatedAbility):
+class Baffle(TargetUnitActivatedAbility):
     """Applies <baffled>."""
 
     cost = EnergyCost(3) | MovementCost(1)
     range = 2
     controller_target_option = ControllerTargetOption.ENEMY
+    requires_los = False
 
     def perform(self, target: Unit) -> None:
         apply_status_to_unit(target, "baffled", self)
@@ -841,23 +855,53 @@ class VitalityTransfusion(ActivatedAbilityFacet[list[Unit]]):
             ES.resolve(Heal(recipient, available_health, self))
 
 
-class FatalBonding(ActivatedAbilityFacet):
+class ForcedMarch(TargetUnitActivatedAbility):
     """
-    Applies linked <tainted_bond> to both units for 2 rounds.
+    You may take one move action with the targeted unit.
     """
 
-    cost = EnergyCost(3) | ExclusiveCost()
+    cost = EnergyCost(2)
+    range = 3
+    can_target_self = False
+
+    def perform(self, target: Unit) -> None:
+        if moveable_hexes := target.get_potential_move_destinations(None):
+            decision = GS.make_decision(
+                self.parent.controller,
+                SelectOptionDecisionPoint(
+                    [
+                        MoveOption(
+                            target_profile=OneOfHexes(
+                                moveable_hexes + [GS.map.hex_off(target)]
+                            )
+                        ),
+                        SkipOption(target_profile=NoTarget()),
+                    ],
+                    explanation="quick",
+                ),
+            )
+            if isinstance(
+                decision.option, MoveOption
+            ) and decision.target != GS.map.hex_off(target):
+                ES.resolve(MoveAction(target, to_=decision.target))
+
+
+class FatalBonding(ActivatedAbilityFacet):
+    """
+    Applies linked <tainted_bond> to the target units for 2 rounds.
+    """
+
+    cost = EnergyCost(3) | MovementCost(2)
 
     @classmethod
     def get_target_explanation(cls) -> str | None:
-        return "Target two units within 4 range LoS."
+        return "Target 2 or 3 units within 4 range LoS."
 
     def get_target_profile(self) -> TargetProfile[list[Unit]] | None:
         if len(units := find_units_within_range(self.parent, 4)) >= 2:
-            return NOfUnits(units, 2, ["select unit"] * 2)
+            return NOfUnits(units, 3, ["select unit"] * 3, min_count=2)
 
     def perform(self, target: list[Unit]) -> None:
-        # TODO common logic
         if statuses := [
             event.result
             for event in itertools.chain(
@@ -872,11 +916,7 @@ class FatalBonding(ActivatedAbilityFacet):
             and event.unit in target
             and isinstance(event.result, UnitStatus.get("tainted_bond"))
         ]:
-            if len(statuses) == 2:
-                TaintedLink(statuses)
-            else:
-                for status in statuses:
-                    status.remove()
+            TaintedLink(statuses)
 
 
 class PrepareTrap(TargetHexActivatedAbility):
@@ -1267,21 +1307,18 @@ class IronBlessing(TargetUnitActivatedAbility):
         apply_status_to_unit(target, "armored", self, duration=2)
 
 
-class InternalStruggle(TargetUnitActivatedAbility):
+class StopHittingYourself(TargetUnitActivatedAbility):
     """
-    If the unit has a primary attack, it hits itself with it, otherwise it loses 3 energy.
+    The target unit hits itself with its own primary attack.
     """
 
-    cost = EnergyCost(3) | MovementCost(2)
+    cost = EnergyCost(3) | MovementCost(1)
     range = 2
     controller_target_option = ControllerTargetOption.ENEMY
-    requires_los = False
 
     def perform(self, target: Unit) -> None:
         if attack := target.get_primary_attack():
             ES.resolve(Hit(target, target, attack))
-        else:
-            ES.resolve(LoseEnergy(target, 3, self))
 
 
 class Hitch(TargetUnitActivatedAbility):

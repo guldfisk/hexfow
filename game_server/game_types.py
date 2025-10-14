@@ -58,19 +58,17 @@ class TestGameType(GameType):
         )
         player_units = (
             (
+                KEEN_ARCHER,
                 RABID_BADGER,
-                CHARGE_DRONE,
-                INFERNO_TANK,
+                STAUNCH_IRON_HEART,
+                CRUEL_PUPPETEER,
             ),
             (
-                RIFLE_INFANTRY,
-                BELL_STRIKER_BRUTE,
-                ANKLE_BITER_NUISANCE,
-                # ANCIENT_ALTRUIST,
-                BLIND_GRUB,
-                # BLIND_ORACLE,
-                # # LUMBERING_PILLAR,
-                # BEE_SHAMAN,
+                VILE_TRANSMUTER,
+                # DOMINEERING_PSYCHIC,
+                # DEVIOUS_SABOTEUR,
+                # RIFLE_INFANTRY,
+                # ANKLE_BITER_NUISANCE,
             ),
         )
 

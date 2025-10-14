@@ -365,7 +365,7 @@ class TaintedBondTrigger(TriggerEffect[SufferDamage]):
                 ES.resolve(
                     Damage(
                         status.parent,
-                        DamageSignature(event.result, status, DamageType.PURE),
+                        DamageSignature(1, status, DamageType.PURE),
                     )
                 )
 

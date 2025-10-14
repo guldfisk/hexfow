@@ -287,13 +287,15 @@ class Hit(Event[None]):
             LogLine([self.defender, "is hit with", self.attack]),
         ):
             self.attack.resolve_pre_damage_effects(self.defender)
-            ES.resolve(
-                Damage(
-                    self.defender,
-                    self.attack.get_damage_signature_against(self.defender),
-                )
+            self.attack.resolve_post_damage_effects(
+                self.defender,
+                ES.resolve(
+                    Damage(
+                        self.defender,
+                        self.attack.get_damage_signature_against(self.defender),
+                    )
+                ),
             )
-            self.attack.resolve_post_damage_effects(self.defender)
 
 
 @dataclasses.dataclass
