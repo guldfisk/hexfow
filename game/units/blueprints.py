@@ -7,6 +7,7 @@ from game.units.facets.activated_abilities import (
     Binoculars,
     Bloom,
     Camouflage,
+    Charge,
     ChokingSoot,
     ConstructTurret,
     CoordinatedManeuver,
@@ -156,6 +157,7 @@ from game.units.facets.attacks import (
     OtterBite,
     Peck,
     Pinch,
+    RabidBite,
     RazorTusk,
     Rifle,
     RifleSalvo,
@@ -226,6 +228,7 @@ from game.units.facets.static_abilities import (
     PureInnocence,
     Pusher,
     Quick,
+    Reckless,
     ResistantSkin,
     RockSteady,
     Schadenfreude,
@@ -268,6 +271,16 @@ BLIND_ORACLE = UnitBlueprint(
     sight=0,
     energy=2,
     facets=[Scry],
+    price=1,
+)
+
+CHARGE_DRONE = UnitBlueprint(
+    name="Charge Drone",
+    health=3,
+    speed=2,
+    sight=1,
+    size=Size.SMALL,
+    facets=[Charge],
     price=1,
 )
 
@@ -347,6 +360,15 @@ LUMBERING_PILLAR = UnitBlueprint(
     sight=0,
     armor=1,
     size=Size.LARGE,
+    price=2,
+)
+
+RABID_BADGER = UnitBlueprint(
+    name="Rabid Badger",
+    health=2,
+    speed=2,
+    sight=1,
+    facets=[RabidBite, Reckless, Wild],
     price=2,
 )
 
@@ -966,16 +988,6 @@ BOULDER_HURLER_OAF = UnitBlueprint(
     price=10,
 )
 
-GATE_FIEND = UnitBlueprint(
-    "Gate Fiend",
-    health=8,
-    speed=3,
-    sight=2,
-    energy=4,
-    facets=[InfernalBlade, OpenGate],
-    price=10,
-)
-
 HOODED_EXECUTIONER = UnitBlueprint(
     "Hooded Executioner",
     health=7,
@@ -1072,6 +1084,16 @@ ELITE_COMMANDO = UnitBlueprint(
         TerrainSavvy,
         Swimmer,
     ],
+    price=11,
+)
+
+GATE_FIEND = UnitBlueprint(
+    "Gate Fiend",
+    health=7,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[InfernalBlade, OpenGate],
     price=11,
 )
 

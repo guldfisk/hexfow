@@ -107,6 +107,10 @@ class Strangle(MeleeAttackFacet):
             return 2
 
 
+class RabidBite(MeleeAttackFacet):
+    damage = 3
+
+
 class SpitAcid(RangedAttackFacet):
     """Applies 1 stack of <corroded> for 2 rounds."""
 

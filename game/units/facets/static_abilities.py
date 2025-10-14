@@ -67,6 +67,7 @@ from game.effects.triggers import (
     PuffAwayTrigger,
     PureInnocenceTrigger,
     QuickTrigger,
+    RecklessTrigger,
     RecurringUnitBuffTrigger,
     SchadenfreudeDamageTrigger,
     SchadenfreudeDebuffTrigger,
@@ -217,6 +218,16 @@ class Infiltrator(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(InvisibleWhenActiveModifier(self.parent))
+
+
+class Reckless(StaticAbilityFacet):
+    """
+    Whenever this unit melee attacks another unit, if that unit is still alive and
+    can hit this unit with its primary attack, it does.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(RecklessTrigger(self.parent))
 
 
 class OpeningGambit(StaticAbilityFacet):

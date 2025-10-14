@@ -56,29 +56,18 @@ class TestGameType(GameType):
                 for cc in hex_circle(4)
             }
         )
-
         player_units = (
             (
-                # GOBLIN_ASSASSIN,
-                ACID_SPITTER_IGUANA,
-                # KEEN_ARCHER,
-                # VOID_SPRITE,
-                # EFFORTLESS_ATHLETE,
-                # WITCH_ENGINE,
-                # HARMONIOUS_DRUID,
-                # TERRAFORMER_MAGE,
-                # BLOOD_CONDUIT,
-                PYROMANCER_ARTILLERIST,
-                DEVIOUS_SABOTEUR,
-                # ICE_SAVANT,
-                # INK_WITCH,
-                # HARROWED_MYSTICIST,
-                # GRANITE_GOLEM,
+                RABID_BADGER,
+                CHARGE_DRONE,
+                INFERNO_TANK,
             ),
             (
+                RIFLE_INFANTRY,
+                BELL_STRIKER_BRUTE,
                 ANKLE_BITER_NUISANCE,
                 # ANCIENT_ALTRUIST,
-                INFERNO_TANK,
+                BLIND_GRUB,
                 # BLIND_ORACLE,
                 # # LUMBERING_PILLAR,
                 # BEE_SHAMAN,

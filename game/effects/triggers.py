@@ -59,7 +59,7 @@ from game.statuses.shortcuts import apply_status_to_hex, apply_status_to_unit
 from game.values import DamageType, StatusIntention
 
 
-class TriggerLayers(IntEnum):
+class TriggerLayer(IntEnum):
     ROUND_STATUSES_TICK = auto()
     ROUND_HEAL_TICK = auto()
     PANIC = auto()
@@ -71,6 +71,9 @@ class TriggerLayers(IntEnum):
 
     READY = auto()
     EXHAUST = auto()
+
+    PACK_HUNTER = auto()
+    RECKLESS = auto()
 
 
 @dataclasses.dataclass(eq=False)
@@ -108,7 +111,7 @@ class DebuffOnMeleeAttackTrigger(TriggerEffect[Hit]):
 
 @dataclasses.dataclass(eq=False)
 class PackHunterTrigger(TriggerEffect[MeleeAttackAction]):
-    priority: ClassVar[int] = 0
+    priority: ClassVar[int] = TriggerLayer.PACK_HUNTER
 
     unit: Unit
 
@@ -128,8 +131,33 @@ class PackHunterTrigger(TriggerEffect[MeleeAttackAction]):
 
 
 @dataclasses.dataclass(eq=False)
+class RecklessTrigger(TriggerEffect[MeleeAttackAction]):
+    priority: ClassVar[int] = TriggerLayer.RECKLESS
+
+    unit: Unit
+
+    def should_trigger(self, event: MeleeAttackAction) -> bool:
+        return (
+            event.attacker == self.unit
+            and event.defender.on_map()
+            and event.attacker != event.defender
+            and (
+                (defender_attack := event.defender.get_primary_attack())
+                and event.attacker
+                in defender_attack.get_legal_targets(
+                    ActiveUnitContext(event.defender, 1)
+                )
+            )
+        )
+
+    def resolve(self, event: MeleeAttackAction) -> None:
+        if attack := event.defender.get_primary_attack():
+            ES.resolve(Hit(attacker=event.defender, defender=self.unit, attack=attack))
+
+
+@dataclasses.dataclass(eq=False)
 class FuriousTrigger(TriggerEffect[Hit]):
-    priority: ClassVar[int] = TriggerLayers.READY
+    priority: ClassVar[int] = TriggerLayer.READY
 
     unit: Unit
 
@@ -363,7 +391,7 @@ class ParchedTrigger(TriggerEffect[TurnCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class OldBonesTrigger(TriggerEffect[TurnCleanup]):
-    priority: ClassVar[int] = TriggerLayers.OLD_BONES
+    priority: ClassVar[int] = TriggerLayer.OLD_BONES
 
     unit: Unit
     source: Source
@@ -381,7 +409,7 @@ class OldBonesTrigger(TriggerEffect[TurnCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class TiredDamageTrigger(TriggerEffect[TurnCleanup]):
-    priority: ClassVar[int] = TriggerLayers.TIRED
+    priority: ClassVar[int] = TriggerLayer.TIRED
 
     status: UnitStatus
 
@@ -542,7 +570,7 @@ class UnitAppliesStatusOnMoveTrigger(TriggerEffect[MoveUnit]):
 
 @dataclasses.dataclass(eq=False)
 class ChillTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
+    priority: ClassVar[int] = TriggerLayer.ROUND_STATUSES_TICK
 
     unit: Unit
     source: Source
@@ -560,7 +588,7 @@ class ChillTrigger(TriggerEffect[RoundCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class BurnOnCleanup(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = TriggerLayers.ROUND_APPLY_DEBUFFS
+    priority: ClassVar[int] = TriggerLayer.ROUND_APPLY_DEBUFFS
 
     hex: Hex
     amount: int | Callable[..., int]
@@ -580,7 +608,7 @@ class BurnOnCleanup(TriggerEffect[RoundCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class FleetingTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = TriggerLayers.FLEETING
+    priority: ClassVar[int] = TriggerLayer.FLEETING
 
     unit: Unit
     round: int
@@ -595,7 +623,7 @@ class FleetingTrigger(TriggerEffect[RoundCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class BurnTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
+    priority: ClassVar[int] = TriggerLayer.ROUND_STATUSES_TICK
 
     status: UnitStatus
 
@@ -608,7 +636,7 @@ class BurnTrigger(TriggerEffect[RoundCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class SludgeTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
+    priority: ClassVar[int] = TriggerLayer.ROUND_STATUSES_TICK
 
     status: HexStatus
 
@@ -622,7 +650,7 @@ class SludgeTrigger(TriggerEffect[RoundCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class RoundHealTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = TriggerLayers.ROUND_HEAL_TICK
+    priority: ClassVar[int] = TriggerLayer.ROUND_HEAL_TICK
 
     unit: Unit
     amount: int
@@ -634,7 +662,7 @@ class RoundHealTrigger(TriggerEffect[RoundCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class HexRoundHealTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = TriggerLayers.ROUND_HEAL_TICK
+    priority: ClassVar[int] = TriggerLayer.ROUND_HEAL_TICK
 
     hex: Hex
     amount: int
@@ -741,7 +769,7 @@ class RecurringUnitBuffTrigger(TriggerEffect[RoundUpkeep]):
 
 @dataclasses.dataclass(eq=False)
 class FleaInfestedTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
+    priority: ClassVar[int] = TriggerLayer.ROUND_STATUSES_TICK
 
     unit: Unit
     controller: Player
@@ -769,7 +797,7 @@ class FleaInfestedTrigger(TriggerEffect[RoundCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class HexRoundDamageTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
+    priority: ClassVar[int] = TriggerLayer.ROUND_STATUSES_TICK
 
     hex: Hex
     source: Source
@@ -895,7 +923,7 @@ class ExpireOnSufferDamageStatusTrigger(TriggerEffect[SufferDamage]):
 
 @dataclasses.dataclass(eq=False)
 class RoundDamageTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = TriggerLayers.ROUND_STATUSES_TICK
+    priority: ClassVar[int] = TriggerLayer.ROUND_STATUSES_TICK
 
     unit: Unit
     source: Source
@@ -916,7 +944,7 @@ class RoundDamageTrigger(TriggerEffect[RoundCleanup]):
 
 @dataclasses.dataclass(eq=False)
 class PanickedTrigger(TriggerEffect[RoundCleanup]):
-    priority: ClassVar[int] = TriggerLayers.PANIC
+    priority: ClassVar[int] = TriggerLayer.PANIC
 
     status: UnitStatus
 
@@ -1037,7 +1065,7 @@ class ScurryInTheShadowsTrigger(TriggerEffect[TurnUpkeep]):
 
 @dataclasses.dataclass(eq=False)
 class BellStruckTrigger(TriggerEffect[ReceiveDamage]):
-    priority: ClassVar[int] = TriggerLayers.EXHAUST
+    priority: ClassVar[int] = TriggerLayer.EXHAUST
 
     unit: Unit
     source: Source

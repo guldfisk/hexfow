@@ -85,6 +85,19 @@ class Bloom(NoTargetActivatedAbility):
         ES.resolve(Kill(self.parent, self))
 
 
+class Charge(TargetUnitActivatedAbility):
+    """
+    The target gains 2 energy. This unit dies.
+    """
+
+    controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(GainEnergy(target, 2, self))
+        ES.resolve(Kill(self.parent, self))
+
+
 class PatchUp(TargetUnitActivatedAbility):
     """
     Heals 1.
