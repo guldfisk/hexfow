@@ -1,11 +1,52 @@
 import { useArmyEditorDispatch, useArmyEditorState } from "./state/hooks.ts";
-import { GameObjectDetails } from "../interfaces/gameObjectDetails.ts";
+import {
+  GameObjectDetails,
+  UnitDetails,
+} from "../interfaces/gameObjectDetails.ts";
 import { addUnit, hoverUnit, removeUnit, setUnits } from "./state/store.ts";
 import { UnitDetailsView } from "../components/unitDetails.tsx";
 import { DetailsIndicator } from "../details/components.tsx";
 import React from "react";
 import { getAdditionalDetails } from "../details/additional.ts";
 import { sortBlueprints, UnitList } from "../components/unitList.tsx";
+import { StatusesDetailView } from "../components/statusDetails.tsx";
+
+const AdditionalDetailView = ({
+  detailed,
+  gameObjectDetails,
+  additionalDetailsIndex,
+}: {
+  detailed: UnitDetails;
+  gameObjectDetails: GameObjectDetails;
+  additionalDetailsIndex: number;
+}) => {
+  const additionalDetails = getAdditionalDetails(
+    { type: "blueprint", blueprint: detailed.identifier },
+    gameObjectDetails,
+  );
+
+  if (additionalDetails.length) {
+    const additionalDetail = additionalDetails[additionalDetailsIndex];
+    if (additionalDetail.type == "blueprint") {
+      return (
+        <UnitDetailsView
+          unit={null}
+          details={gameObjectDetails.units[additionalDetail.blueprint]}
+          gameObjectDetails={gameObjectDetails}
+        />
+      );
+    }
+    if (additionalDetail.type == "statusTypes") {
+      return (
+        <StatusesDetailView
+          statuses={null}
+          statusIdentifiers={additionalDetail.statuses}
+          gameObjectDetails={gameObjectDetails}
+        />
+      );
+    }
+  }
+};
 
 const DetailsView = ({
   gameObjectDetails,
@@ -25,17 +66,10 @@ const DetailsView = ({
     <>
       {gameObjectDetails && additionalDetailsIndex !== null ? (
         <div className={"sidebar sidebar-details"}>
-          <UnitDetailsView
-            unit={null}
-            details={
-              gameObjectDetails.units[
-                getAdditionalDetails(
-                  { type: "blueprint", blueprint: detailed.identifier },
-                  gameObjectDetails,
-                )[additionalDetailsIndex].blueprint
-              ]
-            }
+          <AdditionalDetailView
+            detailed={detailed}
             gameObjectDetails={gameObjectDetails}
+            additionalDetailsIndex={additionalDetailsIndex}
           />
         </div>
       ) : null}
