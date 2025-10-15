@@ -885,7 +885,7 @@ BLASTER_DROID = UnitBlueprint(
 
 BLIND_ABOMINATION = UnitBlueprint(
     "Blind Abomination",
-    health=9,
+    health=8,
     speed=3,
     sight=0,
     size=Size.LARGE,
@@ -948,15 +948,6 @@ DEVIOUS_SABOTEUR = UnitBlueprint(
     price=9,
 )
 
-EFFORTLESS_ATHLETE = UnitBlueprint(
-    "Effortless Athlete",
-    health=6,
-    speed=3,
-    sight=2,
-    facets=[RoundhouseKick, Vault, BatonPass],
-    price=9,
-)
-
 VELOCIRAPTOR = UnitBlueprint(
     "Velociraptor",
     health=5,
@@ -1008,11 +999,20 @@ CHAINSAW_SADIST = UnitBlueprint(
 
 CRUEL_PUPPETEER = UnitBlueprint(
     "Cruel Puppeteer",
-    health=4,
+    health=5,
     speed=3,
     sight=2,
     energy=6,
     facets=[StopHittingYourself, FatalBonding, ForcedMarch],
+    price=10,
+)
+
+EFFORTLESS_ATHLETE = UnitBlueprint(
+    "Effortless Athlete",
+    health=6,
+    speed=3,
+    sight=2,
+    facets=[RoundhouseKick, Vault, BatonPass],
     price=10,
 )
 
