@@ -509,7 +509,11 @@ class MineTrigger(TriggerEffect[MoveUnit]):
     status: HexStatus
 
     def should_trigger(self, event: MoveUnit) -> bool:
-        return event.to_ == self.status.parent and event.result
+        return (
+            event.to_ == self.status.parent
+            and event.result
+            and event.unit.controller != self.status.controller
+        )
 
     def resolve(self, event: MoveUnit) -> None:
         ES.resolve(Damage(event.unit, DamageSignature(2, self.status)))

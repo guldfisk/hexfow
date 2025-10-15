@@ -224,9 +224,9 @@ class RuneOfClarity(HexStatus):
         self.register_effects(HexFlatEnergyRegenModifier(self.parent, 1))
 
 
-class Mine(HexStatus):
+class Mine(PerPlayerUnstackable, HexStatus):
     """
-    When a unit moves into this hex, it's dealt 2 damage and this status is removed.
+    When an enemy unit moves into this hex, it's dealt 2 damage and this status is removed.
     This status is hidden for opponents.
     """
 

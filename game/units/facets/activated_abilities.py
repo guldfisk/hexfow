@@ -1358,7 +1358,6 @@ class LayMine(TargetHexActivatedAbility):
     cost = EnergyCost(2) | MovementCost(1)
     combinable = True
     max_activations = 2
-    requires_empty = True
     hidden_target = True
 
     def perform(self, target: Hex) -> None:

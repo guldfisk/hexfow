@@ -58,10 +58,11 @@ class TestGameType(GameType):
         )
         player_units = (
             (
-                KEEN_ARCHER,
-                RABID_BADGER,
-                STAUNCH_IRON_HEART,
-                CRUEL_PUPPETEER,
+                # KEEN_ARCHER,
+                # RABID_BADGER,
+                # STAUNCH_IRON_HEART,
+                MINE_LAYER_BEETLE,
+                # CRUEL_PUPPETEER,
             ),
             (
                 VILE_TRANSMUTER,

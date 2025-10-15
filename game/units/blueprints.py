@@ -216,7 +216,6 @@ from game.units.facets.static_abilities import (
     Inspiration,
     InspiringPresence,
     JukeAndJive,
-    LastStand,
     MagicForm,
     Nourishing,
     OldBones,
@@ -276,7 +275,7 @@ BLIND_ORACLE = UnitBlueprint(
 
 CHARGE_DRONE = UnitBlueprint(
     name="Charge Drone",
-    health=3,
+    health=2,
     speed=2,
     sight=1,
     size=Size.SMALL,
@@ -474,10 +473,10 @@ KEEN_ARCHER = UnitBlueprint(
 
 MARSHMALLOW_TITAN = UnitBlueprint(
     name="Marshmallow Titan",
-    health=11,
+    health=12,
     speed=2,
     sight=1,
-    armor=-1,
+    armor=-2,
     size=Size.LARGE,
     facets=[MarshmallowFist],
     price=3,
@@ -506,8 +505,8 @@ SHRINE_KEEPER = UnitBlueprint(
 
 ANKLE_BITER_NUISANCE = UnitBlueprint(
     "Ankle Biter Nuisance",
-    health=4,
-    speed=3,
+    health=3,
+    speed=4,
     sight=1,
     size=Size.SMALL,
     facets=[AnkleBite],
@@ -710,7 +709,7 @@ GIANT_SLAYER_MOUSE = UnitBlueprint(
     speed=3,
     sight=2,
     size=Size.SMALL,
-    facets=[Slay, LastStand],
+    facets=[Slay, StayingPower],
     price=6,
 )
 
@@ -903,16 +902,6 @@ CAMELBACK_OUTRIDER = UnitBlueprint(
     price=8,
 )
 
-DEVIOUS_SABOTEUR = UnitBlueprint(
-    "Devious Saboteur",
-    health=4,
-    speed=3,
-    sight=2,
-    energy=6,
-    facets=[PrepareTrap, MountCharge, Zap, Stealth, Infiltrator, OpeningGambit],
-    price=8,
-)
-
 GIANT_TOAD = UnitBlueprint(
     "Giant Toad",
     health=8,
@@ -947,6 +936,16 @@ ZONE_SKIRMISHER = UnitBlueprint(
     sight=2,
     facets=[StandardIssueBlaster, Engage],
     price=8,
+)
+
+DEVIOUS_SABOTEUR = UnitBlueprint(
+    "Devious Saboteur",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[PrepareTrap, MountCharge, Zap, Stealth, Infiltrator, OpeningGambit],
+    price=9,
 )
 
 EFFORTLESS_ATHLETE = UnitBlueprint(
