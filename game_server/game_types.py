@@ -59,6 +59,8 @@ class TestGameType(GameType):
         player_units = (
             (
                 HEAVY_ARTILLERY,
+                ARTILLERY_SURVEYOR,
+                BOMB_TRUCK,
                 MINE_LAYER_BEETLE,
                 TRENCH_ENGINEER,
             ),

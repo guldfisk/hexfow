@@ -154,27 +154,6 @@ class FuriousTrigger(TriggerEffect[Hit]):
 
 
 @dataclasses.dataclass(eq=False)
-class ExplosiveTrigger(TriggerEffect[KillUpkeep]):
-    priority: ClassVar[int] = 0
-
-    unit: Unit
-    source: Source
-    damage: int
-
-    def should_trigger(self, event: KillUpkeep) -> bool:
-        return event.unit == self.unit
-
-    def resolve(self, event: KillUpkeep) -> None:
-        for unit in GS.map.get_units_within_range_off(self.unit, 1):
-            ES.resolve(
-                Damage(
-                    unit,
-                    DamageSignature(self.damage, self.source, type=DamageType.PHYSICAL),
-                )
-            )
-
-
-@dataclasses.dataclass(eq=False)
 class SchadenfreudeDamageTrigger(TriggerEffect[Damage]):
     priority: ClassVar[int] = 0
 

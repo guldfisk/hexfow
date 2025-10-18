@@ -156,6 +156,23 @@ class SelfDestruct(NoTargetActivatedAbility):
         ES.resolve(Kill(self.parent, self))
 
 
+class Explode(NoTargetActivatedAbility):
+    """
+    This unit deals 4 damage to each adjacent unit. It dies.
+    """
+
+    cost = MovementCost(1)
+
+    def perform(self, target: None) -> None:
+        for unit in GS.map.get_units_within_range_off(self.parent, 1):
+            ES.resolve(
+                Damage(
+                    unit,
+                    DamageSignature(4, self, type=DamageType.PHYSICAL),
+                )
+            )
+
+
 class GrantWish(TargetUnitActivatedAbility):
     """
     The target is exhausted, and its controller chooses one:

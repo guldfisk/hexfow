@@ -55,7 +55,6 @@ from game.effects.triggers import (
     ApplyStatusToDefenderOnHitTrigger,
     AutomatedTrigger,
     CaughtInTheMatchTrigger,
-    ExplosiveTrigger,
     FleetingTrigger,
     FoulBurstTrigger,
     FuriousTrigger,
@@ -267,13 +266,6 @@ class FightFlightFreeze(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(FightFlightFreezeModifier(self.parent))
-
-
-class Explosive(StaticAbilityFacet):
-    """When this unit dies, it deals 5 damage to unit within 1 range."""
-
-    def create_effects(self) -> None:
-        self.register_effects(ExplosiveTrigger(self.parent, self, 5))
 
 
 class Schadenfreude(StaticAbilityFacet):

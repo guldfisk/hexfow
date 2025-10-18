@@ -22,6 +22,7 @@ from game.units.facets.activated_abilities import (
     EnfeeblingHex,
     Evacuate,
     Exorcise,
+    Explode,
     FaerieDust,
     FalseCure,
     FatalBonding,
@@ -76,7 +77,6 @@ from game.units.facets.activated_abilities import (
     Scorch,
     Scorn,
     Scry,
-    SelfDestruct,
     ShieldWithFrost,
     ShootFlare,
     Shove,
@@ -207,7 +207,6 @@ from game.units.facets.static_abilities import (
     DiamondSkin,
     Diver,
     DreadfulVisage,
-    Explosive,
     Farsighted,
     FightFlightFreeze,
     FlameResistant,
@@ -705,10 +704,10 @@ BOMBARD_CANON = UnitBlueprint(
 
 BOMB_TRUCK = UnitBlueprint(
     "Bomb Truck",
-    health=3,
+    health=4,
     speed=3,
     sight=1,
-    facets=[SelfDestruct, Explosive],
+    facets=[Explode],
     price=6,
     flavor="Nothing stops the mail.",
 )
@@ -1385,7 +1384,7 @@ DOOMBOT_3000 = UnitBlueprint(
     energy=4,
     armor=1,
     size=Size.LARGE,
-    facets=[DeathLaser, FlameThrower, SelfDestruct, Explosive],
+    facets=[DeathLaser, FlameThrower],
     price=None,
 )
 

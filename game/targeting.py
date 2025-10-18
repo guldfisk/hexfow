@@ -216,7 +216,7 @@ class TargetTriHexActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
 
     @classmethod
     def get_target_explanation(cls) -> str | None:
-        s = "Target tri hex within range "
+        s = f"Target tri hex within {cls.range} range "
         if cls.min_range is not None:
             s += f"and at least {cls.min_range} hexes away "
         return s + "NLoS."
