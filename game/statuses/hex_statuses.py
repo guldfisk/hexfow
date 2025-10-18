@@ -4,6 +4,7 @@ from game.core import (
     DamageSignature,
     HexStatus,
     HighestStackableRefreshableMixin,
+    IndependentMixin,
     LowestRefreshableMixin,
     PerPlayerRefreshable,
     PerPlayerUnstackable,
@@ -37,6 +38,7 @@ from game.effects.triggers import (
     WalkInDestroyStatusTrigger,
 )
 from game.events import ChangeHexTerrain, Damage
+from game.values import DamageType
 
 
 class Shrine(HexStatus):
@@ -132,6 +134,20 @@ class TimedDemoCharge(LowestRefreshableMixin, HexStatus):
     def on_expires(self) -> None:
         if unit := GS.map.unit_on(self.parent):
             ES.resolve(Damage(unit, DamageSignature(4, self)))
+
+
+class Incoming(IndependentMixin, HexStatus):
+    """
+    When this status expires, it deals damage equal to its stacks to units on this hex.
+    """
+
+    def on_expires(self) -> None:
+        if unit := GS.map.unit_on(self.parent):
+            ES.resolve(
+                Damage(
+                    unit, DamageSignature(self.stacks, self, type=DamageType.PHYSICAL)
+                )
+            )
 
 
 class Flare(PerPlayerRefreshable, HexStatus):

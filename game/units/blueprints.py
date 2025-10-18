@@ -7,6 +7,7 @@ from game.units.facets.activated_abilities import (
     BatonPass,
     Binoculars,
     Bloom,
+    Bombard,
     Camouflage,
     Charge,
     ChokingSoot,
@@ -57,11 +58,13 @@ from game.units.facets.activated_abilities import (
     MountCharge,
     NaturalBlessing,
     OpenGate,
+    OrbitalStrike,
     PatchUp,
     Poof,
     PrepareTrap,
     PsychicCommand,
     PublicExecution,
+    Pummel,
     RaiseGround,
     RaiseShrine,
     RingOfIce,
@@ -82,6 +85,7 @@ from game.units.facets.activated_abilities import (
     SowDiscord,
     SpiritProjection,
     SpurIntoRage,
+    SpySatellite,
     SquirtSoot,
     Stare,
     StimulatingInjection,
@@ -195,6 +199,7 @@ from game.units.facets.static_abilities import (
     Automated,
     CaughtInTheMatch,
     CrabShuffle,
+    Cumbersome,
     DiamondSkin,
     Diver,
     DreadfulVisage,
@@ -938,6 +943,17 @@ ZONE_SKIRMISHER = UnitBlueprint(
     price=8,
 )
 
+ARTILLERY_SURVEYOR = UnitBlueprint(
+    "Artillery Surveyor",
+    health=4,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    energy=6,
+    facets=[OrbitalStrike, SpySatellite],
+    price=9,
+)
+
 DEVIOUS_SABOTEUR = UnitBlueprint(
     "Devious Saboteur",
     health=4,
@@ -1124,6 +1140,16 @@ GRANITE_GOLEM = UnitBlueprint(
     size=Size.LARGE,
     armor=1,
     facets=[CrushingFists, RockSteady, ResistantSkin],
+    price=11,
+)
+
+HEAVY_ARTILLERY = UnitBlueprint(
+    "Heavy Artillery",
+    health=5,
+    speed=1,
+    sight=1,
+    energy=6,
+    facets=[Pummel, Bombard, Cumbersome],
     price=11,
 )
 

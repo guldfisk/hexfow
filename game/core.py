@@ -1278,6 +1278,15 @@ def refresh_duration(
     return MergeResult.REJECTED
 
 
+class IndependentMixin(StatusMixin):
+    @classmethod
+    def get_stacking_info(cls) -> str:
+        return "independently stacking"
+
+    def merge(self, signature: StatusSignature) -> MergeResult:
+        return MergeResult.STACK
+
+
 class RefreshableMixin(StatusMixin):
     @classmethod
     def get_stacking_info(cls) -> str:
@@ -1748,19 +1757,24 @@ class HexMap:
                 if controlled_by is None or controlled_by == unit.controller:
                     yield unit
 
-    def get_hexes_within_range_off(self, off: CCArg, distance: int) -> Iterator[Hex]:
-        for cc in hex_circle(distance, center=self._to_cc(off)):
-            if cc in self.hexes:
-                yield self.hexes[cc]
+    def get_hexes_within_range_off(
+        self, off: CCArg, distance: int, min_distance: int | None = None
+    ) -> Iterator[Hex]:
+        for cc in hex_circle(distance, center=(center := self._to_cc(off))):
+            if min_distance is None or cc.distance_to(center) >= min_distance:
+                if cc in self.hexes:
+                    yield self.hexes[cc]
 
     def get_corners_within_range_off(
-        self, off: CCArg, distance: int
+        self, off: CCArg, distance: int, min_distance: int | None = None
     ) -> Iterator[Corner]:
         for cc in hex_circle(distance, center=(center := self._to_cc(off))):
             for position in CornerPosition:
                 corner = Corner(cc, position)
                 if all(
-                    cc in self.hexes and cc.distance_to(center) <= distance
+                    cc in self.hexes
+                    and cc.distance_to(center) <= distance
+                    and (min_distance is None or cc.distance_to(center) >= min_distance)
                     for cc in corner.get_adjacent_positions()
                 ):
                     yield corner
@@ -1818,6 +1832,7 @@ def find_hexs_within_range(
     from_unit: Unit,
     within_range: int,
     *,
+    min_distance: int | None = None,
     require_vision: bool = False,
     require_los: bool = True,
     require_empty: bool = True,
@@ -1828,7 +1843,9 @@ def find_hexs_within_range(
     vision_for_player = vision_for_player or from_unit.controller
     return [
         _hex
-        for _hex in GS.map.get_hexes_within_range_off(from_unit, within_range)
+        for _hex in GS.map.get_hexes_within_range_off(
+            from_unit, within_range, min_distance=min_distance
+        )
         if (not require_vision or _hex.is_visible_to(vision_for_player))
         and (
             not require_los

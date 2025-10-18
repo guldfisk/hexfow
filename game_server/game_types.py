@@ -53,15 +53,18 @@ class TestGameType(GameType):
                     cc.distance_to(CC(0, 0)) <= 1,
                     deployment_zone_of=0 if cc.r & 1 else 1,
                 )
-                for cc in hex_circle(4)
+                for cc in hex_circle(8)
             }
         )
         player_units = (
             (
                 # KEEN_ARCHER,
                 # RABID_BADGER,
-                STAUNCH_IRON_HEART,
+                HEAVY_ARTILLERY,
+                # STAUNCH_IRON_HEART,
                 MINE_LAYER_BEETLE,
+                ARTILLERY_SURVEYOR,
+                # PYROMANCER_ARTILLERIST,
                 # CRUEL_PUPPETEER,
             ),
             (

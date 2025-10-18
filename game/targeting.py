@@ -87,6 +87,7 @@ class TargetUnitActivatedAbility(ActivatedAbilityFacet[Unit], ABC):
 
 class TargetHexActivatedAbility(ActivatedAbilityFacet[Hex], ABC):
     range: ClassVar[int] = 1
+    min_range: ClassVar[int | None] = None
     requires_los: ClassVar[bool] = True
     requires_vision: ClassVar[bool] = True
     requires_empty: ClassVar[bool] = False
@@ -119,6 +120,8 @@ class TargetHexActivatedAbility(ActivatedAbilityFacet[Hex], ABC):
             fragments.append(cls.explain_with_filter)
         if not adjacent:
             fragments.append(f"within {cls.range} range")
+            if cls.min_range is not None:
+                fragments.append(f"and at least {cls.min_range} hexes away")
             if cls.range > 1:
                 fragments.append("LoS" if cls.requires_los else "NLoS")
         if cls.explain_that_filter:
@@ -129,6 +132,7 @@ class TargetHexActivatedAbility(ActivatedAbilityFacet[Hex], ABC):
         if hexes := find_hexs_within_range(
             self.parent,
             self.range,
+            min_distance=self.min_range,
             require_vision=self.requires_vision,
             require_los=self.requires_los,
             require_empty=self.requires_empty,
@@ -208,14 +212,20 @@ class TargetHexRingActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
 
 class TargetTriHexActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
     range: ClassVar[int]
+    min_range: ClassVar[int | None] = None
 
     @classmethod
     def get_target_explanation(cls) -> str | None:
-        return f"Target tri hex within {cls.range} range NLoS."
+        s = "Target tri hex within range "
+        if cls.min_range is not None:
+            s += f"and at least {cls.min_range} hexes away "
+        return s + "NLoS."
 
     def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
         if corners := list(
-            GS.map.get_corners_within_range_off(self.parent, self.range)
+            GS.map.get_corners_within_range_off(
+                self.parent, self.range, min_distance=self.min_range
+            )
         ):
             return TriHex(corners)
 

@@ -58,7 +58,7 @@ from game.statuses.shortcuts import (
     dispel_all,
     dispel_from_unit,
 )
-from game.target_profiles import Cone, NOfHexes, NOfUnits, Tree, TreeNode, TriHex
+from game.target_profiles import Cone, NOfHexes, NOfUnits, Tree, TreeNode
 from game.targeting import (
     ControllerTargetOption,
     NoTargetActivatedAbility,
@@ -1792,28 +1792,70 @@ class TorporFumes(TargetTriHexActivatedAbility):
             apply_status_to_unit(unit, "tired", self, stacks=2)
 
 
-class FireStorm(ActivatedAbilityFacet[list[Hex]]):
+class Pummel(TargetHexActivatedAbility):
+    """
+    Applies 3 stacks of <incoming> for 1 round.
+    """
+
+    cost = ExclusiveCost() | EnergyCost(3)
+    range = 6
+    min_range = 2
+    requires_vision = False
+    requires_los = False
+
+    def perform(self, target: Hex) -> None:
+        apply_status_to_hex(target, "incoming", self, stacks=3, duration=1)
+
+
+class Bombard(TargetTriHexActivatedAbility):
+    """
+    Applies 1 stacks of <incoming> for 1 round.
+    """
+
+    cost = ExclusiveCost() | EnergyCost(2)
+    range = 7
+    min_range = 2
+
+    def perform(self, target: list[Hex]) -> None:
+        for h in target:
+            apply_status_to_hex(h, "incoming", self, stacks=1, duration=1)
+
+
+class OrbitalStrike(TargetTriHexActivatedAbility):
+    """
+    Applies 4 stacks of <incoming> for 2 rounds.
+    """
+
+    cost = MovementCost(2) | EnergyCost(3)
+    range = 5
+
+    def perform(self, target: list[Hex]) -> None:
+        for h in target:
+            apply_status_to_hex(h, "incoming", self, stacks=4, duration=2)
+
+
+class SpySatellite(TargetTriHexActivatedAbility):
+    """
+    Applies <revealed> for 1 round.
+    """
+
+    cost = MovementCost(2) | EnergyCost(2)
+    range = 5
+
+    def perform(self, target: list[Hex]) -> None:
+        for h in target:
+            apply_status_to_hex(h, "revealed", self, duration=1)
+
+
+class FireStorm(TargetTriHexActivatedAbility):
     """
     For each target hex, if it has <burning_terrain>, apply 2 stacks of <burning_terrain> for 2 rounds, and 2 <burn> to any
     unit on it, otherwise apply 1 stack of those statuses.
     """
 
     cost = EnergyCost(3) | ExclusiveCost()
-
-    @classmethod
-    def get_target_explanation(cls) -> str | None:
-        return "Target tri hex within 4 range and at least 2 hexes away NLoS."
-
-    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
-        if corners := [
-            corner
-            for corner in GS.map.get_corners_within_range_off(self.parent, 4)
-            if all(
-                GS.map.distance_between(cc, self.parent) >= 2
-                for cc in corner.get_adjacent_positions()
-            )
-        ]:
-            return TriHex(corners)
+    range = 4
+    min_range = 2
 
     def perform(self, target: list[Hex]) -> None:
         for h in target:

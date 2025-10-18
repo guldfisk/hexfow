@@ -307,8 +307,8 @@ class ReduceDamageReplacement(ReplacementEffect[SufferDamage]):
     def resolve(self, event: SufferDamage) -> None:
         ES.resolve(
             event.branch(
-                signature=event.signature.branch(
-                    amount=event.signature.amount - self.amount
+                signature=event.signature.with_damage(
+                    event.signature.amount - self.amount
                 )
             )
         )
@@ -341,7 +341,7 @@ class FrailReplacement(ReplacementEffect[SufferDamage]):
 
     def resolve(self, event: SufferDamage) -> None:
         ES.resolve(
-            SufferDamage(event.unit, event.signature.branch(amount=self.status.stacks))
+            SufferDamage(event.unit, event.signature.with_damage(self.status.stacks))
         )
 
 

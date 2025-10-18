@@ -6,6 +6,7 @@ from events.eventsystem import ES, TriggerEffect, hook_on
 from game.core import (
     GS,
     ActiveUnitContext,
+    AttackFacet,
     DamageSignature,
     EnergyCost,
     Hex,
@@ -91,22 +92,6 @@ class PricklyTrigger(TriggerEffect[Hit]):
 
     def resolve(self, event: Hit) -> None:
         ES.resolve(Damage(event.attacker, DamageSignature(self.amount, self.source)))
-
-
-@dataclasses.dataclass(eq=False)
-class DebuffOnMeleeAttackTrigger(TriggerEffect[Hit]):
-    priority: ClassVar[int] = 0
-
-    unit: Unit
-    signature: UnitStatusSignature
-
-    def should_trigger(self, event: Hit) -> bool:
-        return event.defender == self.unit and isinstance(
-            event.attack, MeleeAttackFacet
-        )
-
-    def resolve(self, event: Hit) -> None:
-        ES.resolve(ApplyStatus(event.attacker, self.signature))
 
 
 @dataclasses.dataclass(eq=False)
@@ -874,17 +859,37 @@ class ExpireOnDealDamageStatusTrigger(TriggerEffect[Damage]):
 
 
 @dataclasses.dataclass(eq=False)
-class ApplyStatusOnHitTrigger(TriggerEffect[Hit]):
+class ApplyStatusToAttackerOnHitTrigger(TriggerEffect[Hit]):
     priority: ClassVar[int] = 0
 
     unit: Unit
     signature: UnitStatusSignature
+    attack_type: type[AttackFacet] = AttackFacet
 
     def should_trigger(self, event: Hit) -> bool:
-        return event.defender == self.unit
+        return event.defender == self.unit and isinstance(
+            event.attack, self.attack_type
+        )
 
     def resolve(self, event: Hit) -> None:
         ES.resolve(ApplyStatus(event.attacker, self.signature))
+
+
+@dataclasses.dataclass(eq=False)
+class ApplyStatusToDefenderOnHitTrigger(TriggerEffect[Hit]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+    signature: UnitStatusSignature
+    attack_type: type[AttackFacet] = AttackFacet
+
+    def should_trigger(self, event: Hit) -> bool:
+        return event.defender == self.unit and isinstance(
+            event.attack, self.attack_type
+        )
+
+    def resolve(self, event: Hit) -> None:
+        ES.resolve(ApplyStatus(event.defender, self.signature))
 
 
 @dataclasses.dataclass(eq=False)

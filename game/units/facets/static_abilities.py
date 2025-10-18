@@ -5,6 +5,7 @@ from game.core import (
     AttackFacet,
     HexStatus,
     HexStatusSignature,
+    MeleeAttackFacet,
     StaticAbilityFacet,
     Status,
     Terrain,
@@ -49,9 +50,10 @@ from game.effects.replacements import (
     UnitImmuneToStatusReplacement,
 )
 from game.effects.triggers import (
+    ApplyStatusToAttackerOnHitTrigger,
+    ApplyStatusToDefenderOnHitTrigger,
     AutomatedTrigger,
     CaughtInTheMatchTrigger,
-    DebuffOnMeleeAttackTrigger,
     ExplosiveTrigger,
     FleetingTrigger,
     FoulBurstTrigger,
@@ -89,6 +91,21 @@ class Prickly(StaticAbilityFacet):
         self.register_effects(PricklyTrigger(self.parent, self, 2))
 
 
+class Cumbersome(StaticAbilityFacet):
+    """
+    Whenever this unit is hit by a melee attack, apply 1 stack of <stunned> to it.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            ApplyStatusToDefenderOnHitTrigger(
+                self.parent,
+                UnitStatusSignature(UnitStatus.get("stunned"), self, stacks=1),
+                MeleeAttackFacet,
+            )
+        )
+
+
 class ToxicSkin(StaticAbilityFacet):
     """
     When this unit is melee attacked, apply 1 stack of <poison> to the attacking unit.
@@ -96,9 +113,10 @@ class ToxicSkin(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(
-            DebuffOnMeleeAttackTrigger(
+            ApplyStatusToAttackerOnHitTrigger(
                 self.parent,
                 UnitStatusSignature(UnitStatus.get("poison"), self, stacks=1),
+                MeleeAttackFacet,
             )
         )
 

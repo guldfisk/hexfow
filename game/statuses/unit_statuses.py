@@ -45,7 +45,7 @@ from game.effects.replacements import (
     VigorReplacement,
 )
 from game.effects.triggers import (
-    ApplyStatusOnHitTrigger,
+    ApplyStatusToAttackerOnHitTrigger,
     BaffledTrigger,
     BellStruckTrigger,
     BurnTrigger,
@@ -599,7 +599,7 @@ class FrostShield(RefreshableMixin, UnitStatus):
     def create_effects(self) -> None:
         self.register_effects(
             ReduceDamageReplacement(self.parent, 1),
-            ApplyStatusOnHitTrigger(
+            ApplyStatusToAttackerOnHitTrigger(
                 self.parent,
                 UnitStatusSignature(UnitStatus.get("freezing"), self, duration=2),
             ),
