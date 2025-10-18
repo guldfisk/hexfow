@@ -122,7 +122,7 @@ class Revealed(PerPlayerRefreshable, HexStatus):
 
 class TimedDemoCharge(LowestRefreshableMixin, HexStatus):
     """
-    When this status expires, it deals 4 damage to units on this hex.
+    When this status expires, it deals 4 ability damage to units on this hex.
     This status is hidden for opponents.
     """
 
@@ -226,7 +226,7 @@ class RuneOfClarity(HexStatus):
 
 class Mine(PerPlayerUnstackable, HexStatus):
     """
-    When an enemy unit moves into this hex, it's dealt 2 damage and this status is removed.
+    When an enemy unit moves into this hex, it's dealt 2 ability damage and this status is removed.
     This status is hidden for opponents.
     """
 
@@ -240,7 +240,7 @@ class Mine(PerPlayerUnstackable, HexStatus):
 class BearTrap(HexStatus):
     """
     When an enemy unit moves into this hex, apply <rooted> to it for 1 round,
-    it's dealt 1 damage and this status is removed.
+    it's dealt 1 ability damage and this status is removed.
     This status is hidden for opponents.
     """
 

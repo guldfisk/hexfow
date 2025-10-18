@@ -524,9 +524,6 @@ class Shiv(MeleeAttackFacet):
     damage = 2
     combinable = True
 
-    def should_follow_up(self) -> bool:
-        return False
-
 
 class Stinger(MeleeAttackFacet):
     damage = 2
@@ -569,7 +566,7 @@ class Tackle(MeleeAttackFacet):
 
 class FromTheTopRope(MeleeAttackFacet):
     """
-    +1 damage against stumbling units. Deals 2 non-lethal damage to this unit as well.
+    +1 damage against stumbling units. Deals 2 non-lethal ability damage to this unit as well.
     """
 
     damage = 4

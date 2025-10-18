@@ -10,10 +10,8 @@ class Size(IntEnum):
 
 
 class DamageType(StrEnum):
-    MELEE = auto()
-    RANGED = auto()
-    AOE = auto()
     PHYSICAL = auto()
+    ABILITY = auto()
     PURE = auto()
 
 

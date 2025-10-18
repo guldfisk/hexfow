@@ -1,7 +1,7 @@
 from game.core import GS, Hex, Terrain, TerrainProtectionRequest, Unit
 from game.effects.modifiers import ForestStealthModifier
 from game.effects.triggers import BurnOnCleanup, BurnOnWalkIn
-from game.values import DamageType, Size
+from game.values import Size
 
 
 class Plains(Terrain): ...
@@ -20,34 +20,10 @@ class Forest(Terrain):
         return 1
 
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
-        if request.unit.size.g() < Size.LARGE:
-            return 1
-            # if request.damage_signature.type in (DamageType.RANGED, DamageType.AOE):
-            #     return 2
-            # if request.damage_signature.type == DamageType.MELEE:
-            #     return 1
-
-        # if request.damage_signature.type in (DamageType.RANGED, DamageType.AOE):
-        #     return 1
-        return 0
+        return 1 if request.unit.size.g() < Size.LARGE else 0
 
     def create_effects(self, space: Hex) -> None:
         self.register_effects(ForestStealthModifier(space))
-
-
-# TODO block vision for small units? :^)
-class Shrubs(Terrain):
-    """
-    0/1/1 melee/ranged/aoe protection for small units.
-    """
-
-    def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
-        if request.unit.size.g() == Size.SMALL:
-            if request.damage_signature.type == DamageType.MELEE:
-                return 0
-            return 1
-
-        return 0
 
 
 class Hills(Terrain):
@@ -75,8 +51,6 @@ class Magma(Terrain):
     """
 
     def create_effects(self, space: Hex) -> None:
-        # TODO should this also happen when units on this space are melee attacked? how should that be handled in general
-        #  for these types of effects?
         self.register_effects(BurnOnWalkIn(space, 1), BurnOnCleanup(space, 1))
 
 

@@ -241,7 +241,6 @@ class ReceiveDamage(Event[int]):
         return damage
 
 
-# TODO no reason to return value when we span child with that value
 @dataclasses.dataclass
 class Damage(Event[int]):
     unit: Unit
@@ -260,8 +259,7 @@ class Damage(Event[int]):
                     self.unit.get_terrain_protection_for(
                         TerrainProtectionRequest(self.unit, self.signature)
                     )
-                    if self.signature.type
-                    in (DamageType.MELEE, DamageType.RANGED, DamageType.AOE)
+                    if self.signature.type == DamageType.PHYSICAL
                     else 0
                 ),
                 min(self.signature.amount, 1),

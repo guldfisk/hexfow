@@ -43,8 +43,8 @@ class TestGameType(GameType):
                         [
                             Plains,
                             # Plains,
-                            # Forest,
-                            # Hills,
+                            Forest,
+                            Hills,
                             # Water,
                             # Magma,
                             # Swamp,
@@ -60,7 +60,7 @@ class TestGameType(GameType):
             (
                 # KEEN_ARCHER,
                 # RABID_BADGER,
-                # STAUNCH_IRON_HEART,
+                STAUNCH_IRON_HEART,
                 MINE_LAYER_BEETLE,
                 # CRUEL_PUPPETEER,
             ),
@@ -68,7 +68,7 @@ class TestGameType(GameType):
                 VILE_TRANSMUTER,
                 # DOMINEERING_PSYCHIC,
                 # DEVIOUS_SABOTEUR,
-                # RIFLE_INFANTRY,
+                RIFLE_INFANTRY,
                 # ANKLE_BITER_NUISANCE,
             ),
         )

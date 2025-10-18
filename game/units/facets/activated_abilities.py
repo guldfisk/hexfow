@@ -421,7 +421,7 @@ class SummonScarab(TargetHexActivatedAbility):
 
 class Sweep(TargetHexArcActivatedAbility):
     """
-    Deals 4 melee damage to units on hexes.
+    Deals 4 damage to units on hexes.
     """
 
     cost = MovementCost(1)
@@ -429,7 +429,7 @@ class Sweep(TargetHexArcActivatedAbility):
     def perform(self, target: list[Hex]) -> None:
         for h in target:
             if unit := GS.map.unit_on(h):
-                ES.resolve(Damage(unit, DamageSignature(4, self, DamageType.MELEE)))
+                ES.resolve(Damage(unit, DamageSignature(4, self, DamageType.PHYSICAL)))
 
 
 class Stare(TargetRadiatingLineActivatedAbility):
@@ -595,14 +595,14 @@ class EnfeeblingHex(TargetUnitActivatedAbility):
 
 class Suplex(TargetUnitActivatedAbility):
     """
-    Deals 3 melee damage, and moves the target to the other side of this unit.
+    Deals 3 damage, and moves the target to the other side of this unit.
     """
 
     cost = MovementCost(2) | EnergyCost(3)
     can_target_self = False
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(Damage(target, DamageSignature(3, self, DamageType.MELEE)))
+        ES.resolve(Damage(target, DamageSignature(3, self, DamageType.PHYSICAL)))
         own_position = GS.map.position_off(self.parent)
         if target_hex := GS.map.hexes.get(
             own_position + (own_position - GS.map.position_off(target))
@@ -766,7 +766,7 @@ class InkScreen(TargetHexArcActivatedAbility):
 
 class Scorch(TargetHexArcActivatedAbility):
     """
-    Deals 3 aoe damage and applies 2 stacks of <burn> to units on hexes.
+    Deals 3 damage and applies 2 stacks of <burn> to units on hexes.
     """
 
     cost = MovementCost(1) | EnergyCost(3)
@@ -774,7 +774,7 @@ class Scorch(TargetHexArcActivatedAbility):
     def perform(self, target: list[Hex]) -> None:
         for h in target:
             if unit := GS.map.unit_on(h):
-                ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.AOE)))
+                ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.PHYSICAL)))
                 apply_status_to_unit(unit, "burn", self, stacks=2)
 
 
@@ -1120,14 +1120,14 @@ class Scry(TargetHexActivatedAbility):
 
 class ShrinkRay(TargetUnitActivatedAbility):
     """
-    Deals 1 ranged damage and applies 1 stack of <shrunk> for 2 rounds.
+    Deals 1 damage and applies 1 stack of <shrunk> for 2 rounds.
     """
 
     cost = MovementCost(1) | EnergyCost(3)
     range = 2
 
     def perform(self, target: Unit) -> None:
-        ES.resolve(Damage(target, DamageSignature(1, self, DamageType.RANGED)))
+        ES.resolve(Damage(target, DamageSignature(1, self, DamageType.PHYSICAL)))
         apply_status_to_unit(target, "shrunk", self, stacks=1, duration=2)
 
 
@@ -1361,8 +1361,7 @@ class LayMine(TargetHexActivatedAbility):
     hidden_target = True
 
     def perform(self, target: Hex) -> None:
-        if not GS.map.unit_on(target):
-            apply_status_to_hex(target, "mine", self)
+        apply_status_to_hex(target, "mine", self)
 
 
 class TidyUp(TargetHexActivatedAbility):
@@ -1376,7 +1375,7 @@ class TidyUp(TargetHexActivatedAbility):
 
 class Vomit(TargetHexActivatedAbility):
     """
-    Deals aoe 5 damage.
+    Deals 5 damage.
     """
 
     cost = MovementCost(2)
@@ -1385,11 +1384,11 @@ class Vomit(TargetHexActivatedAbility):
 
     def perform(self, target: Hex) -> None:
         if unit := GS.map.unit_on(target):
-            ES.resolve(Damage(unit, DamageSignature(5, self, DamageType.AOE)))
+            ES.resolve(Damage(unit, DamageSignature(5, self, DamageType.PHYSICAL)))
 
 
 class Mortar(TargetHexActivatedAbility):
-    """Deals 3 aoe damage to any unit on the target hex."""
+    """Deals 3 damage to any unit on the target hex."""
 
     cost = ExclusiveCost()
     range = 3
@@ -1402,7 +1401,7 @@ class Mortar(TargetHexActivatedAbility):
 
     def perform(self, target: Hex) -> None:
         if unit := GS.map.unit_on(target):
-            ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.AOE)))
+            ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.PHYSICAL)))
 
 
 class Binoculars(TargetHexActivatedAbility):
@@ -1478,7 +1477,7 @@ class FalseCure(TargetTriHexActivatedAbility):
 
 class HandGrenade(TargetTriHexActivatedAbility):
     """
-    Deals 2 aoe damage.
+    Deals 2 damage.
     """
 
     cost = EnergyCost(3) | MovementCost(1)
@@ -1487,7 +1486,7 @@ class HandGrenade(TargetTriHexActivatedAbility):
     def perform(self, target: list[Hex]) -> None:
         for _hex in target:
             if unit := GS.map.unit_on(_hex):
-                ES.resolve(Damage(unit, DamageSignature(2, self, DamageType.AOE)))
+                ES.resolve(Damage(unit, DamageSignature(2, self, DamageType.PHYSICAL)))
 
 
 class FlashBang(TargetTriHexActivatedAbility):
@@ -1584,7 +1583,7 @@ class ShieldWithFrost(TargetUnitActivatedAbility):
 
 class RingOfIce(TargetHexRingActivatedAbility):
     """
-    Deals 3 aoe damage to other units on the target hexes and applies <chill> for 2 rounds.
+    Deals 3 damage to other units on the target hexes and applies <chill> for 2 rounds.
     """
 
     cost = EnergyCost(4) | MovementCost(1)
@@ -1593,7 +1592,7 @@ class RingOfIce(TargetHexRingActivatedAbility):
     def perform(self, target: list[Hex]) -> None:
         for unit in GS.map.units_on(target):
             if unit != self.parent:
-                ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.AOE)))
+                ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.PHYSICAL)))
                 apply_status_to_unit(unit, "chill", self, duration=2)
 
 
@@ -1834,7 +1833,7 @@ class FireStorm(ActivatedAbilityFacet[list[Hex]]):
 
 
 class GiantPincers(ActivatedAbilityFacet[list[Hex]]):
-    """Deals 5 + attack power melee damage to units on the target hexes."""
+    """Deals 5 + attack power damage to units on the target hexes."""
 
     cost = MovementCost(1)
 
@@ -1880,7 +1879,7 @@ class GiantPincers(ActivatedAbilityFacet[list[Hex]]):
                     Damage(
                         unit,
                         DamageSignature(
-                            5 + self.parent.attack_power.g(), self, DamageType.MELEE
+                            5 + self.parent.attack_power.g(), self, DamageType.PHYSICAL
                         ),
                     )
                 )

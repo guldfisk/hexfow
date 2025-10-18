@@ -549,7 +549,7 @@ class AttackFacet(EffortFacet, ABC): ...
 # TODO maybe this is all attacks, and "aoe attacks" are all abilities?
 #  Don't think so, but it should prob be called something different.
 class SingleTargetAttackFacet(AttackFacet, ABC):
-    damage_type: ClassVar[DamageType]
+    damage_type: ClassVar[DamageType] = DamageType.PHYSICAL
     damage: ClassVar[int]
     ap: ClassVar[int] = 0
     benefits_from_attack_power: ClassVar[bool] = True
@@ -596,7 +596,6 @@ class SingleTargetAttackFacet(AttackFacet, ABC):
 
 class MeleeAttackFacet(SingleTargetAttackFacet, ABC):
     category = "melee_attack"
-    damage_type = DamageType.MELEE
 
     # TODO wrap in get_legal_targets to align with activated ability
     @modifiable
@@ -607,19 +606,7 @@ class MeleeAttackFacet(SingleTargetAttackFacet, ABC):
             if unit.controller != self.parent.controller
             and unit.is_visible_to(self.parent.controller)
             and unit.can_be_attacked_by(self)
-            # TODO testing
-            # and GS.map.hex_off(unit).is_passable_to(self.owner)
-            # and (
-            #     not context.has_acted
-            #     or GS.map.hex_off(unit).get_move_in_cost_for(self.owner)
-            #     + (self.get_cost().get(MovementCost) or MovementCost(0)).amount
-            #     <= context.movement_points
-            # )
         ]
-
-    # TODO should prob be modifiable.
-    def should_follow_up(self) -> bool:
-        return True
 
 
 # TODO where should logic for these be?
@@ -641,7 +628,6 @@ def line_of_sight_obstructed_for_unit(unit: Unit, line_from: CC, line_to: CC) ->
 
 class RangedAttackFacet(SingleTargetAttackFacet, ABC):
     category = "ranged_attack"
-    damage_type = DamageType.RANGED
     range: ClassVar[int]
 
     @modifiable
@@ -1528,8 +1514,7 @@ class Hex(Modifiable, HasStatuses["HexStatus", "HexStatusSignature"], Serializab
     def get_terrain_protection_for(self, request: TerrainProtectionRequest) -> int:
         return self.terrain.get_terrain_protection_for(request) + (
             1
-            if request.damage_signature.type
-            in (DamageType.RANGED, DamageType.MELEE, DamageType.AOE)
+            if request.damage_signature.type == DamageType.PHYSICAL
             and isinstance(request.damage_signature.source, Facet)
             and GS.map.hex_off(request.unit).terrain.is_high_ground
             and not GS.map.hex_off(
@@ -1622,7 +1607,7 @@ def get_source_unit(source: Source) -> Unit | None:
 class DamageSignature:
     amount: int
     source: Source
-    type: DamageType = DamageType.PHYSICAL
+    type: DamageType = DamageType.ABILITY
     ap: int = 0
     lethal: bool = True
 

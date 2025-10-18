@@ -183,7 +183,8 @@ class ExplosiveTrigger(TriggerEffect[KillUpkeep]):
         for unit in GS.map.get_units_within_range_off(self.unit, 1):
             ES.resolve(
                 Damage(
-                    unit, DamageSignature(self.damage, self.source, type=DamageType.AOE)
+                    unit,
+                    DamageSignature(self.damage, self.source, type=DamageType.PHYSICAL),
                 )
             )
 

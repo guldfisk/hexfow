@@ -75,7 +75,7 @@ from game.values import Resistance, StatusIntention
 
 class Burn(StackableMixin, UnitStatus):
     """
-    At the end of each round, this unit is dealt damage equals to its stacks of burn, then remove a stack of burn.
+    At the end of each round, this unit is dealt ability damage equals to its stacks of burn, then remove a stack of burn.
     """
 
     default_intention = StatusIntention.DEBUFF

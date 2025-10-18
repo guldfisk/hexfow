@@ -82,7 +82,7 @@ from game.values import Resistance
 
 class Prickly(StaticAbilityFacet):
     """
-    When this unit is hit with a melee attack, this ability deals 2 damage to the attacker.
+    When this unit is hit with a melee attack, this ability deals 2 ability damage to the attacker.
     """
 
     def create_effects(self) -> None:
@@ -140,7 +140,8 @@ class Nourishing(StaticAbilityFacet):
 class Pusher(StaticAbilityFacet):
     """
     This unit can move into occupied spaces. If it would do so, it first pushes the occupying unit one space, repeating
-    if that unit would be pushed into an occupied space as well. If units can't be pushed back due to being blocked, they're dealt 2 damage.
+    if that unit would be pushed into an occupied space as well. If units can't be pushed back due to being blocked,
+    they're dealt 2 ability damage.
     If this is sufficient to kill them, it does, and the space is freed up to be moved in by the next unit in the chain.
     """
 
@@ -250,7 +251,7 @@ class FightFlightFreeze(StaticAbilityFacet):
 
 
 class Explosive(StaticAbilityFacet):
-    """When this unit dies, it deals 5 aoe damage to unit within 1 range."""
+    """When this unit dies, it deals 5 damage to unit within 1 range."""
 
     def create_effects(self) -> None:
         self.register_effects(ExplosiveTrigger(self.parent, self, 5))
