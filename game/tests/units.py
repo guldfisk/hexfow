@@ -1,5 +1,5 @@
 from game.core import MeleeAttackFacet, UnitBlueprint
-from game.units.facets.attacks import LightBow
+from game.units.facets.attacks import LightBow, MarshmallowFist
 from game.units.facets.static_abilities import Immobile, Prickly
 from game.values import Size
 
@@ -35,4 +35,15 @@ TEST_CACTUS = UnitBlueprint(
     energy=2,
     facets=[Prickly, Immobile],
     price=None,
+)
+
+TEST_MARSHMALLOW_TITAN = UnitBlueprint(
+    name="Marshmallow Titan",
+    health=10,
+    speed=2,
+    sight=1,
+    armor=-1,
+    size=Size.LARGE,
+    facets=[MarshmallowFist],
+    price=3,
 )

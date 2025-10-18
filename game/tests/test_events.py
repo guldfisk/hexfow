@@ -46,8 +46,13 @@ from game.map.geometry import hex_circle
 from game.map.terrain import Plains, Water
 from game.tests.conftest import TestScope
 from game.tests.test_terrain import InstantDamageMagma
-from game.tests.units import TEST_CACTUS, TEST_CHICKEN, TEST_LIGHT_ARCHER
-from game.units.blueprints import LUMBERING_PILLAR, MARSHMALLOW_TITAN
+from game.tests.units import (
+    TEST_CACTUS,
+    TEST_CHICKEN,
+    TEST_LIGHT_ARCHER,
+    TEST_MARSHMALLOW_TITAN,
+)
+from game.units.blueprints import LUMBERING_PILLAR
 from game.values import Size
 
 
@@ -593,7 +598,7 @@ def test_armor(unit_spawner: UnitSpawner, player2: Player):
         LUMBERING_PILLAR, coordinate=CC(0, 1), controller=player2
     )
     evil_marshmallow = unit_spawner.spawn(
-        MARSHMALLOW_TITAN, coordinate=CC(1, 0), controller=player2
+        TEST_MARSHMALLOW_TITAN, coordinate=CC(1, 0), controller=player2
     )
     ES.resolve(Hit(chicken, evil_pillar, chicken.attacks[0]))
     ES.resolve(Hit(chicken, evil_marshmallow, chicken.attacks[0]))

@@ -795,8 +795,8 @@ class Status(
             self.remove()
 
     def decrement_stacks(self, n: int = 1) -> None:
-        self.stacks -= n
-        if self.stacks <= 0:
+        self.stacks = max(self.stacks - n, 0)
+        if not self.stacks:
             self.on_fully_decremented()
             self.remove()
 
