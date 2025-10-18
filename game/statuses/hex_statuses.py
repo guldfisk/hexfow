@@ -27,6 +27,8 @@ from game.effects.triggers import (
     BearTrapTrigger,
     BurnOnCleanup,
     BurnOnWalkIn,
+    GasRoundTrigger,
+    GasTurnTrigger,
     HexRoundDamageTrigger,
     HexRoundHealTrigger,
     HexWalkInDamageTrigger,
@@ -34,6 +36,7 @@ from game.effects.triggers import (
     ShrineSkipTrigger,
     ShrineWalkInTrigger,
     SludgeTrigger,
+    StakesMoveInTrigger,
     TurnExpiringStatusTrigger,
     WalkInDestroyStatusTrigger,
 )
@@ -69,6 +72,32 @@ class Soot(RefreshableMixin, HexStatus):
             HexCappedFlatSightModifier(self.parent),
             HexBlocksVisionModifier(self.parent),
         )
+
+
+class TrenchGas(RefreshableMixin, HexStatus):
+    """
+    This hex blocks vision, and units on it has -1 sight, to a minimum of 1.
+    When a unit ends it's turn on this hex, it's dealt 1 pure damage.
+    At the end of the round, active units on this hex are dealt 1 pure damage.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            GasTurnTrigger(self.parent, self, 1),
+            GasRoundTrigger(self.parent, self, 1),
+            HexCappedFlatSightModifier(self.parent),
+            HexBlocksVisionModifier(self.parent),
+        )
+
+
+class Stakes(HexStatus):
+    """
+    When a unit moves into this space, it is dealt x ability damage, where x is
+    equal to its distance to this hex at the beginning of the turn, minus 1.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(StakesMoveInTrigger(self.parent, self))
 
 
 class Smoke(RefreshableMixin, HexStatus):

@@ -43,8 +43,8 @@ class TestGameType(GameType):
                         [
                             Plains,
                             # Plains,
-                            Forest,
-                            Hills,
+                            # Forest,
+                            # Hills,
                             # Water,
                             # Magma,
                             # Swamp,
@@ -58,21 +58,13 @@ class TestGameType(GameType):
         )
         player_units = (
             (
-                # KEEN_ARCHER,
-                # RABID_BADGER,
                 HEAVY_ARTILLERY,
-                # STAUNCH_IRON_HEART,
                 MINE_LAYER_BEETLE,
-                ARTILLERY_SURVEYOR,
-                # PYROMANCER_ARTILLERIST,
-                # CRUEL_PUPPETEER,
+                TRENCH_ENGINEER,
             ),
             (
                 VILE_TRANSMUTER,
-                # DOMINEERING_PSYCHIC,
-                # DEVIOUS_SABOTEUR,
                 RIFLE_INFANTRY,
-                # ANKLE_BITER_NUISANCE,
             ),
         )
 

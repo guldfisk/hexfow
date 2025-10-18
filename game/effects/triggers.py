@@ -459,6 +459,43 @@ class ToxicPresenceTrigger(TriggerEffect[TurnCleanup]):
 
 
 @dataclasses.dataclass(eq=False)
+class GasTurnTrigger(TriggerEffect[TurnCleanup]):
+    priority: ClassVar[int] = 0
+
+    hex: Hex
+    source: Source
+    amount: int
+
+    def should_trigger(self, event: TurnCleanup) -> bool:
+        return GS.map.hex_off(event.unit) == self.hex
+
+    def resolve(self, event: TurnCleanup) -> None:
+        ES.resolve(
+            Damage(
+                event.unit, DamageSignature(self.amount, self.source, DamageType.PURE)
+            )
+        )
+
+
+@dataclasses.dataclass(eq=False)
+class GasRoundTrigger(TriggerEffect[RoundCleanup]):
+    priority: ClassVar[int] = TriggerLayer.ROUND_STATUSES_TICK
+
+    hex: Hex
+    source: Source
+    amount: int
+
+    def should_trigger(self, event: RoundCleanup) -> bool:
+        return (unit := GS.map.unit_on(self.hex)) and unit.ready
+
+    def resolve(self, event: RoundCleanup) -> None:
+        if unit := GS.map.unit_on(self.hex):
+            ES.resolve(
+                Damage(unit, DamageSignature(self.amount, self.source, DamageType.PURE))
+            )
+
+
+@dataclasses.dataclass(eq=False)
 class JukeAndJiveTrigger(TriggerEffect[ActionCleanup]):
     priority: ClassVar[int] = 0
     _visible: bool | None = dataclasses.field(init=False, default=None)
@@ -504,6 +541,36 @@ class MineTrigger(TriggerEffect[MoveUnit]):
     def resolve(self, event: MoveUnit) -> None:
         ES.resolve(Damage(event.unit, DamageSignature(2, self.status)))
         self.status.remove()
+
+
+@dataclasses.dataclass(eq=False)
+class StakesMoveInTrigger(TriggerEffect[MoveUnit]):
+    priority: ClassVar[int] = 0
+
+    def __init__(self, hex: Hex, source: Source):
+        self.hex = hex
+        self.source = source
+        self._unit_distances: dict[Unit, int] = {}
+
+    @hook_on(TurnUpkeep)
+    def on_turn_upkeep(self, event: TurnUpkeep) -> None:
+        self._unit_distances = {
+            unit: hex.position.distance_to(self.hex.position)
+            for unit, hex in GS.map.unit_positions.items()
+        }
+
+    def should_trigger(self, event: MoveUnit) -> bool:
+        return event.to_ == self.hex and event.result
+
+    def resolve(self, event: MoveUnit) -> None:
+        ES.resolve(
+            Damage(
+                event.unit,
+                DamageSignature(
+                    self._unit_distances.get(event.unit, 0) - 1, self.source
+                ),
+            )
+        )
 
 
 @dataclasses.dataclass(eq=False)

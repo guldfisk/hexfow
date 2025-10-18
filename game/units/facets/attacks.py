@@ -83,6 +83,12 @@ class Gore(MeleeAttackFacet):
             return 3
 
 
+class ServiceRifle(RangedAttackFacet):
+    cost = MovementCost(3)
+    range = 3
+    damage = 2
+
+
 class MarshmallowFist(MeleeAttackFacet):
     cost = MovementCost(1)
     damage = 2

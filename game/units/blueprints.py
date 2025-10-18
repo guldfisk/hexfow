@@ -16,6 +16,7 @@ from game.units.facets.activated_abilities import (
     CoordinatedManeuver,
     CriticalAid,
     CuringWord,
+    DeployStakes,
     Disempower,
     DrawSpring,
     EnfeeblingHex,
@@ -32,6 +33,7 @@ from game.units.facets.activated_abilities import (
     FlattenGround,
     FleaSwarm,
     ForcedMarch,
+    GasGrenade,
     GiantPincers,
     GrantCharm,
     GrantWish,
@@ -70,6 +72,7 @@ from game.units.facets.activated_abilities import (
     RingOfIce,
     RollUp,
     RoyalJelly,
+    Sandbags,
     Scorch,
     Scorn,
     Scry,
@@ -171,6 +174,7 @@ from game.units.facets.attacks import (
     SerratedBeak,
     SerratedClaws,
     ServicePistol,
+    ServiceRifle,
     Shiv,
     Slay,
     SlingShot,
@@ -215,6 +219,7 @@ from game.units.facets.static_abilities import (
     GlassSkin,
     GrizzlyMurderer,
     Haughty,
+    HazardSuit,
     HeelTurn,
     Immobile,
     Infiltrator,
@@ -876,6 +881,16 @@ SLUDGE_SLUG = UnitBlueprint(
     size=Size.LARGE,
     energy=3,
     facets=[Spew, SludgeBelch, SludgeTrail, SlimyLocomotion, SlimySkin],
+    price=7,
+)
+
+TRENCH_ENGINEER = UnitBlueprint(
+    "Trench Engineer",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[ServiceRifle, Sandbags, GasGrenade, DeployStakes, HazardSuit],
     price=7,
 )
 

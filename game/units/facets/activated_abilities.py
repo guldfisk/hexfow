@@ -1976,6 +1976,42 @@ class CriticalAid(TargetUnitActivatedAbility):
         ES.resolve(Heal(target, 4 - target.health, self))
 
 
+class GasGrenade(TargetTriHexActivatedAbility):
+    """
+    Applies <trench_gas> for 2 rounds.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 3
+
+    def perform(self, target: list[Hex]) -> None:
+        for h in target:
+            apply_status_to_hex(h, "trench_gas", self, duration=2)
+
+
+class DeployStakes(TargetHexActivatedAbility):
+    """
+    Applies <stakes>.
+    """
+
+    cost = EnergyCost(1)
+    combinable = True
+
+    def perform(self, target: Hex) -> None:
+        apply_status_to_hex(target, "stakes", self)
+
+
+class Sandbags(TargetUnitActivatedAbility):
+    """
+    Applies <dug_in>.
+    """
+
+    cost = EnergyCost(3) | MovementCost(2)
+
+    def perform(self, target: Unit) -> None:
+        apply_status_to_unit(target, "dug_in", self)
+
+
 class CuringWord(TargetUnitActivatedAbility):
     """
     Dispels one debuff.

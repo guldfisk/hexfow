@@ -17,6 +17,7 @@ from game.core import (
     UnitStatusSignature,
 )
 from game.effects.modifiers import (
+    DugInModifier,
     MustDoEffortTypeModifier,
     ParanoiaModifier,
     RootedModifier,
@@ -257,6 +258,20 @@ class BellStruck(RefreshableMixin, UnitStatus):
 
     def create_effects(self) -> None:
         self.register_effects(BellStruckTrigger(self.parent, self))
+
+
+class DugIn(UnitStatus):
+    """
+    +1 terrain protection against damage not from melee attacks.
+    When this unit moves, remove this status.
+    """
+
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            DugInModifier(self.parent, 1), ExpiresOnMovesTrigger(self)
+        )
 
 
 class MortallyWounded(UnitStatus):

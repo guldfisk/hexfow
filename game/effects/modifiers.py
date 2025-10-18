@@ -14,6 +14,8 @@ from game.core import (
     EffortFacet,
     EffortOption,
     Hex,
+    HexStatus,
+    MeleeAttackFacet,
     MoveOption,
     OneOfHexes,
     OneOfUnits,
@@ -26,7 +28,7 @@ from game.core import (
 )
 from game.events import MoveUnit, TurnUpkeep
 from game.map.coordinates import CC
-from game.values import Resistance, Size, VisionObstruction
+from game.values import DamageType, Resistance, Size, VisionObstruction
 
 
 class SpeedLayer(IntEnum):
@@ -436,21 +438,40 @@ class SourceTypeResistanceModifier(
 
 
 @dataclasses.dataclass(eq=False)
-class TerrainProtectionModifier(
-    StateModifierEffect[Unit, TerrainProtectionRequest, int]
-):
+class HazardSuitModifier(StateModifierEffect[Unit, DamageSignature, Resistance]):
     priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.get_resistance_against
+
+    unit: Unit
+
+    def should_modify(
+        self, obj: Unit, request: DamageSignature, value: Resistance
+    ) -> bool:
+        return (
+            obj == self.unit
+            and isinstance(request.source, HexStatus)
+            and request.type == DamageType.PURE
+        )
+
+    def modify(
+        self, obj: Unit, request: DamageSignature, value: Resistance
+    ) -> Resistance:
+        return Resistance.IMMUNE
+
+
+@dataclasses.dataclass(eq=False)
+class DugInModifier(StateModifierEffect[Unit, TerrainProtectionRequest, int]):
+    priority: ClassVar[int] = 0
     target: ClassVar[object] = Unit.get_terrain_protection_for
 
     unit: Unit
-    terrain_type: type[Terrain]
     amount: int
 
     def should_modify(
         self, obj: Unit, request: TerrainProtectionRequest, value: int
     ) -> bool:
-        return obj == self.unit and isinstance(
-            GS.map.hex_off(self.unit).terrain, self.terrain_type
+        return obj == self.unit and not isinstance(
+            request.damage_signature.source, MeleeAttackFacet
         )
 
     def modify(self, obj: Unit, request: TerrainProtectionRequest, value: int) -> int:

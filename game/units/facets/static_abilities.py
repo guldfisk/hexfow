@@ -20,6 +20,7 @@ from game.effects.modifiers import (
     FightFlightFreezeModifier,
     GambitSpeedModifier,
     HaughtyModifier,
+    HazardSuitModifier,
     IgnoreMoveInOnTerrainModifier,
     IncreaseSpeedAuraModifier,
     InvisibleWhenActiveModifier,
@@ -523,6 +524,15 @@ class LastStand(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(LastStandReplacement(self.parent, self))
+
+
+class HazardSuit(StaticAbilityFacet):
+    """
+    Immune to pure damage from hex statuses.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(HazardSuitModifier(self.parent))
 
 
 class ToxicPresence(StaticAbilityFacet):
