@@ -10,6 +10,7 @@ from game.core import (
     ActivatedAbilityFacet,
     ActivateUnitOption,
     ActiveUnitContext,
+    AttackFacet,
     DamageSignature,
     DeployArmyDecisionPoint,
     EffortOption,
@@ -30,7 +31,6 @@ from game.core import (
     Scenario,
     SelectArmyDecisionPoint,
     SelectOptionDecisionPoint,
-    SingleTargetAttackFacet,
     SkipOption,
     Source,
     Status,
@@ -273,7 +273,7 @@ class Damage(Event[int]):
 class Hit(Event[None]):
     attacker: Unit
     defender: Unit
-    attack: SingleTargetAttackFacet
+    attack: AttackFacet
 
     def is_valid(self) -> bool:
         # TODO some way to formalize this?

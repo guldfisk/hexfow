@@ -543,20 +543,13 @@ class EffortFacet(Facet, ABC):
         }
 
 
-class AttackFacet(EffortFacet, ABC): ...
-
-
-# TODO maybe this is all attacks, and "aoe attacks" are all abilities?
-#  Don't think so, but it should prob be called something different.
-class SingleTargetAttackFacet(AttackFacet, ABC):
+class AttackFacet(EffortFacet, ABC):
     damage_type: ClassVar[DamageType] = DamageType.PHYSICAL
     damage: ClassVar[int]
     ap: ClassVar[int] = 0
     benefits_from_attack_power: ClassVar[bool] = True
 
-    def get_damage_modifier_against(self, unit: Unit) -> int | None:
-        # TODO blah internal hook
-        ...
+    def get_damage_modifier_against(self, unit: Unit) -> int | None: ...
 
     def get_attack_power_modifier(self) -> int:
         return (
@@ -594,7 +587,7 @@ class SingleTargetAttackFacet(AttackFacet, ABC):
         }
 
 
-class MeleeAttackFacet(SingleTargetAttackFacet, ABC):
+class MeleeAttackFacet(AttackFacet, ABC):
     category = "melee_attack"
 
     # TODO wrap in get_legal_targets to align with activated ability
@@ -626,7 +619,7 @@ def line_of_sight_obstructed_for_unit(unit: Unit, line_from: CC, line_to: CC) ->
     )
 
 
-class RangedAttackFacet(SingleTargetAttackFacet, ABC):
+class RangedAttackFacet(AttackFacet, ABC):
     category = "ranged_attack"
     range: ClassVar[int]
 

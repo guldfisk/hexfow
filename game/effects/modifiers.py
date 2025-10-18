@@ -18,7 +18,6 @@ from game.core import (
     OneOfHexes,
     OneOfUnits,
     Option,
-    SingleTargetAttackFacet,
     SkipOption,
     Source,
     Terrain,
@@ -292,7 +291,7 @@ class FightFlightFreezeModifier(
         for option in value:
             if (
                 isinstance(option, EffortOption)
-                and isinstance(option.facet, SingleTargetAttackFacet)
+                and isinstance(option.facet, AttackFacet)
                 and isinstance(option.target_profile, OneOfUnits)
                 and self.unit in option.target_profile.units
             ):
