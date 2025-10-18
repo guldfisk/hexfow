@@ -61,7 +61,7 @@ class TestGameType(GameType):
                 HEAVY_ARTILLERY,
                 ARTILLERY_SURVEYOR,
                 BOMB_TRUCK,
-                MINE_LAYER_BEETLE,
+                RANK_DEFILER,
                 TRENCH_ENGINEER,
             ),
             (

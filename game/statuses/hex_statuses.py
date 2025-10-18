@@ -13,7 +13,6 @@ from game.core import (
     Terrain,
 )
 from game.effects.modifiers import (
-    HexAttackPowerFlatModifier,
     HexBlocksVisionModifier,
     HexCappedFlatSightModifier,
     HexFlatEnergyRegenModifier,
@@ -244,18 +243,6 @@ class UndergroundSpring(LowestRefreshableMixin, HexStatus):
 
     def on_expires(self) -> None:
         ES.resolve(ChangeHexTerrain(self.parent, Terrain.get_class("water")))
-
-
-class SappingField(RefreshableMixin, HexStatus):
-    """
-    Units on this hex has -1 attack power and energy regeneration.
-    """
-
-    def create_effects(self) -> None:
-        self.register_effects(
-            HexFlatEnergyRegenModifier(self.parent, -1),
-            HexAttackPowerFlatModifier(self.parent, -1),
-        )
 
 
 class RuneOfClarity(HexStatus):

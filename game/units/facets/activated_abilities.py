@@ -521,7 +521,7 @@ class PsychicCommand(TargetUnitActivatedAbility):
 class Baffle(TargetUnitActivatedAbility):
     """Applies <baffled>."""
 
-    cost = EnergyCost(3) | MovementCost(1)
+    cost = EnergyCost(3) | MovementCost(2)
     range = 2
     controller_target_option = ControllerTargetOption.ENEMY
     requires_los = False
@@ -1031,13 +1031,14 @@ class VenomousSpine(TargetUnitActivatedAbility):
 
 class HealingPotion(TargetUnitActivatedAbility):
     """
-    Applies <regenerating> for 3 rounds.
+    Heals 1 and applies <regenerating> for 3 rounds.
     """
 
-    cost = EnergyCost(2) | MovementCost(1)
+    cost = EnergyCost(2) | MovementCost(2)
     controller_target_option = ControllerTargetOption.ALLIED
 
     def perform(self, target: Unit) -> None:
+        ES.resolve(Heal(target, 1, self))
         apply_status_to_unit(target, "regenerating", self, duration=3)
 
 
@@ -1663,8 +1664,6 @@ class SquirtSoot(TargetHexActivatedAbility):
     Applies <soot> for 2 rounds.
     """
 
-    cost = MovementCost(1)
-
     def perform(self, target: Hex) -> None:
         apply_status_to_hex(target, "soot", self, duration=2)
 
@@ -1785,15 +1784,15 @@ class FleaSwarm(TargetUnitActivatedAbility):
 
 class Disempower(TargetTriHexActivatedAbility):
     """
-    Applies <sapping_field> for 1 round.
+    Applies <sapped> for 1 round.
     """
 
     cost = EnergyCost(2)
     range = 3
 
     def perform(self, target: list[Hex]) -> None:
-        for h in target:
-            apply_status_to_hex(h, "sapping_field", self, duration=1)
+        for unit in GS.map.units_on(target):
+            apply_status_to_unit(unit, "sapped", self, duration=1)
 
 
 class TorporFumes(TargetTriHexActivatedAbility):
@@ -1811,7 +1810,7 @@ class TorporFumes(TargetTriHexActivatedAbility):
 
 class Pummel(TargetHexActivatedAbility):
     """
-    Applies 3 stacks of <incoming> for 1 round.
+    Applies 2 stacks of <incoming> for 1 round.
     """
 
     cost = ExclusiveCost() | EnergyCost(3)
@@ -1821,7 +1820,7 @@ class Pummel(TargetHexActivatedAbility):
     requires_los = False
 
     def perform(self, target: Hex) -> None:
-        apply_status_to_hex(target, "incoming", self, stacks=3, duration=1)
+        apply_status_to_hex(target, "incoming", self, stacks=2, duration=1)
 
 
 class Bombard(TargetTriHexActivatedAbility):

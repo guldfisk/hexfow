@@ -722,7 +722,7 @@ class Rolling(UnitStatus):
 
 class MagicWard(RefreshableMixin, UnitStatus):
     """
-    Reduce damage dealt to this unit by abilities and statuses to two thirds, rounded up.
+    Reduce damage dealt to this unit by abilities and statuses to half, rounded up.
     """
 
     default_intention = StatusIntention.BUFF
@@ -732,8 +732,22 @@ class MagicWard(RefreshableMixin, UnitStatus):
             SourceTypeResistanceModifier(
                 self.parent,
                 (ActivatedAbilityFacet, StaticAbilityFacet, Status),
-                Resistance.MINOR,
+                Resistance.NORMAL,
             )
+        )
+
+
+class Sapped(RefreshableMixin, UnitStatus):
+    """
+    -1 attack power and -1 energy regen.
+    """
+
+    default_intention = StatusIntention.DEBUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            UnitAttackPowerFlatModifier(self.parent, -1),
+            UnitEnergyRegenFlatModifier(self.parent, -1),
         )
 
 

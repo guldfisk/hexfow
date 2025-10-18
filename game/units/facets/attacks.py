@@ -238,7 +238,6 @@ class Pinch(MeleeAttackFacet):
 
 
 class SnappingBeak(MeleeAttackFacet):
-    cost = MovementCost(1)
     damage = 2
 
 

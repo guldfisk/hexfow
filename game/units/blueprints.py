@@ -433,7 +433,7 @@ ARTHRITIC_GIANT = UnitBlueprint(
 
 FROST_SPRITE = UnitBlueprint(
     "Frost Sprite",
-    health=3,
+    health=4,
     speed=3,
     sight=1,
     size=Size.SMALL,
@@ -463,7 +463,7 @@ INFERNAL_IMP = UnitBlueprint(
 
 JOLLY_HERBALIST = UnitBlueprint(
     "Jolly Herbalist",
-    health=3,
+    health=2,
     speed=3,
     sight=2,
     energy=3,
@@ -493,7 +493,7 @@ MARSHMALLOW_TITAN = UnitBlueprint(
 
 PANGOLIN_FAMILIAR = UnitBlueprint(
     "Pangolin Familiar",
-    health=4,
+    health=5,
     speed=2,
     sight=1,
     size=Size.SMALL,
@@ -593,6 +593,16 @@ STIM_DRONE = UnitBlueprint(
     flavor="Just the refreshments this time, thanks.",
 )
 
+UNDERHANDED_HEXMAGE = UnitBlueprint(
+    name="Underhanded Hexmage",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=4,
+    facets=[EnfeeblingHex],
+    price=4,
+)
+
 AP_GUNNER = UnitBlueprint(
     "AP Gunner",
     health=2,
@@ -672,16 +682,6 @@ SQUIRMING_SQUID = UnitBlueprint(
     price=5,
 )
 
-UNDERHANDED_HEXMAGE = UnitBlueprint(
-    name="Underhanded Hexmage",
-    health=4,
-    speed=3,
-    sight=2,
-    energy=4,
-    facets=[EnfeeblingHex],
-    price=5,
-)
-
 ANCIENT_ALTRUIST = UnitBlueprint(
     "Ancient Altruist",
     health=4,
@@ -710,6 +710,16 @@ BOMB_TRUCK = UnitBlueprint(
     facets=[Explode],
     price=6,
     flavor="Nothing stops the mail.",
+)
+
+DOMINEERING_PSYCHIC = UnitBlueprint(
+    "Domineering Psychic",
+    health=5,
+    speed=3,
+    sight=1,
+    energy=6,
+    facets=[Compel, Baffle, PsychicCommand, TelepathicSpy],
+    price=6,
 )
 
 GIANT_SLAYER_MOUSE = UnitBlueprint(
@@ -852,16 +862,6 @@ DJINN = UnitBlueprint(
     price=7,
 )
 
-DOMINEERING_PSYCHIC = UnitBlueprint(
-    "Domineering Psychic",
-    health=5,
-    speed=3,
-    sight=1,
-    energy=6,
-    facets=[Compel, Baffle, PsychicCommand, TelepathicSpy],
-    price=7,
-)
-
 RANGER_GUIDE = UnitBlueprint(
     "Ranger Guide",
     health=5,
@@ -978,6 +978,16 @@ DEVIOUS_SABOTEUR = UnitBlueprint(
     price=9,
 )
 
+RANK_DEFILER = UnitBlueprint(
+    "Rank Defiler",
+    health=6,
+    speed=2,
+    sight=1,
+    energy=6,
+    facets=[FleaSwarm, TorporFumes, Disempower],
+    price=9,
+)
+
 VELOCIRAPTOR = UnitBlueprint(
     "Velociraptor",
     health=5,
@@ -1046,6 +1056,16 @@ EFFORTLESS_ATHLETE = UnitBlueprint(
     price=10,
 )
 
+HEAVY_ARTILLERY = UnitBlueprint(
+    "Heavy Artillery",
+    health=5,
+    speed=1,
+    sight=1,
+    energy=6,
+    facets=[Pummel, Bombard, Cumbersome],
+    price=10,
+)
+
 HOODED_EXECUTIONER = UnitBlueprint(
     "Hooded Executioner",
     health=7,
@@ -1061,22 +1081,7 @@ NOTORIOUS_OUTLAW = UnitBlueprint(
     speed=3,
     sight=2,
     energy=3,
-    facets=[
-        TwinRevolvers,
-        Lasso,
-        Showdown,
-        Quick,
-    ],
-    price=10,
-)
-
-RANK_DEFILER = UnitBlueprint(
-    "Rank Defiler",
-    health=6,
-    speed=2,
-    sight=1,
-    energy=6,
-    facets=[FleaSwarm, TorporFumes, Disempower],
+    facets=[TwinRevolvers, Lasso, Showdown, Quick],
     price=10,
 )
 
@@ -1154,16 +1159,6 @@ GRANITE_GOLEM = UnitBlueprint(
     size=Size.LARGE,
     armor=1,
     facets=[CrushingFists, RockSteady, ResistantSkin],
-    price=11,
-)
-
-HEAVY_ARTILLERY = UnitBlueprint(
-    "Heavy Artillery",
-    health=5,
-    speed=1,
-    sight=1,
-    energy=6,
-    facets=[Pummel, Bombard, Cumbersome],
     price=11,
 )
 
