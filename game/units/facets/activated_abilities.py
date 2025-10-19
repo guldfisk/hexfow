@@ -310,28 +310,48 @@ class SweatItOut(TargetUnitActivatedAbility):
 
 class Exorcise(TargetUnitActivatedAbility):
     """
-    Dispels all statuses from the target unit. For each debuff dispelled this way,
-    the unit is dealt pure 1 damage, and for each buff it is healed 1.
+    Deals pure damage equal to the amount of dispelable statuses on the target unit
+    to the target unit, then heals it equal to the amount of dispelable buffs,
+    then dispels all statuses from it.
     """
 
-    cost = EnergyCost(3) | MovementCost(1)
+    cost = EnergyCost(2) | MovementCost(1)
     range = 2
     can_target_self = False
 
     def perform(self, target: Unit) -> None:
-        heal = 0
-        damage = 0
-        for status in list(target.statuses):
-            for event in ES.resolve(DispelStatus(target, status)).iter_type(
-                DispelStatus
-            ):
-                if event.owner == target and isinstance(event.status, UnitStatus):
-                    if event.status.intention == StatusIntention.DEBUFF:
-                        damage += 1
-                    elif event.status.intention == StatusIntention.BUFF:
-                        heal += 1
-        ES.resolve(Damage(target, DamageSignature(damage, self, DamageType.PURE)))
-        ES.resolve(Heal(target, heal, self))
+        ES.resolve(
+            Damage(
+                target,
+                DamageSignature(
+                    len(
+                        [
+                            status
+                            for status in target.statuses
+                            if status.intention == StatusIntention.DEBUFF
+                            and status.dispellable
+                        ]
+                    ),
+                    self,
+                    DamageType.PURE,
+                ),
+            )
+        )
+        ES.resolve(
+            Heal(
+                target,
+                len(
+                    [
+                        status
+                        for status in target.statuses
+                        if status.intention == StatusIntention.BUFF
+                        and status.dispellable
+                    ]
+                ),
+                self,
+            )
+        )
+        dispel_all(target)
 
 
 class WardEvil(TargetUnitActivatedAbility):
@@ -1574,7 +1594,7 @@ class AwarenessMentor(TargetUnitActivatedAbility):
 
 class IcicleSplinter(TargetUnitActivatedAbility):
     """
-    Applies 3 stacks of <frail> for 2 rounds and 5 stacks of <frigid> for 2 rounds.
+    Applies 3 stacks of <frail> for 2 rounds and 4 stacks of <frigid> for 2 rounds.
     """
 
     cost = EnergyCost(3)
@@ -1583,7 +1603,7 @@ class IcicleSplinter(TargetUnitActivatedAbility):
 
     def perform(self, target: Unit) -> None:
         apply_status_to_unit(target, "frail", self, stacks=3, duration=2)
-        apply_status_to_unit(target, "frigid", self, stacks=5, duration=2)
+        apply_status_to_unit(target, "frigid", self, stacks=4, duration=2)
 
 
 class ShieldWithFrost(TargetUnitActivatedAbility):

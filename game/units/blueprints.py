@@ -547,7 +547,7 @@ HARROWED_MYSTICIST = UnitBlueprint(
     health=3,
     speed=3,
     sight=1,
-    energy=5,
+    energy=4,
     facets=[WardEvil, Exorcise, WishHarm],
     price=4,
 )
@@ -654,12 +654,12 @@ MINE_LAYER_BEETLE = UnitBlueprint(
 
 MISCHIEVOUS_GODMOTHER = UnitBlueprint(
     "Mischievous Godmother",
-    health=5,
+    health=4,
     speed=3,
     sight=2,
     energy=6,
     facets=[TurnToRabbit, TugIn, FaerieDust],
-    price=5,
+    price=4,
 )
 
 MORTAR_SQUAD = UnitBlueprint(
@@ -1082,7 +1082,7 @@ NOTORIOUS_OUTLAW = UnitBlueprint(
     sight=2,
     energy=3,
     facets=[TwinRevolvers, Lasso, Showdown, Quick],
-    price=10,
+    price=9,
 )
 
 REMORSELESS_SNIPER = UnitBlueprint(
@@ -1306,7 +1306,7 @@ GIANT_BATTLE_CRAB = UnitBlueprint(
     armor=2,
     size=Size.LARGE,
     facets=[GiantPincers, Aquatic, CrabShuffle],
-    price=17,
+    price=16,
 )
 
 ICE_SAVANT = UnitBlueprint(
@@ -1316,7 +1316,7 @@ ICE_SAVANT = UnitBlueprint(
     sight=2,
     energy=7,
     facets=[RingOfIce, ShieldWithFrost, IcicleSplinter, Haughty],
-    price=17,
+    price=16,
 )
 
 ZONE_MECH = UnitBlueprint(

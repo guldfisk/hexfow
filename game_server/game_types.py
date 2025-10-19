@@ -58,15 +58,12 @@ class TestGameType(GameType):
         )
         player_units = (
             (
-                HEAVY_ARTILLERY,
-                ARTILLERY_SURVEYOR,
-                BOMB_TRUCK,
-                RANK_DEFILER,
-                TRENCH_ENGINEER,
+                INFERNO_TANK,
+                BLOOD_FEUD_WARLOCK,
             ),
             (
-                VILE_TRANSMUTER,
-                RIFLE_INFANTRY,
+                CYCLOPS,
+                HARROWED_MYSTICIST,
             ),
         )
 
