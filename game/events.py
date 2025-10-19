@@ -476,7 +476,7 @@ class MoveUnit(Event[Hex | None]):
                 and self.to_.captured_by != self.unit.controller
                 and self.unit.can_capture_objectives_on(self.to_)
             ):
-                self.to_.captured_by = None
+                ES.resolve(NeutralizeObjective(self.to_, self.unit))
             # TODO hmm
             GS.update_vision()
             with GS.log(
@@ -801,6 +801,47 @@ class RoundUpkeep(Event[None]):
 
 
 @dataclasses.dataclass
+class NeutralizeObjective(Event[None]):
+    hex: Hex
+    by: Source | Unit
+
+    def is_valid(self) -> bool:
+        return self.hex.is_objective and self.hex.captured_by is not None
+
+    def resolve(self) -> None:
+        with GS.log(
+            *(
+                (LogLine([self.by, "neutralizes", self.hex]),)
+                if self.by is not None
+                else ()
+            ),
+            LogLine([self.hex, "is neutralized"]),
+        ):
+            self.hex.captured_by = None
+
+
+@dataclasses.dataclass
+class CaptureObjective(Event[None]):
+    hex: Hex
+    player: Player
+    by: Source | Unit
+
+    def is_valid(self) -> bool:
+        return self.hex.is_objective and self.hex.captured_by != self.player
+
+    def resolve(self) -> None:
+        with GS.log(
+            *(
+                (LogLine([self.by, "captures", self.hex]),)
+                if self.by is not None
+                else ()
+            ),
+            LogLine([self.hex, "is captured for", self.player]),
+        ):
+            self.hex.captured_by = self.player
+
+
+@dataclasses.dataclass
 class GainPoints(Event[None]):
     player: Player
     amount: int
@@ -817,7 +858,7 @@ class AwardPoints(Event[None]):
     def resolve(self) -> None:
         for unit, _hex in GS.map.unit_positions.items():
             if _hex.is_objective and unit.can_capture_objectives_on(_hex):
-                _hex.captured_by = unit.controller
+                ES.resolve(CaptureObjective(_hex, unit.controller, unit))
 
         player_values: dict[Player, int] = defaultdict(int)
         for _hex in GS.map.hexes.values():

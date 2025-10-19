@@ -7,6 +7,7 @@ platform
     edit/load armies
 
 army editor
+    grid view
     search/filter units
 
     test deploy on map
@@ -19,11 +20,12 @@ map editor
     unit details
 
 game
-    round restricted objectives
-
     chess clock
 
+    round restricted objectives
+
     corpses
+
     break
     spawn unit source
     "+2 attack power to melee attacks"
@@ -36,10 +38,8 @@ game
 
 ui
     changes animations
-        status add/remove
         target arrows
 
-    facet/related statuses overflow details
     better indication of which facet will be used to perform action
 
     dedicated movement action icon?
@@ -47,6 +47,7 @@ ui
     linked statuses display
 
 code
+    status expire/decremented as triggers
     clean up action space interface
     don't send no change game state updates
 
@@ -63,10 +64,7 @@ code
         hard to get right with event result and history
 
 descriptions
-    alarm aoe types terminology
-
     aoe type icons
-
 
 production configuration
     web server behind nginx

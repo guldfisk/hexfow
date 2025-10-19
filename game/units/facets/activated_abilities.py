@@ -46,6 +46,7 @@ from game.events import (
     ModifyMovementPoints,
     MoveAction,
     MoveUnit,
+    NeutralizeObjective,
     QueueUnitForActivation,
     ReadyUnit,
     SpawnUnit,
@@ -1659,11 +1660,10 @@ class Scorn(TargetUnitActivatedAbility):
 
     def perform(self, target: Unit) -> None:
         apply_status_to_unit(target, "dishonorable_coward", self, duration=3)
-        # TODO event
         if (
             _hex := GS.map.hex_off(target)
         ).is_objective and _hex.captured_by == target.controller:
-            _hex.captured_by = None
+            ES.resolve(NeutralizeObjective(_hex, self))
 
 
 class SpurIntoRage(TargetUnitActivatedAbility):
