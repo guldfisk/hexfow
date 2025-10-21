@@ -49,6 +49,7 @@ from game.effects.replacements import (
     StayingPowerReplacement,
     StrainedPusherReplacement,
     UnitImmuneToStatusReplacement,
+    MagicalDefensesReplacement,
 )
 from game.effects.triggers import (
     ApplyStatusToAttackerOnHitTrigger,
@@ -634,6 +635,13 @@ class SlimySkin(StaticAbilityFacet):
             UnitImmuneToStatusReplacement(self.parent, UnitStatus.get("slimed"))
         )
 
+class MagicalDefenses(StaticAbilityFacet):
+    """
+    When this unit would take damage, it loses up to that much energy first. The damage is reduced by the amount of energy lost.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(MagicalDefensesReplacement(self.parent,self))
 
 class ForceShield(StaticAbilityFacet):
     """

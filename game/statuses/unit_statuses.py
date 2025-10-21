@@ -44,6 +44,7 @@ from game.effects.replacements import (
     ReduceDamageReplacement,
     StunnedReplacement,
     VigorReplacement,
+    ShieldReplacement,
 )
 from game.effects.triggers import (
     ApplyStatusToAttackerOnHitTrigger,
@@ -145,6 +146,16 @@ class Parasite(UnitStatus):
     def create_effects(self) -> None:
         self.register_effects(ParasiteTrigger(self))
 
+class Shield(StackableMixin, UnitStatus):
+    """
+    If this unit would suffer damage, first remove up to that many stacks of this buff.
+    Damage is reduced by the number of stacks removed.
+    """
+
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(ShieldReplacement(self))
 
 class BurstOfSpeed(UnitStatus):
     """When this unit is activated, it gains 1 movement point, and this status is removed."""

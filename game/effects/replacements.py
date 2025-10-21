@@ -35,7 +35,9 @@ class SufferDamageLayer(IntEnum):
     REDUCE = auto()
     LUCKY_CHARM = auto()
     BUFFER = auto()
-
+class ReceiveDamageLayer(IntEnum):
+    SHIELD = auto()
+    MAGICAL_DEFENSES = auto()
 
 @dataclasses.dataclass(eq=False)
 class ExternallyImmobileReplacement(ReplacementEffect[MoveUnit]):
@@ -326,6 +328,46 @@ class BufferReplacement(ReplacementEffect[SufferDamage]):
     def resolve(self, event: SufferDamage) -> None:
         self.status.decrement_stacks()
 
+@dataclasses.dataclass
+class ShieldReplacement(ReplacementEffect[SufferDamage]):
+    priority: ClassVar[int] = ReceiveDamageLayer.SHIELD
+
+    status: UnitStatus
+
+    def can_replace(self, event: ReceiveDamage) -> bool:
+        return event.unit == self.status.parent
+
+    def resolve(self, event: ReceiveDamage) -> None:
+        
+        ES.resolve(
+            event.branch(
+                signature=event.signature.with_damage(
+                    event.signature.amount - self.status.stacks
+                )
+            )
+        )
+        self.status.decrement_stacks(event.signature.amount)
+
+@dataclasses.dataclass
+class MagicalDefensesReplacement(ReplacementEffect[SufferDamage]):
+    priority: ClassVar[int] = ReceiveDamageLayer.MAGICAL_DEFENSES
+
+    unit: Unit
+    source: Source
+
+    def can_replace(self, event: ReceiveDamage) -> bool:
+        return event.unit == self.unit
+
+    def resolve(self, event: ReceiveDamage) -> None:
+        
+        ES.resolve(
+            event.branch(
+                signature=event.signature.with_damage(
+                    event.signature.amount - event.unit.energy
+                )
+            )
+        )
+        ES.resolve(LoseEnergy(self.unit,event.signature.amount,self.source))
 
 @dataclasses.dataclass(eq=False)
 class FrailReplacement(ReplacementEffect[SufferDamage]):

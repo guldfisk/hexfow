@@ -54,6 +54,8 @@ from game.units.facets.activated_abilities import (
     Jump,
     Lasso,
     LayMine,
+    MagicMissile,
+    MagicShield,
     MagmaFissure,
     MalevolentStare,
     MapOut,
@@ -225,6 +227,7 @@ from game.units.facets.static_abilities import (
     Inspiration,
     InspiringPresence,
     JukeAndJive,
+    MagicalDefenses,
     MagicForm,
     Nourishing,
     OldBones,
@@ -851,6 +854,17 @@ BLOOD_FEUD_WARLOCK = UnitBlueprint(
     facets=[SowDiscord, Scorn, SpurIntoRage],
     price=7,
 )
+Barrier_Mage = UnitBlueprint(
+    "Barrier Mage",
+    health=2,
+    speed=2,
+    energy=6,
+    sight=2,
+    size=Size.MEDIUM,
+    facets=[MagicMissile, MagicShield, MagicalDefenses],
+    price=7,
+)
+
 
 DJINN = UnitBlueprint(
     "Djinn",
