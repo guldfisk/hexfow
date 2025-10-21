@@ -854,7 +854,8 @@ BLOOD_FEUD_WARLOCK = UnitBlueprint(
     facets=[SowDiscord, Scorn, SpurIntoRage],
     price=7,
 )
-Barrier_Mage = UnitBlueprint(
+
+BARRIER_MAGE = UnitBlueprint(
     "Barrier Mage",
     health=2,
     speed=2,

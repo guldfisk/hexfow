@@ -10,10 +10,12 @@ from game.events import (
     Damage,
     Heal,
     Kill,
+    LoseEnergy,
     ModifyMovementPoints,
     MovePenalty,
     MoveUnit,
     ReadyUnit,
+    ReceiveDamage,
     SufferDamage,
     Turn,
 )
@@ -35,9 +37,12 @@ class SufferDamageLayer(IntEnum):
     REDUCE = auto()
     LUCKY_CHARM = auto()
     BUFFER = auto()
+
+
 class ReceiveDamageLayer(IntEnum):
     SHIELD = auto()
     MAGICAL_DEFENSES = auto()
+
 
 @dataclasses.dataclass(eq=False)
 class ExternallyImmobileReplacement(ReplacementEffect[MoveUnit]):
@@ -328,8 +333,9 @@ class BufferReplacement(ReplacementEffect[SufferDamage]):
     def resolve(self, event: SufferDamage) -> None:
         self.status.decrement_stacks()
 
-@dataclasses.dataclass
-class ShieldReplacement(ReplacementEffect[SufferDamage]):
+
+@dataclasses.dataclass(eq=False)
+class ShieldReplacement(ReplacementEffect[ReceiveDamage]):
     priority: ClassVar[int] = ReceiveDamageLayer.SHIELD
 
     status: UnitStatus
@@ -338,7 +344,6 @@ class ShieldReplacement(ReplacementEffect[SufferDamage]):
         return event.unit == self.status.parent
 
     def resolve(self, event: ReceiveDamage) -> None:
-        
         ES.resolve(
             event.branch(
                 signature=event.signature.with_damage(
@@ -348,8 +353,9 @@ class ShieldReplacement(ReplacementEffect[SufferDamage]):
         )
         self.status.decrement_stacks(event.signature.amount)
 
-@dataclasses.dataclass
-class MagicalDefensesReplacement(ReplacementEffect[SufferDamage]):
+
+@dataclasses.dataclass(eq=False)
+class MagicalDefensesReplacement(ReplacementEffect[ReceiveDamage]):
     priority: ClassVar[int] = ReceiveDamageLayer.MAGICAL_DEFENSES
 
     unit: Unit
@@ -359,7 +365,6 @@ class MagicalDefensesReplacement(ReplacementEffect[SufferDamage]):
         return event.unit == self.unit
 
     def resolve(self, event: ReceiveDamage) -> None:
-        
         ES.resolve(
             event.branch(
                 signature=event.signature.with_damage(
@@ -367,7 +372,8 @@ class MagicalDefensesReplacement(ReplacementEffect[SufferDamage]):
                 )
             )
         )
-        ES.resolve(LoseEnergy(self.unit,event.signature.amount,self.source))
+        ES.resolve(LoseEnergy(self.unit, event.signature.amount, self.source))
+
 
 @dataclasses.dataclass(eq=False)
 class FrailReplacement(ReplacementEffect[SufferDamage]):

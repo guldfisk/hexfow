@@ -71,7 +71,7 @@ export const loadGameTextures = async () => {
     load(uiIdentifier, `/src/images/ui/${uiIdentifier}.png`);
   }
   for (const iconIdentifier of [
-    "shield",
+    "armor",
     "shield_broken",
     "flag",
     "closed_eye",

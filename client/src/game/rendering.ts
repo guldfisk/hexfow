@@ -861,7 +861,7 @@ export const renderMap = (
         const shieldContainer = new Container();
         const shieldSprite = newSprite(
           textureMap[
-            hexData.unit.armor > 0 ? "shield" : "shield_broken"
+            hexData.unit.armor > 0 ? "armor" : "shield_broken"
           ],
         );
         shieldSprite.anchor = 0.5;
