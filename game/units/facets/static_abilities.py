@@ -43,6 +43,7 @@ from game.effects.replacements import (
     ExternallyImmobileReplacement,
     IgnoresMoveOutPenaltyReplacement,
     LastStandReplacement,
+    MagicalDefensesReplacement,
     PerTurnMovePenaltyIgnoreReplacement,
     PusherReplacement,
     RockSteadyReplacement,
@@ -633,6 +634,16 @@ class SlimySkin(StaticAbilityFacet):
         self.register_effects(
             UnitImmuneToStatusReplacement(self.parent, UnitStatus.get("slimed"))
         )
+
+
+class MagicalDefenses(StaticAbilityFacet):
+    """
+    If this unit would receive damage, it loses that much energy instead. If it does not have enough energy, it receives
+    the remainder as damage.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(MagicalDefensesReplacement(self.parent, self))
 
 
 class ForceShield(StaticAbilityFacet):

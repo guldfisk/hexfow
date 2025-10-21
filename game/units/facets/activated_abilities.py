@@ -1170,6 +1170,32 @@ class ShrinkRay(TargetUnitActivatedAbility):
         apply_status_to_unit(target, "shrunk", self, stacks=1, duration=2)
 
 
+class MagicMissile(TargetUnitActivatedAbility):
+    """
+    Deals 2 damage.
+    """
+
+    cost = EnergyCost(2) | MovementCost(1)
+    range = 3
+    controller_target_option = ControllerTargetOption.ENEMY
+
+    def perform(self, target: Unit) -> None:
+        ES.resolve(Damage(target, DamageSignature(2, self)))
+
+
+class MagicShield(TargetUnitActivatedAbility):
+    """
+    Applies 2 stacks of <shield>.
+    """
+
+    cost = EnergyCost(3)
+    range = 2
+    controller_target_option = ControllerTargetOption.ALLIED
+
+    def perform(self, target: Unit) -> None:
+        apply_status_to_unit(target, "shield", self, stacks=2)
+
+
 class AssembleTheDoombot(TargetHexActivatedAbility):
     """
     Applies <doombot_scaffold> to hex.

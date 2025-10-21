@@ -61,6 +61,7 @@ class TestGameType(GameType):
                 INFERNO_TANK,
                 BLOOD_FEUD_WARLOCK,
                 DEVIOUS_SABOTEUR,
+                BARRIER_MAGE,
             ),
             (
                 CYCLOPS,

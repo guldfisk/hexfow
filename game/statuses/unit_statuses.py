@@ -42,6 +42,7 @@ from game.effects.replacements import (
     LuckyCharmReplacement,
     PerTurnMovePenaltyIgnoreReplacement,
     ReduceDamageReplacement,
+    ShieldReplacement,
     StunnedReplacement,
     VigorReplacement,
 )
@@ -144,6 +145,18 @@ class Parasite(UnitStatus):
 
     def create_effects(self) -> None:
         self.register_effects(ParasiteTrigger(self))
+
+
+class Shield(StackableMixin, UnitStatus):
+    """
+    If this unit would receive damage, remove that many stacks of this status instead. If there aren't enough stacks, it receives
+    the remainder as damage.
+    """
+
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(ShieldReplacement(self))
 
 
 class BurstOfSpeed(UnitStatus):
