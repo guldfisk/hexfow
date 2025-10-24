@@ -83,6 +83,9 @@ class SeatInterface(Connection):
         self.in_queue = SimpleQueue()
         self._callbacks: list[Callable[[str], ...]] = []
 
+        self._remaining_time: float = game_runner.game.time_bank or 0
+        self._grace: float = game_runner.game.time_grace or 0
+
     def _send_frame_to_callback(
         self, f: Callable[[str], ...], values: Mapping[str, Any]
     ) -> None:
@@ -113,10 +116,19 @@ class SeatInterface(Connection):
     def make_game_state_frame(
         self, game_state: Mapping[str, Any], decision_point: DecisionPoint | None = None
     ) -> dict[str, Any]:
-        frame = super().make_game_state_frame(game_state, decision_point)
+        frame = {
+            "message_type": "game_state",
+            "count": self._game_state_counter,
+            "game_state": game_state,
+            **(
+                {"remaining_time": self._remaining_time, "grace": self._grace - 0.5}
+                if self.game_runner.game.time_bank is not None
+                else {}
+            ),
+        }
         with self._latest_game_state_frame_lock:
             self._latest_game_state_frame = frame
-        return frame
+            return frame
 
     def send(self, values: Mapping[str, Any]) -> None:
         with self._lock:
@@ -124,16 +136,33 @@ class SeatInterface(Connection):
                 self._send_frame_to_callback(f, values)
 
     def wait_for_response(self) -> G_decision_result:
+        start_time = time.time()
         while self.game_runner.is_running:
             try:
                 if (
                     validated := self.validate_decision_message(
-                        self.in_queue.get(timeout=1)
+                        self.in_queue.get(timeout=0.1)
                     )
                 ) is not None:
+                    if self.game_runner.game.time_bank is not None:
+                        self._remaining_time -= max(
+                            (time.time() - start_time) - self._grace, 0
+                        )
                     return validated
             except Empty:
-                pass
+                if (
+                    self.game_runner.game.time_bank is not None
+                    and time.time() - start_time > self._remaining_time + self._grace
+                ):
+                    self.game_runner.send_result_message(
+                        [
+                            interface
+                            for interface in self.game_runner.seat_map.values()
+                            if interface != self
+                        ][0].player.name,
+                        "opponent timeout",
+                    )
+                    self.game_runner.stop()
         raise GameClosed()
 
 
@@ -164,7 +193,7 @@ class GameRunner(Thread):
             .model_validate(game.settings)
             .get_scenario()
         )
-        self._game = game
+        self.game = game
         self._lock = threading.Lock()
         self._is_running = False
         self._children: list[Thread] = []
@@ -196,6 +225,12 @@ class GameRunner(Thread):
         with self._lock:
             self._is_running = v
 
+    def send_result_message(self, winner: str, result: str) -> None:
+        for interface in self.seat_map.values():
+            interface.send(
+                {"message_type": "game_result", "winner": winner, "reason": result}
+            )
+
     def run(self):
         try:
             self.is_running = True
@@ -208,18 +243,22 @@ class GameRunner(Thread):
             self.seat_map: dict[UUID, SeatInterface] = {
                 seat.id: connection
                 for (player, connection), seat in zip(
-                    gs.connections.items(), self._game.seats
+                    gs.connections.items(), self.game.seats
                 )
             }
             GM.register(self)
 
             setup_scenario_units(
                 self._scenario,
-                with_fow=self._game.with_fow,
-                custom_armies=self._game.custom_armies,
+                with_fow=self.game.with_fow,
+                custom_armies=self.game.custom_armies,
             )
 
-            ES.resolve(Play())
+            if (
+                len(winners := [e.result for e in ES.resolve(Play()).iter_type(Play)])
+                == 1
+            ):
+                self.send_result_message(winners[0].name, "having the most points")
         except GameClosed:
             pass
         except:

@@ -13,7 +13,10 @@ import {
 } from "../actions/interface.ts";
 import { HoveredDetails } from "../../interfaces/details.ts";
 import { deepEquals } from "../utils/equals.ts";
-import { GameStateMessage } from "../../interfaces/messages.ts";
+import {
+  GameResultMessage,
+  GameStateMessage,
+} from "../../interfaces/messages.ts";
 import { getAdditionalDetails } from "../../details/additional.ts";
 
 const mainSlice = createSlice({
@@ -32,6 +35,9 @@ const mainSlice = createSlice({
     showCoordinates: false,
     additionalDetailsIndex: null,
     actionFilter: null,
+    gameResult: null,
+    remainingTime: null,
+    grace: null,
   } as {
     previousGameState: GameState | null;
     gameState: GameState | null;
@@ -46,9 +52,16 @@ const mainSlice = createSlice({
     showCoordinates: boolean;
     additionalDetailsIndex: number | null;
     actionFilter: ActionFilter | null;
+    gameResult: GameResultMessage | null;
+    remainingTime: number | null;
+    grace: number | null;
   },
   reducers: {
     receiveGameState: (state, action: PayloadAction<GameStateMessage>) => {
+      state.remainingTime = action.payload.remaining_time
+        ? action.payload.remaining_time
+        : null;
+      state.grace = action.payload.grace ? action.payload.grace : null;
       state.doAnimations = true;
       state.previousGameState = state.gameState;
       state.gameState = action.payload.game_state;
@@ -58,6 +71,9 @@ const mainSlice = createSlice({
       state.actionFilter = null;
       state.highlightedCCs = null;
       state.shouldRerender = true;
+    },
+    receivedGameResult: (state, action: PayloadAction<GameResultMessage>) => {
+      state.gameResult = action.payload;
     },
     renderedGameState: (state) => {
       state.shouldRerender = false;
@@ -154,6 +170,7 @@ const mainSlice = createSlice({
 
 export const {
   receiveGameState,
+  receivedGameResult,
   renderedGameState,
   loadedImage,
   receivedGameObjectDetails,

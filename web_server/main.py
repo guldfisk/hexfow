@@ -95,6 +95,8 @@ def create_game(body: CreateGameSchema) -> dict[str, Any]:
         game_type=body.game_type,
         with_fow=body.with_fow,
         custom_armies=body.custom_armies,
+        time_bank=body.time_bank,
+        time_grace=body.time_grace,
         settings=body.settings,
         seats=[Seat(position=i, player_name=f"player {i}") for i in range(1, 3)],
     )

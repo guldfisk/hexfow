@@ -12,6 +12,14 @@ export interface GameStateMessage extends BaseMessage {
   message_type: "game_state";
   count: number;
   game_state: GameState;
+  remaining_time?: number;
+  grace?: number;
 }
 
-export type Message = ErrorMessage | GameStateMessage;
+export interface GameResultMessage extends BaseMessage {
+  message_type: "game_result";
+  winner: string;
+  reason: string;
+}
+
+export type Message = ErrorMessage | GameStateMessage | GameResultMessage;

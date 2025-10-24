@@ -92,6 +92,11 @@ const GameCreator = ({}: {}) => {
   const settings = useLobbyState((state) => state.settings);
   const gameResponse = useLobbyState((state) => state.gameResponse);
   const dispatch = useLobbyDispatch();
+
+  const [useChessClock, setUseChessClock] = useState(true);
+  const [timeBank, setTimeBank] = useState(30);
+  const [grace, setGrace] = useState(2);
+
   useEffect(() => {
     fetch(
       `${window.location.protocol + "//" + window.location.hostname}:8000/maps`,
@@ -128,6 +133,8 @@ const GameCreator = ({}: {}) => {
                 settings: settings,
                 with_fow: withFow,
                 custom_armies: withCustomArmies,
+                time_bank: useChessClock ? timeBank * 60 : null,
+                time_grace: useChessClock ? grace : null,
               }),
               headers: {
                 "Content-type": "application/json",
@@ -155,6 +162,30 @@ const GameCreator = ({}: {}) => {
           type={"checkbox"}
           checked={withCustomArmies}
           onChange={() => dispatch(setWithCustomArmies(!withCustomArmies))}
+        />
+      </div>
+      <div>
+        <label>Use chess clock</label>
+        <input
+          type={"checkbox"}
+          checked={useChessClock}
+          onChange={() => setUseChessClock((prev) => !prev)}
+        />
+      </div>
+      <div>
+        <label>Time bank minutes</label>
+        <input
+          type={"number"}
+          value={timeBank}
+          onChange={(event) => setTimeBank(parseInt(event.target.value))}
+        />
+      </div>
+      <div>
+        <label>Time grace seconds</label>
+        <input
+          type={"number"}
+          value={grace}
+          onChange={(event) => setGrace(parseInt(event.target.value))}
         />
       </div>
       <GameTypeSelector />

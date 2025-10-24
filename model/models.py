@@ -58,6 +58,8 @@ class Game(Base, CreatedMixin, IntPKMixin):
     game_type: Mapped[str]
     with_fow: Mapped[bool]
     custom_armies: Mapped[bool]
+    time_bank: Mapped[float | None]
+    time_grace: Mapped[float | None]
     settings: Mapped[dict[str, Any]] = mapped_column(JSONB)
 
     seats: Mapped[list[Seat]] = relationship(back_populates="game")

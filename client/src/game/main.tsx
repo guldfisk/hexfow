@@ -11,6 +11,7 @@ import { Provider } from "react-redux";
 import {
   deactivateMenu,
   incrementAdditionalDetailsIndex,
+  receivedGameResult,
   receiveGameState,
   renderedGameState,
   setActionFilter,
@@ -33,6 +34,8 @@ gameConnection.onmessage = (event) => {
     store.dispatch(receiveGameState(result));
   } else if (result.message_type == "error") {
     console.log("ERROR!", result);
+  } else if (result.message_type == "game_result") {
+    store.dispatch(receivedGameResult(result));
   } else {
     console.log("unknown message", result);
   }

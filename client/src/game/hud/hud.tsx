@@ -214,14 +214,82 @@ const LogList = ({ logLines }: { logLines: LogLine[] }) => {
   );
 };
 
-const GameInfoView = ({ gameState }: { gameState: GameState }) => (
-  <div>
-    {gameState.players.map((player) => (
-      <div>{`${player.name}${player.name == gameState.player ? " (you)" : ""}: ${player.points}/${gameState.target_points} points`}</div>
-    ))}
-    {`round: ${gameState.round}/10`}
-  </div>
-);
+const Countdown = ({ milliSeconds }: { milliSeconds: number }) => {
+  const remaining = new Date(milliSeconds);
+
+  return (
+    <label>
+      {(milliSeconds >= 3600 * 1000
+        ? `${remaining.getUTCHours().toString().padStart(2, "0")}:`
+        : "") +
+        `${remaining.getUTCMinutes().toString().padStart(2, "0")}:${remaining.getSeconds().toString().padStart(2, "0")}` +
+        (milliSeconds < 10 * 1000
+          ? `:${remaining.getUTCMilliseconds().toString().padStart(3, "0").slice(0, 1)}`
+          : "")}
+    </label>
+  );
+};
+
+const ChessClock = ({ key }: { key: number }) => {
+  const remainingTime = useAppSelector((state) => state.remainingTime);
+  const grace = useAppSelector((state) => state.grace);
+  const gameState = useAppSelector((state) => state.gameState);
+
+  if (remainingTime === null || grace === null) {
+    return;
+  }
+
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => setElapsed((e) => e + 10), 10);
+    return () => clearInterval(intervalId);
+  }, [key]);
+
+  if (!gameState?.decision) {
+    return (
+      <>
+        <Countdown milliSeconds={0} />{" "}
+        <Countdown milliSeconds={remainingTime * 1000} />
+      </>
+    );
+  }
+  if (elapsed < grace * 1000) {
+    return (
+      <>
+        <Countdown milliSeconds={grace * 1000 - elapsed} />{" "}
+        <Countdown milliSeconds={remainingTime * 1000} />
+      </>
+    );
+  }
+  return (
+    <>
+      <Countdown milliSeconds={0} />{" "}
+      <Countdown
+        milliSeconds={Math.max(
+          remainingTime * 1000 + grace * 1000 - elapsed,
+          0,
+        )}
+      />
+    </>
+  );
+};
+
+const GameInfoView = ({ gameState }: { gameState: GameState }) => {
+  const gameStateId = useAppSelector((state) => state.gameStateId);
+
+  return (
+    <div>
+      <div>
+        {gameState.players.map((player) => (
+          <div>{`${player.name}${player.name == gameState.player ? " (you)" : ""}: ${player.points}/${gameState.target_points} points`}</div>
+        ))}
+        {`round: ${gameState.round}/10`}
+      </div>
+      <ChessClock key={gameStateId} />
+    </div>
+  );
+};
 
 const DecisionDetailView = ({
   applicationState,
@@ -345,6 +413,8 @@ export const HUD = ({
   const gameState = applicationState.gameState;
   const gameObjectDetails = applicationState.gameObjectDetails;
 
+  const [hideGameResult, setHideGameResult] = useState(false);
+
   if (!gameState || !gameObjectDetails) {
     return <div className={"sidebar sidebar-left"}></div>;
   }
@@ -369,71 +439,81 @@ export const HUD = ({
       );
 
   return (
-    <div>
-      <div className={"sidebar sidebar-left"}>
-        {actionSpace.unitListActions ? (
-          <>
-            <div style={{ height: "20%" }}>
-              <LogList logLines={gameState.logs} />
-            </div>
-            <div style={{ height: "45%" }}>
-              <UnitList
-                units={[...actionSpace.unitListActions.units].sort(
-                  sortBlueprints,
-                )}
-                onClick={actionSpace.unitListActions.onClick}
-                onHover={(unit) =>
-                  store.dispatch(
-                    hoverDetail({
-                      type: "blueprint",
-                      blueprint: unit.identifier,
-                    }),
-                  )
-                }
-              />
-            </div>
-          </>
-        ) : (
-          <div style={{ height: "70%" }}>
-            <LogList logLines={gameState.logs} />
+    <>
+      {applicationState.gameResult && !hideGameResult ? (
+        <div className={"modal"}>
+          <div className={"modal-main"}>
+            <div>{`${applicationState.gameResult.winner} wins due to ${applicationState.gameResult.reason}`}</div>
+            <button onClick={() => setHideGameResult(true)}>ok</button>
           </div>
-        )}
-
-        <DecisionDetailView
-          applicationState={applicationState}
-          gameState={applicationState.gameState}
-          gameObjectDetails={applicationState.gameObjectDetails}
-          makeDecision={makeDecision}
-          actionSpace={actionSpace}
-        />
-      </div>
-
-      {applicationState.gameObjectDetails &&
-      applicationState.detailed &&
-      applicationState.additionalDetailsIndex !== null ? (
-        <div className={"sidebar sidebar-details"}>
-          <DetailView
-            applicationState={applicationState}
-            detail={
-              getAdditionalDetails(
-                applicationState.detailed,
-                applicationState.gameObjectDetails,
-              )[applicationState.additionalDetailsIndex]
-            }
-            main={false}
-          />
         </div>
       ) : null}
+      <div>
+        <div className={"sidebar sidebar-left"}>
+          {actionSpace.unitListActions ? (
+            <>
+              <div style={{ height: "20%" }}>
+                <LogList logLines={gameState.logs} />
+              </div>
+              <div style={{ height: "45%" }}>
+                <UnitList
+                  units={[...actionSpace.unitListActions.units].sort(
+                    sortBlueprints,
+                  )}
+                  onClick={actionSpace.unitListActions.onClick}
+                  onHover={(unit) =>
+                    store.dispatch(
+                      hoverDetail({
+                        type: "blueprint",
+                        blueprint: unit.identifier,
+                      }),
+                    )
+                  }
+                />
+              </div>
+            </>
+          ) : (
+            <div style={{ height: "70%" }}>
+              <LogList logLines={gameState.logs} />
+            </div>
+          )}
 
-      <div className={"sidebar sidebar-right"}>
-        {applicationState.detailed ? (
-          <DetailView
+          <DecisionDetailView
             applicationState={applicationState}
-            detail={applicationState.detailed}
-            main={true}
+            gameState={applicationState.gameState}
+            gameObjectDetails={applicationState.gameObjectDetails}
+            makeDecision={makeDecision}
+            actionSpace={actionSpace}
           />
+        </div>
+
+        {applicationState.gameObjectDetails &&
+        applicationState.detailed &&
+        applicationState.additionalDetailsIndex !== null ? (
+          <div className={"sidebar sidebar-details"}>
+            <DetailView
+              applicationState={applicationState}
+              detail={
+                getAdditionalDetails(
+                  applicationState.detailed,
+                  applicationState.gameObjectDetails,
+                )[applicationState.additionalDetailsIndex]
+              }
+              main={false}
+            />
+          </div>
         ) : null}
+
+        <div className={"sidebar sidebar-right"}>
+          {applicationState.detailed ? (
+            <DetailView
+              applicationState={applicationState}
+              detail={applicationState.detailed}
+              main={true}
+            />
+          ) : null}
+        </div>
       </div>
-    </div>
+    </>
   );
 };

@@ -1043,8 +1043,8 @@ class DeployArmies(Event[None]):
 
 
 @dataclasses.dataclass
-class Play(Event[None]):
-    def resolve(self) -> None:
+class Play(Event[Player]):
+    def resolve(self) -> Player:
         gs = GS
         while (
             not (
@@ -1062,3 +1062,4 @@ class Play(Event[None]):
         with gs.log(LogLine([winner.name, "wins"])):
             pass
         gs.send_to_players()
+        return winner

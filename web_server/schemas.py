@@ -20,6 +20,8 @@ class CreateGameSchema(BaseModel):
     game_type: GameTypeValue
     with_fow: bool
     custom_armies: bool
+    time_bank: float | None = None
+    time_grace: float | None = None
     settings: dict[str, Any]
 
     @model_validator(mode="after")

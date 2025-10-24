@@ -75,7 +75,19 @@ class TestGameRunner(Thread):
             setup_scenario(scenario, lambda player: WebsocketConnection(player))
             setup_scenario_units(scenario)
 
-            ES.resolve(Play())
+            if (
+                len(winners := [e.result for e in ES.resolve(Play()).iter_type(Play)])
+                == 1
+            ):
+                self.connection.send(
+                    json.dumps(
+                        {
+                            "message_type": "game_result",
+                            "winner": winners[0].name,
+                            "reason": "having the most points",
+                        }
+                    )
+                )
         except GameClosed:
             pass
         except:

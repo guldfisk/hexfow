@@ -67,8 +67,8 @@ def setup_scenario_units(
 
         ES.register_effects(*effects)
 
-        for player in gs.turn_order:
-            gs.serialize_for(gs._get_context_for(player), None)
+        gs.update_vision()
+        gs.update_ghosts()
 
         if with_fow:
             ES.deregister_effects(*effects)
