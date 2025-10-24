@@ -8,8 +8,9 @@ import { UnitDetailsView } from "../components/unitDetails.tsx";
 import { DetailsIndicator } from "../details/components.tsx";
 import React from "react";
 import { getAdditionalDetails } from "../details/additional.ts";
-import { sortBlueprints, UnitList } from "../components/unitList.tsx";
+import { sortBlueprints } from "../components/unitList.tsx";
 import { StatusesDetailView } from "../components/statusDetails.tsx";
+import { UnitGrid } from "../components/unitGrid.tsx";
 
 const AdditionalDetailView = ({
   detailed,
@@ -107,15 +108,19 @@ export const ArmyEditor = ({}: {}) => {
     <div>
       <div className={"sidebar sidebar-left"}>
         {state.gameObjectDetails ? (
-          <UnitList
-            units={Object.values(state.gameObjectDetails.units).filter(
-              (unit) =>
-                !state.armyList.includes(unit.identifier) &&
-                unit.price !== null &&
-                unit.max_count > 0,
-            )}
-            onClick={(unit) => dispatch(addUnit(unit.identifier))}
-            onHover={(unit) => dispatch(hoverUnit(unit))}
+          <UnitGrid
+            units={Object.values(state.gameObjectDetails.units)
+              .filter((unit) => unit.price !== null && unit.max_count > 0)
+              .map((unit) => ({
+                unit: unit,
+                enabled: !state.armyList.includes(unit.identifier),
+              }))}
+            onClick={(unit) =>
+              dispatch(
+                (unit.enabled ? addUnit : removeUnit)(unit.unit.identifier),
+              )
+            }
+            onHover={(unit) => dispatch(hoverUnit(unit.unit))}
           />
         ) : null}
       </div>
@@ -158,12 +163,13 @@ export const ArmyEditor = ({}: {}) => {
               </div>
             </div>
             <div className={"army-list"}>
-              <UnitList
+              <UnitGrid
                 units={Object.values(state.gameObjectDetails.units)
                   .filter((unit) => state.armyList.includes(unit.identifier))
-                  .sort(sortBlueprints)}
-                onClick={(unit) => dispatch(removeUnit(unit.identifier))}
-                onHover={(unit) => dispatch(hoverUnit(unit))}
+                  .sort(sortBlueprints)
+                  .map((unit) => ({ unit, enabled: true }))}
+                onClick={(unit) => dispatch(removeUnit(unit.unit.identifier))}
+                onHover={(unit) => dispatch(hoverUnit(unit.unit))}
               />
             </div>
           </>

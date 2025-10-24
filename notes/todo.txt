@@ -7,7 +7,6 @@ platform
     edit/load armies
 
 army editor
-    grid view
     search/filter units
 
     test deploy on map
@@ -20,8 +19,6 @@ map editor
     unit details
 
 game
-    chess clock
-
     round restricted objectives
 
     corpses

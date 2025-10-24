@@ -214,3 +214,20 @@ button {
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
+.text-container {
+  position: relative;
+  color: white;
+  display: inline-block;
+}
+
+.text-top-left {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  background: grey;
+}
+
+.grey-image {
+  filter: grayscale(1);
+}
