@@ -5,7 +5,7 @@ import threading
 import traceback
 from queue import Empty, SimpleQueue
 from threading import Thread
-from typing import Any, Mapping
+from typing import Any, Iterator, Mapping
 
 from websockets import ServerConnection
 
@@ -58,17 +58,19 @@ class TestGameRunner(Thread):
                     ).get("decision"):
                         game.connection.send(json.dumps(values))
 
-                def wait_for_response(self) -> G_decision_result:
+                def wait_for_response(self) -> Iterator[G_decision_result | None]:
                     while game.is_running:
                         try:
                             if (
                                 validated := self.validate_decision_message(
-                                    game.in_queue.get(timeout=1)
+                                    game.in_queue.get(timeout=0.01)
                                 )
                             ) is not None:
-                                return validated
+                                yield validated
+                                return
                         except Empty:
                             pass
+                        yield None
                     raise GameClosed()
 
             scenario = TestGameType().get_scenario()

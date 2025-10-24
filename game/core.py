@@ -2058,7 +2058,7 @@ class Connection(ABC):
         self.send(self.make_game_state_frame(game_state, decision_point))
 
     @abstractmethod
-    def wait_for_response(self) -> G_decision_result: ...
+    def wait_for_response(self) -> Iterator[G_decision_result | None]: ...
 
     def get_response(
         self,
@@ -2081,7 +2081,13 @@ class Connection(ABC):
                 self._premove = None
                 return validated_premove
         self.send_game_state(game_state, decision_point)
-        return self.wait_for_response()
+        for v in (waiter := self.wait_for_response()):
+            if v is not None:
+                try:
+                    next(waiter)
+                except StopIteration:
+                    pass
+                return v
 
 
 class GameState:
@@ -2243,10 +2249,24 @@ class GameState:
                 ),
                 decision_points.get(player),
             )
-        return {
+
+        waiters = {
             player: self.connections[player].wait_for_response()
             for player in decision_points.keys()
         }
+        results = {}
+        while waiters:
+            for player, waiter in list(waiters.items()):
+                result = next(waiter)
+                if result is not None:
+                    try:
+                        next(waiter)
+                    except StopIteration:
+                        pass
+                    results[player] = result
+                    del waiters[player]
+
+        return results
 
 
 class ScopedGameState:

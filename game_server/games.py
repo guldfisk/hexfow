@@ -6,7 +6,7 @@ import time
 import traceback
 from queue import Empty, SimpleQueue
 from threading import Thread
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Iterator, Mapping
 from uuid import UUID
 
 from sqlalchemy import Exists, select
@@ -135,20 +135,21 @@ class SeatInterface(Connection):
             for f in list(self._callbacks):
                 self._send_frame_to_callback(f, values)
 
-    def wait_for_response(self) -> G_decision_result:
+    def wait_for_response(self) -> Iterator[G_decision_result | None]:
         start_time = time.time()
         while self.game_runner.is_running:
             try:
                 if (
                     validated := self.validate_decision_message(
-                        self.in_queue.get(timeout=0.1)
+                        self.in_queue.get(timeout=0.01)
                     )
                 ) is not None:
                     if self.game_runner.game.time_bank is not None:
                         self._remaining_time -= max(
                             (time.time() - start_time) - self._grace, 0
                         )
-                    return validated
+                    yield validated
+                    return
             except Empty:
                 if (
                     self.game_runner.game.time_bank is not None
@@ -163,6 +164,7 @@ class SeatInterface(Connection):
                         "opponent timeout",
                     )
                     self.game_runner.stop()
+            yield None
         raise GameClosed()
 
 
