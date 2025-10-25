@@ -297,8 +297,8 @@ CHARGE_DRONE = UnitBlueprint(
 
 CHICKEN = UnitBlueprint(
     name="Chicken",
-    health=1,
-    speed=3,
+    health=2,
+    speed=2,
     sight=1,
     size=Size.SMALL,
     facets=[Peck],
@@ -444,6 +444,16 @@ FROST_SPRITE = UnitBlueprint(
     price=3,
 )
 
+GNARLED_SHAMAN = UnitBlueprint(
+    "Gnarled Shaman",
+    health=3,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[SpiritProjection, SweatItOut, GuidedTrance],
+    price=3,
+)
+
 GNOME_COMMANDO = UnitBlueprint(
     "Gnome Commando",
     health=4,
@@ -535,13 +545,13 @@ BLOOD_CONDUIT = UnitBlueprint(
     price=4,
 )
 
-GNARLED_SHAMAN = UnitBlueprint(
-    "Gnarled Shaman",
-    health=3,
+HARMONIOUS_DRUID = UnitBlueprint(
+    "Harmonious Druid",
+    health=4,
     speed=3,
     sight=2,
     energy=5,
-    facets=[SpiritProjection, SweatItOut, GuidedTrance],
+    facets=[NaturalBlessing, VerdantFlash, HelpfulWatchers, ForestDweller],
     price=4,
 )
 
@@ -561,6 +571,16 @@ LITTLE_ENGINE = UnitBlueprint(
     speed=1,
     sight=1,
     facets=[StrainedPusher],
+    price=4,
+)
+
+MISCHIEVOUS_GODMOTHER = UnitBlueprint(
+    "Mischievous Godmother",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[TurnToRabbit, TugIn, FaerieDust],
     price=4,
 )
 
@@ -606,6 +626,16 @@ UNDERHANDED_HEXMAGE = UnitBlueprint(
     price=4,
 )
 
+ANCIENT_ALTRUIST = UnitBlueprint(
+    "Ancient Altruist",
+    health=3,
+    speed=2,
+    sight=2,
+    energy=5,
+    facets=[CriticalAid, Evacuate, CuringWord],
+    price=5,
+)
+
 AP_GUNNER = UnitBlueprint(
     "AP Gunner",
     health=2,
@@ -635,16 +665,6 @@ GOBLIN_ASSASSIN = UnitBlueprint(
     price=5,
 )
 
-HARMONIOUS_DRUID = UnitBlueprint(
-    "Harmonious Druid",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[NaturalBlessing, VerdantFlash, HelpfulWatchers, ForestDweller],
-    price=5,
-)
-
 MINE_LAYER_BEETLE = UnitBlueprint(
     "Mine Layer Beetle",
     health=5,
@@ -653,16 +673,6 @@ MINE_LAYER_BEETLE = UnitBlueprint(
     energy=4,
     facets=[SpinyAppendages, LayMine],
     price=5,
-)
-
-MISCHIEVOUS_GODMOTHER = UnitBlueprint(
-    "Mischievous Godmother",
-    health=4,
-    speed=3,
-    sight=2,
-    energy=6,
-    facets=[TurnToRabbit, TugIn, FaerieDust],
-    price=4,
 )
 
 MORTAR_SQUAD = UnitBlueprint(
@@ -685,13 +695,13 @@ SQUIRMING_SQUID = UnitBlueprint(
     price=5,
 )
 
-ANCIENT_ALTRUIST = UnitBlueprint(
-    "Ancient Altruist",
-    health=4,
-    speed=2,
+BLOOD_FEUD_WARLOCK = UnitBlueprint(
+    "Blood Feud Warlock",
+    health=5,
+    speed=3,
     sight=2,
     energy=5,
-    facets=[CriticalAid, Evacuate, CuringWord],
+    facets=[SowDiscord, Scorn, SpurIntoRage],
     price=6,
 )
 
@@ -722,16 +732,6 @@ DOMINEERING_PSYCHIC = UnitBlueprint(
     sight=1,
     energy=6,
     facets=[Compel, Baffle, PsychicCommand, TelepathicSpy],
-    price=6,
-)
-
-GIANT_SLAYER_MOUSE = UnitBlueprint(
-    "Giant Slayer Mouse",
-    health=4,
-    speed=3,
-    sight=2,
-    size=Size.SMALL,
-    facets=[Slay, StayingPower],
     price=6,
 )
 
@@ -835,26 +835,6 @@ ACID_SPITTER_IGUANA = UnitBlueprint(
     price=7,
 )
 
-BEE_SHAMAN = UnitBlueprint(
-    "Bee Shaman",
-    health=4,
-    speed=3,
-    sight=2,
-    energy=6,
-    facets=[SummonBees, RoyalJelly],
-    price=7,
-)
-
-BLOOD_FEUD_WARLOCK = UnitBlueprint(
-    "Blood Feud Warlock",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[SowDiscord, Scorn, SpurIntoRage],
-    price=7,
-)
-
 BARRIER_MAGE = UnitBlueprint(
     "Barrier Mage",
     health=2,
@@ -866,6 +846,15 @@ BARRIER_MAGE = UnitBlueprint(
     price=7,
 )
 
+BEE_SHAMAN = UnitBlueprint(
+    "Bee Shaman",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[SummonBees, RoyalJelly],
+    price=7,
+)
 
 DJINN = UnitBlueprint(
     "Djinn",
@@ -874,6 +863,16 @@ DJINN = UnitBlueprint(
     sight=2,
     energy=4,
     facets=[DancingSaber, GrantWish, MagicForm],
+    price=7,
+)
+
+GIANT_SLAYER_MOUSE = UnitBlueprint(
+    "Giant Slayer Mouse",
+    health=4,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    facets=[Slay, StayingPower],
     price=7,
 )
 
@@ -908,6 +907,17 @@ TRENCH_ENGINEER = UnitBlueprint(
     price=7,
 )
 
+ARTILLERY_SURVEYOR = UnitBlueprint(
+    "Artillery Surveyor",
+    health=4,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    energy=6,
+    facets=[OrbitalStrike, SpySatellite],
+    price=8,
+)
+
 BLASTER_DROID = UnitBlueprint(
     "Blaster Droid",
     health=4,
@@ -933,6 +943,16 @@ CAMELBACK_OUTRIDER = UnitBlueprint(
     speed=4,
     sight=2,
     facets=[Lance, Vigorous, StayingPower],
+    price=8,
+)
+
+DEVIOUS_SABOTEUR = UnitBlueprint(
+    "Devious Saboteur",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[PrepareTrap, MountCharge, Zap, Stealth, Infiltrator, OpeningGambit],
     price=8,
 )
 
@@ -963,6 +983,16 @@ LEGENDARY_WRESTLER = UnitBlueprint(
     flavor="I need justice in my life: Here it comes.",
 )
 
+RANK_DEFILER = UnitBlueprint(
+    "Rank Defiler",
+    health=6,
+    speed=2,
+    sight=1,
+    energy=6,
+    facets=[FleaSwarm, TorporFumes, Disempower],
+    price=8,
+)
+
 ZONE_SKIRMISHER = UnitBlueprint(
     "ZONE Skirmisher",
     health=6,
@@ -972,34 +1002,13 @@ ZONE_SKIRMISHER = UnitBlueprint(
     price=8,
 )
 
-ARTILLERY_SURVEYOR = UnitBlueprint(
-    "Artillery Surveyor",
-    health=4,
+NOTORIOUS_OUTLAW = UnitBlueprint(
+    "Notorious Outlaw",
+    health=5,
     speed=3,
     sight=2,
-    size=Size.SMALL,
-    energy=6,
-    facets=[OrbitalStrike, SpySatellite],
-    price=9,
-)
-
-DEVIOUS_SABOTEUR = UnitBlueprint(
-    "Devious Saboteur",
-    health=4,
-    speed=3,
-    sight=2,
-    energy=6,
-    facets=[PrepareTrap, MountCharge, Zap, Stealth, Infiltrator, OpeningGambit],
-    price=9,
-)
-
-RANK_DEFILER = UnitBlueprint(
-    "Rank Defiler",
-    health=6,
-    speed=2,
-    sight=1,
-    energy=6,
-    facets=[FleaSwarm, TorporFumes, Disempower],
+    energy=3,
+    facets=[TwinRevolvers, Lasso, Showdown, Quick],
     price=9,
 )
 
@@ -1088,16 +1097,6 @@ HOODED_EXECUTIONER = UnitBlueprint(
     sight=2,
     facets=[GuillotineAxe, PublicExecution, DreadfulVisage],
     price=10,
-)
-
-NOTORIOUS_OUTLAW = UnitBlueprint(
-    "Notorious Outlaw",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=3,
-    facets=[TwinRevolvers, Lasso, Showdown, Quick],
-    price=9,
 )
 
 REMORSELESS_SNIPER = UnitBlueprint(
@@ -1197,6 +1196,15 @@ INK_WITCH = UnitBlueprint(
     price=11,
 )
 
+LANKY_PROWLER = UnitBlueprint(
+    "Lanky Prowler",
+    health=5,
+    speed=5,
+    sight=2,
+    facets=[Strangle, Stealth],
+    price=11,
+)
+
 PESTILENCE_PRIEST = UnitBlueprint(
     "Pestilence Priest",
     health=5,
@@ -1224,15 +1232,6 @@ FRONTLINE_TACTICIAN = UnitBlueprint(
     sight=2,
     energy=4,
     facets=[CommandersPistol, CoordinatedManeuver, InspiringPresence],
-    price=12,
-)
-
-LANKY_PROWLER = UnitBlueprint(
-    "Lanky Prowler",
-    health=5,
-    speed=5,
-    sight=2,
-    facets=[Strangle, Stealth],
     price=12,
 )
 
@@ -1334,6 +1333,16 @@ ICE_SAVANT = UnitBlueprint(
     price=16,
 )
 
+RHINO_BEAST = UnitBlueprint(
+    "Rhino",
+    health=9,
+    speed=4,
+    sight=2,
+    size=Size.LARGE,
+    facets=[Gore],
+    price=19,
+)
+
 ZONE_MECH = UnitBlueprint(
     "ZONE Mech",
     health=7,
@@ -1343,17 +1352,7 @@ ZONE_MECH = UnitBlueprint(
     energy=3,
     size=Size.LARGE,
     facets=[HammerCannon, SmokeCanister],
-    price=18,
-)
-
-RHINO_BEAST = UnitBlueprint(
-    "Rhino",
-    health=9,
-    speed=4,
-    sight=2,
-    size=Size.LARGE,
-    facets=[Gore],
-    price=19,
+    price=20,
 )
 
 ANNOYING_FLEA = UnitBlueprint(
