@@ -31,6 +31,7 @@ class Hills(Terrain):
     1 move in penalty for units not moving in from high-ground.
     1 terrain protection against attacks from units not on high-ground.
     Blocks vision for units not on high-ground.
+    Units on high ground can see over other units and terrain not on high ground.
     """
 
     is_high_ground = True

@@ -39,6 +39,7 @@ from game.effects.modifiers import (
     UnwieldySwimmerModifier,
 )
 from game.effects.replacements import (
+    CapDamageReplacement,
     CrushableReplacement,
     ExternallyImmobileReplacement,
     IgnoresMoveOutPenaltyReplacement,
@@ -427,6 +428,15 @@ class Stakeout(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(NotMovedStealthModifier(self.parent))
+
+
+class PlascreteCarapace(StaticAbilityFacet):
+    """
+    If this unit would suffer more than 3 damage, it suffers 3 damage instead.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(CapDamageReplacement(self.parent, 3))
 
 
 class AntiMagicHide(StaticAbilityFacet):

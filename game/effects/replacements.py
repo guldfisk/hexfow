@@ -37,6 +37,7 @@ class SufferDamageLayer(IntEnum):
     REDUCE = auto()
     LUCKY_CHARM = auto()
     BUFFER = auto()
+    CAP = auto()
 
 
 class ReceiveDamageLayer(IntEnum):
@@ -316,6 +317,26 @@ class ReduceDamageReplacement(ReplacementEffect[SufferDamage]):
             event.branch(
                 signature=event.signature.with_damage(
                     event.signature.amount - self.amount
+                )
+            )
+        )
+
+
+@dataclasses.dataclass(eq=False)
+class CapDamageReplacement(ReplacementEffect[SufferDamage]):
+    priority: ClassVar[int] = SufferDamageLayer.CAP
+
+    unit: Unit
+    amount: int
+
+    def can_replace(self, event: SufferDamage) -> bool:
+        return event.unit == self.unit
+
+    def resolve(self, event: SufferDamage) -> None:
+        ES.resolve(
+            event.branch(
+                signature=event.signature.with_damage(
+                    min(event.signature.amount, self.amount)
                 )
             )
         )

@@ -103,6 +103,12 @@ class SerratedBeak(MeleeAttackFacet):
     damage = 2
 
 
+class PlasmaBlaster(RangedAttackFacet):
+    cost = ExclusiveCost()
+    damage = 4
+    range = 2
+
+
 class Strangle(MeleeAttackFacet):
     """+2 damage against small units."""
 

@@ -166,6 +166,7 @@ from game.units.facets.attacks import (
     OtterBite,
     Peck,
     Pinch,
+    PlasmaBlaster,
     RabidBite,
     RazorTusk,
     Rifle,
@@ -234,6 +235,7 @@ from game.units.facets.static_abilities import (
     OpeningGambit,
     Ornery,
     PackHunter,
+    PlascreteCarapace,
     Prickly,
     PuffAway,
     PureInnocence,
@@ -1331,6 +1333,15 @@ ICE_SAVANT = UnitBlueprint(
     energy=7,
     facets=[RingOfIce, ShieldWithFrost, IcicleSplinter, Haughty],
     price=16,
+)
+
+TOMB_WALKER = UnitBlueprint(
+    "Tomb Walker",
+    health=7,
+    speed=2,
+    sight=1,
+    facets=[PlasmaBlaster, PlascreteCarapace],
+    price=9,
 )
 
 RHINO_BEAST = UnitBlueprint(

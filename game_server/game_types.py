@@ -57,15 +57,10 @@ class TestGameType(GameType):
             }
         )
         player_units = (
-            (
-                INFERNO_TANK,
-                BLOOD_FEUD_WARLOCK,
-                DEVIOUS_SABOTEUR,
-                BARRIER_MAGE,
-            ),
+            (TOMB_WALKER,),
             (
                 CYCLOPS,
-                HARROWED_MYSTICIST,
+                RIFLE_INFANTRY,
             ),
         )
 
