@@ -1091,7 +1091,7 @@ class RaiseGround(TargetHexActivatedAbility):
     Turns the terrain into Hills.
     """
 
-    cost = EnergyCost(3) | MovementCost(2)
+    cost = EnergyCost(3) | MovementCost(1)
     range = 3
 
     explain_qualifier_filter = "non-elevated"

@@ -53,12 +53,12 @@ from game.effects.replacements import (
     UnitImmuneToStatusReplacement,
 )
 from game.effects.triggers import (
+    ApplyHexStatusOnDeathTrigger,
     ApplyStatusToAttackerOnHitTrigger,
     ApplyStatusToDefenderOnHitTrigger,
     AutomatedTrigger,
     CaughtInTheMatchTrigger,
     FleetingTrigger,
-    FoulBurstTrigger,
     FuriousTrigger,
     GrizzlyMurdererTrigger,
     HeelTurnTrigger,
@@ -488,7 +488,12 @@ class FoulBurst(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(FoulBurstTrigger(self.parent, self))
+        self.register_effects(
+            ApplyHexStatusOnDeathTrigger(
+                self.parent,
+                HexStatusSignature(HexStatus.get("soot"), self, duration=2),
+            )
+        )
 
 
 class ToughSkin(StaticAbilityFacet):

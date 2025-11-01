@@ -161,6 +161,7 @@ from game.units.facets.attacks import (
     LightBlaster,
     LightBow,
     MarshmallowFist,
+    MetallicStinger,
     MightyBlow,
     MiniGun,
     OtterBite,
@@ -178,6 +179,7 @@ from game.units.facets.attacks import (
     SerratedClaws,
     ServicePistol,
     ServiceRifle,
+    ServitorPincers,
     Shiv,
     Slay,
     SlingShot,
@@ -381,6 +383,7 @@ RABID_BADGER = UnitBlueprint(
     health=2,
     speed=2,
     sight=1,
+    size=Size.SMALL,
     facets=[RabidBite, Reckless, Wild],
     price=2,
 )
@@ -413,6 +416,15 @@ SNAP_JAW = UnitBlueprint(
     speed=1,
     sight=1,
     facets=[Chomp],
+    price=2,
+)
+
+UNTHINKING_SERVITOR = UnitBlueprint(
+    "Unthinking Servitor",
+    health=4,
+    speed=3,
+    sight=1,
+    facets=[ServitorPincers, Wild],
     price=2,
 )
 
@@ -524,6 +536,18 @@ SHRINE_KEEPER = UnitBlueprint(
     energy=4,
     size=Size.SMALL,
     facets=[RaiseShrine, GrantCharm, TidyUp],
+    price=3,
+)
+
+STINGING_SENTRY = UnitBlueprint(
+    "Stinging Sentry",
+    health=5,
+    speed=3,
+    sight=1,
+    facets=[
+        MetallicStinger,
+        Automated,
+    ],
     price=3,
 )
 
@@ -847,6 +871,16 @@ BEE_SHAMAN = UnitBlueprint(
     price=7,
 )
 
+DEVIOUS_SABOTEUR = UnitBlueprint(
+    "Devious Saboteur",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[PrepareTrap, MountCharge, Zap, Stealth, Infiltrator, OpeningGambit],
+    price=7,
+)
+
 DJINN = UnitBlueprint(
     "Djinn",
     health=4,
@@ -948,26 +982,6 @@ CAMELBACK_OUTRIDER = UnitBlueprint(
     price=8,
 )
 
-DEVIOUS_SABOTEUR = UnitBlueprint(
-    "Devious Saboteur",
-    health=4,
-    speed=3,
-    sight=2,
-    energy=6,
-    facets=[PrepareTrap, MountCharge, Zap, Stealth, Infiltrator, OpeningGambit],
-    price=8,
-)
-
-GIANT_TOAD = UnitBlueprint(
-    "Giant Toad",
-    health=8,
-    speed=2,
-    sight=2,
-    energy=3,
-    facets=[TongueLash, Jump, ToxicSkin],
-    price=8,
-)
-
 LEGENDARY_WRESTLER = UnitBlueprint(
     "Legendary Wrestler",
     health=7,
@@ -1004,6 +1018,16 @@ ZONE_SKIRMISHER = UnitBlueprint(
     price=8,
 )
 
+GIANT_TOAD = UnitBlueprint(
+    "Giant Toad",
+    health=8,
+    speed=2,
+    sight=2,
+    energy=3,
+    facets=[TongueLash, Jump, ToxicSkin],
+    price=9,
+)
+
 NOTORIOUS_OUTLAW = UnitBlueprint(
     "Notorious Outlaw",
     health=5,
@@ -1011,6 +1035,15 @@ NOTORIOUS_OUTLAW = UnitBlueprint(
     sight=2,
     energy=3,
     facets=[TwinRevolvers, Lasso, Showdown, Quick],
+    price=9,
+)
+
+TOMB_WALKER = UnitBlueprint(
+    "Tomb Walker",
+    health=7,
+    speed=2,
+    sight=1,
+    facets=[PlasmaBlaster, PlascreteCarapace],
     price=9,
 )
 
@@ -1239,7 +1272,7 @@ FRONTLINE_TACTICIAN = UnitBlueprint(
 
 PRIMEVAL_TORTOISE = UnitBlueprint(
     "Primeval Tortoise",
-    health=5,
+    health=6,
     speed=1,
     sight=2,
     armor=2,
@@ -1333,15 +1366,6 @@ ICE_SAVANT = UnitBlueprint(
     energy=7,
     facets=[RingOfIce, ShieldWithFrost, IcicleSplinter, Haughty],
     price=16,
-)
-
-TOMB_WALKER = UnitBlueprint(
-    "Tomb Walker",
-    health=7,
-    speed=2,
-    sight=1,
-    facets=[PlasmaBlaster, PlascreteCarapace],
-    price=9,
 )
 
 RHINO_BEAST = UnitBlueprint(

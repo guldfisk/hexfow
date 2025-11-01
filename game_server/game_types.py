@@ -57,7 +57,11 @@ class TestGameType(GameType):
             }
         )
         player_units = (
-            (TOMB_WALKER,),
+            (
+                TOMB_WALKER,
+                UNTHINKING_SERVITOR,
+                STINGING_SENTRY,
+            ),
             (
                 CYCLOPS,
                 RIFLE_INFANTRY,

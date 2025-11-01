@@ -1032,17 +1032,17 @@ class PureInnocenceTrigger(TriggerEffect[KillUpkeep]):
 
 
 @dataclasses.dataclass(eq=False)
-class FoulBurstTrigger(TriggerEffect[KillUpkeep]):
+class ApplyHexStatusOnDeathTrigger(TriggerEffect[KillUpkeep]):
     priority: ClassVar[int] = 0
 
     unit: Unit
-    source: Source
+    signature: HexStatusSignature
 
     def should_trigger(self, event: KillUpkeep) -> bool:
         return event.unit == self.unit
 
     def resolve(self, event: KillUpkeep) -> None:
-        apply_status_to_hex(GS.map.hex_off(event.unit), "soot", self.source, duration=2)
+        ES.resolve(ApplyHexStatus(GS.map.hex_off(event.unit), self.signature))
 
 
 @dataclasses.dataclass(eq=False)

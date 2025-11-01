@@ -121,7 +121,18 @@ class Strangle(MeleeAttackFacet):
 
 
 class RabidBite(MeleeAttackFacet):
+    cost = MovementCost(1)
     damage = 3
+
+
+class ServitorPincers(MeleeAttackFacet):
+    cost = MovementCost(3)
+    damage = 2
+
+
+class MetallicStinger(MeleeAttackFacet):
+    cost = ExclusiveCost()
+    damage = 2
 
 
 class SpitAcid(RangedAttackFacet):
