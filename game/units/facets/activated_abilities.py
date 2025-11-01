@@ -1106,7 +1106,7 @@ class RaiseGround(TargetHexActivatedAbility):
 class FlattenGround(TargetHexActivatedAbility):
     """Turns the terrain into Plains"""
 
-    cost = EnergyCost(3) | MovementCost(2)
+    cost = EnergyCost(3) | MovementCost(1)
     range = 3
 
     explain_qualifier_filter = "elevated"
@@ -1123,7 +1123,7 @@ class DrawSpring(TargetHexActivatedAbility):
     Applies <underground_spring> for 2 rounds.
     """
 
-    cost = EnergyCost(2) | MovementCost(2)
+    cost = EnergyCost(2) | MovementCost(1)
     range = 3
 
     def perform(self, target: Hex) -> None:

@@ -835,17 +835,6 @@ ACID_SPITTER_IGUANA = UnitBlueprint(
     price=7,
 )
 
-BARRIER_MAGE = UnitBlueprint(
-    "Barrier Mage",
-    health=2,
-    speed=2,
-    energy=6,
-    sight=2,
-    size=Size.MEDIUM,
-    facets=[MagicMissile, MagicShield, MagicalDefenses],
-    price=7,
-)
-
 BEE_SHAMAN = UnitBlueprint(
     "Bee Shaman",
     health=4,
@@ -868,7 +857,7 @@ DJINN = UnitBlueprint(
 
 GIANT_SLAYER_MOUSE = UnitBlueprint(
     "Giant Slayer Mouse",
-    health=4,
+    health=3,
     speed=3,
     sight=2,
     size=Size.SMALL,
@@ -915,6 +904,17 @@ ARTILLERY_SURVEYOR = UnitBlueprint(
     size=Size.SMALL,
     energy=6,
     facets=[OrbitalStrike, SpySatellite],
+    price=8,
+)
+
+BARRIER_MAGE = UnitBlueprint(
+    "Barrier Mage",
+    health=2,
+    speed=2,
+    energy=6,
+    sight=2,
+    size=Size.MEDIUM,
+    facets=[MagicMissile, MagicShield, MagicalDefenses],
     price=8,
 )
 
@@ -1041,7 +1041,7 @@ BLITZ_TROOPER = UnitBlueprint(
 
 BOULDER_HURLER_OAF = UnitBlueprint(
     "Boulder Hurler Oaf",
-    health=7,
+    health=8,
     speed=2,
     sight=2,
     size=Size.LARGE,
@@ -1255,16 +1255,6 @@ WAR_HOG = UnitBlueprint(
     price=12,
 )
 
-COMBAT_ENGINEER = UnitBlueprint(
-    "Combat Engineer",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=6,
-    facets=[Wrench, ConstructTurret, FixErUp, TurboTune],
-    price=13,
-)
-
 INFERNO_TANK = UnitBlueprint(
     "Inferno Tank",
     health=7,
@@ -1279,6 +1269,16 @@ INFERNO_TANK = UnitBlueprint(
         FlameResistant,
     ],
     price=13,
+)
+
+COMBAT_ENGINEER = UnitBlueprint(
+    "Combat Engineer",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[Wrench, ConstructTurret, FixErUp, TurboTune],
+    price=14,
 )
 
 STAUNCH_IRON_HEART = UnitBlueprint(
