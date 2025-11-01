@@ -190,6 +190,26 @@ class SchadenfreudeDebuffTrigger(TriggerEffect[ApplyStatus]):
 
 
 @dataclasses.dataclass(eq=False)
+class KarmaDebuffTrigger(TriggerEffect[ApplyStatus]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+    source: Source
+
+    def should_trigger(self, event: ApplyStatus) -> bool:
+        return (
+            event.unit == self.unit
+            and event.result
+            and event.result.intention == StatusIntention.DEBUFF
+            and get_source_unit(event.signature.source) != self.unit
+        )
+
+    def resolve(self, event: ApplyStatus) -> None:
+        if unit := get_source_unit(event.signature.source):
+            ES.resolve(ApplyStatus(unit, event.signature.branch(source=self.source)))
+
+
+@dataclasses.dataclass(eq=False)
 class OrneryTrigger(TriggerEffect[ApplyStatus]):
     priority: ClassVar[int] = 0
 
@@ -311,6 +331,28 @@ class HeelTurnTrigger(TriggerEffect[SufferDamage]):
 
     def resolve(self, event: SufferDamage) -> None:
         apply_status_to_unit(self.unit, "they_ve_got_a_steel_chair", self.source)
+
+
+@dataclasses.dataclass(eq=False)
+class KarmaDamageTrigger(TriggerEffect[SufferDamage]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+    source: Source
+
+    def should_trigger(self, event: SufferDamage) -> bool:
+        return (
+            event.unit == self.unit
+            and get_source_unit(event.signature.source) != self.unit
+        )
+
+    def resolve(self, event: SufferDamage) -> None:
+        if unit := get_source_unit(event.signature.source):
+            ES.resolve(
+                Damage(
+                    unit, DamageSignature(event.result, self.source, DamageType.PURE)
+                )
+            )
 
 
 @dataclasses.dataclass(eq=False)

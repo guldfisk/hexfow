@@ -60,10 +60,12 @@ class TestGameType(GameType):
             (
                 TOMB_WALKER,
                 UNTHINKING_SERVITOR,
-                STINGING_SENTRY,
+                FAIRCHILD,
+                # STINGING_SENTRY,
             ),
             (
-                CYCLOPS,
+                RANK_DEFILER,
+                # CYCLOPS,
                 RIFLE_INFANTRY,
             ),
         )

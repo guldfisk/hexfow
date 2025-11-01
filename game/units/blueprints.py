@@ -8,6 +8,7 @@ from game.units.facets.activated_abilities import (
     Binoculars,
     Bloom,
     Bombard,
+    BurnBright,
     Camouflage,
     Charge,
     ChokingSoot,
@@ -49,9 +50,11 @@ from game.units.facets.activated_abilities import (
     InducePanic,
     InkRing,
     InkScreen,
+    InstilFocus,
     IronBlessing,
     Jaunt,
     Jump,
+    KarmicJustice,
     Lasso,
     LayMine,
     MagicMissile,
@@ -911,6 +914,16 @@ RANGER_GUIDE = UnitBlueprint(
     price=7,
 )
 
+RANK_DEFILER = UnitBlueprint(
+    "Rank Defiler",
+    health=6,
+    speed=2,
+    sight=1,
+    energy=6,
+    facets=[FleaSwarm, TorporFumes, Disempower],
+    price=7,
+)
+
 SLUDGE_SLUG = UnitBlueprint(
     "Sludge Slug",
     health=10,
@@ -982,6 +995,16 @@ CAMELBACK_OUTRIDER = UnitBlueprint(
     price=8,
 )
 
+FAIRCHILD = UnitBlueprint(
+    "Fairchild",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[KarmicJustice, BurnBright, InstilFocus],
+    price=8,
+)
+
 LEGENDARY_WRESTLER = UnitBlueprint(
     "Legendary Wrestler",
     health=7,
@@ -997,16 +1020,6 @@ LEGENDARY_WRESTLER = UnitBlueprint(
     ],
     price=8,
     flavor="I need justice in my life: Here it comes.",
-)
-
-RANK_DEFILER = UnitBlueprint(
-    "Rank Defiler",
-    health=6,
-    speed=2,
-    sight=1,
-    energy=6,
-    facets=[FleaSwarm, TorporFumes, Disempower],
-    price=8,
 )
 
 ZONE_SKIRMISHER = UnitBlueprint(

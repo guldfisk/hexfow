@@ -60,6 +60,8 @@ from game.effects.triggers import (
     ExpiresOnMovesTrigger,
     FleaInfestedTrigger,
     HitchedTrigger,
+    KarmaDamageTrigger,
+    KarmaDebuffTrigger,
     OneTimeModifyMovementPointsStatusTrigger,
     PanickedTrigger,
     ParasiteTrigger,
@@ -157,6 +159,35 @@ class Shield(StackableMixin, UnitStatus):
 
     def create_effects(self) -> None:
         self.register_effects(ShieldReplacement(self))
+
+
+class KarmicShield(RefreshableMixin, UnitStatus):
+    """
+    Whenever this unit is damaged or debuffed by another unit. This status deals the
+    same amount of damage / applies the same debuff to that unit.
+    """
+
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            KarmaDamageTrigger(self.parent, self),
+            KarmaDebuffTrigger(self.parent, self.source),
+        )
+
+
+class BurningBright(RefreshableMixin, UnitStatus):
+    """
+    +1 attack power, +1 speed.
+    """
+
+    default_intention = StatusIntention.BUFF
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            UnitAttackPowerFlatModifier(self.parent, 1),
+            UnitSpeedModifier(self.parent, 1),
+        )
 
 
 class BurstOfSpeed(UnitStatus):

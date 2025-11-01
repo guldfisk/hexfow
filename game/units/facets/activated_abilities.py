@@ -551,6 +551,35 @@ class Baffle(TargetUnitActivatedAbility):
         apply_status_to_unit(target, "baffled", self)
 
 
+class KarmicJustice(TargetUnitActivatedAbility):
+    """
+    Applies <karmic_shield> for 1 round.
+    """
+
+    cost = EnergyCost(4) | MovementCost(1)
+    range = 3
+    controller_target_option = ControllerTargetOption.ALLIED
+
+    def perform(self, target: Unit) -> None:
+        apply_status_to_unit(target, "karmic_shield", self, duration=1)
+
+
+class BurnBright(TargetUnitActivatedAbility):
+    """
+    Sets the target units health to 1, dispell all debuffs and applies <burning_bright>
+    for 1 round.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+    range = 2
+    controller_target_option = ControllerTargetOption.ALLIED
+
+    def perform(self, target: Unit) -> None:
+        target.damage = target.max_health.g() - 1
+        dispel_from_unit(target, StatusIntention.DEBUFF)
+        apply_status_to_unit(target, "burning_bright", self, duration=1)
+
+
 class InstilFocus(TargetUnitActivatedAbility):
     """Applies <focused> for 3 rounds."""
 
