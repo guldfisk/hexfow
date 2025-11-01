@@ -1857,6 +1857,24 @@ class FleaSwarm(TargetUnitActivatedAbility):
         apply_status_to_unit(target, "flea_infested", self, duration=3)
 
 
+class SpawnBrood(TargetHexActivatedAbility):
+    """
+    Spawns an exhausted [horror_spawn].
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+
+    def perform(self, target: Hex) -> None:
+        ES.resolve(
+            SpawnUnit(
+                UnitBlueprint.get_class("horror_spawn"),
+                self.parent.controller,
+                target,
+                exhausted=True,
+            )
+        )
+
+
 class Disempower(TargetTriHexActivatedAbility):
     """
     Applies <sapped> for 1 round.

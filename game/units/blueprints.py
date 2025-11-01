@@ -91,6 +91,7 @@ from game.units.facets.activated_abilities import (
     SmokeCanister,
     SmokeGrenade,
     SowDiscord,
+    SpawnBrood,
     SpiritProjection,
     SpurIntoRage,
     SpySatellite,
@@ -526,7 +527,6 @@ PANGOLIN_FAMILIAR = UnitBlueprint(
     health=5,
     speed=2,
     sight=1,
-    size=Size.SMALL,
     facets=[SturdyClaws, RollUp, AntiMagicHide],
     price=3,
 )
@@ -544,7 +544,7 @@ SHRINE_KEEPER = UnitBlueprint(
 
 STINGING_SENTRY = UnitBlueprint(
     "Stinging Sentry",
-    health=5,
+    health=6,
     speed=3,
     sight=1,
     facets=[
@@ -1164,6 +1164,17 @@ VILE_TRANSMUTER = UnitBlueprint(
     energy=5,
     facets=[DrainingGrasp, WringEssence, FalseCure],
     price=10,
+)
+
+BROODMOTHER = UnitBlueprint(
+    "Broodmother",
+    health=7,
+    speed=2,
+    sight=1,
+    energy=6,
+    size=Size.LARGE,
+    facets=[SpawnBrood],
+    price=11,
 )
 
 BULLDOZER = UnitBlueprint(

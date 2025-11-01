@@ -58,8 +58,9 @@ class TestGameType(GameType):
         )
         player_units = (
             (
-                TOMB_WALKER,
-                UNTHINKING_SERVITOR,
+                BROODMOTHER,
+                # TOMB_WALKER,
+                # UNTHINKING_SERVITOR,
                 FAIRCHILD,
                 # STINGING_SENTRY,
             ),
