@@ -164,7 +164,7 @@ class Shield(StackableMixin, UnitStatus):
 class KarmicShield(RefreshableMixin, UnitStatus):
     """
     Whenever this unit is damaged or debuffed by another unit. This status deals the
-    same amount of damage / applies the same debuff to that unit.
+    same amount of pure damage / applies the same debuff to that unit.
     """
 
     default_intention = StatusIntention.BUFF
