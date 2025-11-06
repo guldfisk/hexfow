@@ -207,7 +207,6 @@ from game.units.facets.attacks import (
     Wrench,
 )
 from game.units.facets.static_abilities import (
-    AntiMagicHide,
     Aquatic,
     Automated,
     CaughtInTheMatch,
@@ -305,8 +304,8 @@ CHARGE_DRONE = UnitBlueprint(
 
 CHICKEN = UnitBlueprint(
     name="Chicken",
-    health=2,
-    speed=2,
+    health=1,
+    speed=3,
     sight=1,
     size=Size.SMALL,
     facets=[Peck],
@@ -527,18 +526,7 @@ PANGOLIN_FAMILIAR = UnitBlueprint(
     health=5,
     speed=2,
     sight=1,
-    facets=[SturdyClaws, RollUp, AntiMagicHide],
-    price=3,
-)
-
-SHRINE_KEEPER = UnitBlueprint(
-    "Shrine Keeper",
-    health=3,
-    speed=3,
-    sight=2,
-    energy=4,
-    size=Size.SMALL,
-    facets=[RaiseShrine, GrantCharm, TidyUp],
+    facets=[SturdyClaws, RollUp, ResistantSkin],
     price=3,
 )
 
@@ -633,6 +621,17 @@ RAT_SCOUT = UnitBlueprint(
     price=4,
 )
 
+SHRINE_KEEPER = UnitBlueprint(
+    "Shrine Keeper",
+    health=3,
+    speed=3,
+    sight=2,
+    energy=4,
+    size=Size.SMALL,
+    facets=[RaiseShrine, GrantCharm, TidyUp],
+    price=4,
+)
+
 STIM_DRONE = UnitBlueprint(
     "Stim Drone",
     health=3,
@@ -671,6 +670,16 @@ AP_GUNNER = UnitBlueprint(
     speed=2,
     sight=2,
     facets=[APGun],
+    price=5,
+)
+
+BLOOD_FEUD_WARLOCK = UnitBlueprint(
+    "Blood Feud Warlock",
+    health=4,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[SowDiscord, Scorn, SpurIntoRage],
     price=5,
 )
 
@@ -724,14 +733,14 @@ SQUIRMING_SQUID = UnitBlueprint(
     price=5,
 )
 
-BLOOD_FEUD_WARLOCK = UnitBlueprint(
-    "Blood Feud Warlock",
-    health=5,
+TRACTOR = UnitBlueprint(
+    "Tractor",
+    health=6,
     speed=3,
-    sight=2,
-    energy=5,
-    facets=[SowDiscord, Scorn, SpurIntoRage],
-    price=6,
+    sight=1,
+    facets=[Hitch],
+    energy=4,
+    price=5,
 )
 
 BOMBARD_CANON = UnitBlueprint(
@@ -784,6 +793,16 @@ MEDIC = UnitBlueprint(
     price=6,
 )
 
+RANGER_GUIDE = UnitBlueprint(
+    "Ranger Guide",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[HuntingKnife, WildernessGuide, Camouflage, AwarenessMentor, TerrainSavvy],
+    price=6,
+)
+
 RECON_SPECIALIST = UnitBlueprint(
     "Recon Specialist",
     health=5,
@@ -833,16 +852,6 @@ TERRAFORMER_MAGE = UnitBlueprint(
     price=6,
 )
 
-TRACTOR = UnitBlueprint(
-    "Tractor",
-    health=6,
-    speed=3,
-    sight=1,
-    facets=[Hitch],
-    energy=4,
-    price=6,
-)
-
 VOID_SPRITE = UnitBlueprint(
     "Void Sprite",
     health=3,
@@ -861,6 +870,17 @@ ACID_SPITTER_IGUANA = UnitBlueprint(
     sight=2,
     size=Size.SMALL,
     facets=[SpitAcid],
+    price=7,
+)
+
+ARTILLERY_SURVEYOR = UnitBlueprint(
+    "Artillery Surveyor",
+    health=4,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    energy=6,
+    facets=[OrbitalStrike, SpySatellite],
     price=7,
 )
 
@@ -894,6 +914,16 @@ DJINN = UnitBlueprint(
     price=7,
 )
 
+FAIRCHILD = UnitBlueprint(
+    "Fairchild",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=5,
+    facets=[KarmicJustice, BurnBright, InstilFocus],
+    price=7,
+)
+
 GIANT_SLAYER_MOUSE = UnitBlueprint(
     "Giant Slayer Mouse",
     health=3,
@@ -901,16 +931,6 @@ GIANT_SLAYER_MOUSE = UnitBlueprint(
     sight=2,
     size=Size.SMALL,
     facets=[Slay, StayingPower],
-    price=7,
-)
-
-RANGER_GUIDE = UnitBlueprint(
-    "Ranger Guide",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[HuntingKnife, WildernessGuide, Camouflage, AwarenessMentor, TerrainSavvy],
     price=7,
 )
 
@@ -945,28 +965,6 @@ TRENCH_ENGINEER = UnitBlueprint(
     price=7,
 )
 
-ARTILLERY_SURVEYOR = UnitBlueprint(
-    "Artillery Surveyor",
-    health=4,
-    speed=3,
-    sight=2,
-    size=Size.SMALL,
-    energy=6,
-    facets=[OrbitalStrike, SpySatellite],
-    price=8,
-)
-
-BARRIER_MAGE = UnitBlueprint(
-    "Barrier Mage",
-    health=2,
-    speed=2,
-    energy=6,
-    sight=2,
-    size=Size.MEDIUM,
-    facets=[MagicMissile, MagicShield, MagicalDefenses],
-    price=8,
-)
-
 BLASTER_DROID = UnitBlueprint(
     "Blaster Droid",
     health=4,
@@ -995,16 +993,6 @@ CAMELBACK_OUTRIDER = UnitBlueprint(
     price=8,
 )
 
-FAIRCHILD = UnitBlueprint(
-    "Fairchild",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=5,
-    facets=[KarmicJustice, BurnBright, InstilFocus],
-    price=8,
-)
-
 LEGENDARY_WRESTLER = UnitBlueprint(
     "Legendary Wrestler",
     health=7,
@@ -1029,6 +1017,36 @@ ZONE_SKIRMISHER = UnitBlueprint(
     sight=2,
     facets=[StandardIssueBlaster, Engage],
     price=8,
+)
+
+BARRIER_MAGE = UnitBlueprint(
+    "Barrier Mage",
+    health=2,
+    speed=2,
+    energy=6,
+    sight=2,
+    size=Size.MEDIUM,
+    facets=[MagicMissile, MagicShield, MagicalDefenses],
+    price=9,
+)
+
+CHAINSAW_SADIST = UnitBlueprint(
+    "Chainsaw Sadist",
+    health=7,
+    speed=3,
+    sight=2,
+    facets=[Chainsaw, FightFlightFreeze, GrizzlyMurderer],
+    price=9,
+)
+
+CRUEL_PUPPETEER = UnitBlueprint(
+    "Cruel Puppeteer",
+    health=5,
+    speed=3,
+    sight=2,
+    energy=6,
+    facets=[StopHittingYourself, FatalBonding, ForcedMarch],
+    price=9,
 )
 
 GIANT_TOAD = UnitBlueprint(
@@ -1100,25 +1118,6 @@ BOULDER_HURLER_OAF = UnitBlueprint(
     price=10,
 )
 
-CHAINSAW_SADIST = UnitBlueprint(
-    "Chainsaw Sadist",
-    health=7,
-    speed=3,
-    sight=2,
-    facets=[Chainsaw, FightFlightFreeze, GrizzlyMurderer],
-    price=10,
-)
-
-CRUEL_PUPPETEER = UnitBlueprint(
-    "Cruel Puppeteer",
-    health=5,
-    speed=3,
-    sight=2,
-    energy=6,
-    facets=[StopHittingYourself, FatalBonding, ForcedMarch],
-    price=10,
-)
-
 EFFORTLESS_ATHLETE = UnitBlueprint(
     "Effortless Athlete",
     health=6,
@@ -1144,6 +1143,15 @@ HOODED_EXECUTIONER = UnitBlueprint(
     speed=3,
     sight=2,
     facets=[GuillotineAxe, PublicExecution, DreadfulVisage],
+    price=10,
+)
+
+LANKY_PROWLER = UnitBlueprint(
+    "Lanky Prowler",
+    health=5,
+    speed=5,
+    sight=2,
+    facets=[Strangle, Stealth],
     price=10,
 )
 
@@ -1252,15 +1260,6 @@ INK_WITCH = UnitBlueprint(
     sight=2,
     energy=5,
     facets=[BloodExpunge, InkRing, MalevolentStare],
-    price=11,
-)
-
-LANKY_PROWLER = UnitBlueprint(
-    "Lanky Prowler",
-    health=5,
-    speed=5,
-    sight=2,
-    facets=[Strangle, Stealth],
     price=11,
 )
 

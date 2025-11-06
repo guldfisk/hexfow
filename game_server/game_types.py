@@ -13,7 +13,7 @@ from game.core import DeploymentSpec, HexSpec, Landscape, Scenario
 from game.map.coordinates import CC
 from game.map.geometry import hex_circle
 from game.map.terrain import *
-from game.units.blueprints import *
+from game.units.blueprince import *
 from model.engine import SS
 from model.grouping import get_grouping_meta, get_suffix_remover
 from model.models import Map

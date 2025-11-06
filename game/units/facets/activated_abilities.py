@@ -399,11 +399,11 @@ class GuidedTrance(TargetUnitActivatedAbility):
 
 class SpiritProjection(TargetHexActivatedAbility):
     """
-    Apply <glimpse> to the target hex. Then up to 3 times, choose another hex adjacent to the last chosen hex,
+    Apply <glimpse> to the target hex. Then up to 2 times, choose another hex adjacent to the last chosen hex,
     and apply <glimpse> to that as well.
     """
 
-    cost = EnergyCost(4) | MovementCost(1)
+    cost = EnergyCost(3) | MovementCost(1)
     range = 3
     requires_los = False
     requires_vision = False
@@ -412,7 +412,7 @@ class SpiritProjection(TargetHexActivatedAbility):
     def perform(self, target: Hex) -> None:
         current_hex = target
         apply_status_to_hex(current_hex, "glimpse", self)
-        for _ in range(3):
+        for _ in range(2):
             decision = GS.make_decision(
                 self.parent.controller,
                 SelectOptionDecisionPoint(
@@ -1677,7 +1677,7 @@ class ShieldWithFrost(TargetUnitActivatedAbility):
 
 class RingOfIce(TargetHexRingActivatedAbility):
     """
-    Deals 3 damage to other units on the target hexes and applies <chill> for 2 rounds.
+    Deals 2 damage to other units on the target hexes and applies <chill> for 3 rounds.
     """
 
     cost = EnergyCost(4) | MovementCost(1)
@@ -1686,8 +1686,8 @@ class RingOfIce(TargetHexRingActivatedAbility):
     def perform(self, target: list[Hex]) -> None:
         for unit in GS.map.units_on(target):
             if unit != self.parent:
-                ES.resolve(Damage(unit, DamageSignature(3, self, DamageType.PHYSICAL)))
-                apply_status_to_unit(unit, "chill", self, duration=2)
+                ES.resolve(Damage(unit, DamageSignature(2, self, DamageType.PHYSICAL)))
+                apply_status_to_unit(unit, "chill", self, duration=3)
 
 
 class SowDiscord(TargetTriHexActivatedAbility):

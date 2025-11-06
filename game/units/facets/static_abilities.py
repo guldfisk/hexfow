@@ -439,26 +439,9 @@ class PlascreteCarapace(StaticAbilityFacet):
         self.register_effects(CapDamageReplacement(self.parent, 3))
 
 
-class AntiMagicHide(StaticAbilityFacet):
-    """
-    Reduce damage dealt to this unit by abilities and statuses to half, rounded down.
-    """
-
-    name = "Anti-Magic Hide"
-
-    def create_effects(self) -> None:
-        self.register_effects(
-            SourceTypeResistanceModifier(
-                self.parent,
-                (ActivatedAbilityFacet, StaticAbilityFacet, Status),
-                Resistance.MAJOR,
-            )
-        )
-
-
 class ResistantSkin(StaticAbilityFacet):
     """
-    Reduce damage dealt to this unit by abilities and statuses to two thirds, rounded up.
+    Reduce damage dealt to this unit by abilities and statuses by half, rounded up.
     """
 
     def create_effects(self) -> None:
@@ -466,7 +449,7 @@ class ResistantSkin(StaticAbilityFacet):
             SourceTypeResistanceModifier(
                 self.parent,
                 (ActivatedAbilityFacet, StaticAbilityFacet, Status),
-                Resistance.MINOR,
+                Resistance.NORMAL,
             )
         )
 

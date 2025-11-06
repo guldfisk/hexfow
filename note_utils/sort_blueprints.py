@@ -12,12 +12,12 @@ def _sort_key(s: str) -> tuple[bool, float, str]:
 
 
 def sort_blueprint():
-    with open("game/units/blueprints.py", "r") as f:
+    with open("game/units/blueprince.py", "r") as f:
         s = f.read()
 
     fragments = re.split("\n{2,}", s)
 
-    with open("game/units/blueprints.py", "w") as f:
+    with open("game/units/blueprince.py", "w") as f:
         f.write(
             "\n\n".join([fragments[0] + "\n", *sorted(fragments[1:], key=_sort_key)])
         )

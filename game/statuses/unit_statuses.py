@@ -653,7 +653,7 @@ class FrostShield(RefreshableMixin, UnitStatus):
     When a unit hits this unit, apply <freezing> to it for 2 rounds.
     """
 
-    default_intention = StatusIntention.DEBUFF
+    default_intention = StatusIntention.BUFF
 
     def create_effects(self) -> None:
         self.register_effects(

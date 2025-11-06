@@ -9,7 +9,7 @@ from websockets.sync.server import ServerConnection, serve
 
 from game.map import terrain  # noqa F401
 from game.statuses import hex_statuses, unit_statuses  # noqa F401
-from game.units import blueprints  # noqa F401
+from game.units import blueprince  # noqa F401
 from game_server.games import GM
 from game_server.testing import TestGameRunner
 

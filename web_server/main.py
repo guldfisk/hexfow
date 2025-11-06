@@ -9,7 +9,7 @@ from starlette.middleware.cors import CORSMiddleware
 from game.core import Facet, Status, Terrain, UnitBlueprint
 from game.map import terrain  # noqa F401
 from game.statuses import hex_statuses, unit_statuses  # noqa F401
-from game.units import blueprints  # noqa F401
+from game.units import blueprince  # noqa F401
 from model.engine import SS
 from model.models import Game, Map, Seat
 from web_server.schemas import CreateGameSchema, CreateMapSchema

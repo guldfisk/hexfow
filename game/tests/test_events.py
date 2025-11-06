@@ -52,7 +52,7 @@ from game.tests.units import (
     TEST_LIGHT_ARCHER,
     TEST_MARSHMALLOW_TITAN,
 )
-from game.units.blueprints import LUMBERING_PILLAR
+from game.units.blueprince import LUMBERING_PILLAR
 from game.values import Size
 
 

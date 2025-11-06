@@ -706,7 +706,7 @@ class Lance(MeleeAttackFacet):
 class Swelter(RangedAttackFacet):
     """Applies <parched> for 2 rounds."""
 
-    cost = ExclusiveCost()
+    cost = MovementCost(1)
     damage = 2
     range = 2
 
