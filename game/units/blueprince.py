@@ -1540,3 +1540,13 @@ MAD_SCIENTIST = UnitBlueprint(
     price=13,
     max_count=0,
 )
+Doomspeaker = UnitBlueprint(
+    "Doomspeaker",
+    health=5,
+    speed=2,
+    energy=7,
+    sight=2,
+    size=Size.MEDIUM,
+    facets=[ForetellDemise, AVisionOfDoom, RevelInDeath],
+    price=10,
+)
