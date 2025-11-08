@@ -2198,3 +2198,28 @@ class OpenGate(ActivatedAbilityFacet[list[Hex]]):
             else:
                 for status in statuses:
                     status.remove()
+
+
+class ForetellDemise(TargetUnitActivatedAbility):
+    """
+    Applies <inevitable_death> for 2 rounds.
+    """
+
+    cost = EnergyCost(7)
+    range = 1
+
+    def perform(self, target: Unit) -> None:
+        apply_status_to_unit(target, "inevitable_death", self, duration=2)
+
+
+class AVisionOfDoom(TargetHexCircleActivatedAbility):
+    """
+    Applies <impending_doom> for 2 rounds.
+    """
+
+    cost = EnergyCost(7)
+    range = 1
+
+    def perform(self, target: list[Hex]) -> None:
+        for _hex in target:
+            apply_status_to_hex(_hex, "impending_doom", self, duration=2)

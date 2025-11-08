@@ -1,6 +1,7 @@
 from game.core import UnitBlueprint
 from game.units.facets.activated_abilities import (
     AssembleTheDoombot,
+    AVisionOfDoom,
     AwarenessMentor,
     Baffle,
     BallMode,
@@ -35,6 +36,7 @@ from game.units.facets.activated_abilities import (
     FlattenGround,
     FleaSwarm,
     ForcedMarch,
+    ForetellDemise,
     GasGrenade,
     GiantPincers,
     GrantCharm,
@@ -248,6 +250,7 @@ from game.units.facets.static_abilities import (
     Quick,
     Reckless,
     ResistantSkin,
+    RevelInDeath,
     RockSteady,
     Schadenfreude,
     ScurryInTheShadows,
@@ -1539,4 +1542,15 @@ MAD_SCIENTIST = UnitBlueprint(
     facets=[ShrinkRay, Translocate, AssembleTheDoombot, Inspiration],
     price=13,
     max_count=0,
+)
+
+DOOMSPEAKER = UnitBlueprint(
+    "Doomspeaker",
+    health=5,
+    speed=2,
+    energy=7,
+    sight=2,
+    size=Size.MEDIUM,
+    facets=[ForetellDemise, AVisionOfDoom, RevelInDeath],
+    price=10,
 )

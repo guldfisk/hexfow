@@ -4,6 +4,7 @@ from game.core import (
     ActivatedAbilityFacet,
     AttackFacet,
     HighestStackableRefreshableMixin,
+    IndependentMixin,
     LowestRefreshableMixin,
     LowestStackableRefreshableMixin,
     RefreshableMixin,
@@ -841,3 +842,14 @@ class Parched(RefreshableMixin, UnitStatus):
 
     def create_effects(self) -> None:
         self.register_effects(ParchedTrigger(self.parent, self))
+
+
+class InevitableDeath(IndependentMixin, UnitStatus):
+    """
+    When this status expires, this unit dies.
+    """
+
+    default_intention = StatusIntention.DEBUFF
+
+    def on_expires(self) -> None:
+        ES.resolve(Kill(self.parent, self))

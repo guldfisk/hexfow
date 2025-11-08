@@ -73,6 +73,7 @@ from game.effects.triggers import (
     QuickTrigger,
     RecklessTrigger,
     RecurringUnitBuffTrigger,
+    RevelInDeathTrigger,
     SchadenfreudeDamageTrigger,
     SchadenfreudeDebuffTrigger,
     ScurryInTheShadowsTrigger,
@@ -437,6 +438,15 @@ class PlascreteCarapace(StaticAbilityFacet):
 
     def create_effects(self) -> None:
         self.register_effects(CapDamageReplacement(self.parent, 3))
+
+
+class RevelInDeath(StaticAbilityFacet):
+    """
+    When an adjacent unit dies, this unit gains 2 energy and 1 health.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(RevelInDeathTrigger(self.parent, self))
 
 
 class ResistantSkin(StaticAbilityFacet):

@@ -1253,3 +1253,21 @@ class BaffledTrigger(TriggerEffect[Turn]):
         if event.result:
             apply_status_to_unit(self.status.parent, "stunned", self.status, stacks=1)
         self.status.remove()
+
+
+@dataclasses.dataclass(eq=False)
+class RevelInDeathTrigger(TriggerEffect[KillUpkeep]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+    source: Source
+
+    def should_trigger(self, event: KillUpkeep) -> bool:
+        return (
+            event.unit != self.unit
+            and GS.map.distance_between(self.unit, event.unit) <= 1
+        )
+
+    def resolve(self, event: Damage) -> None:
+        ES.resolve(GainEnergy(self.unit, 2, source=self.source))
+        ES.resolve(Heal(self.unit, 1, source=self.source))
