@@ -298,17 +298,14 @@ class Gate(HexStatus):
     """
     If a unit would move into this hex, it instead moves into the hex with the linked gate, if able.
     """
+
+
 class ImpendingDoom(IndependentMixin, HexStatus):
     """
-    When this status expires a meteor strikes. It deals 13 damage to units on this hex and transforms it into magma.
+    When this status expires, it deals 13 damage to units on this hex and transforms it into magma.
     """
 
     def on_expires(self) -> None:
         if unit := GS.map.unit_on(self.parent):
-            ES.resolve(
-                Damage(
-                    unit, DamageSignature(13, self)
-                )
-            )
+            ES.resolve(Damage(unit, DamageSignature(13, self)))
         ES.resolve(ChangeHexTerrain(self.parent, Terrain.get_class("magma")))
-
