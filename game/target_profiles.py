@@ -6,7 +6,15 @@ from typing import ClassVar
 
 from pydantic import BaseModel
 
-from game.core import GS, JSON, Hex, SerializationContext, TargetProfile, Unit
+from game.core import (
+    GS,
+    JSON,
+    Hex,
+    ObjectListResult,
+    SerializationContext,
+    TargetProfile,
+    Unit,
+)
 from game.map.coordinates import CC, Corner
 from game.map.geometry import hex_arc, hex_ring
 from game.schemas import (
@@ -19,7 +27,7 @@ from game.schemas import (
 
 
 @dataclasses.dataclass
-class NOfUnits(TargetProfile[list[Unit]]):
+class NOfUnits(TargetProfile[ObjectListResult[Unit]]):
     response_schema: ClassVar[type[BaseModel]] = IndexesSchema
 
     units: list[Unit]
@@ -37,7 +45,7 @@ class NOfUnits(TargetProfile[list[Unit]]):
             "labels": self.labels,
         }
 
-    def parse_response_schema(self, v: IndexesSchema) -> list[Unit]:
+    def parse_response_schema(self, v: IndexesSchema) -> ObjectListResult[Unit]:
         if self.min_count is not None:
             if len(v.indexes) < self.min_count:
                 raise DecisionValidationError("not enough selected")
@@ -47,13 +55,13 @@ class NOfUnits(TargetProfile[list[Unit]]):
             raise DecisionValidationError("invalid count selected")
 
         try:
-            return [self.units[idx] for idx in v.indexes]
+            return ObjectListResult([self.units[idx] for idx in v.indexes])
         except IndexError:
             raise DecisionValidationError("invalid index")
 
 
 @dataclasses.dataclass
-class NOfHexes(TargetProfile[list[Hex]]):
+class NOfHexes(TargetProfile[ObjectListResult[Hex]]):
     response_schema: ClassVar[type[BaseModel]] = IndexesSchema
 
     hexes: list[Hex]
@@ -69,7 +77,7 @@ class NOfHexes(TargetProfile[list[Hex]]):
             "labels": self.labels,
         }
 
-    def parse_response_schema(self, v: IndexesSchema) -> list[Hex]:
+    def parse_response_schema(self, v: IndexesSchema) -> ObjectListResult[Hex]:
         if self.min_count is not None:
             if len(v.indexes) < self.min_count:
                 raise DecisionValidationError("not enough selected")
@@ -79,13 +87,13 @@ class NOfHexes(TargetProfile[list[Hex]]):
             raise DecisionValidationError("invalid count selected")
 
         try:
-            return [self.hexes[idx] for idx in v.indexes]
+            return ObjectListResult([self.hexes[idx] for idx in v.indexes])
         except IndexError:
             raise DecisionValidationError("invalid index")
 
 
 @dataclasses.dataclass
-class ConsecutiveAdjacentHexes(TargetProfile[list[Hex]]):
+class ConsecutiveAdjacentHexes(TargetProfile[ObjectListResult[Hex]]):
     response_schema: ClassVar[type[BaseModel]] = SingleCCSchema
 
     adjacent_to: Hex
@@ -97,18 +105,20 @@ class ConsecutiveAdjacentHexes(TargetProfile[list[Hex]]):
             "arm_length": self.arm_length,
         }
 
-    def parse_response_schema(self, v: SingleCCSchema) -> list[Hex]:
+    def parse_response_schema(self, v: SingleCCSchema) -> ObjectListResult[Hex]:
         # TODO yikes
         cc = CC(v.cc.r, v.cc.h)
         if cc not in self.adjacent_to.position.neighbors():
             raise DecisionValidationError("invalid cc")
-        return list(
-            GS.map.get_hexes_of_positions(
-                hex_arc(
-                    radius=1,
-                    arm_length=self.arm_length,
-                    stroke_center=cc,
-                    arc_center=self.adjacent_to.position,
+        return ObjectListResult(
+            list(
+                GS.map.get_hexes_of_positions(
+                    hex_arc(
+                        radius=1,
+                        arm_length=self.arm_length,
+                        stroke_center=cc,
+                        arc_center=self.adjacent_to.position,
+                    )
                 )
             )
         )
@@ -116,7 +126,7 @@ class ConsecutiveAdjacentHexes(TargetProfile[list[Hex]]):
 
 # TODO terrible name
 @dataclasses.dataclass
-class HexHexes(TargetProfile[list[Hex]]):
+class HexHexes(TargetProfile[ObjectListResult[Hex]]):
     response_schema: ClassVar[type[BaseModel]] = IndexSchema
 
     centers: list[Hex]
@@ -128,16 +138,18 @@ class HexHexes(TargetProfile[list[Hex]]):
             "radius": self.radius,
         }
 
-    def parse_response_schema(self, v: IndexSchema) -> list[Hex]:
+    def parse_response_schema(self, v: IndexSchema) -> ObjectListResult[Hex]:
         try:
             center = self.centers[v.index]
         except IndexError:
             raise DecisionValidationError("invalid index")
-        return list(GS.map.get_hexes_within_range_off(center, self.radius))
+        return ObjectListResult(
+            list(GS.map.get_hexes_within_range_off(center, self.radius))
+        )
 
 
 @dataclasses.dataclass
-class TriHex(TargetProfile[list[Hex]]):
+class TriHex(TargetProfile[ObjectListResult[Hex]]):
     response_schema: ClassVar[type[BaseModel]] = IndexSchema
 
     corners: list[Corner]
@@ -147,16 +159,18 @@ class TriHex(TargetProfile[list[Hex]]):
             "corners": [corner.serialize() for corner in self.corners],
         }
 
-    def parse_response_schema(self, v: IndexSchema) -> list[Hex]:
+    def parse_response_schema(self, v: IndexSchema) -> ObjectListResult[Hex]:
         try:
             corner = self.corners[v.index]
         except IndexError:
             raise DecisionValidationError("invalid index")
-        return list(GS.map.get_hexes_of_positions(corner.get_adjacent_positions()))
+        return ObjectListResult(
+            list(GS.map.get_hexes_of_positions(corner.get_adjacent_positions()))
+        )
 
 
 @dataclasses.dataclass
-class HexRing(TargetProfile[list[Hex]]):
+class HexRing(TargetProfile[ObjectListResult[Hex]]):
     response_schema: ClassVar[type[BaseModel]] = IndexSchema
 
     centers: list[Hex]
@@ -168,18 +182,18 @@ class HexRing(TargetProfile[list[Hex]]):
             "radius": self.radius,
         }
 
-    def parse_response_schema(self, v: IndexSchema) -> list[Hex]:
+    def parse_response_schema(self, v: IndexSchema) -> ObjectListResult[Hex]:
         try:
             center = self.centers[v.index]
         except IndexError:
             raise DecisionValidationError("invalid index")
-        return list(
-            GS.map.get_hexes_of_positions(hex_ring(self.radius, center.position))
+        return ObjectListResult(
+            list(GS.map.get_hexes_of_positions(hex_ring(self.radius, center.position)))
         )
 
 
 @dataclasses.dataclass
-class RadiatingLine(TargetProfile[list[Hex]]):
+class RadiatingLine(TargetProfile[ObjectListResult[Hex]]):
     response_schema: ClassVar[type[BaseModel]] = IndexSchema
 
     from_hex: Hex
@@ -193,21 +207,23 @@ class RadiatingLine(TargetProfile[list[Hex]]):
             "length": self.length,
         }
 
-    def parse_response_schema(self, v: IndexSchema) -> list[Hex]:
+    def parse_response_schema(self, v: IndexSchema) -> ObjectListResult[Hex]:
         try:
             selected_cc = self.to_hexes[v.index].position
         except IndexSchema:
             raise DecisionValidationError("invalid index")
         difference = selected_cc - self.from_hex.position
-        return [
-            projected
-            for i in range(self.length)
-            if (projected := GS.map.hexes.get(selected_cc + difference * i))
-        ]
+        return ObjectListResult(
+            [
+                projected
+                for i in range(self.length)
+                if (projected := GS.map.hexes.get(selected_cc + difference * i))
+            ]
+        )
 
 
 @dataclasses.dataclass
-class Cone(TargetProfile[list[Hex]]):
+class Cone(TargetProfile[ObjectListResult[Hex]]):
     response_schema: ClassVar[type[BaseModel]] = IndexSchema
 
     from_hex: Hex
@@ -221,23 +237,25 @@ class Cone(TargetProfile[list[Hex]]):
             "arm_lengths": self.arm_lengths,
         }
 
-    def parse_response_schema(self, v: IndexSchema) -> list[Hex]:
+    def parse_response_schema(self, v: IndexSchema) -> ObjectListResult[Hex]:
         try:
             selected_cc = self.to_hexes[v.index].position
         except IndexSchema:
             raise DecisionValidationError("invalid index")
         difference = selected_cc - self.from_hex.position
-        return list(
-            GS.map.get_hexes_of_positions(
-                itertools.chain(
-                    *(
-                        hex_arc(
-                            idx + 1,
-                            arm_length=arm_length,
-                            stroke_center=selected_cc + difference * idx,
-                            arc_center=self.from_hex.position,
+        return ObjectListResult(
+            list(
+                GS.map.get_hexes_of_positions(
+                    itertools.chain(
+                        *(
+                            hex_arc(
+                                idx + 1,
+                                arm_length=arm_length,
+                                stroke_center=selected_cc + difference * idx,
+                                arc_center=self.from_hex.position,
+                            )
+                            for idx, arm_length in enumerate(self.arm_lengths)
                         )
-                        for idx, arm_length in enumerate(self.arm_lengths)
                     )
                 )
             )
@@ -271,7 +289,7 @@ class TreeNode:
 
 
 @dataclasses.dataclass
-class Tree(TargetProfile[list[Unit | Hex]]):
+class Tree(TargetProfile[ObjectListResult[Unit | Hex]]):
     response_schema: ClassVar[type[BaseModel]] = OrderedIndexesSchema
 
     root_node: TreeNode
@@ -279,7 +297,9 @@ class Tree(TargetProfile[list[Unit | Hex]]):
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {"root_node": self.root_node.serialize(context)}
 
-    def parse_response_schema(self, v: OrderedIndexesSchema) -> list[Unit | Hex]:
+    def parse_response_schema(
+        self, v: OrderedIndexesSchema
+    ) -> ObjectListResult[Unit | Hex]:
         selected = []
         current = self.root_node
         for idx in v.indexes:
@@ -291,4 +311,4 @@ class Tree(TargetProfile[list[Unit | Hex]]):
             current = node
         if current:
             raise DecisionValidationError("not enough indexes")
-        return selected
+        return ObjectListResult(selected)

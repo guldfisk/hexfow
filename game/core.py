@@ -58,9 +58,11 @@ from game.values import (
 )
 
 
+G = TypeVar("G")
 G_Status = TypeVar("G_Status", bound="Status")
 G_StatusSignature = TypeVar("G_StatusSignature", bound="StatusSignature")
 G_decision_result = TypeVar("G_decision_result")
+G_target_result = TypeVar("G_target_result", bound="TargetResult")
 G_HasStatuses = TypeVar("G_HasStatuses", bound="HasStatuses")
 G_EffortCost = TypeVar("G_EffortCost", bound="EffortCost")
 G_AttackFacet = TypeVar("G_AttackFacet", bound="AttackFacet")
@@ -104,7 +106,12 @@ class DecisionPoint(Serializable, Generic[G_decision_result]):
         return self.parse_response_schema(self.response_schema.model_validate(v))
 
 
-class TargetProfile(ABC, Generic[G_decision_result]):
+class TargetResult(ABC):
+    @abstractmethod
+    def to_log_element(self) -> LogElement | None: ...
+
+
+class TargetProfile(ABC, Generic[G_target_result]):
     response_schema: ClassVar[type[BaseModel]]
 
     @abstractmethod
@@ -114,25 +121,30 @@ class TargetProfile(ABC, Generic[G_decision_result]):
         return {"type": type(self).__name__, "values": self.serialize_values(context)}
 
     @abstractmethod
-    def parse_response_schema(self, v: BaseModel) -> G_decision_result: ...
+    def parse_response_schema(self, v: BaseModel) -> G_target_result: ...
 
-    def parse_response(self, v: Mapping[str, Any]) -> G_decision_result:
+    def parse_response(self, v: Mapping[str, Any]) -> G_target_result:
         return self.parse_response_schema(self.response_schema.model_validate(v))
 
 
-class NoTarget(TargetProfile[None]):
+class NoneResult(TargetResult):
+    def to_log_element(self) -> LogElement | None:
+        return None
+
+
+class NoTarget(TargetProfile[NoneResult]):
     response_schema = EmptySchema
 
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {}
 
-    def parse_response_schema(self, v: EmptySchema) -> None:
-        return None
+    def parse_response_schema(self, v: EmptySchema) -> NoneResult:
+        return NoneResult()
 
 
 @dataclasses.dataclass(kw_only=True)
-class Option(ABC, Generic[G_decision_result]):
-    target_profile: TargetProfile[G_decision_result]
+class Option(ABC, Generic[G_target_result]):
+    target_profile: TargetProfile[G_target_result]
 
     @abstractmethod
     def serialize_values(self, context: SerializationContext) -> JSON: ...
@@ -146,9 +158,9 @@ class Option(ABC, Generic[G_decision_result]):
 
 
 @dataclasses.dataclass
-class OptionDecision(Generic[G_decision_result]):
-    option: Option[G_decision_result]
-    target: G_decision_result
+class OptionDecision(Generic[G_target_result]):
+    option: Option[G_target_result]
+    target: G_target_result
 
 
 @dataclasses.dataclass
@@ -287,13 +299,13 @@ class SelectOptionAtHexDecisionPoint(DecisionPoint[str]):
         return self.options[v.index]
 
 
-class MoveOption(Option[G_decision_result]):
+class MoveOption(Option[G_target_result]):
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {}
 
 
 @dataclasses.dataclass
-class EffortOption(Option[G_decision_result]):
+class EffortOption(Option[G_target_result]):
     facet: EffortFacet
 
     def serialize_values(self, context: SerializationContext) -> JSON:
@@ -301,7 +313,7 @@ class EffortOption(Option[G_decision_result]):
 
 
 @dataclasses.dataclass
-class ActivateUnitOption(Option[G_decision_result]):
+class ActivateUnitOption(Option[G_target_result]):
     actions_previews: dict[Unit, list[Option]]
 
     def serialize_values(self, context: SerializationContext) -> JSON:
@@ -315,7 +327,7 @@ class ActivateUnitOption(Option[G_decision_result]):
         }
 
 
-class SkipOption(Option[None]):
+class SkipOption(Option[NoneResult]):
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {}
 
@@ -637,7 +649,7 @@ class RangedAttackFacet(AttackFacet, ABC):
         return {**super().serialize_type(), "range": cls.range}
 
 
-class ActivatedAbilityFacet(EffortFacet, Generic[G_decision_result], ABC):
+class ActivatedAbilityFacet(EffortFacet, Generic[G_target_result], ABC):
     category = "activated_ability"
     hidden_target: ClassVar[bool] = False
 
@@ -645,10 +657,10 @@ class ActivatedAbilityFacet(EffortFacet, Generic[G_decision_result], ABC):
     def get_target_explanation(cls) -> str | None: ...
 
     @abstractmethod
-    def get_target_profile(self) -> TargetProfile[G_decision_result] | None: ...
+    def get_target_profile(self) -> TargetProfile[G_target_result] | None: ...
 
     @abstractmethod
-    def perform(self, target: G_decision_result) -> None: ...
+    def perform(self, target: G_target_result) -> None: ...
 
     @modifiable
     def can_be_activated(self, context: ActiveUnitContext) -> bool:
@@ -1232,7 +1244,26 @@ class UnitStatusSignature(StatusSignature[Unit, UnitStatus]):
 
 
 @dataclasses.dataclass
-class OneOfUnits(TargetProfile[Unit]):
+class SingleObjectResult(TargetResult, Generic[G]):
+    value: G
+
+    def to_log_element(self) -> LogElement | None:
+        return self.value
+
+
+@dataclasses.dataclass
+class ObjectListResult(TargetResult, Generic[G]):
+    values: list[G]
+
+    def __iter__(self) -> Iterator[G]:
+        return self.values.__iter__()
+
+    def to_log_element(self) -> LogElement | None:
+        return self.values
+
+
+@dataclasses.dataclass
+class OneOfUnits(TargetProfile[SingleObjectResult[Unit]]):
     response_schema: ClassVar[type[BaseModel]] = IndexSchema
 
     units: list[Unit]
@@ -1244,9 +1275,9 @@ class OneOfUnits(TargetProfile[Unit]):
             ]
         }
 
-    def parse_response_schema(self, v: IndexSchema) -> Unit:
+    def parse_response_schema(self, v: IndexSchema) -> SingleObjectResult[Unit]:
         try:
-            return self.units[v.index]
+            return SingleObjectResult(self.units[v.index])
         except IndexError:
             raise DecisionValidationError("invalid index")
 
@@ -1656,7 +1687,7 @@ class UnitStatusLink(StatusLink[UnitStatus], ABC): ...
 
 
 @dataclasses.dataclass
-class OneOfHexes(TargetProfile[Hex]):
+class OneOfHexes(TargetProfile[SingleObjectResult[Hex]]):
     response_schema: ClassVar[type[BaseModel]] = IndexSchema
 
     hexes: list[Hex]
@@ -1664,9 +1695,9 @@ class OneOfHexes(TargetProfile[Hex]):
     def serialize_values(self, context: SerializationContext) -> JSON:
         return {"options": [_hex.position.serialize() for _hex in self.hexes]}
 
-    def parse_response_schema(self, v: IndexSchema) -> Hex:
+    def parse_response_schema(self, v: IndexSchema) -> SingleObjectResult[Hex]:
         try:
-            return self.hexes[v.index]
+            return SingleObjectResult(self.hexes[v.index])
         except IndexError:
             raise DecisionValidationError("invalid index")
 
@@ -1889,16 +1920,7 @@ class ActiveUnitContext(Serializable):
 
 @dataclasses.dataclass
 class LogLine:
-    elements: list[
-        str
-        | Unit
-        | Hex
-        | list[Hex | Unit | UnitBlueprint]
-        | Facet
-        | Status
-        | Player
-        | UnitBlueprint
-    ]
+    elements: LogElement
     valid_for_players: set[Player] | None = None
 
     def is_visible_to(self, player: Player) -> bool:
@@ -1972,6 +1994,18 @@ class Player:
 
     def serialize(self) -> dict[str, Any]:
         return {"name": self.name, "points": self.points}
+
+
+LogElement: TypeAlias = list[
+    str
+    | Unit
+    | Hex
+    | list[Hex | Unit | UnitBlueprint]
+    | Facet
+    | Status
+    | Player
+    | UnitBlueprint
+]
 
 
 class TurnOrder:

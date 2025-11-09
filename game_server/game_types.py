@@ -67,7 +67,7 @@ class TestGameType(GameType):
             ),
             (
                 RANK_DEFILER,
-                # CYCLOPS,
+                CYCLOPS,
                 RIFLE_INFANTRY,
             ),
         )

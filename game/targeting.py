@@ -5,9 +5,12 @@ from game.core import (
     GS,
     ActivatedAbilityFacet,
     Hex,
+    NoneResult,
     NoTarget,
+    ObjectListResult,
     OneOfHexes,
     OneOfUnits,
+    SingleObjectResult,
     TargetProfile,
     Unit,
     find_hexs_within_range,
@@ -23,15 +26,15 @@ from game.target_profiles import (
 from game.values import ControllerTargetOption
 
 
-class NoTargetActivatedAbility(ActivatedAbilityFacet[None], ABC):
-    def get_target_profile(self) -> TargetProfile[None] | None:
+class NoTargetActivatedAbility(ActivatedAbilityFacet[NoneResult], ABC):
+    def get_target_profile(self) -> TargetProfile[NoneResult] | None:
         return NoTarget()
 
     @abstractmethod
     def perform(self, target: None) -> None: ...
 
 
-class TargetUnitActivatedAbility(ActivatedAbilityFacet[Unit], ABC):
+class TargetUnitActivatedAbility(ActivatedAbilityFacet[SingleObjectResult[Unit]], ABC):
     range: ClassVar[int] = 1
     requires_los: ClassVar[bool] = True
     can_target_self: ClassVar[bool] = True
@@ -70,7 +73,7 @@ class TargetUnitActivatedAbility(ActivatedAbilityFacet[Unit], ABC):
             fragments.append(cls.explain_that_filter)
         return " ".join(fragments) + "."
 
-    def get_target_profile(self) -> TargetProfile[Unit] | None:
+    def get_target_profile(self) -> TargetProfile[SingleObjectResult[Unit]] | None:
         if units := find_units_within_range(
             self.parent,
             self.range,
@@ -82,10 +85,10 @@ class TargetUnitActivatedAbility(ActivatedAbilityFacet[Unit], ABC):
             return OneOfUnits(units)
 
     @abstractmethod
-    def perform(self, target: Unit) -> None: ...
+    def perform(self, target: SingleObjectResult[Unit]) -> None: ...
 
 
-class TargetHexActivatedAbility(ActivatedAbilityFacet[Hex], ABC):
+class TargetHexActivatedAbility(ActivatedAbilityFacet[SingleObjectResult[Hex]], ABC):
     range: ClassVar[int] = 1
     min_range: ClassVar[int | None] = None
     requires_los: ClassVar[bool] = True
@@ -128,7 +131,7 @@ class TargetHexActivatedAbility(ActivatedAbilityFacet[Hex], ABC):
             fragments.append(cls.explain_that_filter)
         return " ".join(fragments) + "."
 
-    def get_target_profile(self) -> TargetProfile[Hex] | None:
+    def get_target_profile(self) -> TargetProfile[SingleObjectResult[Hex]] | None:
         if hexes := find_hexs_within_range(
             self.parent,
             self.range,
@@ -142,31 +145,33 @@ class TargetHexActivatedAbility(ActivatedAbilityFacet[Hex], ABC):
             return OneOfHexes(hexes)
 
     @abstractmethod
-    def perform(self, target: Hex) -> None: ...
+    def perform(self, target: SingleObjectResult[Hex]) -> None: ...
 
 
-class TargetHexArcActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
+class TargetHexArcActivatedAbility(ActivatedAbilityFacet[ObjectListResult[Hex]], ABC):
     arm_length: ClassVar[int] = 1
 
     @classmethod
     def get_target_explanation(cls) -> str | None:
         return f"Target length {1 + cls.arm_length * 2} adjacent arc of hexes."
 
-    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
+    def get_target_profile(self) -> TargetProfile[ObjectListResult[Hex]] | None:
         return ConsecutiveAdjacentHexes(GS.map.hex_off(self.parent), self.arm_length)
 
     @abstractmethod
-    def perform(self, target: list[Hex]) -> None: ...
+    def perform(self, target: ObjectListResult[Hex]) -> None: ...
 
 
-class TargetRadiatingLineActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
+class TargetRadiatingLineActivatedAbility(
+    ActivatedAbilityFacet[ObjectListResult[Hex]], ABC
+):
     length: ClassVar[int]
 
     @classmethod
     def get_target_explanation(cls) -> str | None:
         return f"Target length {cls.length} radiating line of hexes."
 
-    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
+    def get_target_profile(self) -> TargetProfile[ObjectListResult[Hex]] | None:
         return RadiatingLine(
             GS.map.hex_off(self.parent),
             list(GS.map.get_neighbors_off(self.parent)),
@@ -174,10 +179,12 @@ class TargetRadiatingLineActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC)
         )
 
     @abstractmethod
-    def perform(self, target: list[Hex]) -> None: ...
+    def perform(self, target: ObjectListResult[Hex]) -> None: ...
 
 
-class TargetHexCircleActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
+class TargetHexCircleActivatedAbility(
+    ActivatedAbilityFacet[ObjectListResult[Hex]], ABC
+):
     range: ClassVar[int]
     radius: ClassVar[int] = 1
 
@@ -185,17 +192,17 @@ class TargetHexCircleActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
     def get_target_explanation(cls) -> str | None:
         return f"Target radius {cls.radius} hex circle, center within {cls.range} NLoS."
 
-    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
+    def get_target_profile(self) -> TargetProfile[ObjectListResult[Hex]] | None:
         if hexes := [
             _hex for _hex in GS.map.get_hexes_within_range_off(self.parent, self.range)
         ]:
             return HexHexes(hexes, self.radius)
 
     @abstractmethod
-    def perform(self, target: list[Hex]) -> None: ...
+    def perform(self, target: ObjectListResult[Hex]) -> None: ...
 
 
-class TargetHexRingActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
+class TargetHexRingActivatedAbility(ActivatedAbilityFacet[ObjectListResult[Hex]], ABC):
     range: ClassVar[int]
     radius: ClassVar[int] = 1
 
@@ -203,14 +210,17 @@ class TargetHexRingActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
     def get_target_explanation(cls) -> str | None:
         return f"Target radius {cls.radius} hex ring, center within {cls.range} NLoS."
 
-    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
+    def get_target_profile(self) -> TargetProfile[ObjectListResult[Hex]] | None:
         if hexes := [
             _hex for _hex in GS.map.get_hexes_within_range_off(self.parent, self.range)
         ]:
             return HexRing(hexes, self.radius)
 
+    @abstractmethod
+    def perform(self, target: ObjectListResult[Hex]) -> None: ...
 
-class TargetTriHexActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
+
+class TargetTriHexActivatedAbility(ActivatedAbilityFacet[ObjectListResult[Hex]], ABC):
     range: ClassVar[int]
     min_range: ClassVar[int | None] = None
 
@@ -221,7 +231,7 @@ class TargetTriHexActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
             s += f"and at least {cls.min_range} hexes away "
         return s + "NLoS."
 
-    def get_target_profile(self) -> TargetProfile[list[Hex]] | None:
+    def get_target_profile(self) -> TargetProfile[ObjectListResult[Hex]] | None:
         if corners := list(
             GS.map.get_corners_within_range_off(
                 self.parent, self.range, min_distance=self.min_range
@@ -230,4 +240,4 @@ class TargetTriHexActivatedAbility(ActivatedAbilityFacet[list[Hex]], ABC):
             return TriHex(corners)
 
     @abstractmethod
-    def perform(self, target: list[Hex]) -> None: ...
+    def perform(self, target: ObjectListResult[Hex]) -> None: ...

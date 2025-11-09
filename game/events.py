@@ -14,7 +14,7 @@ from game.core import (
     DamageSignature,
     DeployArmyDecisionPoint,
     EffortOption,
-    G_decision_result,
+    G_target_result,
     HasStatuses,
     Hex,
     HexStatus,
@@ -22,6 +22,7 @@ from game.core import (
     LogLine,
     MeleeAttackFacet,
     MoveOption,
+    NoneResult,
     NoTarget,
     OneOfHexes,
     OneOfUnits,
@@ -342,7 +343,7 @@ class MeleeAttackAction(Event[None]):
                 )
             )
             and isinstance(decision.option, MoveOption)
-            and decision.target == defender_position
+            and decision.target.value == defender_position
         ):
             ES.resolve(MoveUnit(self.attacker, defender_position))
             GS.active_unit_context.movement_points -= movement_cost
@@ -440,16 +441,30 @@ class DispelStatus(Event[None]):
 @dataclasses.dataclass
 class ActivateAbilityAction(Event[None]):
     unit: Unit
-    ability: ActivatedAbilityFacet[G_decision_result]
-    target: G_decision_result
+    ability: ActivatedAbilityFacet[G_target_result]
+    target: G_target_result
 
     def resolve(self) -> None:
         with GS.log(
-            LogLine(
-                [self.unit, "activates", self.ability, "targeting", self.target],
-                valid_for_players=(
-                    {self.unit.controller} if self.ability.hidden_target else None
-                ),
+            *(
+                (
+                    LogLine(
+                        [
+                            self.unit,
+                            "activates",
+                            self.ability,
+                            "targeting",
+                            target_element,
+                        ],
+                        valid_for_players=(
+                            {self.unit.controller}
+                            if self.ability.hidden_target
+                            else None
+                        ),
+                    ),
+                )
+                if (target_element := self.target.to_log_element()) is not None
+                else ()
             ),
             LogLine([self.unit, "activates", self.ability]),
         ):
@@ -712,7 +727,7 @@ class Turn(Event[bool]):
 
                 # TODO maybe have some is_auto_resolvable thing instead?
                 if all(isinstance(option, SkipOption) for option in legal_options):
-                    decision = OptionDecision(legal_options[0], None)
+                    decision = OptionDecision(legal_options[0], NoneResult())
                 else:
                     decision = GS.make_decision(
                         self.unit.controller,
@@ -731,7 +746,7 @@ class Turn(Event[bool]):
                     break
 
                 elif isinstance(decision.option, MoveOption):
-                    ES.resolve(MoveAction(self.unit, to_=decision.target))
+                    ES.resolve(MoveAction(self.unit, to_=decision.target.value))
 
                 elif isinstance(decision.option, EffortOption):
                     context.activated_facets[
@@ -741,7 +756,7 @@ class Turn(Event[bool]):
                         ES.resolve(
                             MeleeAttackAction(
                                 attacker=self.unit,
-                                defender=decision.target,
+                                defender=decision.target.value,
                                 attack=decision.option.facet,
                             )
                         )
@@ -749,7 +764,7 @@ class Turn(Event[bool]):
                         ES.resolve(
                             RangedAttackAction(
                                 attacker=self.unit,
-                                defender=decision.target,
+                                defender=decision.target.value,
                                 attack=decision.option.facet,
                             )
                         )
@@ -969,11 +984,13 @@ class Round(Event[None]):
                     waiting_players = set()
 
                     if gs.activation_queued_units:
-                        gs.activation_queued_units.discard(decision.target)
+                        gs.activation_queued_units.discard(decision.target.value)
 
                     if any(
                         turn.result
-                        for turn in ES.resolve(Turn(decision.target)).iter_type(Turn)
+                        for turn in ES.resolve(Turn(decision.target.value)).iter_type(
+                            Turn
+                        )
                     ):
                         last_action_timestamps[player] = timestamp
                     do_state_based_check()

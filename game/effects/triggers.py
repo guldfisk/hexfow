@@ -287,9 +287,9 @@ class PuffAwayTrigger(TriggerEffect[MoveUnit]):
             )
             if isinstance(
                 decision.option, MoveOption
-            ) and decision.target != GS.map.hex_off(self.unit):
+            ) and decision.target.value != GS.map.hex_off(self.unit):
                 previous_hex = GS.map.hex_off(self.unit)
-                ES.resolve(MoveUnit(self.unit, to_=decision.target))
+                ES.resolve(MoveUnit(self.unit, to_=decision.target.value))
                 apply_status_to_hex(previous_hex, "soot", self.source, duration=2)
                 ES.resolve(ExhaustUnit(self.unit))
 
@@ -459,8 +459,8 @@ class QuickTrigger(TriggerEffect[TurnCleanup]):
             )
             if isinstance(
                 decision.option, MoveOption
-            ) and decision.target != GS.map.hex_off(self.unit):
-                ES.resolve(MoveAction(self.unit, to_=decision.target))
+            ) and decision.target.value != GS.map.hex_off(self.unit):
+                ES.resolve(MoveAction(self.unit, to_=decision.target.value))
 
 
 @dataclasses.dataclass(eq=False)
@@ -868,7 +868,7 @@ class FleaInfestedTrigger(TriggerEffect[RoundCleanup]):
                             ],
                             explanation="Flea Infested",
                         ),
-                    ).target,
+                    ).target.value,
                 )
             )
 
