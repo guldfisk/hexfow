@@ -13,6 +13,7 @@ from game.units.facets.activated_abilities import (
     Camouflage,
     Charge,
     ChokingSoot,
+    Cocoon,
     Compel,
     ConstructTurret,
     CoordinatedManeuver,
@@ -170,6 +171,7 @@ from game.units.facets.attacks import (
     MetallicStinger,
     MightyBlow,
     MiniGun,
+    NeedleSpines,
     OtterBite,
     Peck,
     Pinch,
@@ -703,6 +705,16 @@ GOBLIN_ASSASSIN = UnitBlueprint(
     sight=2,
     size=Size.SMALL,
     facets=[HiddenBlade, Stealth],
+    price=5,
+)
+
+HIVE_TENDER = UnitBlueprint(
+    "Hive Tender",
+    health=5,
+    speed=2,
+    sight=1,
+    energy=4,
+    facets=[NeedleSpines, RoyalJelly, Cocoon],
     price=5,
 )
 

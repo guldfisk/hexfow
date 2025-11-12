@@ -704,6 +704,17 @@ class BeautySleep(RefreshableMixin, UnitStatus):
         ES.resolve(Heal(self.parent, 3, self))
 
 
+class Cocooned(RefreshableMixin, UnitStatus):
+    """
+    This unit can't be activated, and has +2 armor.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            UnactivateableModifier(self.parent), UnitArmorFlatModifier(self.parent, 2)
+        )
+
+
 class MagicStrength(RefreshableMixin, UnitStatus):
     """
     +1 attack power and energy regeneration.

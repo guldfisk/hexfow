@@ -585,6 +585,12 @@ class Tackle(MeleeAttackFacet):
         apply_status_to_unit(defender, "stumbling", self)
 
 
+class NeedleSpines(RangedAttackFacet):
+    cost = MovementCost(1)
+    range = 2
+    damage = 1
+
+
 class FromTheTopRope(MeleeAttackFacet):
     """
     +1 damage against stumbling units. Deals 2 non-lethal ability damage to this unit as well.

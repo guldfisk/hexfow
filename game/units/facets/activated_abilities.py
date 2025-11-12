@@ -585,12 +585,26 @@ class BurnBright(TargetUnitActivatedAbility):
     cost = EnergyCost(3) | MovementCost(1)
     range = 2
     controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
 
     def perform(self, target: SingleObjectResult[Unit]) -> None:
         target.value.damage = target.value.max_health.g() - 1
         ES.resolve(GainEnergy(target.value, 3 - target.value.energy, self))
         dispel_from_unit(target.value, StatusIntention.DEBUFF)
         apply_status_to_unit(target.value, "burning_bright", self, duration=1)
+
+
+class Cocoon(TargetUnitActivatedAbility):
+    """
+    Applies <cocooned> for 1 round.
+    """
+
+    cost = EnergyCost(3)
+    controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
+
+    def perform(self, target: SingleObjectResult[Unit]) -> None:
+        apply_status_to_unit(target.value, "cocooned", self, duration=1)
 
 
 class InstilFocus(TargetUnitActivatedAbility):
@@ -611,6 +625,7 @@ class RoyalJelly(TargetUnitActivatedAbility):
 
     cost = MovementCost(1) | EnergyCost(2)
     controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
 
     def perform(self, target: SingleObjectResult[Unit]) -> None:
         ES.resolve(Heal(target.value, 1, self))

@@ -62,7 +62,8 @@ class TestGameType(GameType):
                 # TOMB_WALKER,
                 # UNTHINKING_SERVITOR,
                 FAIRCHILD,
-                DOOMSPEAKER,
+                HIVE_TENDER,
+                # DOOMSPEAKER,
                 # STINGING_SENTRY,
             ),
             (
