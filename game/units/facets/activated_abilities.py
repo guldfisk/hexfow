@@ -578,8 +578,8 @@ class KarmicJustice(TargetUnitActivatedAbility):
 
 class BurnBright(TargetUnitActivatedAbility):
     """
-    Sets the target units health to 1, dispel all debuffs and applies <burning_bright>
-    for 1 round.
+    Sets the target units health to 1, it gains energy to 3 energy, dispel all
+    debuffs and applies <burning_bright> for 1 round.
     """
 
     cost = EnergyCost(3) | MovementCost(1)
@@ -588,6 +588,7 @@ class BurnBright(TargetUnitActivatedAbility):
 
     def perform(self, target: SingleObjectResult[Unit]) -> None:
         target.value.damage = target.value.max_health.g() - 1
+        ES.resolve(GainEnergy(target.value, 3 - target.value.energy, self))
         dispel_from_unit(target.value, StatusIntention.DEBUFF)
         apply_status_to_unit(target.value, "burning_bright", self, duration=1)
 
@@ -1220,7 +1221,7 @@ class MagicMissile(TargetUnitActivatedAbility):
     controller_target_option = ControllerTargetOption.ENEMY
 
     def perform(self, target: SingleObjectResult[Unit]) -> None:
-        ES.resolve(Damage(target.value, DamageSignature(2, self)))
+        ES.resolve(Damage(target.value, DamageSignature(2, self, DamageType.PHYSICAL)))
 
 
 class MagicShield(TargetUnitActivatedAbility):
@@ -1675,7 +1676,7 @@ class IcicleSplinter(TargetUnitActivatedAbility):
 
 class ShieldWithFrost(TargetUnitActivatedAbility):
     """
-    Applies <frost_shield> for 2 rounds.
+    Applies <frost_shield> for 3 rounds.
     """
 
     cost = EnergyCost(4) | MovementCost(1)
@@ -1683,7 +1684,7 @@ class ShieldWithFrost(TargetUnitActivatedAbility):
     controller_target_option = ControllerTargetOption.ALLIED
 
     def perform(self, target: SingleObjectResult[Unit]) -> None:
-        apply_status_to_unit(target.value, "frost_shield", self, duration=2)
+        apply_status_to_unit(target.value, "frost_shield", self, duration=3)
 
 
 class RingOfIce(TargetHexRingActivatedAbility):

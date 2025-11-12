@@ -535,7 +535,7 @@ PANGOLIN_FAMILIAR = UnitBlueprint(
 
 STINGING_SENTRY = UnitBlueprint(
     "Stinging Sentry",
-    health=6,
+    health=5,
     speed=3,
     sight=1,
     facets=[
@@ -987,15 +987,6 @@ BLIND_ABOMINATION = UnitBlueprint(
     price=8,
 )
 
-CAMELBACK_OUTRIDER = UnitBlueprint(
-    "Camelback Outrider",
-    health=6,
-    speed=4,
-    sight=2,
-    facets=[Lance, Vigorous, StayingPower],
-    price=8,
-)
-
 LEGENDARY_WRESTLER = UnitBlueprint(
     "Legendary Wrestler",
     health=7,
@@ -1030,6 +1021,15 @@ BARRIER_MAGE = UnitBlueprint(
     sight=2,
     size=Size.MEDIUM,
     facets=[MagicMissile, MagicShield, MagicalDefenses],
+    price=9,
+)
+
+CAMELBACK_OUTRIDER = UnitBlueprint(
+    "Camelback Outrider",
+    health=6,
+    speed=4,
+    sight=2,
+    facets=[Lance, Vigorous, StayingPower],
     price=9,
 )
 
@@ -1121,12 +1121,14 @@ BOULDER_HURLER_OAF = UnitBlueprint(
     price=10,
 )
 
-EFFORTLESS_ATHLETE = UnitBlueprint(
-    "Effortless Athlete",
-    health=6,
-    speed=3,
+DOOMSPEAKER = UnitBlueprint(
+    "Doomspeaker",
+    health=5,
+    speed=2,
+    energy=7,
     sight=2,
-    facets=[RoundhouseKick, Vault, BatonPass],
+    size=Size.MEDIUM,
+    facets=[ForetellDemise, AVisionOfDoom, RevelInDeath],
     price=10,
 )
 
@@ -1205,6 +1207,15 @@ DIRE_WOLF = UnitBlueprint(
     speed=4,
     sight=2,
     facets=[Bite, PackHunter],
+    price=11,
+)
+
+EFFORTLESS_ATHLETE = UnitBlueprint(
+    "Effortless Athlete",
+    health=6,
+    speed=3,
+    sight=2,
+    facets=[RoundhouseKick, Vault, BatonPass],
     price=11,
 )
 
@@ -1391,7 +1402,7 @@ ICE_SAVANT = UnitBlueprint(
     sight=2,
     energy=7,
     facets=[RingOfIce, ShieldWithFrost, IcicleSplinter, Haughty],
-    price=16,
+    price=18,
 )
 
 RHINO_BEAST = UnitBlueprint(
@@ -1542,15 +1553,4 @@ MAD_SCIENTIST = UnitBlueprint(
     facets=[ShrinkRay, Translocate, AssembleTheDoombot, Inspiration],
     price=13,
     max_count=0,
-)
-
-DOOMSPEAKER = UnitBlueprint(
-    "Doomspeaker",
-    health=5,
-    speed=2,
-    energy=7,
-    sight=2,
-    size=Size.MEDIUM,
-    facets=[ForetellDemise, AVisionOfDoom, RevelInDeath],
-    price=10,
 )
