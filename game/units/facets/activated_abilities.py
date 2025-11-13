@@ -599,7 +599,7 @@ class Cocoon(TargetUnitActivatedAbility):
     Applies <cocooned> for 1 round.
     """
 
-    cost = EnergyCost(3)
+    cost = EnergyCost(2)
     controller_target_option = ControllerTargetOption.ALLIED
     can_target_self = False
 

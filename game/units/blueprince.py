@@ -713,7 +713,7 @@ HIVE_TENDER = UnitBlueprint(
     health=5,
     speed=2,
     sight=1,
-    energy=4,
+    energy=3,
     facets=[NeedleSpines, RoyalJelly, Cocoon],
     price=5,
 )
@@ -1045,15 +1045,6 @@ CAMELBACK_OUTRIDER = UnitBlueprint(
     price=9,
 )
 
-CHAINSAW_SADIST = UnitBlueprint(
-    "Chainsaw Sadist",
-    health=7,
-    speed=3,
-    sight=2,
-    facets=[Chainsaw, FightFlightFreeze, GrizzlyMurderer],
-    price=9,
-)
-
 CRUEL_PUPPETEER = UnitBlueprint(
     "Cruel Puppeteer",
     health=5,
@@ -1130,6 +1121,15 @@ BOULDER_HURLER_OAF = UnitBlueprint(
         HurlBoulder,
         Farsighted,
     ],
+    price=10,
+)
+
+CHAINSAW_SADIST = UnitBlueprint(
+    "Chainsaw Sadist",
+    health=7,
+    speed=3,
+    sight=2,
+    facets=[Chainsaw, FightFlightFreeze, GrizzlyMurderer],
     price=10,
 )
 

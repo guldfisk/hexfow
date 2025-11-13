@@ -217,7 +217,11 @@ class OrneryTrigger(TriggerEffect[ApplyStatus]):
     source: Source
 
     def should_trigger(self, event: ApplyStatus) -> bool:
-        return event.unit == self.unit and event.result
+        return (
+            event.unit == self.unit
+            and event.result
+            and event.signature.intention == StatusIntention.DEBUFF
+        )
 
     def resolve(self, event: ApplyStatus) -> None:
         ES.resolve(Heal(self.unit, 1, self.source))
