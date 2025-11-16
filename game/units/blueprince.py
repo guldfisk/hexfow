@@ -7,7 +7,6 @@ from game.units.facets.activated_abilities import (
     BallMode,
     BatonPass,
     Binoculars,
-    Bloom,
     Bombard,
     BurnBright,
     Camouflage,
@@ -18,7 +17,9 @@ from game.units.facets.activated_abilities import (
     ConstructTurret,
     CoordinatedManeuver,
     CriticalAid,
+    CupidStrike,
     CuringWord,
+    Dam,
     DeployStakes,
     Disempower,
     DrawSpring,
@@ -40,9 +41,12 @@ from game.units.facets.activated_abilities import (
     ForetellDemise,
     GasGrenade,
     GiantPincers,
+    GlowUp,
     GrantCharm,
     GrantWish,
     GreaseTheGears,
+    GrowCactus,
+    GrowLotus,
     GuidedTrance,
     HandGrenade,
     HealBeam,
@@ -71,6 +75,8 @@ from game.units.facets.activated_abilities import (
     OpenGate,
     OrbitalStrike,
     PatchUp,
+    Pincers,
+    PlayfulProd,
     Poof,
     PrepareTrap,
     PsychicCommand,
@@ -79,6 +85,7 @@ from game.units.facets.activated_abilities import (
     RaiseGround,
     RaiseShrine,
     RingOfIce,
+    Rinse,
     RollUp,
     RoyalJelly,
     Sandbags,
@@ -149,6 +156,7 @@ from game.units.facets.attacks import (
     FleaBite,
     FromTheTopRope,
     Frostbite,
+    FrostedFists,
     GiantClub,
     GlassFist,
     Gnaw,
@@ -216,11 +224,13 @@ from game.units.facets.static_abilities import (
     CaughtInTheMatch,
     CrabShuffle,
     Cumbersome,
+    Delicious,
     DiamondSkin,
     Diver,
     DreadfulVisage,
     Farsighted,
     FightFlightFreeze,
+    Fixture,
     FlameResistant,
     Fleeting,
     ForceShield,
@@ -232,8 +242,8 @@ from game.units.facets.static_abilities import (
     Haughty,
     HazardSuit,
     HeelTurn,
-    Immobile,
     Infiltrator,
+    Insentient,
     Inspiration,
     InspiringPresence,
     JukeAndJive,
@@ -245,6 +255,7 @@ from game.units.facets.static_abilities import (
     Ornery,
     PackHunter,
     PlascreteCarapace,
+    PranksterSpirit,
     Prickly,
     PuffAway,
     PureInnocence,
@@ -264,7 +275,6 @@ from game.units.facets.static_abilities import (
     StayingPower,
     Stealth,
     StrainedPusher,
-    Structure,
     Swimmer,
     TactileSensing,
     TelepathicSpy,
@@ -290,7 +300,7 @@ BLIND_GRUB = UnitBlueprint(
 BLIND_ORACLE = UnitBlueprint(
     "Blind Oracle",
     health=2,
-    speed=2,
+    speed=3,
     sight=0,
     energy=2,
     facets=[Scry],
@@ -309,7 +319,7 @@ CHARGE_DRONE = UnitBlueprint(
 
 CHICKEN = UnitBlueprint(
     name="Chicken",
-    health=1,
+    health=2,
     speed=3,
     sight=1,
     size=Size.SMALL,
@@ -356,6 +366,17 @@ IMPARTIAL_OBSERVER = UnitBlueprint(
     price=1,
 )
 
+SEA_SNAIL = UnitBlueprint(
+    "Sea Snail",
+    health=3,
+    speed=2,
+    sight=1,
+    size=Size.SMALL,
+    energy=2,
+    facets=[Rinse, Aquatic],
+    price=1,
+)
+
 GOBLIN_SLINGSHOT = UnitBlueprint(
     "Goblin Slingshot",
     health=3,
@@ -383,6 +404,16 @@ LUMBERING_PILLAR = UnitBlueprint(
     sight=0,
     armor=1,
     size=Size.LARGE,
+    price=2,
+)
+
+PATIENT_GARDENER = UnitBlueprint(
+    name="Patient Gardener",
+    health=3,
+    speed=3,
+    sight=1,
+    energy=3,
+    facets=[GrowLotus, GrowCactus],
     price=2,
 )
 
@@ -698,6 +729,25 @@ BUGLING = UnitBlueprint(
     price=5,
 )
 
+BUSY_BEAVER = UnitBlueprint(
+    "Busy Beaver",
+    health=6,
+    speed=3,
+    sight=1,
+    facets=[Gnaw, Dam, Aquatic],
+    price=5,
+)
+
+CANDY_COLOSSUS = UnitBlueprint(
+    "Candy Colossus",
+    health=10,
+    speed=2,
+    sight=1,
+    size=Size.LARGE,
+    facets=[FrostedFists, Delicious],
+    price=5,
+)
+
 GOBLIN_ASSASSIN = UnitBlueprint(
     "Goblin Assassin",
     health=3,
@@ -738,6 +788,15 @@ MORTAR_SQUAD = UnitBlueprint(
     flavor="MOOORTAR COOOMBAT",
 )
 
+SCUTTLING_CRAB = UnitBlueprint(
+    "Scuttling Crab",
+    health=5,
+    speed=3,
+    sight=1,
+    facets=[Pincers, Aquatic, CrabShuffle],
+    price=5,
+)
+
 SQUIRMING_SQUID = UnitBlueprint(
     "Squirming Squid",
     health=6,
@@ -776,6 +835,17 @@ BOMB_TRUCK = UnitBlueprint(
     facets=[Explode],
     price=6,
     flavor="Nothing stops the mail.",
+)
+
+CHERUB_PRANKSTER = UnitBlueprint(
+    "Cherub Prankster",
+    health=5,
+    speed=3,
+    sight=2,
+    size=Size.SMALL,
+    energy=5,
+    facets=[PlayfulProd, CupidStrike, GlowUp, PranksterSpirit],
+    price=6,
 )
 
 DOMINEERING_PSYCHIC = UnitBlueprint(
@@ -1468,6 +1538,16 @@ BLOOD_HOMUNCULUS = UnitBlueprint(
     price=None,
 )
 
+CACTUS = UnitBlueprint(
+    name="Cactus",
+    health=3,
+    speed=0,
+    sight=0,
+    energy=2,
+    facets=[Prickly, Fixture, Insentient],
+    price=None,
+)
+
 DOOMBOT_3000 = UnitBlueprint(
     "Doombot 3000",
     identifier="doombot_3000",
@@ -1488,6 +1568,16 @@ HORROR_SPAWN = UnitBlueprint(
     sight=1,
     size=Size.SMALL,
     facets=[SerratedBeak],
+    price=None,
+)
+
+LOTUS_BUD = UnitBlueprint(
+    name="Lotus Bud",
+    health=2,
+    speed=0,
+    sight=0,
+    size=Size.SMALL,
+    facets=[Nourishing, Fixture, Insentient],
     price=None,
 )
 
@@ -1517,21 +1607,8 @@ SENTRY_TURRET = UnitBlueprint(
     health=4,
     speed=0,
     sight=2,
-    facets=[MiniGun, Structure, Automated],
+    facets=[MiniGun, Fixture, Automated],
     price=None,
-)
-
-LOTUS_BUD = UnitBlueprint(
-    name="Lotus Bud",
-    health=3,
-    speed=0,
-    sight=0,
-    energy=2,
-    starting_energy=0,
-    size=Size.SMALL,
-    facets=[Immobile, Nourishing, Bloom],
-    price=1,
-    max_count=0,
 )
 
 CAPRICIOUS_TRICKSTER = UnitBlueprint(

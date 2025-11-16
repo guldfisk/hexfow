@@ -54,7 +54,7 @@ from game.events import (
     SpawnUnit,
 )
 from game.map.terrain import Forest
-from game.statuses.links import GateLink, TaintedLink
+from game.statuses.links import GateLink, SmittenLink, TaintedLink
 from game.statuses.shortcuts import (
     apply_status_to_hex,
     apply_status_to_unit,
@@ -65,6 +65,7 @@ from game.target_profiles import Cone, NOfHexes, NOfUnits, Tree, TreeNode
 from game.targeting import (
     ControllerTargetOption,
     NoTargetActivatedAbility,
+    PincersActivatedAbility,
     TargetHexActivatedAbility,
     TargetHexArcActivatedAbility,
     TargetHexCircleActivatedAbility,
@@ -76,17 +77,40 @@ from game.targeting import (
 from game.values import DamageType, StatusIntention
 
 
-class Bloom(NoTargetActivatedAbility):
+class GrowLotus(TargetHexActivatedAbility):
     """
-    Heals each adjacent allied unit 1. This unit dies.
+    Spawns a [lotus_bud].
     """
 
-    cost = EnergyCost(2)
+    cost = EnergyCost(2) | MovementCost(1)
+    requires_empty = True
 
-    def perform(self, target: None) -> None:
-        for unit in GS.map.get_neighboring_units_off(self.parent):
-            ES.resolve(Heal(unit, 1, self))
-        ES.resolve(Kill(self.parent, self))
+    def perform(self, target: SingleObjectResult[Hex]) -> None:
+        ES.resolve(
+            SpawnUnit(
+                UnitBlueprint.get_class("lotus_bud"),
+                self.parent.controller,
+                target.value,
+            )
+        )
+
+
+class GrowCactus(TargetHexActivatedAbility):
+    """
+    Spawns a [cactus].
+    """
+
+    cost = EnergyCost(2) | MovementCost(1)
+    requires_empty = True
+
+    def perform(self, target: SingleObjectResult[Hex]) -> None:
+        ES.resolve(
+            SpawnUnit(
+                UnitBlueprint.get_class("cactus"),
+                self.parent.controller,
+                target.value,
+            )
+        )
 
 
 class Charge(TargetUnitActivatedAbility):
@@ -578,8 +602,8 @@ class KarmicJustice(TargetUnitActivatedAbility):
 
 class BurnBright(TargetUnitActivatedAbility):
     """
-    Sets the target units health to 1, it gains energy to 3 energy, dispel all
-    debuffs and applies <burning_bright> for 1 round.
+    Sets the target units health to 1, applies <burning_bright> for 1 round and
+    activates it.
     """
 
     cost = EnergyCost(3) | MovementCost(1)
@@ -589,9 +613,8 @@ class BurnBright(TargetUnitActivatedAbility):
 
     def perform(self, target: SingleObjectResult[Unit]) -> None:
         target.value.damage = target.value.max_health.g() - 1
-        ES.resolve(GainEnergy(target.value, 3 - target.value.energy, self))
-        dispel_from_unit(target.value, StatusIntention.DEBUFF)
         apply_status_to_unit(target.value, "burning_bright", self, duration=1)
+        ES.resolve(QueueUnitForActivation(target.value))
 
 
 class Cocoon(TargetUnitActivatedAbility):
@@ -980,6 +1003,90 @@ class ForcedMarch(TargetUnitActivatedAbility):
                 ES.resolve(MoveAction(target.value, to_=decision.target.value))
 
 
+class CupidStrike(ActivatedAbilityFacet[ObjectListResult[Unit]]):
+    """
+    Applies merging linked <smitten> to the target units for 3 rounds.
+    """
+
+    cost = EnergyCost(3) | MovementCost(1)
+
+    @classmethod
+    def get_target_explanation(cls) -> str | None:
+        return "Target 2 other units within 3 range LoS."
+
+    def get_target_profile(self) -> TargetProfile[ObjectListResult[Unit]] | None:
+        if (
+            len(
+                units := find_units_within_range(self.parent, 3, can_include_self=False)
+            )
+            >= 2
+        ):
+            return NOfUnits(units, 2, ["select unit"] * 2)
+
+    def perform(self, target: ObjectListResult[Unit]) -> None:
+        if statuses := [
+            event.result
+            for event in itertools.chain(
+                *(
+                    apply_status_to_unit(unit, "smitten", self, duration=3).iter_type(
+                        ApplyStatus
+                    )
+                    for unit in target
+                )
+            )
+            if event.result
+            and event.unit in target
+            and isinstance(event.result, UnitStatus.get("smitten"))
+        ]:
+            SmittenLink.merge_on_statuses(statuses)
+
+
+class Dam(TargetHexActivatedAbility):
+    """
+    Turns the terrain into Forest.
+    """
+
+    cost = MovementCost(1)
+    explain_qualifier_filter = "water"
+
+    def filter_hex(self, hex_: Hex) -> bool:
+        return hex_.terrain.is_water
+
+    def perform(self, target: SingleObjectResult[Hex]) -> None:
+        ES.resolve(ChangeHexTerrain(target.value, Terrain.get_class("forest")))
+
+
+class GlowUp(TargetUnitActivatedAbility):
+    """
+    Applies <striking_beauty>.
+    """
+
+    cost = EnergyCost(2)
+    controller_target_option = ControllerTargetOption.ALLIED
+    can_target_self = False
+
+    def perform(self, target: SingleObjectResult[Unit]) -> None:
+        apply_status_to_unit(target.value, "striking_beauty", self)
+
+
+class PlayfulProd(TargetUnitActivatedAbility):
+    """
+    Deals 1 non-lethal pure damage. Activates the target.
+    """
+
+    cost = EnergyCost(2)
+    range = 2
+    can_target_self = False
+
+    def perform(self, target: SingleObjectResult[Unit]) -> None:
+        ES.resolve(
+            Damage(
+                target.value, DamageSignature(1, self, DamageType.PURE, lethal=False)
+            )
+        )
+        ES.resolve(QueueUnitForActivation(target.value))
+
+
 class FatalBonding(ActivatedAbilityFacet[ObjectListResult[Unit]]):
     """
     Applies linked <tainted_bond> to the target units for 2 rounds.
@@ -1203,7 +1310,7 @@ class Scry(TargetHexActivatedAbility):
     Applies <revealed> for 2 rounds.
     """
 
-    cost = EnergyCost(2)
+    cost = EnergyCost(2) | MovementCost(1)
     range = 6
     requires_los = False
     requires_vision = False
@@ -1489,6 +1596,15 @@ class TidyUp(TargetHexActivatedAbility):
     """Dispels all hex statuses."""
 
     cost = EnergyCost(2)
+
+    def perform(self, target: SingleObjectResult[Hex]) -> None:
+        dispel_all(target.value)
+
+
+class Rinse(TargetHexActivatedAbility):
+    """Dispels all hex statuses."""
+
+    cost = EnergyCost(2) | ExclusiveCost()
 
     def perform(self, target: SingleObjectResult[Hex]) -> None:
         dispel_all(target.value)
@@ -2010,57 +2126,38 @@ class FireStorm(TargetTriHexActivatedAbility):
                 apply_status_to_unit(unit, "burn", self, stacks=2 if is_burning else 1)
 
 
-class GiantPincers(ActivatedAbilityFacet[ObjectListResult[Hex]]):
+class Pincers(PincersActivatedAbility):
+    """Deals 2 + attack power damage to units on the target hexes."""
+
+    cost = MovementCost(1)
+
+    def perform(self, target: ObjectListResult[Hex]) -> None:
+        for unit in GS.map.units_on(target):
+            ES.resolve(
+                Damage(
+                    unit,
+                    DamageSignature(
+                        2 + self.parent.attack_power.g(), self, DamageType.PHYSICAL
+                    ),
+                )
+            )
+
+
+class GiantPincers(PincersActivatedAbility):
     """Deals 5 + attack power damage to units on the target hexes."""
 
     cost = MovementCost(1)
 
-    @classmethod
-    def get_target_explanation(cls) -> str | None:
-        return "Target two visible hexes adjacent to this unit, with one hex also adjacent to this unit between them."
-
-    def get_target_profile(self) -> TargetProfile[ObjectListResult[Hex]] | None:
-        # TODO edge??
-        if (
-            len(
-                hexes := [
-                    h
-                    for h in GS.map.get_neighbors_off(self.parent)
-                    if h.is_visible_to(self.parent.controller)
-                ]
-            )
-            >= 2
-        ):
-            return Tree(
-                TreeNode(
-                    [
-                        (
-                            _hex,
-                            TreeNode(
-                                [
-                                    (hexes[(idx + offset) % len(hexes)], None)
-                                    for offset in (-2, 2)
-                                ],
-                                "select second hex",
-                            ),
-                        )
-                        for idx, _hex in enumerate(hexes)
-                    ],
-                    "select first hex",
-                )
-            )
-
     def perform(self, target: ObjectListResult[Hex]) -> None:
-        for h in target:
-            if unit := GS.map.unit_on(h):
-                ES.resolve(
-                    Damage(
-                        unit,
-                        DamageSignature(
-                            5 + self.parent.attack_power.g(), self, DamageType.PHYSICAL
-                        ),
-                    )
+        for unit in GS.map.units_on(target):
+            ES.resolve(
+                Damage(
+                    unit,
+                    DamageSignature(
+                        5 + self.parent.attack_power.g(), self, DamageType.PHYSICAL
+                    ),
                 )
+            )
 
 
 class Evacuate(ActivatedAbilityFacet[ObjectListResult[Unit | Hex]]):

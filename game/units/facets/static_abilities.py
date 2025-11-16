@@ -13,6 +13,7 @@ from game.core import (
     UnitStatusSignature,
 )
 from game.effects.modifiers import (
+    AllowAlliedAttacksModifier,
     AquaticModifier,
     CrabShuffleModifier,
     CrushableModifier,
@@ -33,6 +34,7 @@ from game.effects.modifiers import (
     StealthModifier,
     StealthOnTerrainModifier,
     TelepathicSpyModifier,
+    UnactivateableModifier,
     UnitNoCaptureModifier,
     UnitSetSpeedModifier,
     UnitSightMinModifier,
@@ -56,20 +58,22 @@ from game.effects.triggers import (
     ApplyHexStatusOnDeathTrigger,
     ApplyStatusToAttackerOnHitTrigger,
     ApplyStatusToDefenderOnHitTrigger,
+    ApplyStatusToKillerTrigger,
     AutomatedTrigger,
     CaughtInTheMatchTrigger,
     FleetingTrigger,
     FuriousTrigger,
     GrizzlyMurdererTrigger,
+    HealAttackerOnHitTrigger,
     HeelTurnTrigger,
     InspirationTrigger,
     JukeAndJiveTrigger,
     OldBonesTrigger,
     OrneryTrigger,
     PackHunterTrigger,
+    PranksterSpiritTrigger,
     PricklyTrigger,
     PuffAwayTrigger,
-    PureInnocenceTrigger,
     QuickTrigger,
     RecklessTrigger,
     RecurringUnitBuffTrigger,
@@ -671,7 +675,21 @@ class PureInnocence(StaticAbilityFacet):
     """
 
     def create_effects(self) -> None:
-        self.register_effects(PureInnocenceTrigger(self.parent, self))
+        self.register_effects(
+            ApplyStatusToKillerTrigger(
+                self.parent, UnitStatusSignature(UnitStatus.get("shame"), self)
+            )
+        )
+
+
+class PranksterSpirit(StaticAbilityFacet):
+    """
+    Whenever an allied units within 2 range activates an ability targeting one or
+    more enemy units adjacent to the that unit, that unit gains 1 energy.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(PranksterSpiritTrigger(self.parent, self))
 
 
 class Vigorous(StaticAbilityFacet):
@@ -717,7 +735,7 @@ class SludgeTrail(StaticAbilityFacet):
         )
 
 
-class Structure(StaticAbilityFacet):
+class Fixture(StaticAbilityFacet):
     """
     This unit can't take move actions and can't capture points.
     """
@@ -726,6 +744,28 @@ class Structure(StaticAbilityFacet):
         self.register_effects(
             UnitNoCaptureModifier(self.parent), RootedModifier(self.parent)
         )
+
+
+class Delicious(StaticAbilityFacet):
+    """
+    This unit can be attacked by allied units. Whenever this unit is hit with by
+    a melee attack, the attacking unit is healed 2.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            AllowAlliedAttacksModifier(self.parent),
+            HealAttackerOnHitTrigger(self.parent, 2, self, MeleeAttackFacet),
+        )
+
+
+class Insentient(StaticAbilityFacet):
+    """
+    This unit can't be activated.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(UnactivateableModifier(self.parent))
 
 
 class Automated(StaticAbilityFacet):

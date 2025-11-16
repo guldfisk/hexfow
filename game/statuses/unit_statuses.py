@@ -49,6 +49,7 @@ from game.effects.replacements import (
 )
 from game.effects.triggers import (
     ApplyStatusToAttackerOnHitTrigger,
+    ApplyStatusToKillerTrigger,
     BaffledTrigger,
     BellStruckTrigger,
     BurnTrigger,
@@ -526,6 +527,27 @@ class TaintedBond(UnitStatus):
     Whenever a unit with a linked Tainted Bond status suffers damage not from a Tainted Bond
     status, this status deals 1 pure damage to this unit.
     """
+
+
+class Smitten(RefreshableMixin, UnitStatus):
+    """
+    This unit can't attack other units with a linked <smitten> status.
+    Whenever a unit with a linked <smitten> status dies, apply 1 stack of
+    <stunned> to this unit.
+    """
+
+
+class StrikingBeauty(RefreshableMixin, UnitStatus):
+    """
+    When a unit kills this unit, apply <shame> to that unit.
+    """
+
+    def create_effects(self) -> None:
+        self.register_effects(
+            ApplyStatusToKillerTrigger(
+                self.parent, UnitStatusSignature(UnitStatus.get("shame"), self)
+            )
+        )
 
 
 class Enfeebled(RefreshableMixin, UnitStatus):

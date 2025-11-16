@@ -110,6 +110,9 @@ class TargetResult(ABC):
     @abstractmethod
     def to_log_element(self) -> LogElement | None: ...
 
+    @abstractmethod
+    def get_targets(self) -> Iterable[Unit | Hex]: ...
+
 
 class TargetProfile(ABC, Generic[G_target_result]):
     response_schema: ClassVar[type[BaseModel]]
@@ -130,6 +133,9 @@ class TargetProfile(ABC, Generic[G_target_result]):
 class NoneResult(TargetResult):
     def to_log_element(self) -> LogElement | None:
         return None
+
+    def get_targets(self) -> Iterable[Unit | Hex]:
+        return ()
 
 
 class NoTarget(TargetProfile[NoneResult]):
@@ -342,11 +348,10 @@ class HasStatuses(HasEffects, Generic[G_Status, G_StatusSignature]):
             return None
         for existing_status in self.statuses:
             if type(existing_status) is signature.status_type:
-                if (
-                    merge_result := existing_status.merge(signature)
-                ) == MergeResult.REJECTED:
-                    return None
-                if merge_result == MergeResult.MERGED:
+                if existing_status.merge(signature) in (
+                    MergeResult.REJECTED,
+                    MergeResult.MERGED,
+                ):
                     return existing_status
 
         status = signature.realize(self)
@@ -608,7 +613,7 @@ class MeleeAttackFacet(AttackFacet, ABC):
         return [
             unit
             for unit in GS.map.get_neighboring_units_off(self.parent)
-            if unit.controller != self.parent.controller
+            if unit.can_be_attacked_by_player(self.parent.controller)
             and unit.is_visible_to(self.parent.controller)
             and unit.can_be_attacked_by(self)
         ]
@@ -640,8 +645,10 @@ class RangedAttackFacet(AttackFacet, ABC):
         return find_units_within_range(
             self.parent,
             self.range,
-            with_controller=ControllerTargetOption.ENEMY,
-            additional_filter=lambda u: u.can_be_attacked_by(self),
+            additional_filter=lambda u: u.can_be_attacked_by_player(
+                self.parent.controller
+            )
+            and u.can_be_attacked_by(self),
         )
 
     @classmethod
@@ -689,6 +696,8 @@ class StaticAbilityFacet(Facet, ABC):
 
 class MergeResult(Enum):
     MERGED = 0
+    # TODO maybe still have rejected, but this one should instead be "subset" or
+    #  something?
     REJECTED = 1
     STACK = 2
 
@@ -813,8 +822,9 @@ class StatusLink(HasEffects, Generic[G_Status], ABC):
         self.deregister()
 
     def add_status(self, status: G_Status) -> None:
-        self.statuses.append(status)
-        status.links.append(self)
+        if status not in self.statuses:
+            self.statuses.append(status)
+            status.links.append(self)
 
     def on_status_removed(self, status: G_Status) -> None: ...
 
@@ -822,10 +832,30 @@ class StatusLink(HasEffects, Generic[G_Status], ABC):
         if status in self.statuses:
             self.statuses.remove(status)
             self.on_status_removed(status)
+            status.links.remove(self)
             if not self.statuses:
                 self.remove()
 
     def create_effects(self) -> None: ...
+
+    @classmethod
+    def merge_on_statuses(cls, statuses: list[G_Status]) -> None:
+        merge_candidates: set[StatusLink] = set()
+        for status in statuses:
+            for link in status.links:
+                if isinstance(link, cls):
+                    merge_candidates.add(link)
+        if merge_candidates:
+            candidates = list(merge_candidates)
+            for status in statuses:
+                candidates[0].add_status(status)
+            for other_candidate in candidates[1:]:
+                for status in list(other_candidate.statuses):
+                    status.links.remove(other_candidate)
+                    candidates[0].add_status(status)
+                other_candidate.deregister()
+        else:
+            cls(statuses)
 
 
 class StatusLinkMixin(ABC):
@@ -1046,6 +1076,10 @@ class Unit(HasStatuses["UnitStatus", "UnitStatusSignature"], Modifiable, Seriali
         return not self.exhausted
 
     @modifiable
+    def can_be_attacked_by_player(self, player: Player) -> bool:
+        return player != self.controller
+
+    @modifiable
     def can_be_attacked_by(self, attack: AttackFacet) -> bool:
         return True
 
@@ -1250,6 +1284,9 @@ class SingleObjectResult(TargetResult, Generic[G]):
     def to_log_element(self) -> LogElement | None:
         return self.value
 
+    def get_targets(self) -> Iterable[Unit | Hex]:
+        return (self.value,)
+
 
 @dataclasses.dataclass
 class ObjectListResult(TargetResult, Generic[G]):
@@ -1259,6 +1296,9 @@ class ObjectListResult(TargetResult, Generic[G]):
         return self.values.__iter__()
 
     def to_log_element(self) -> LogElement | None:
+        return self.values
+
+    def get_targets(self) -> Iterable[Unit | Hex]:
         return self.values
 
 

@@ -951,6 +951,24 @@ class ExpireOnDealDamageStatusTrigger(TriggerEffect[Damage]):
 
 
 @dataclasses.dataclass(eq=False)
+class HealAttackerOnHitTrigger(TriggerEffect[Hit]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+    amount: int
+    source: Source
+    attack_type: type[AttackFacet] = AttackFacet
+
+    def should_trigger(self, event: Hit) -> bool:
+        return event.defender == self.unit and isinstance(
+            event.attack, self.attack_type
+        )
+
+    def resolve(self, event: Hit) -> None:
+        ES.resolve(Heal(event.attacker, self.amount, self.source))
+
+
+@dataclasses.dataclass(eq=False)
 class ApplyStatusToAttackerOnHitTrigger(TriggerEffect[Hit]):
     priority: ClassVar[int] = 0
 
@@ -1064,17 +1082,32 @@ class PanickedTrigger(TriggerEffect[RoundCleanup]):
 
 
 @dataclasses.dataclass(eq=False)
-class PureInnocenceTrigger(TriggerEffect[KillUpkeep]):
+class SmittenTrigger(TriggerEffect[KillUpkeep]):
+    priority: ClassVar[int] = 0
+
+    link: UnitStatusLink
+
+    def should_trigger(self, event: KillUpkeep) -> bool:
+        return any(event.unit == status.parent for status in self.link.statuses)
+
+    def resolve(self, event: KillUpkeep) -> None:
+        for status in self.link.statuses:
+            if status.parent != event.unit:
+                apply_status_to_unit(status.parent, "stunned", status, stacks=1)
+
+
+@dataclasses.dataclass(eq=False)
+class ApplyStatusToKillerTrigger(TriggerEffect[KillUpkeep]):
     priority: ClassVar[int] = 0
 
     unit: Unit
-    source: Source
+    signature: UnitStatusSignature
 
     def should_trigger(self, event: KillUpkeep) -> bool:
         return event.unit == self.unit and get_source_unit(event.source)
 
     def resolve(self, event: KillUpkeep) -> None:
-        apply_status_to_unit(get_source_unit(event.source), "shame", self.source)
+        ES.resolve(ApplyStatus(get_source_unit(event.source), self.signature))
 
 
 @dataclasses.dataclass(eq=False)
@@ -1177,6 +1210,29 @@ class BellStruckTrigger(TriggerEffect[ReceiveDamage]):
 
     def resolve(self, event: ReceiveDamage) -> None:
         apply_status_to_unit(event.unit, "stunned", self.source, stacks=1)
+
+
+@dataclasses.dataclass(eq=False)
+class PranksterSpiritTrigger(TriggerEffect[ActivateAbilityAction]):
+    priority: ClassVar[int] = 0
+
+    unit: Unit
+    source: Source
+
+    def should_trigger(self, event: ActivateAbilityAction) -> bool:
+        return (
+            event.unit.controller == self.unit.controller
+            and GS.map.distance_between(event.unit, self.unit) <= 2
+            and any(
+                isinstance(target, Unit)
+                and target.controller != event.unit.controller
+                and GS.map.distance_between(event.unit, target) <= 1
+                for target in event.target.get_targets()
+            )
+        )
+
+    def resolve(self, event: ActivateAbilityAction) -> None:
+        ES.resolve(GainEnergy(event.unit, 1, self.source))
 
 
 @dataclasses.dataclass(eq=False)

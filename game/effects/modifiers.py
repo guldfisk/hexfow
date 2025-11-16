@@ -25,6 +25,7 @@ from game.core import (
     Terrain,
     TerrainProtectionRequest,
     Unit,
+    UnitStatusLink,
 )
 from game.events import MoveUnit, TurnUpkeep
 from game.map.coordinates import CC
@@ -130,6 +131,38 @@ class FarsightedModifier(StateModifierEffect[Unit, Hex, bool]):
 
     def modify(self, obj: Unit, request: Hex, value: bool) -> bool:
         return False
+
+
+@dataclasses.dataclass(eq=False)
+class SmittenModifier(StateModifierEffect[Unit, AttackFacet, bool]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.can_be_attacked_by
+
+    link: UnitStatusLink
+
+    def should_modify(self, obj: Unit, request: AttackFacet, value: bool) -> bool:
+        return (
+            any(status.parent == obj for status in self.link.statuses)
+            and any(status.parent == request.parent for status in self.link.statuses)
+            and obj != request.parent
+        )
+
+    def modify(self, obj: Unit, request: AttackFacet, value: bool) -> bool:
+        return False
+
+
+@dataclasses.dataclass(eq=False)
+class AllowAlliedAttacksModifier(StateModifierEffect[Unit, Player, bool]):
+    priority: ClassVar[int] = 1
+    target: ClassVar[object] = Unit.can_be_attacked_by_player
+
+    unit: Unit
+
+    def should_modify(self, obj: Unit, request: Player, value: bool) -> bool:
+        return obj == self.unit
+
+    def modify(self, obj: Unit, request: Player, value: bool) -> bool:
+        return True
 
 
 @dataclasses.dataclass(eq=False)

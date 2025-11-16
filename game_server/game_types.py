@@ -42,10 +42,10 @@ class TestGameType(GameType):
                     random.choice(
                         [
                             Plains,
-                            # Plains,
+                            Plains,
                             # Forest,
                             # Hills,
-                            # Water,
+                            Water,
                             # Magma,
                             # Swamp,
                         ]
@@ -58,17 +58,14 @@ class TestGameType(GameType):
         )
         player_units = (
             (
-                BROODMOTHER,
-                # TOMB_WALKER,
-                # UNTHINKING_SERVITOR,
-                FAIRCHILD,
-                HIVE_TENDER,
-                # DOOMSPEAKER,
-                # STINGING_SENTRY,
+                CHERUB_PRANKSTER,
+                GNOME_COMMANDO,
+                BUSY_BEAVER,
             ),
             (
-                RANK_DEFILER,
+                # PYROMANCER_ARTILLERIST,
                 CYCLOPS,
+                RAT_SCOUT,
                 RIFLE_INFANTRY,
             ),
         )

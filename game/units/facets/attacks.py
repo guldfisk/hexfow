@@ -18,7 +18,13 @@ from game.values import DamageType, Size, StatusIntention
 
 
 class Peck(MeleeAttackFacet):
+    cost = MovementCost(1)
     damage = 1
+
+
+class FrostedFists(MeleeAttackFacet):
+    cost = ExclusiveCost()
+    damage = 3
 
 
 class BurningSting(MeleeAttackFacet):

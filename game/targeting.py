@@ -21,6 +21,8 @@ from game.target_profiles import (
     HexHexes,
     HexRing,
     RadiatingLine,
+    Tree,
+    TreeNode,
     TriHex,
 )
 from game.values import ControllerTargetOption
@@ -241,3 +243,40 @@ class TargetTriHexActivatedAbility(ActivatedAbilityFacet[ObjectListResult[Hex]],
 
     @abstractmethod
     def perform(self, target: ObjectListResult[Hex]) -> None: ...
+
+
+class PincersActivatedAbility(ActivatedAbilityFacet[ObjectListResult[Hex]], ABC):
+    @classmethod
+    def get_target_explanation(cls) -> str | None:
+        return "Target two visible hexes adjacent to this unit, with one hex also adjacent to this unit between them."
+
+    def get_target_profile(self) -> TargetProfile[ObjectListResult[Hex]] | None:
+        # TODO edge??
+        if (
+            len(
+                hexes := [
+                    h
+                    for h in GS.map.get_neighbors_off(self.parent)
+                    if h.is_visible_to(self.parent.controller)
+                ]
+            )
+            >= 2
+        ):
+            return Tree(
+                TreeNode(
+                    [
+                        (
+                            _hex,
+                            TreeNode(
+                                [
+                                    (hexes[(idx + offset) % len(hexes)], None)
+                                    for offset in (-2, 2)
+                                ],
+                                "select second hex",
+                            ),
+                        )
+                        for idx, _hex in enumerate(hexes)
+                    ],
+                    "select first hex",
+                )
+            )
